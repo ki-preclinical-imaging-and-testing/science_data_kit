@@ -2,21 +2,6 @@
 
 Scan your messy science data, remap, visualize, and enrich using built-in knowledge graph capabilities.
 
-## Getting started
-
-Ensure all requirements are installed. Then you can run 
-
-    streamlit run start.py
-
-from the repository base. Once this is running, you can access from your
-browser window by navigating to 
-
-    localhost:8501
-
-or whichever port `streamlit` automatically maps your applcation to (see output
-of streamlit) 
-
-
 ## Simplifying FAIR+ data in your lab
 
 ### What is this?
@@ -48,3 +33,18 @@ Science data that is...
 - **+** (Computable)
 
 ... is *nice things* science data. Let's have it!
+## Getting started
+
+Ensure all requirements are installed. Then you can run 
+
+    streamlit run start.py
+
+from the repository base. Once this is running, you can access from your
+browser window by navigating to 
+
+    localhost:8501
+
+or whichever port `streamlit` automatically maps your applcation to (see output
+of streamlit) 
+
+
