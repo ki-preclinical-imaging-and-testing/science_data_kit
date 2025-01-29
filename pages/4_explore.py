@@ -2,6 +2,20 @@ import streamlit as st
 import docker
 import socket
 
+st.set_page_config(
+    page_title="Science Data Toolkit",
+    page_icon="🖥️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://adam-patch.mit.edu',
+        'Report a bug': "https://adam-patch.mit.edu",
+        'About': "# Science Data for Data Science!"
+    }
+
+)
+
+
 # Initialize Docker client
 client = docker.from_env()
 

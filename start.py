@@ -8,11 +8,10 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://adam-patch.mit.edu',
         'Report a bug': "https://adam-patch.mit.edu",
-        'About': "# This is a header. This is an *extremely* cool app!"
+        'About': "# Science Data for Data Science!"
     }
 
 )
-
 
 st.title("Get started...")
 st.markdown(

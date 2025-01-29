@@ -2,6 +2,19 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 
+st.set_page_config(
+    page_title="Science Data Toolkit",
+    page_icon="🖥️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://adam-patch.mit.edu',
+        'Report a bug': "https://adam-patch.mit.edu",
+        'About': "# Science Data for Data Science!"
+    }
+
+)
+
 # Initialize session state variables
 if "entities_df" not in st.session_state:
     st.session_state["entities_df"] = None

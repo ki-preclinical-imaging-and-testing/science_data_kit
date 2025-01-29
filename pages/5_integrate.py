@@ -1,5 +1,18 @@
 import streamlit as st
 
+st.set_page_config(
+    page_title="Science Data Toolkit",
+    page_icon="🖥️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://adam-patch.mit.edu',
+        'Report a bug': "https://adam-patch.mit.edu",
+        'About': "# Science Data for Data Science!"
+    }
+
+)
+
 # Example API functions
 def example_function(param1, param2):
     """

@@ -4,6 +4,18 @@ from neo4j import GraphDatabase
 #from neo4j_graphrag.embeddings import OllamaEmbeddings
 #from neo4j_graphrag.llm import OllamaLLM
 
+st.set_page_config(
+    page_title="Science Data Toolkit",
+    page_icon="🖥️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://adam-patch.mit.edu',
+        'Report a bug': "https://adam-patch.mit.edu",
+        'About': "# Science Data for Data Science!"
+    }
+
+)
 
 # Session state initialization
 if "neo4j_uri" not in st.session_state:
