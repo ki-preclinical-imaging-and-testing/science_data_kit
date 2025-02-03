@@ -21,10 +21,9 @@ if "folder" not in st.session_state:
 if "scan_completed" not in st.session_state:
     st.session_state["scan_completed"] = False
 if "scanned_files" not in st.session_state:
-    st.session_state["scanned_files"] = None
+    st.session_state["scanned_files"] = pd.DataFrame()
 if "ncdu_output" not in st.session_state:
     st.session_state["ncdu_output"] = ""
-
 
 # Description and instructions
 st.markdown(
@@ -39,6 +38,7 @@ st.markdown(
 # Input for the file path using a folder selector
 st.subheader("Step 1: Select Dataset Location")
 
+
 # Function to open a file browser for folder selection
 def browse_folder():
     root = tk.Tk()
@@ -46,6 +46,7 @@ def browse_folder():
     folder_selected = filedialog.askdirectory()
     root.destroy()  # Properly destroy tkinter root window
     return folder_selected
+
 
 if st.button("Browse for Folder"):
     folder = browse_folder()
@@ -62,14 +63,14 @@ if st.session_state["folder"]:
         st.error("Invalid folder. Please enter a valid directory path.")
 
 
-# Function to run NCDU scan
+# Function to run NCDU scan and process output
 def run_ncdu_scan():
     if not st.session_state["folder"]:
         st.error("Please select a folder first.")
         return
 
     dataset_path = st.session_state["folder"]
-    output_json_path = Path(dataset_path) / "ncdu_scan.json"
+    output_json_path = Path(dataset_path) / "index.ncdu"
 
     st.session_state["scan_completed"] = False
     st.session_state["ncdu_output"] = ""
@@ -79,6 +80,7 @@ def run_ncdu_scan():
     status_box = st.empty()
 
     try:
+        # Run ncdu scan
         with subprocess.Popen(
                 ["ncdu", "-o", str(output_json_path), dataset_path],
                 stdout=subprocess.PIPE,
@@ -95,28 +97,42 @@ def run_ncdu_scan():
             st.success(f"Scan complete! Results saved to `{output_json_path}`")
             st.session_state["scan_completed"] = True
 
-            # Load JSON and store in session
-            with open(output_json_path, "r") as f:
-                scan_data = json.load(f)
+            # Run jq transformation
+            jq_filter = 'def c: (arrays | .[0] + {children: [.[1:][] | c]}) // .; last | c'
+            result = subprocess.run(
+                ["jq", jq_filter, str(output_json_path)],
+                text=True,
+                capture_output=True,
+                check=True
+            )
+
+            # Load transformed JSON
+            scan_data = json.loads(result.stdout)
 
             # Convert to DataFrame
-            files = []
+            def parse_ncdu_json(node, parent_path=""):
+                """Recursively parses NCDU JSON into a list of file entries."""
+                path = f"{parent_path}/{node['name']}" if parent_path else node["name"]
 
-            def parse_files(file_list, parent=""):
-                for f in file_list:
-                    files.append({
-                        "Path": f"{parent}/{f['name']}" if parent else f["name"],
-                        "Size (Bytes)": f.get("asize", 0),
-                        "Disk Usage (Bytes)": f.get("dsize", 0),
-                        "Type": "Directory" if "sub" in f else "File"
-                    })
-                    if "sub" in f:
-                        parse_files(f["sub"], f"{parent}/{f['name']}" if parent else f["name"])
+                file_info = {
+                    "Path": path,
+                    "Size (Bytes)": node.get("asize", 0),
+                    "Disk Usage (Bytes)": node.get("dsize", 0),
+                    "Type": "Directory" if "children" in node else "File"
+                }
 
-                return files
+                # Recursively process children if it's a directory
+                parsed_files = [file_info]
+                if "children" in node:
+                    for child in node["children"]:
+                        parsed_files.extend(parse_ncdu_json(child, path))
 
-            file_data = parse_files(scan_data.get("root", {}).get("sub", []))
-            st.session_state["scanned_files"] = pd.DataFrame(file_data)
+                return parsed_files
+
+            # Parse the transformed JSON
+            parsed_files = parse_ncdu_json(scan_data)
+            st.session_state["scanned_files"] = pd.DataFrame(parsed_files)
+
         else:
             st.error("NCDU scan failed: No output JSON found.")
 
@@ -130,7 +146,7 @@ if not st.session_state["scan_completed"]:
         run_ncdu_scan()
 
 # Display scanned results
-if st.session_state["scan_completed"]:
+if st.session_state["scan_completed"] and not st.session_state["scanned_files"].empty:
     st.subheader("Step 3: Save & View Results")
     st.write("Scanned Files Preview:", st.session_state["scanned_files"].head())
 
