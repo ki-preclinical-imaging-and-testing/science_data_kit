@@ -1,46 +1,30 @@
-import streamlit as st
-from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog
-import os
-import time
-from tqdm import tqdm
+import streamlit as st
+import subprocess
+import json
+from pathlib import Path
 import pandas as pd
-from datetime import timedelta
-
 
 st.set_page_config(
     page_title="Science Data Toolkit",
     page_icon="🖥️",
     layout="wide",
     initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': 'https://adam-patch.mit.edu',
-        'Report a bug': "https://adam-patch.mit.edu",
-        'About': "# Science Data for Data Science!"
-    }
-
 )
 
-# Function to open a file browser for folder selection
-def browse_folder():
-    root = tk.Tk()
-    root.withdraw()  # Hide the root window
-    folder_selected = filedialog.askdirectory()
-    root.destroy()  # Properly destroy tkinter root window
-    return folder_selected
+st.title("Index Your Dataset")
 
-
-# Initialize session state variables
+# Initialize session state
 if "folder" not in st.session_state:
     st.session_state["folder"] = None
-if "scanned_files" not in st.session_state:
-    st.session_state["scanned_files"] = None
 if "scan_completed" not in st.session_state:
     st.session_state["scan_completed"] = False
+if "scanned_files" not in st.session_state:
+    st.session_state["scanned_files"] = None
+if "ncdu_output" not in st.session_state:
+    st.session_state["ncdu_output"] = ""
 
-# Set the page title
-st.title("Index Your Dataset")
 
 # Description and instructions
 st.markdown(
@@ -54,82 +38,103 @@ st.markdown(
 
 # Input for the file path using a folder selector
 st.subheader("Step 1: Select Dataset Location")
+
+# Function to open a file browser for folder selection
+def browse_folder():
+    root = tk.Tk()
+    root.withdraw()  # Hide the root window
+    folder_selected = filedialog.askdirectory()
+    root.destroy()  # Properly destroy tkinter root window
+    return folder_selected
+
 if st.button("Browse for Folder"):
     folder = browse_folder()
     if folder:
         st.session_state["folder"] = folder
         st.session_state["scan_completed"] = False  # Reset scan status
 
-# Display selected folder
+# Verify folder
 if st.session_state["folder"]:
+    dataset_path = Path(st.session_state["folder"])
+    if dataset_path.exists() and dataset_path.is_dir():
+        st.success(f"Folder Verified: `{dataset_path}`")
+    else:
+        st.error("Invalid folder. Please enter a valid directory path.")
+
+
+# Function to run NCDU scan
+def run_ncdu_scan():
+    if not st.session_state["folder"]:
+        st.error("Please select a folder first.")
+        return
+
     dataset_path = st.session_state["folder"]
-    st.write(f"Selected folder: `{dataset_path}`")
+    output_json_path = Path(dataset_path) / "ncdu_scan.json"
 
-    # Verify folder path and summarize contents
+    st.session_state["scan_completed"] = False
+    st.session_state["ncdu_output"] = ""
+
+    # Start NCDU scan
+    st.subheader("Step 2: Scanning Filesystem with NCDU")
+    status_box = st.empty()
+
     try:
-        path = Path(dataset_path)
-        if path.exists() and path.is_dir():
-            total_files = sum(1 for _ in path.glob("**/*") if _.is_file())
-            total_size = sum(_.stat().st_size for _ in path.glob("**/*") if _.is_file()) / (1024 ** 3)
-            st.success(f"Verified ({total_size:.2f} GB, {total_files} files)")
-        else:
-            st.error("The selected path is not valid. Please choose a directory.")
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+        with subprocess.Popen(
+                ["ncdu", "-o", str(output_json_path), dataset_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1
+        ) as process:
+            for line in process.stdout:
+                st.session_state["ncdu_output"] += line
+                status_box.text(st.session_state["ncdu_output"])  # Update UI
 
-# Scan the dataset
-st.subheader("Step 2: Scan the Dataset FileTree")
-if not st.session_state["scan_completed"]:
-    if st.button("Run Scan") and dataset_path:
-        file_list = list(path.glob("**/*"))
-        total_files = len(file_list)
-
-        if total_files == 0:
-            st.warning("No files found in the selected directory.")
-        else:
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            start_time = time.time()
-
-            scanned_files = []
-            for i, file in enumerate(file_list):
-                time.sleep(0.01)  # Simulating file processing time
-                scanned_files.append(str(file))
-
-                # Calculate estimated time remaining
-                elapsed_time = time.time() - start_time
-                avg_time_per_file = elapsed_time / (i + 1)
-                remaining_time = avg_time_per_file * (total_files - i - 1)
-                formatted_time = str(timedelta(seconds=int(remaining_time)))  # Convert to HH:MM:SS
-
-                # Calculate progress percentage
-                progress = int((i + 1) / total_files * 100)
-
-                # Update progress bar and status text
-                progress_bar.progress(progress)
-                status_text.markdown(
-                    f"**Scanning {i + 1} / {total_files} files ({progress}% complete)**  \n"
-                    f"⏳ Estimated time remaining: **{formatted_time}**"
-                )
-
-            # Save results
-            st.session_state["scanned_files"] = pd.DataFrame({"FilePath": scanned_files})
+        # Check if JSON was created
+        if output_json_path.exists():
+            st.success(f"Scan complete! Results saved to `{output_json_path}`")
             st.session_state["scan_completed"] = True
-            progress_bar.empty()
-            status_text.success(f"✅ Scan complete! {total_files} files indexed.")
+
+            # Load JSON and store in session
+            with open(output_json_path, "r") as f:
+                scan_data = json.load(f)
+
+            # Convert to DataFrame
+            files = []
+
+            def parse_files(file_list, parent=""):
+                for f in file_list:
+                    files.append({
+                        "Path": f"{parent}/{f['name']}" if parent else f["name"],
+                        "Size (Bytes)": f.get("asize", 0),
+                        "Disk Usage (Bytes)": f.get("dsize", 0),
+                        "Type": "Directory" if "sub" in f else "File"
+                    })
+                    if "sub" in f:
+                        parse_files(f["sub"], f"{parent}/{f['name']}" if parent else f["name"])
+
+                return files
+
+            file_data = parse_files(scan_data.get("root", {}).get("sub", []))
+            st.session_state["scanned_files"] = pd.DataFrame(file_data)
+        else:
+            st.error("NCDU scan failed: No output JSON found.")
+
+    except Exception as e:
+        st.error(f"An error occurred while running NCDU: {e}")
 
 
-# Save scanned results if scan is complete
+# Run scan button
+if not st.session_state["scan_completed"]:
+    if st.button("Run NCDU Scan"):
+        run_ncdu_scan()
+
+# Display scanned results
 if st.session_state["scan_completed"]:
-    st.write("Scan completed successfully!")
-    df = st.session_state["scanned_files"]
-    st.write("Scanned Files Preview:", df.head())
+    st.subheader("Step 3: Save & View Results")
+    st.write("Scanned Files Preview:", st.session_state["scanned_files"].head())
 
-    st.subheader("Step 3: Save Results")
-    save_path = st.text_input(
-        label="Enter the file path to save the scan results (CSV):",
-        placeholder="e.g., /path/to/save/scanned_results.csv"
-    )
+    save_path = st.text_input("Enter the file path to save scan results (CSV):", "")
     if st.button("Save Scan Results"):
         if save_path:
             try:
@@ -139,4 +144,3 @@ if st.session_state["scan_completed"]:
                 st.error(f"An error occurred while saving: {e}")
         else:
             st.warning("Please specify a valid save path.")
-
