@@ -24,13 +24,15 @@ if "scanned_files" not in st.session_state:
     st.session_state["scanned_files"] = pd.DataFrame()
 if "ncdu_output" not in st.session_state:
     st.session_state["ncdu_output"] = ""
+if "ncdu_json_path" not in st.session_state:
+    st.session_state["ncdu_json_path"] = str(Path.home() / "ncdu_scan.json")  # Default in home directory
 
 # Description and instructions
 st.markdown(
     """
     ## Scan Your FileTree
     1. **Locate your dataset** - Ensure connection to storage.
-    2. **Optimize compute** - Option to parallelize and benchmark.
+    2. **Customize output location** - Choose where to save the JSON scan.
     3. **Checkpoint your index** - Version results for the next steps.
     """
 )
@@ -63,6 +65,31 @@ if st.session_state["folder"]:
         st.error("Invalid folder. Please enter a valid directory path.")
 
 
+# Function to open a file dialog for saving NCDU JSON
+def browse_save_path():
+    root = tk.Tk()
+    root.withdraw()  # Hide the root window
+    save_path = filedialog.asksaveasfilename(
+        defaultextension=".json",
+        filetypes=[("JSON files", "*.json")],
+        initialfile="ncdu_scan.json",
+        title="Select NCDU Output File"
+    )
+    root.destroy()  # Properly destroy tkinter root window
+    return save_path
+
+
+# Button to browse for JSON save location
+st.subheader("Step 2: Configure NCDU Output")
+if st.button("Browse for Save Location"):
+    selected_path = browse_save_path()
+    if selected_path:
+        st.session_state["ncdu_json_path"] = selected_path
+
+# Display selected path
+st.write(f"**NCDU JSON will be saved to:** `{st.session_state['ncdu_json_path']}`")
+
+
 # Function to run NCDU scan and process output
 def run_ncdu_scan():
     if not st.session_state["folder"]:
@@ -70,13 +97,13 @@ def run_ncdu_scan():
         return
 
     dataset_path = st.session_state["folder"]
-    output_json_path = Path(dataset_path) / "index.ncdu"
+    output_json_path = Path(st.session_state["ncdu_json_path"])
 
     st.session_state["scan_completed"] = False
     st.session_state["ncdu_output"] = ""
 
     # Start NCDU scan
-    st.subheader("Step 2: Scanning Filesystem with NCDU")
+    st.subheader("Step 3: Scanning Filesystem with NCDU")
     status_box = st.empty()
 
     try:
@@ -147,7 +174,7 @@ if not st.session_state["scan_completed"]:
 
 # Display scanned results
 if st.session_state["scan_completed"] and not st.session_state["scanned_files"].empty:
-    st.subheader("Step 3: Save & View Results")
+    st.subheader("Step 4: Save & View Results")
     st.write("Scanned Files Preview:", st.session_state["scanned_files"].head())
 
     save_path = st.text_input("Enter the file path to save scan results (CSV):", "")
