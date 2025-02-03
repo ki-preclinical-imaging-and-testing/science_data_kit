@@ -6,6 +6,8 @@ import os
 import time
 from tqdm import tqdm
 import pandas as pd
+from datetime import timedelta
+
 
 st.set_page_config(
     page_title="Science Data Toolkit",
@@ -75,42 +77,47 @@ if st.session_state["folder"]:
     except Exception as e:
         st.error(f"An error occurred: {e}")
 
+# Scan the dataset
 st.subheader("Step 2: Scan the Dataset FileTree")
-
-# Option for parallelization
 if not st.session_state["scan_completed"]:
-    benchmark = st.checkbox("Benchmark", value=False, key="benchmark")
-    parallelize = st.checkbox("Parallelize", value=False, key="parallelize")
+    if st.button("Run Scan") and dataset_path:
+        file_list = list(path.glob("**/*"))
+        total_files = len(file_list)
 
-    # Worker selection if parallelization is enabled
-    num_workers = None
-    if st.session_state["parallelize"]:
-        num_workers = st.selectbox("Number of workers:", [1, 2, 4, 8, 16], index=3, key="num_workers")
-
-    # Button to run the scan
-    if st.button("Run Scan"):
-        if dataset_path:
-            try:
-                st.success("Dataset path validated. Starting scan...")
-
-                # Simulating a scan with tqdm
-                file_count = len(list(Path(dataset_path).glob("**/*")))
-                progress = tqdm(Path(dataset_path).glob("**/*"), total=file_count, desc="Scanning files")
-
-                scanned_files = []
-                for idx, file in enumerate(progress):
-                    # Simulate scanning time
-                    time.sleep(0.01)
-                    scanned_files.append(file)
-
-                # Save scanned results to DataFrame
-                st.session_state["scanned_files"] = pd.DataFrame({"FilePath": [str(f) for f in scanned_files]})
-                st.session_state["scan_completed"] = True
-                st.success(f"Scan complete. {len(scanned_files)} files scanned!")
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
+        if total_files == 0:
+            st.warning("No files found in the selected directory.")
         else:
-            st.warning("Please select a valid dataset path to proceed.")
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            start_time = time.time()
+
+            scanned_files = []
+            for i, file in enumerate(file_list):
+                time.sleep(0.01)  # Simulating file processing time
+                scanned_files.append(str(file))
+
+                # Calculate estimated time remaining
+                elapsed_time = time.time() - start_time
+                avg_time_per_file = elapsed_time / (i + 1)
+                remaining_time = avg_time_per_file * (total_files - i - 1)
+                formatted_time = str(timedelta(seconds=int(remaining_time)))  # Convert to HH:MM:SS
+
+                # Calculate progress percentage
+                progress = int((i + 1) / total_files * 100)
+
+                # Update progress bar and status text
+                progress_bar.progress(progress)
+                status_text.markdown(
+                    f"**Scanning {i + 1} / {total_files} files ({progress}% complete)**  \n"
+                    f"⏳ Estimated time remaining: **{formatted_time}**"
+                )
+
+            # Save results
+            st.session_state["scanned_files"] = pd.DataFrame({"FilePath": scanned_files})
+            st.session_state["scan_completed"] = True
+            progress_bar.empty()
+            status_text.success(f"✅ Scan complete! {total_files} files indexed.")
+
 
 # Save scanned results if scan is complete
 if st.session_state["scan_completed"]:
