@@ -3,3 +3,4 @@ pandas~=2.2.3
 docker~=7.1.0
 neo4j~=5.27.0
 pyvis~=0.3.2
+neomodel~=5.4.2

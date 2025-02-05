@@ -2,3 +2,4 @@
 *.json
 *.ncdu
 .idea
+__pycache__/

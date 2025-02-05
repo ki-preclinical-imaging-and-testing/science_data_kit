@@ -2,6 +2,7 @@ import streamlit as st
 import socket
 import docker
 
+
 st.set_page_config(
     page_title="Science Data Toolkit",
     page_icon="🖥️",
@@ -75,9 +76,13 @@ if "container_status" not in st.session_state:
 if "container_name" not in st.session_state:
     st.session_state["container_name"] = "neo4j-instance"
 if "http_port" not in st.session_state:
-    st.session_state["http_port"] = None
+    st.session_state["http_port"] = 7474
 if "bolt_port" not in st.session_state:
-    st.session_state["bolt_port"] = None
+    st.session_state["bolt_port"] = 7687
+if "username" not in st.session_state:
+    st.session_state["username"] = 'neo4j'
+if "password" not in st.session_state:
+    st.session_state["password"] = 'neo4jiscool'
 
 container_name = st.session_state["container_name"]
 
@@ -94,8 +99,8 @@ def start_neo4j_container():
     """Start the Neo4j container."""
     try:
         # Find free ports for HTTP and Bolt
-        st.session_state["http_port"] = find_free_port(7474)
-        st.session_state["bolt_port"] = find_free_port(7687)
+        st.session_state["http_port"] = find_free_port(st.session_state["http_port"])
+        st.session_state["bolt_port"] = find_free_port(st.session_state["bolt_port"])
 
         # Check if the container already exists
         existing_containers = client.containers.list(all=True, filters={"name": container_name})
@@ -116,7 +121,7 @@ def start_neo4j_container():
                 "7687/tcp": st.session_state["bolt_port"]
             },
             environment={
-                "NEO4J_AUTH": "neo4j/neo4jiscool",
+                "NEO4J_AUTH": f"{st.session_state['username']}/{st.session_state['password']}",
             },
             detach=True,
             tty=True,
@@ -136,8 +141,6 @@ def stop_neo4j_container():
                 if container.status == "running":
                     container.stop()
                     st.session_state["container_status"] = "stopped"
-                    st.session_state["http_port"] = None
-                    st.session_state["bolt_port"] = None
                     st.success(f"Neo4j container '{container_name}' stopped successfully.")
                     return
                 else:
