@@ -1334,8 +1334,9 @@ if st.session_state["scan_completed"] and not st.session_state["scanned_files"].
         try:
             first_file = True
             my_bar = st.progress(0., text="Pushing Filetrees to Database...")
-            bar_total = len(st.session_state["scanned_files"])
-            for _, row in st.session_state["scanned_files"].iterrows():
+            # TODO: Fix filter here for on/off switch
+            bar_total = len(st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Folder'])
+            for _, row in st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Folder'].iterrows():
                 my_bar.progress(float(_)/bar_total, f"{int(100*float(_)/bar_total)}%")
                 path = Path(row["Path"]).as_posix()
                 size = row["Size (Bytes)"]
