@@ -1336,29 +1336,30 @@ if st.session_state["scan_completed"] and not st.session_state["scanned_files"].
             my_bar = st.progress(0., text="Pushing Filetrees to Database...")
             bar_total = len(st.session_state["scanned_files"])
             for _, row in st.session_state["scanned_files"].iterrows():
-                my_bar.progress(float(_)/bar_total, "")
+                my_bar.progress(float(_)/bar_total, f"{int(100*float(_)/bar_total)}%")
                 path = Path(row["Path"]).as_posix()
                 size = row["Size (Bytes)"]
                 disk_usage = row["Disk Usage (Bytes)"]
-
                 parent_path = Path(path).parent.as_posix()
-                parent_folder = Folder.nodes.first_or_none(filepath=parent_path)
-                if parent_folder is None:
-                    parent_folder = Folder(filepath=parent_path).save()
 
-                if row["Type"] == "Directory":
-                    folder_node = Folder.nodes.first_or_none(filepath=path)
-                    if folder_node is None:
-                        folder_node = Folder(filepath=path).save()
-                        if parent_folder:
-                            folder_node.is_in.connect(parent_folder)
+                with db.transaction:
+                    parent_folder = Folder.nodes.first_or_none(filepath=parent_path)
+                    if parent_folder is None:
+                        parent_folder = Folder(filepath=parent_path).save()
 
-                if row["Type"] == "File":
-                    file_node = File.nodes.first_or_none(filepath=path)
-                    if file_node is None:
-                        file_node = File(filepath=path).save()
-                        if parent_folder:
-                            file_node.is_in.connect(parent_folder)
+                    if row["Type"] == "Directory":
+                        folder_node = Folder.nodes.first_or_none(filepath=path)
+                        if folder_node is None:
+                            folder_node = Folder(filepath=path).save()
+                            if parent_folder:
+                                folder_node.is_in.connect(parent_folder)
+                    # TODO: Make on/off switch depending on type...
+                    # if row["Type"] == "File":
+                    #     file_node = File.nodes.first_or_none(filepath=path)
+                    #     if file_node is None:
+                    #         file_node = File(filepath=path).save()
+                    #         if parent_folder:
+                    #             file_node.is_in.connect(parent_folder)
 
             st.success("Data successfully pushed to Neo4j!")
         except Exception as e:
