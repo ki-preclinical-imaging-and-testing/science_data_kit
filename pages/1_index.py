@@ -1156,6 +1156,12 @@ import pandas as pd
 from neomodel import config, db, NodeClassAlreadyDefined
 import sys
 
+try:
+    Folder = db._NODE_CLASS_REGISTRY[frozenset({'Folder'})]
+except:
+    from models import Folder
+
+
 st.set_page_config(
     page_title="Science Data Toolkit",
     page_icon="🖥️",
@@ -1176,16 +1182,6 @@ if "ncdu_output" not in st.session_state:
     st.session_state["ncdu_output"] = ""
 if "ncdu_json_path" not in st.session_state:
     st.session_state["ncdu_json_path"] = str(Path.home() / "ncdu_scan.json")  # Default JSON path
-if "neomodels" not in st.session_state:
-    try:
-        from models import Folder, File  # Import only once
-        st.session_state["neomodels"] = {
-            "Folder": Folder,
-            "File": File
-        }
-    except NodeClassAlreadyDefined:
-        print("Neomodels found.")
-
 
 # Description and instructions
 st.markdown(
@@ -1328,15 +1324,17 @@ if st.session_state["scan_completed"] and not st.session_state["scanned_files"].
 
     if st.button("Push to Database"):
         config.DATABASE_URL = f"bolt://{st.session_state['username']}:{st.session_state['password']}@localhost:{st.session_state['bolt_port']}"  # Change as needed
-        Folder = st.session_state["neomodels"]["Folder"]
-        File = st.session_state["neomodels"]["File"]
+        try:
+            Folder = db._NODE_CLASS_REGISTRY[frozenset({'Folder'})]
+        except:
+            from models import Folder
 
         try:
             first_file = True
             my_bar = st.progress(0., text="Pushing Filetrees to Database...")
             # TODO: Fix filter here for on/off switch
-            bar_total = len(st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Folder'])
-            for _, row in st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Folder'].iterrows():
+            bar_total = len(st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Directory'])
+            for _, row in st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Directory'].iterrows():
                 my_bar.progress(float(_)/bar_total, f"{int(100*float(_)/bar_total)}%")
                 path = Path(row["Path"]).as_posix()
                 size = row["Size (Bytes)"]

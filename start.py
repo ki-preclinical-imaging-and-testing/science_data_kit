@@ -1,7 +1,7 @@
 import streamlit as st
 import socket
 import docker
-
+from neomodel import db, NodeClassAlreadyDefined
 
 st.set_page_config(
     page_title="Science Data Toolkit",
@@ -83,6 +83,13 @@ if "username" not in st.session_state:
     st.session_state["username"] = 'neo4j'
 if "password" not in st.session_state:
     st.session_state["password"] = 'neo4jiscool'
+
+try:
+    Folder = db._NODE_CLASS_REGISTRY[frozenset({'Folder'})]
+except:
+    from models import Folder
+
+
 
 container_name = st.session_state["container_name"]
 
