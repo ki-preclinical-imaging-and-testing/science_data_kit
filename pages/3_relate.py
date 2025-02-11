@@ -242,14 +242,20 @@ if st.session_state["entities_df"] is not None:
         with st.session_state["db_connection"].session() as session:
             try:
                 for _, row in st.session_state["taxonomy"].iterrows():
+                    _path_id_chain = []
                     prev_node_id = None
                     for col in st.session_state["taxonomy_keys"]:
                         instance_value = row[col]
+                        _path_id_chain.append(instance_value)
                         query = f"""
-                        MERGE (f:{col} {{is: $instance_value}})
+                        MERGE (f:{col} {{is: $instance_value, path_id: $path_id}})
                         RETURN id(f) as node_id
                         """
-                        result = session.run(query, instance_value=instance_value)
+                        result = session.run(
+                                query,
+                                instance_value=instance_value, 
+                                path_id='-'.join(_path_id_chain)
+                                )
                         current_node_id = result.single()["node_id"]
 
                         if prev_node_id is not None:

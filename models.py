@@ -14,17 +14,8 @@ class File(StructuredNode):
     # disk_usage = IntegerProperty()
     is_in = RelationshipTo('Folder', 'IN')
 
-class ImagingSession(StructuredNode):
-    filepath = StringProperty()
-    study = StringProperty()
-    group = StringProperty()
-    individual = StringProperty()
-    date = DateProperty()
-    stored_in = RelationshipTo(Folder, 'STORED_IN')
-
-if 'ErrorNode' not in globals():
-    class ErrorNode(StructuredNode):
-        uid = StringProperty(unique_index=True)
+class ErrorNode(StructuredNode):
+    uid = StringProperty(unique_index=True)
 
 
 def type_mapping(neo_type):
