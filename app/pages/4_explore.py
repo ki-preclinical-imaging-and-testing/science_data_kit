@@ -22,7 +22,6 @@ st.set_page_config(
 
 )
 
-
 # Utility Functions
 def load_saved_queries():
     """Load saved queries from the JSON file."""
