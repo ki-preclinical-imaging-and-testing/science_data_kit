@@ -9,7 +9,6 @@ from pathlib import Path
 # Path to store saved queries
 QUERIES_FILE = Path("saved_queries.json")
 
-
 st.set_page_config(
     page_title="Science Data Toolkit",
     page_icon="🖥️",
