@@ -1,25 +1,48 @@
-from neo4j import GraphDatabase, Driver, Session
+import yaml
+from neo4j import GraphDatabase, Driver
 from neo4j.exceptions import Neo4jError
 import pandas as pd
+
+def load_db_config(fn='db_config.yaml'):
+    """
+    Loads the database configuration from a YAML file.
+
+    :param fn: Path to the YAML configuration file.
+    :return: Dictionary containing the database configuration.
+    """
+    try:
+        with open(fn, 'r') as file:
+            return yaml.safe_load(file)
+    except Exception as e:
+        print(f"ERROR: Could not load {fn} - {e}")
+        return None
 
 class Neo4jConnection:
     """
     A robust Neo4j driver for connecting and executing queries with improved error handling and extended functionality.
     """
 
-    def __init__(self, uri: str, user: str, password: str, database: str = "aipt"):
+    def __init__(self, config=None, config_file=None):
         """
         Initialize the Neo4jConnection instance.
 
-        :param uri: The URI of the Neo4j database (e.g., "bolt://localhost:7687").
-        :param user: Username for authentication.
-        :param password: Password for authentication.
-        :param database: The database to use (default is "aipt").
+        :param config: Dictionary with database connection details (overrides config_file if provided).
+        :param config_file: Path to a YAML file with database connection details.
         """
-        self.uri = uri
-        self.user = user
-        self.password = password
-        self.database = database
+        if config is None:
+            if config_file:
+                config = load_db_config(config_file)
+            else:
+                raise ValueError("Either a config dictionary or a config_file path must be provided.")
+        
+        required_keys = {"uri", "user", "password", "database"}
+        if not all(key in config for key in required_keys):
+            raise ValueError(f"Missing required keys in config. Expected keys: {required_keys}")
+
+        self.uri = config["uri"]
+        self.user = config["user"]
+        self.password = config["password"]
+        self.database = config.get("database", "aipt")
         self._driver: Driver = None
         self._connect()
 
@@ -71,7 +94,7 @@ class Neo4jConnection:
         records = [dict(record) for record in result]
         return pd.DataFrame(records)
 
-    def query_to_dict(self, query: str, parameters: dict = None):
+    def query_to_dict(self, query: str, parameters: dict = None) -> dict:
         """
         Executes a Cypher query and returns the results as a list of dictionaries.
 
@@ -149,8 +172,6 @@ class Neo4jConnection:
             MERGE (n)-[:{node_match_relationship_type}]->(m)
             """
             self.execute_query(query, {**match_criteria, **properties, **node_match_criteria})
-
-
 
     def test_connection(self, quiet: bool = False) -> bool:
         """
