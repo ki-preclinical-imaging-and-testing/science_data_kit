@@ -87,7 +87,7 @@ if "password" not in st.session_state:
 try:
     Folder = db._NODE_CLASS_REGISTRY[frozenset({'Folder'})]
 except:
-    from models import Folder
+    from utils.models import Folder
 
 
 

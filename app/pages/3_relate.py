@@ -118,7 +118,7 @@ if st.session_state["entities_df"] is not None:
                     prev_node_id = None
                     for col in st.session_state["taxonomy_keys"]:
                         instance_value = row[col]
-                        _path_id_chain.append(instance_value)
+                        _path_id_chain.append(str(instance_value))
                         query = f"""
                         MERGE (f:{col} {{is: $instance_value, path_id: $path_id}})
                         RETURN id(f) as node_id

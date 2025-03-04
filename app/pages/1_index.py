@@ -8,7 +8,7 @@ from neomodel import config, db, NodeClassAlreadyDefined
 try:
     Folder = db._NODE_CLASS_REGISTRY[frozenset({'Folder'})]
 except:
-    from models import Folder
+    from utils.models import Folder
 
 
 st.set_page_config(
@@ -158,7 +158,12 @@ if st.session_state["scan_completed"] and not st.session_state["scanned_files"].
             # TODO: Fix filter here for on/off switch
             bar_total = len(st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Directory'])
             for _, row in st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Directory'].iterrows():
-                my_bar.progress(float(_)/bar_total, f"{int(100*float(_)/bar_total)}%")
+                progress_ratio = (float(_)/bar_total)
+                if progress_ratio > 1:
+                    progress_ratio = 1
+                if progress_ratio < 0:
+                    progress_ratio = 0
+                my_bar.progress(progress_ratio, f"{int(100*progress_ratio)}%")
                 path = Path(row["Path"]).as_posix()
                 size = row["Size (Bytes)"]
                 disk_usage = row["Disk Usage (Bytes)"]

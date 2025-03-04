@@ -6,3 +6,4 @@ __pycache__/
 .ipynb_checkpoints
 .virtual_documents
 db_config.yaml
+*.swp

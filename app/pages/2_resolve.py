@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 from neo4j import GraphDatabase
-from models import initialize_neomodel_classes, merge_nodes_with_existing
+from utils.models import initialize_neomodel_classes, merge_nodes_with_existing
 
 st.set_page_config(
     page_title="Science Data Toolkit",
