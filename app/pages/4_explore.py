@@ -5,6 +5,10 @@ from pyvis.network import Network
 from io import BytesIO
 import json
 from pathlib import Path
+from utils.sidebar import database_sidebar
+
+
+
 
 # Path to store saved queries
 QUERIES_FILE = Path("saved_queries.json")
@@ -21,6 +25,8 @@ st.set_page_config(
     }
 
 )
+
+database_sidebar()
 
 # Utility Functions
 def load_saved_queries():
@@ -190,11 +196,12 @@ if "connected" not in st.session_state:
 if "selected_db" not in st.session_state:
     st.session_state.selected_db = None
 
-with st.sidebar.expander("Neo4j Connection", expanded=True):
+st.sidebar.title("Connect")
+with st.sidebar.expander("Connection", expanded=False):
     # Connection Details in Sidebar
-    uri = st.text_input("Neo4j URI", "bolt://localhost:7687")
-    user = st.text_input("Username", "neo4j")
-    password = st.text_input("Password", type="password")
+    uri = st.text_input("URI", f"bolt://localhost:{st.session_state['bolt_port']}")
+    user = st.text_input("Username", st.session_state['username'])
+    password = st.text_input("Password", st.session_state['password'], type="password")
     if st.button("Connect"):
         with st.spinner("Connecting to Neo4j..."):
             try:
@@ -205,20 +212,22 @@ with st.sidebar.expander("Neo4j Connection", expanded=True):
             except Exception as e:
                 st.sidebar.error(f"Connection failed: {e}")
                 st.session_state.connected = False
+    if st.session_state.connected:
+        with st.spinner("Fetching available databases..."):
+            databases = fetch_databases(st.session_state.session)
+            selected_db = st.sidebar.selectbox(
+                "Database",
+                databases,
+                index=databases.index(st.session_state.selected_db) if st.session_state.selected_db else 0
+            )
+            st.session_state.selected_db = selected_db
+
 
 if st.session_state.connected:
-    with st.spinner("Fetching available databases..."):
-        databases = fetch_databases(st.session_state.session)
-        st.sidebar.title("Database Selection")
-        selected_db = st.sidebar.selectbox(
-            "Select Database",
-            databases,
-            index=databases.index(st.session_state.selected_db) if st.session_state.selected_db else 0
-        )
-        st.session_state.selected_db = selected_db
 
     # Schema Sampling Section
-    st.sidebar.title("Schema Sampling")
+    st.sidebar.title("Recall Schema")
+
 
     # Initialize recall_query in session_state
     if "recall_query" not in st.session_state:
@@ -228,16 +237,19 @@ if st.session_state.connected:
     def update_recall_query():
         st.session_state.recall_query = st.session_state.recall_query_input
 
-    # Sidebar input for Recall Query
+
     st.sidebar.text_area(
-        "Recall Query",
+        "Query",
         value=st.session_state.recall_query,
         key="recall_query_input",
         on_change=update_recall_query,
     )
 
-    with st.sidebar.expander("Manage Recall Queries", expanded=False):
+    with st.sidebar.expander("Recall Query", expanded=False):
+        # Sidebar input for Recall Query
+
         recall_query = manage_queries(st.session_state.recall_query)
+
         st.session_state.recall_query = recall_query
         if st.button('Update'):
             st.success(f"Updated.'")

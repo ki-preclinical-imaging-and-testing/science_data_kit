@@ -3,13 +3,9 @@ import subprocess
 import json
 from pathlib import Path
 import pandas as pd
-from neomodel import config, db, NodeClassAlreadyDefined
-
-try:
-    Folder = db._NODE_CLASS_REGISTRY[frozenset({'Folder'})]
-except:
-    from utils.models import Folder
-
+from neomodel import db
+from utils.sidebar import database_sidebar
+from utils.registry import Folder, File
 
 st.set_page_config(
     page_title="Science Data Toolkit",
@@ -17,6 +13,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+database_sidebar()
 
 st.title("Index Your Dataset")
 
@@ -142,22 +140,20 @@ if st.session_state["scan_completed"] and not st.session_state["scanned_files"].
     st.write("Scanned Files Preview:")
     st.dataframe(st.session_state["scanned_files"])
 
+
 if st.session_state["scan_completed"] and not st.session_state["scanned_files"].empty:
     st.subheader("Step 5: Pushing Data to Neo4j")
 
-    if st.button("Push to Database"):
-        config.DATABASE_URL = f"bolt://{st.session_state['username']}:{st.session_state['password']}@localhost:{st.session_state['bolt_port']}"  # Change as needed
-        try:
-            Folder = db._NODE_CLASS_REGISTRY[frozenset({'Folder'})]
-        except:
-            from models import Folder
+    include_files = st.checkbox("Include Files", value=False)
 
+    if st.button("Push to Database"):
+        st.success(f"Include files: {include_files}")
         try:
             first_file = True
-            my_bar = st.progress(0., text="Pushing Filetrees to Database...")
             # TODO: Fix filter here for on/off switch
-            bar_total = len(st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Directory'])
-            for _, row in st.session_state["scanned_files"][st.session_state["scanned_files"]["Type"] == 'Directory'].iterrows():
+            bar_total = len(st.session_state["scanned_files"])
+            my_bar = st.progress(0., text="Pushing Filetrees to Database...")
+            for _, row in st.session_state["scanned_files"].iterrows():
                 progress_ratio = (float(_)/bar_total)
                 if progress_ratio > 1:
                     progress_ratio = 1
@@ -180,13 +176,14 @@ if st.session_state["scan_completed"] and not st.session_state["scanned_files"].
                             folder_node = Folder(filepath=path).save()
                             if parent_folder:
                                 folder_node.is_in.connect(parent_folder)
-                    # TODO: Make on/off switch depending on type...
-                    # if row["Type"] == "File":
-                    #     file_node = File.nodes.first_or_none(filepath=path)
-                    #     if file_node is None:
-                    #         file_node = File(filepath=path).save()
-                    #         if parent_folder:
-                    #             file_node.is_in.connect(parent_folder)
+
+                    if include_files:
+                        if row["Type"] == "File":
+                            file_node = File.nodes.first_or_none(filepath=path)
+                            if file_node is None:
+                                file_node = File(filepath=path).save()
+                                if parent_folder:
+                                    file_node.is_in.connect(parent_folder)
 
             st.success("Data successfully pushed to Neo4j!")
         except Exception as e:

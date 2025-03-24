@@ -3,7 +3,8 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 from neo4j import GraphDatabase
-from utils.models import initialize_neomodel_classes, merge_nodes_with_existing
+from utils.models import  merge_nodes_with_existing
+from utils.sidebar import database_sidebar
 
 st.set_page_config(
     page_title="Science Data Toolkit",
@@ -16,6 +17,8 @@ st.set_page_config(
         'About': "# Science Data for Data Science!"
     }
 )
+
+database_sidebar()
 
 # Initialize session state variables
 if "entities_df" not in st.session_state:
@@ -135,7 +138,7 @@ if st.session_state["entities_df"] is not None:
                     neomodel_map[_label] = {
                         col: 'String' for col in st.session_state["property_columns"]
                     }
-                initialize_neomodel_classes(neomodel_map)
+
                 # Merge new nodes with existing nodes in the database
                 merge_nodes_with_existing(
                     db_connection=st.session_state["db_connection"],
