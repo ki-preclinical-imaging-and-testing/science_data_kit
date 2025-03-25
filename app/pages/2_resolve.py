@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
-from neo4j import GraphDatabase
 from utils.models import  merge_nodes_with_existing
 from utils.sidebar import database_sidebar
 
@@ -31,12 +30,7 @@ if "property_columns" not in st.session_state:
     st.session_state["property_columns"] = []
 if "available_labels" not in st.session_state:
     st.session_state["available_labels"] = []
-if "db_connection" not in st.session_state:
-    st.session_state["db_connection"] = GraphDatabase.driver(
-        f"bolt://localhost:{st.session_state['bolt_port']}",
-        auth=(st.session_state['username'],
-              st.session_state['password'])
-    )
+
 
 # Function to fetch available labels from Neo4j
 def fetch_available_labels():

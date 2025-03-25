@@ -1,4 +1,4 @@
 uri: "bolt://localhost:7687"
 user: "neo4j"
-password: "neo4jiscool"
+password: "neo4j"
 database: "neo4j"

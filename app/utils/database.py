@@ -3,6 +3,8 @@ import streamlit as st
 import socket
 from neomodel import config
 import pandas as pd
+from neo4j import GraphDatabase
+
 
 client = docker.from_env()
 
@@ -22,6 +24,12 @@ def initialize_session():
         st.session_state["password"] = "neo4jiscool"
     if "credentials_locked" not in st.session_state:
         st.session_state["credentials_locked"] = False  # Prevent changes after start
+    if "db_connection" not in st.session_state:
+        st.session_state["db_connection"] = GraphDatabase.driver(
+            f"bolt://localhost:{st.session_state['bolt_port']}",
+            auth=(st.session_state['username'],
+                  st.session_state['password'])
+        )
 
     config.DATABASE_URL = f"bolt://{st.session_state['username']}:{st.session_state['password']}@localhost:{st.session_state['bolt_port']}"  # Change as needed
 
@@ -31,6 +39,7 @@ initialize_session()  # Ensure variables are set
 def get_neo4j_status():
     """Check Neo4j container status."""
     try:
+        initialize_session()
         existing_containers = client.containers.list(all=True, filters={"name": st.session_state["container_name"]})
         if existing_containers:
             return existing_containers[0].status
@@ -42,6 +51,7 @@ def get_neo4j_status():
 def get_neo4j_hostname():
     """Retrieve Neo4j's hostname or IP address."""
     try:
+        initialize_session()
         container = client.containers.get(st.session_state["container_name"])
         if container.status == "running":
             return container.attrs["NetworkSettings"]["IPAddress"] or "localhost"
@@ -51,6 +61,7 @@ def get_neo4j_hostname():
 
 def find_free_port(start_port):
     """Finds a free port starting from `start_port`."""
+    initialize_session()
     port = start_port
     while True:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -61,8 +72,8 @@ def find_free_port(start_port):
 
 def start_neo4j_container():
     """Start the Neo4j container with user-defined credentials."""
+    initialize_session()
     container_name = st.session_state["container_name"]
-
     try:
         # Lock credentials after first startup
         st.session_state["credentials_locked"] = True
@@ -102,6 +113,7 @@ def start_neo4j_container():
 def stop_neo4j_container():
     """Stop the Neo4j container."""
     try:
+        initialize_session()
         existing_containers = client.containers.list(all=True, filters={"name": st.session_state["container_name"]})
         for container in existing_containers:
             if container.name == st.session_state["container_name"] and container.status == "running":
