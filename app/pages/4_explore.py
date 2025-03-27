@@ -5,7 +5,7 @@ from pyvis.network import Network
 from io import BytesIO
 import json
 from pathlib import Path
-from utils.sidebar import database_sidebar
+from utils.sidebar import database_sidebar, jupyter_sidebar
 
 
 # Path to store saved queries
@@ -24,6 +24,7 @@ st.set_page_config(
 
 )
 
+jupyter_sidebar()
 database_sidebar()
 
 # Utility Functions
@@ -269,7 +270,7 @@ if st.session_state.connected:
             with st.spinner("Sampling schema..."):
                 results = session.run(query)
                 results_list = [record.data() for record in results]
-                st.sidebar.success(f"Sampled {len(results_list)} rows from the schema!")
+                st.success(f"Sampled {len(results_list)} rows from the schema!")
                 triples, nodes = extract_schema(results_list)
                 st.session_state.cached_triples = triples
                 st.session_state.cached_labels = sorted(nodes)  # Ensure this is updated
@@ -335,4 +336,5 @@ if st.session_state.connected:
                             )
                         except Exception as e:
                             st.error(f"Failed to export workbook: {e}")
-    
+else:
+    st.sidebar.success("Link database (DB) to recall and explore ontological maps stored in a graph")

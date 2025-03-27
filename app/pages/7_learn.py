@@ -1,4 +1,6 @@
 import streamlit as st
+from utils.sidebar import database_sidebar, jupyter_sidebar
+
 
 st.set_page_config(
     page_title="Science Data Toolkit",
@@ -12,6 +14,9 @@ st.set_page_config(
     }
 
 )
+
+jupyter_sidebar()
+database_sidebar()
 
 # Title and introduction
 st.title("Learn: Resources and Community")

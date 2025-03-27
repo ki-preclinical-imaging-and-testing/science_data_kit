@@ -4,6 +4,11 @@ from utils.database import (
     get_neo4j_status, get_neo4j_hostname,
     start_neo4j_container, stop_neo4j_container
 )
+from utils.jupyter_server import ( 
+    initialize_jupyter_session,
+    start_jupyter_container, stop_jupyter_container
+)
+
 
 # Initialize Docker client
 client = docker.from_env()
@@ -43,3 +48,28 @@ def database_sidebar():
                 st.text_area("Logs", logs, height=150)
             except Exception as e:
                 st.error(f"Error fetching logs: {e}")
+
+def jupyter_sidebar():
+    
+    initialize_jupyter_session()
+    container_name = st.session_state["jupyter_container_name"]
+    port = st.session_state["jupyter_port"]
+    token = st.session_state["jupyter_token"]
+
+    with st.sidebar.expander("👽 Jupyter Server", expanded=False):
+        containers = client.containers.list(all=True, filters={"name": container_name})
+        status = containers[0].status if containers else "not found"
+        if status == "running":
+            st.success("Jupyter is running.")
+            jupyter_host_ip = containers[0].attrs["NetworkSettings"]["IPAddress"] or "localhost"
+            st.session_state['jupyter_host_ip'] = jupyter_host_ip
+            url = f"http://{jupyter_host_ip}:{port}/?token={token}"
+            st.markdown(f"[🔗 Open Jupyter in browser]({url})")
+            if st.button("🛑 Stop Jupyter"):
+                stop_jupyter_container()
+                st.warning("Stopping Jupyter...")
+        else:
+            st.warning("Jupyter is not running.")
+            if st.button("🚀 Start Jupyter"):
+                start_jupyter_container()
+                st.success("Starting Jupyter... click again in a moment to get the link.")

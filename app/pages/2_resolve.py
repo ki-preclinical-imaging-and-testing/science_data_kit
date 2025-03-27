@@ -1,9 +1,8 @@
-
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 from utils.models import  merge_nodes_with_existing
-from utils.sidebar import database_sidebar
+from utils.sidebar import database_sidebar, jupyter_sidebar
 
 st.set_page_config(
     page_title="Science Data Toolkit",
@@ -17,6 +16,7 @@ st.set_page_config(
     }
 )
 
+jupyter_sidebar()
 database_sidebar()
 
 # Initialize session state variables

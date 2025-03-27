@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.sidebar import database_sidebar
+from utils.sidebar import database_sidebar, jupyter_sidebar
 from utils.database import (
     fetch_entity_labels,
     fetch_node_properties,
@@ -20,6 +20,7 @@ st.set_page_config(
 
 )
 
+jupyter_sidebar()
 database_sidebar()
 
 

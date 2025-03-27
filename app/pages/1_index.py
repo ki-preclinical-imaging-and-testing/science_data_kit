@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import pandas as pd
 from neomodel import db
-from utils.sidebar import database_sidebar
+from utils.sidebar import database_sidebar, jupyter_sidebar
 from utils.registry import Folder, File
 
 st.set_page_config(
@@ -14,6 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+jupyter_sidebar()
 database_sidebar()
 
 st.title("Index Your Dataset")

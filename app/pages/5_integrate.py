@@ -1,4 +1,6 @@
 import streamlit as st
+from utils.sidebar import database_sidebar, jupyter_sidebar
+
 
 st.set_page_config(
     page_title="Science Data Toolkit",
@@ -12,6 +14,9 @@ st.set_page_config(
     }
 
 )
+
+jupyter_sidebar()
+database_sidebar()
 
 # Example API functions
 def example_function(param1, param2):
