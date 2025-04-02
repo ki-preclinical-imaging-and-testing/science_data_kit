@@ -7,3 +7,4 @@ __pycache__/
 .virtual_documents
 *.swp
 .db_config.yaml
+*.xlsx

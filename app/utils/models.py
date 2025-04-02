@@ -98,7 +98,8 @@ def merge_nodes_with_existing(
         for _, row in entities_df.iterrows():
             node_label = row[label_column]
             node_properties = {col: row[col] for col in property_columns if pd.notna(row[col])}
-            match_conditions = ", ".join([f"{col}: ${col}" for col in match_columns])
+            m_match_conditions = ", ".join([f"{col}: ${col}" for col in node_properties.keys()])
+            n_match_conditions = ", ".join([f"{col}: ${col}" for col in match_columns])
             match_params = {col: row[col] for col in match_columns}
 
             # Separate `SET` statements for `n` (target node) and `m` (new entity)
@@ -106,10 +107,10 @@ def merge_nodes_with_existing(
             m_set_statements = ", ".join([f"m.{key} = ${key}" for key in node_properties.keys()])
 
             cypher_query = f"""
-            MERGE (n:{target_label} {{{match_conditions}}})
+            MERGE (n:{target_label} {{{n_match_conditions}}})
             ON CREATE SET {n_set_statements}
             ON MATCH SET {n_set_statements}
-            MERGE (m:{node_label} {{{match_conditions}}})
+            MERGE (m:{node_label} {{{m_match_conditions}}})
             ON CREATE SET {m_set_statements}
             ON MATCH SET {m_set_statements}
             MERGE (m)-[:{relationship_type}]->(n)
