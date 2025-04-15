@@ -8,3 +8,4 @@ __pycache__/
 *.swp
 .db_config.yaml
 *.xlsx
+*.dump
