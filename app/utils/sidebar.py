@@ -2,7 +2,8 @@ import streamlit as st
 import docker
 from utils.database import (
     get_neo4j_status, get_neo4j_hostname,
-    start_neo4j_container, stop_neo4j_container
+    start_neo4j_container, stop_neo4j_container,
+    fetch_databases, get_neo4j_session
 )
 from utils.jupyter_server import ( 
     initialize_jupyter_session,
@@ -20,7 +21,9 @@ def database_sidebar():
     status = get_neo4j_status()
     hostname = get_neo4j_hostname()  # Get hostname
 
-    with st.sidebar.expander("📡 DB Server", expanded=False):
+    # with st.sidebar.expander("📡 DB Server", expanded=False):
+    with st.expander("📡 DB Server", expanded=True):
+
         if status == "running":
             st.write(f"""
         🔗\t    Browser: http://{hostname}:{st.session_state['http_port']}\n
@@ -56,7 +59,8 @@ def jupyter_sidebar():
     port = st.session_state["jupyter_port"]
     token = st.session_state["jupyter_token"]
 
-    with st.sidebar.expander("👽 Jupyter Server", expanded=False):
+    # with st.sidebar.expander("👽 Jupyter Server", expanded=False):
+    with st.expander("👽 Jupyter Server", expanded=False):
         containers = client.containers.list(all=True, filters={"name": container_name})
         status = containers[0].status if containers else "not found"
         if status == "running":
@@ -73,3 +77,34 @@ def jupyter_sidebar():
             if st.button("🚀 Start Jupyter"):
                 start_jupyter_container()
                 st.success("Starting Jupyter... click again in a moment to get the link.")
+
+def neo4j_connector():
+    with st.expander("🔗 DB Link", expanded=False):
+        # Connection Details in Sidebar
+        uri = st.text_input("URI", f"{st.session_state['neo4j_uri']}")
+        user = st.text_input("Username", st.session_state['neo4j_user'])
+        password = st.text_input("Password", st.session_state['neo4j_password'], type="password")
+        st.session_state["neo4j_uri"] = uri
+        st.session_state["neo4j_user"] = user
+        st.session_state["neo4j_password"] = password
+
+        if st.button("Connect"):
+            with st.spinner("Connecting to Neo4j..."):
+                try:
+                    session = get_neo4j_session(uri, user, password)
+                    st.session_state.session = session
+                    st.session_state.connected = True
+                    st.success("Connected!")
+                except Exception as e:
+                    st.sidebar.error(f"Connection failed: {e}")
+                    st.session_state.connected = False
+        if st.session_state.connected:
+            with st.spinner("Fetching available databases..."):
+                databases = fetch_databases(st.session_state.session)
+                selected_db = st.selectbox(
+                    "Database",
+                    databases,
+                    index=databases.index(st.session_state.selected_db) if st.session_state.selected_db else 0
+                )
+                st.session_state.selected_db = selected_db
+

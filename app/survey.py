@@ -4,32 +4,10 @@ import json
 from pathlib import Path
 import pandas as pd
 from neomodel import db
-from utils.sidebar import database_sidebar, jupyter_sidebar
 from utils.registry import Folder, File
-
-st.set_page_config(
-    page_title="Science Data Toolkit",
-    page_icon="🖥️",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-jupyter_sidebar()
-database_sidebar()
 
 st.title("Index Your Dataset")
 
-# Initialize session state
-if "folder" not in st.session_state:
-    st.session_state["folder"] = None
-if "scan_completed" not in st.session_state:
-    st.session_state["scan_completed"] = False
-if "scanned_files" not in st.session_state:
-    st.session_state["scanned_files"] = pd.DataFrame()
-if "ncdu_output" not in st.session_state:
-    st.session_state["ncdu_output"] = ""
-if "ncdu_json_path" not in st.session_state:
-    st.session_state["ncdu_json_path"] = str(Path.home() / "ncdu_scan.json")  # Default JSON path
 
 # Description and instructions
 st.markdown(
