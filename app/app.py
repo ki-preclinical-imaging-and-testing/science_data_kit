@@ -1,5 +1,4 @@
 import streamlit as st
-from menu import menu
 import pandas as pd
 from pathlib import Path
 from neo4j import GraphDatabase
@@ -92,6 +91,7 @@ if __name__ == "__main__":
     if "selected_db" not in st.session_state:
         st.session_state.selected_db = None
 
+    from menu import menu
     menu()
 
     # st.title("Get started...")

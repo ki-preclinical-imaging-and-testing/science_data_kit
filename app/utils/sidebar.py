@@ -9,6 +9,7 @@ from utils.jupyter_server import (
     initialize_jupyter_session,
     start_jupyter_container, stop_jupyter_container
 )
+from utils.database import manage_queries, extract_schema
 
 
 # Initialize Docker client
@@ -108,3 +109,57 @@ def neo4j_connector():
                 )
                 st.session_state.selected_db = selected_db
 
+def schema_sample_widget():
+    with st.sidebar.expander("🕸️ Schema Recall", expanded=False):
+        # Initialize recall_query in session_state
+        if "recall_query" not in st.session_state:
+            st.session_state.recall_query = "MATCH (n)-[r]->(m)\nWITH DISTINCT n, r, m "
+
+        # Callback function to handle query updates
+        def update_recall_query():
+            st.session_state.recall_query = st.session_state.recall_query_input
+
+        st.text_area(
+            "Recall Query",
+            value=st.session_state.recall_query,
+            key="recall_query_input",
+            on_change=update_recall_query,
+        )
+
+        recall_query = manage_queries(st.session_state.recall_query)
+
+        if st.button('Update'):
+            st.session_state.recall_query = recall_query
+            st.success(f"Updated.'")
+            st.rerun()
+
+    with st.sidebar.expander("🕷️ Schema Sampling", expanded=False):
+        uri = st.session_state['neo4j_uri']
+        user = st.session_state['neo4j_user']
+        password = st.session_state['neo4j_password']
+
+        st.text("Summarize schema of recall query")
+        sample_mag = st.number_input("Order (1E??)", min_value=1, value=3, step=1)
+        sample_size = 10**sample_mag
+        st.text(f"Randomly sampling {sample_size} nodes")
+        include_all = st.checkbox("Include All (No Limit)", value=False)
+        st.session_state.cached_layout = st.radio("Schema Layout", ["Hierarchical", "Force-Directed"], index=1)
+        st.session_state.cached_physics_enabled = st.checkbox("Elasticity", value=False)
+
+        if st.button("Pull Schema"):
+            session = get_neo4j_session(uri, user, password, database=st.session_state.selected_db)
+            limit_clause = "" if include_all else f"LIMIT {sample_size}"
+            with_clause = recall_query.strip() if recall_query.strip() else ""
+            query = f"""
+            {with_clause}
+            MATCH (n)-[r]->(m)
+            RETURN labels(n)[0] AS subjectLabel, type(r) AS predicateType, labels(m)[0] AS objectLabel
+            {limit_clause}
+            """
+            with st.spinner("Sampling schema..."):
+                results = session.run(query)
+                results_list = [record.data() for record in results]
+                st.success(f"Sampled {len(results_list)} rows from the schema!")
+                triples, nodes = extract_schema(results_list)
+                st.session_state.cached_triples = triples
+                st.session_state.cached_labels = sorted(nodes)  # Ensure this is updated
