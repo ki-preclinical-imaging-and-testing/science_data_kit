@@ -9,3 +9,6 @@ __pycache__/
 .db_config.yaml
 *.xlsx
 *.dump
+*.pickle
+*.pkl
+/*.ipynb
