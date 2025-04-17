@@ -33,18 +33,33 @@ Science data that is...
 - **+** (Computable)
 
 ... is *nice things* science data. Let's have it!
+
 ## Getting started
+
+### Spinning up a local instance
+
+From your local clone of science_data_kit,
+
+    cd $REPO_HOME/science_data_kit
+    conda create -n python=3.13 science_data_kit pip
+    conda activate science_data_kit
+    pip install requirements.txt
 
 Ensure all requirements are installed. Then you can run 
 
     streamlit run start.py
 
-from the repository base. Once this is running, you can access from your
-browser window by navigating to 
+from the repository base. This works well in `tmux`---otherwise, `nohup`, `bg`
+or something similar should work fine. 
+
+### The GUI
+
+Access the GUI from your browser window by navigating to either the default
 
     localhost:8501
 
-or whichever port `streamlit` automatically maps your applcation to (see output
-of streamlit) 
+or your local instance's unique host and port address. When you launch,
+`streamlit` automatically maps your application to an open port. You can find
+the output of streamlit in your CLI command's output. 
 
 
