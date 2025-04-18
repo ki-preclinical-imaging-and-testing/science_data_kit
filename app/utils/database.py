@@ -6,6 +6,10 @@ import pandas as pd
 from neo4j import GraphDatabase
 from pathlib import Path
 import json
+import networkx as nx
+import pickle
+import io
+from datetime import datetime
 from pyvis.network import Network
 
 
@@ -301,3 +305,189 @@ def fetch_nodes_by_label(session, label, with_clause):
     nodes = [dict(record["node"]) for record in results]
     return pd.DataFrame(nodes).drop_duplicates()
 
+
+def export_graph_to_networkx(session):
+    """
+    Export the entire Neo4j graph to a NetworkX graph.
+
+    Args:
+        session: Neo4j database session
+
+    Returns:
+        NetworkX DiGraph object containing the entire graph
+    """
+    # Create a directed graph
+    G = nx.DiGraph()
+
+    # Get all nodes
+    query_nodes = """
+    MATCH (n)
+    RETURN id(n) AS id, labels(n) AS labels, properties(n) AS properties
+    """
+
+    # Get all relationships
+    query_rels = """
+    MATCH (a)-[r]->(b)
+    RETURN id(a) AS source, id(b) AS target, type(r) AS type, properties(r) AS properties
+    """
+
+    # Execute queries
+    with st.spinner("Fetching nodes from database..."):
+        nodes_result = session.run(query_nodes)
+        nodes = [record.data() for record in nodes_result]
+
+        # Add nodes to graph
+        for node in nodes:
+            # Convert labels list to a string representation
+            label = ":".join(node["labels"])
+            # Add node with its properties
+            G.add_node(node["id"], label=label, **node["properties"])
+
+    with st.spinner("Fetching relationships from database..."):
+        rels_result = session.run(query_rels)
+        relationships = [record.data() for record in rels_result]
+
+        # Add edges to graph
+        for rel in relationships:
+            G.add_edge(
+                rel["source"], 
+                rel["target"], 
+                type=rel["type"], 
+                **rel["properties"]
+            )
+
+    return G
+
+
+def export_graph_to_file(session, file_path):
+    """
+    Export the entire Neo4j graph to a file.
+
+    Args:
+        session: Neo4j database session
+        file_path: Path where the graph will be saved
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Convert Neo4j graph to NetworkX
+        G = export_graph_to_networkx(session)
+
+        # Save the graph to a file
+        with open(file_path, 'wb') as f:
+            pickle.dump(G, f)
+
+        return True, f"Graph exported successfully with {len(G.nodes)} nodes and {len(G.edges)} relationships"
+    except Exception as e:
+        return False, f"Error exporting graph: {str(e)}"
+
+
+def import_graph_from_file(session, file_path):
+    """
+    Import a graph from a file into Neo4j.
+
+    Args:
+        session: Neo4j database session
+        file_path: Path to the file containing the graph
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Load the graph from the file
+        with open(file_path, 'rb') as f:
+            G = pickle.load(f)
+
+        # Clear the database first (optional, can be made configurable)
+        with st.spinner("Clearing existing database..."):
+            session.run("MATCH (n) DETACH DELETE n")
+
+        # Create a mapping of original node IDs to new node IDs
+        node_id_mapping = {}
+
+        # Import nodes
+        with st.spinner(f"Importing {len(G.nodes)} nodes..."):
+            for node_id, node_data in G.nodes(data=True):
+                # Extract label and properties
+                label = node_data.pop('label', 'Node')
+
+                # Create a copy of node_data to avoid modifying the original
+                node_props = node_data.copy()
+
+                # Filter out None values and convert non-serializable types
+                filtered_props = {}
+                for k, v in node_props.items():
+                    if v is not None:
+                        # Convert non-serializable types to strings if necessary
+                        if isinstance(v, (list, dict, set)):
+                            filtered_props[k] = str(v)
+                        else:
+                            filtered_props[k] = v
+
+                # Create properties string for Cypher query
+                properties_str = ", ".join([f"{k}: ${k}" for k in filtered_props.keys()])
+
+                # Create Cypher query
+                query = f"""
+                CREATE (n:{label} {{{properties_str}}})
+                RETURN id(n) as new_id
+                """
+
+                # Execute query and get the new node ID
+                result = session.run(query, **filtered_props)
+                new_id = result.single()["new_id"]
+
+                # Store the mapping between original and new node IDs
+                node_id_mapping[node_id] = new_id
+
+        # Import relationships
+        with st.spinner(f"Importing {len(G.edges)} relationships..."):
+            for source, target, edge_data in G.edges(data=True):
+                # Skip if source or target node wasn't imported
+                if source not in node_id_mapping or target not in node_id_mapping:
+                    continue
+
+                # Get the new node IDs
+                new_source = node_id_mapping[source]
+                new_target = node_id_mapping[target]
+
+                # Extract relationship type and properties
+                rel_type = edge_data.pop('type', 'RELATED_TO')
+
+                # Create a copy of edge_data to avoid modifying the original
+                edge_props = edge_data.copy()
+
+                # Filter out None values and convert non-serializable types
+                filtered_props = {}
+                for k, v in edge_props.items():
+                    if v is not None:
+                        # Convert non-serializable types to strings if necessary
+                        if isinstance(v, (list, dict, set)):
+                            filtered_props[k] = str(v)
+                        else:
+                            filtered_props[k] = v
+
+                # Create properties string for Cypher query
+                properties_str = ", ".join([f"{k}: ${k}" for k in filtered_props.keys()])
+
+                # Create Cypher query with properties if they exist
+                if properties_str:
+                    query = f"""
+                    MATCH (a), (b)
+                    WHERE id(a) = {new_source} AND id(b) = {new_target}
+                    CREATE (a)-[r:{rel_type} {{{properties_str}}}]->(b)
+                    """
+                else:
+                    query = f"""
+                    MATCH (a), (b)
+                    WHERE id(a) = {new_source} AND id(b) = {new_target}
+                    CREATE (a)-[r:{rel_type}]->(b)
+                    """
+
+                # Execute query
+                session.run(query, **filtered_props)
+
+        return True, f"Graph imported successfully with {len(G.nodes)} nodes and {len(G.edges)} relationships"
+    except Exception as e:
+        return False, f"Error importing graph: {str(e)}"
