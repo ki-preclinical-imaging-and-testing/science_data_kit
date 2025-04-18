@@ -9,7 +9,7 @@ st.session_state["available_labels"] = fetch_available_labels()
 # Title and description
 st.header("Entities")
 
-with st.expander("Resolve and define node labels", expanded=True):
+with st.expander("Resolve and define node labels", expanded=False):
     # Create two columns layout
     col1, col2 = st.columns(2)
 
@@ -516,7 +516,7 @@ if st.session_state["entities_df"] is not None:
 # Title and description
 st.header("Structure")
 
-with st.expander("Assemble ontology, taxonomy, or schema using properties", expanded=True):
+with st.expander("Assemble ontology, taxonomy, or schema using properties", expanded=False):
     # Create two columns layout
     col1, col2 = st.columns(2)
 
