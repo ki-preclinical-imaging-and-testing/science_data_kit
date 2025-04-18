@@ -174,6 +174,8 @@ with st.expander("Resolve and define node labels", expanded=True):
     if st.session_state["entities_df"] is not None:
         st.markdown(f"`{st.session_state['file_uploaded']}`")
         st.subheader("Input DataFrame")
+
+        # Display the DataFrame
         st.dataframe(st.session_state["entities_df"], use_container_width=True)
 
         # Select label column
@@ -183,6 +185,33 @@ with st.expander("Resolve and define node labels", expanded=True):
         st.session_state["property_columns"] = st.multiselect("Select Property Columns:",
                                                               options=st.session_state["entities_df"].columns)
 
+        # Initialize property mappings if not already in session state
+        if "property_mappings" not in st.session_state:
+            st.session_state["property_mappings"] = {}
+
+        # Only show property mapping if properties are selected
+        if st.session_state["property_columns"]:
+            st.subheader("Map Property Columns to Neo4j Property Names")
+            st.markdown("Define how selected columns should be named in Neo4j nodes.")
+
+            # Create a container for the property mappings
+            mapping_container = st.container()
+
+            with mapping_container:
+                # Create two columns for each property mapping
+                for prop in st.session_state["property_columns"]:
+                    col1, col2 = st.columns([1, 1])
+                    with col1:
+                        st.text(f"Column: {prop}")
+                    with col2:
+                        # Initialize with the original name if not already mapped
+                        default_value = st.session_state["property_mappings"].get(prop, prop)
+                        new_name = st.text_input(f"Neo4j Property Name for {prop}", 
+                                                value=default_value,
+                                                key=f"mapping_{prop}")
+                        # Store the mapping
+                        st.session_state["property_mappings"][prop] = new_name
+
         # Display individual entity view
         entity_indices = st.session_state["entities_df"].index.tolist()
         selected_entity_index = st.selectbox("Select entity to edit:", options=entity_indices, format_func=lambda
@@ -191,10 +220,18 @@ with st.expander("Resolve and define node labels", expanded=True):
 
         if selected_entity_index is not None:
             st.session_state["selected_entity_index"] = selected_entity_index
+            # Get the original entity data
             selected_entity = st.session_state["entities_df"].iloc[selected_entity_index][
                 st.session_state["property_columns"]].to_dict()
 
-            selected_entity_df = pd.DataFrame(list(selected_entity.items()), columns=["Key", "Value"])
+            # Create a new dictionary with mapped property names as keys
+            mapped_entity = {}
+            for prop, value in selected_entity.items():
+                mapped_name = st.session_state["property_mappings"].get(prop, prop)
+                mapped_entity[mapped_name] = value
+
+            # Create DataFrame with mapped property names
+            selected_entity_df = pd.DataFrame(list(mapped_entity.items()), columns=["Key", "Value"])
 
             edited_entity_df = st.data_editor(
                 selected_entity_df,
@@ -205,36 +242,271 @@ with st.expander("Resolve and define node labels", expanded=True):
 
         # Define relationships
         st.subheader("Define Relationships")
-        target_label = st.selectbox("Select Target Node Label:", options=st.session_state["available_labels"])
-        match_columns = st.multiselect("Select Matching Properties:", options=st.session_state["entities_df"].columns)
+
+        # Add option to create a new node label
+        label_option = st.radio("Target Node Label:", ["Existing Label", "New Label"])
+
+        if label_option == "Existing Label":
+            target_label = st.selectbox("Select Target Node Label:", options=st.session_state["available_labels"])
+        else:
+            st.info("A new node label will be created in the database if it doesn't already exist.")
+            target_label = st.text_input("Enter New Node Label:")
+
+        # Create a list of property columns with their mapped names for selection
+        if "property_mappings" in st.session_state and st.session_state["property_mappings"]:
+            # Create a list of tuples (original_name, mapped_name) for display
+            property_options = []
+            for col in st.session_state["entities_df"].columns:
+                mapped_name = st.session_state["property_mappings"].get(col, col)
+                if col == mapped_name:
+                    property_options.append(f"{col}")
+                else:
+                    property_options.append(f"{col} → {mapped_name}")
+
+            # Display the selection with mapped names
+            st.markdown("### Select Matching Properties")
+            st.markdown("Select properties to match with target nodes. Properties with mapped names show both original and mapped names.")
+
+            # Store the selected options
+            selected_options = st.multiselect(
+                "Select Matching Properties:", 
+                options=property_options
+            )
+
+            # Extract the original column names from the selected options
+            match_columns = []
+            for option in selected_options:
+                if " → " in option:
+                    # Extract the original column name (before the arrow)
+                    original_col = option.split(" → ")[0]
+                    match_columns.append(original_col)
+                else:
+                    match_columns.append(option)
+        else:
+            # If no mappings exist, use the original column selection
+            match_columns = st.multiselect("Select Matching Properties:", options=st.session_state["entities_df"].columns)
+
+        # Initialize target property mappings if not already in session state
+        if "target_property_mappings" not in st.session_state:
+            st.session_state["target_property_mappings"] = {}
+
+        # Only show property mapping if properties are selected
+        if match_columns:
+            st.markdown("### Map Properties to Target Node Properties")
+
+            # For existing labels, fetch available properties
+            if label_option == "Existing Label" and target_label:
+                try:
+                    # Fetch available properties for the selected target label
+                    with st.session_state["db_connection"].session() as session:
+                        target_properties = fetch_node_properties(session, target_label)
+
+                    st.markdown(f"Map source properties to existing properties in '{target_label}' nodes")
+
+                    # Create a container for the property mappings
+                    mapping_container = st.container()
+
+                    with mapping_container:
+                        # Create two columns for each property mapping
+                        for prop in match_columns:
+                            col1, col2 = st.columns([1, 1])
+                            with col1:
+                                # Show the source property name (with mapped name if applicable)
+                                mapped_name = st.session_state["property_mappings"].get(prop, prop)
+                                if prop == mapped_name:
+                                    st.text(f"Source: {prop}")
+                                else:
+                                    st.text(f"Source: {prop} → {mapped_name}")
+                            with col2:
+                                # Default to the same property name if it exists in target properties
+                                default_index = target_properties.index(mapped_name) if mapped_name in target_properties else 0
+                                target_prop = st.selectbox(
+                                    f"Target property for {mapped_name}",
+                                    options=target_properties,
+                                    index=default_index,
+                                    key=f"target_mapping_{prop}"
+                                )
+                                # Store the mapping
+                                st.session_state["target_property_mappings"][prop] = target_prop
+                except Exception as e:
+                    st.error(f"Error fetching properties for {target_label}: {e}")
+            else:
+                # For new labels, provide free text input
+                st.markdown(f"Define property names for the new '{target_label}' nodes")
+
+                # Create a container for the property mappings
+                mapping_container = st.container()
+
+                with mapping_container:
+                    # Create two columns for each property mapping
+                    for prop in match_columns:
+                        col1, col2 = st.columns([1, 1])
+                        with col1:
+                            # Show the source property name (with mapped name if applicable)
+                            mapped_name = st.session_state["property_mappings"].get(prop, prop)
+                            if prop == mapped_name:
+                                st.text(f"Source: {prop}")
+                            else:
+                                st.text(f"Source: {prop} → {mapped_name}")
+                        with col2:
+                            # Default to the same property name
+                            default_value = st.session_state["target_property_mappings"].get(prop, mapped_name)
+                            target_prop = st.text_input(
+                                f"Target property name for {mapped_name}",
+                                value=default_value,
+                                key=f"target_mapping_{prop}"
+                            )
+                            # Store the mapping
+                            st.session_state["target_property_mappings"][prop] = target_prop
+
         relationship_type = st.text_input("Define Relationship Type (e.g., STORED_IN):")
 
         # Submit to database
         if st.button("Push to Database"):
+            # Validate that a target label is provided if "New Label" is selected
+            if label_option == "New Label" and not target_label:
+                st.error("Please enter a new node label name.")
+                st.stop()
+
+            # Validate that a relationship type is provided
+            if not relationship_type:
+                st.error("Please enter a relationship type.")
+                st.stop()
+
             with st.spinner("Pushing to database..."):
                 try:
                     # Generate Neomodel classes dynamically if not already defined
                     neomodel_map = {}
                     for _label in st.session_state["entities_df"][st.session_state["label_column"]].unique():
                         neomodel_map[_label] = {
-                            col: 'String' for col in st.session_state["property_columns"]
+                            st.session_state["property_mappings"].get(col, col): 'String' for col in st.session_state["property_columns"]
                         }
+
+                    # Create a copy of the DataFrame with mapped column names
+                    mapped_df = st.session_state["entities_df"].copy()
+
+                    # Create a dictionary to map original column names to new column names
+                    column_mapping = {}
+                    for col in st.session_state["property_columns"]:
+                        new_name = st.session_state["property_mappings"].get(col, col)
+                        if new_name != col:
+                            column_mapping[col] = new_name
+
+                    # If there are any mappings, rename the columns in the DataFrame
+                    if column_mapping:
+                        # First, create new columns with the mapped names
+                        for old_name, new_name in column_mapping.items():
+                            mapped_df[new_name] = mapped_df[old_name]
+
+                        # Update property_columns to use the new names
+                        mapped_property_columns = [st.session_state["property_mappings"].get(col, col) for col in st.session_state["property_columns"]]
+                    else:
+                        # If no mappings, use the original property columns
+                        mapped_property_columns = st.session_state["property_columns"]
+
+                    # Update match_columns to use the new names if they are in the property_columns
+                    mapped_match_columns = []
+                    for col in match_columns:
+                        if col in st.session_state["property_columns"]:
+                            mapped_match_columns.append(st.session_state["property_mappings"].get(col, col))
+                        else:
+                            # For columns not in property_columns, check if they have a mapping anyway
+                            mapped_match_columns.append(st.session_state["property_mappings"].get(col, col))
+
+                    # Create a mapping from source property names to target property names
+                    target_property_map = {}
+                    for col in match_columns:
+                        source_prop = st.session_state["property_mappings"].get(col, col)
+                        target_prop = st.session_state["target_property_mappings"].get(col, source_prop)
+                        target_property_map[source_prop] = target_prop
+
+                    # Create a list of target property names for the match columns
+                    target_match_columns = []
+                    for col in mapped_match_columns:
+                        target_match_columns.append(target_property_map.get(col, col))
 
                     # Merge new nodes with existing nodes in the database
                     merge_nodes_with_existing(
                         db_connection=st.session_state["db_connection"],
-                        entities_df=st.session_state["entities_df"],
+                        entities_df=mapped_df,
                         label_column=st.session_state["label_column"],
-                        property_columns=st.session_state["property_columns"],
+                        property_columns=mapped_property_columns,
                         target_label=target_label,
-                        match_columns=match_columns,
-                        relationship_type=relationship_type
+                        match_columns=target_match_columns,
+                        relationship_type=relationship_type,
+                        source_to_target_map=target_property_map
                     )
 
-                    st.success("Entities and relationships pushed successfully!")
+                    # Success message with specific information about new labels
+                    if label_option == "New Label":
+                        st.success(f"Entities and relationships pushed successfully! New node label '{target_label}' created if it didn't exist.")
+                    else:
+                        st.success("Entities and relationships pushed successfully!")
                 except Exception as e:
                     st.error(f"Error: {e}")
 
+
+# Add filtering options if entities are loaded
+if st.session_state["entities_df"] is not None:
+    with st.expander("Filter Entities", expanded=False):
+        st.markdown("Filter entities based on column values")
+
+        # Select column to filter on
+        filter_column = st.selectbox(
+            "Select column to filter on:",
+            options=st.session_state["entities_df"].columns,
+            key="filter_column"
+        )
+
+        # Select filter operation
+        filter_operation = st.selectbox(
+            "Filter operation:",
+            options=["==", "!=", ">", "<", ">=", "<=", "contains", "starts with", "ends with"],
+            key="filter_operation"
+        )
+
+        # Input filter value
+        filter_value = st.text_input("Filter value:", key="filter_value")
+
+        # Apply filter button
+        if st.button("Apply Filter"):
+            if filter_value:
+                # Create a filtered copy of the DataFrame
+                original_df = st.session_state["entities_df"].copy()
+
+                # Apply the filter based on the selected operation
+                if filter_operation == "==":
+                    filtered_df = original_df[original_df[filter_column].astype(str) == filter_value]
+                elif filter_operation == "!=":
+                    filtered_df = original_df[original_df[filter_column].astype(str) != filter_value]
+                elif filter_operation == ">":
+                    filtered_df = original_df[pd.to_numeric(original_df[filter_column], errors='coerce') > float(filter_value)]
+                elif filter_operation == "<":
+                    filtered_df = original_df[pd.to_numeric(original_df[filter_column], errors='coerce') < float(filter_value)]
+                elif filter_operation == ">=":
+                    filtered_df = original_df[pd.to_numeric(original_df[filter_column], errors='coerce') >= float(filter_value)]
+                elif filter_operation == "<=":
+                    filtered_df = original_df[pd.to_numeric(original_df[filter_column], errors='coerce') <= float(filter_value)]
+                elif filter_operation == "contains":
+                    filtered_df = original_df[original_df[filter_column].astype(str).str.contains(filter_value, na=False)]
+                elif filter_operation == "starts with":
+                    filtered_df = original_df[original_df[filter_column].astype(str).str.startswith(filter_value, na=False)]
+                elif filter_operation == "ends with":
+                    filtered_df = original_df[original_df[filter_column].astype(str).str.endswith(filter_value, na=False)]
+
+                # Update the DataFrame in session state
+                st.session_state["entities_df"] = filtered_df
+                st.success(f"Filter applied. {len(filtered_df)} entities match the filter.")
+
+        # Reset filter button
+        if st.button("Reset Filter"):
+            if "original_entities_df" in st.session_state:
+                st.session_state["entities_df"] = st.session_state["original_entities_df"].copy()
+                st.success("Filter reset. Showing all entities.")
+
+    # Store original DataFrame for reset functionality if not already stored
+    if "original_entities_df" not in st.session_state:
+        st.session_state["original_entities_df"] = st.session_state["entities_df"].copy()
 
 ### pasting from 03 _ relate.py (current file was previously 2_resolve
 
@@ -449,8 +721,30 @@ with st.expander("Assemble ontology, taxonomy, or schema using properties", expa
                                     prev_node_id = current_node_id
 
                                 # Match the final node with an existing entity
-                                match_conditions = " AND ".join([f"e.{col} = $col_{col}" for col in match_columns])
-                                match_params = {f"col_{col}": row[col] for col in match_columns}
+                                # Use target property names for the match conditions if available
+                                if "target_property_mappings" in st.session_state:
+                                    # First get the source property names (with property_mappings applied)
+                                    source_props = [st.session_state["property_mappings"].get(col, col) for col in match_columns]
+
+                                    # Then map to target property names
+                                    target_props = []
+                                    for i, col in enumerate(match_columns):
+                                        source_prop = st.session_state["property_mappings"].get(col, col)
+                                        target_prop = st.session_state["target_property_mappings"].get(col, source_prop)
+                                        target_props.append(target_prop)
+
+                                    # Create match conditions using target property names
+                                    match_conditions = " AND ".join([f"e.{target_prop} = $col_{i}" for i, target_prop in enumerate(target_props)])
+                                else:
+                                    # Fall back to using source property names
+                                    mapped_match_columns = [st.session_state["property_mappings"].get(col, col) for col in match_columns]
+                                    match_conditions = " AND ".join([f"e.{mapped_col} = $col_{i}" for i, mapped_col in enumerate(mapped_match_columns)])
+
+                                # Create parameters using original column names to access values in the row
+                                match_params = {}
+                                for i, col in enumerate(match_columns):
+                                    match_params[f"col_{i}"] = row[col]
+
                                 entity_query = f"""
                                 MATCH (e:{entity_label}) WHERE {match_conditions}
                                 MATCH (t) WHERE id(t) = $final_node_id
