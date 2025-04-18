@@ -56,7 +56,6 @@ def chat():
             # Extract schema from the database
             try:
                 from utils.sidebar import schema_sample_widget
-                schema_sample_widget()
                 triples = st.session_state.cached_triples
                 labels = st.session_state.cached_labels
 
