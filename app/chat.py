@@ -353,13 +353,7 @@ def chat():
 
     # Display schema information if available
     with row[1]:
-        with st.expander("Cypher Schema", expanded=False):
-            if "neo4j_schema" in st.session_state and st.session_state["neo4j_schema"]:
-                schema = st.session_state["neo4j_schema"]
-                st.markdown(f"```\n{schema}\n```")
-
         with st.expander("Visual Schema", expanded=False):
-
             net = create_pyvis_graph(
                 st.session_state.cached_triples,
                 st.session_state.cached_layout,
@@ -367,3 +361,8 @@ def chat():
             )
             net_html = net.generate_html()
             st.components.v1.html(net_html, height=800)
+
+        with st.expander("Cypher Schema", expanded=False):
+            if "neo4j_schema" in st.session_state and st.session_state["neo4j_schema"]:
+                schema = st.session_state["neo4j_schema"]
+                st.markdown(f"```\n{schema}\n```")
