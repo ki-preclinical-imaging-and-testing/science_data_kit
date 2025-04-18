@@ -58,15 +58,21 @@ This document contains a prioritized list of actionable improvement tasks for th
 
 ## Feature Improvements
 
-[ ] 11. Complete the GraphRAG implementation
-    - [ ] Uncomment and fix the GraphRAG functionality in chat.py
-    - [ ] Implement proper error handling for GraphRAG queries
-    - [ ] Add documentation for GraphRAG usage
+[✓] 11. Implement basic GraphRAG functionality
+    - [✓] Uncomment and fix the GraphRAG functionality in chat.py
+    - [✓] Implement proper error handling for GraphRAG queries
+    - [✓] Add basic conversation interface
+
+[ ] 11a. Enhance the GraphRAG implementation
+    - [ ] Improve schema extraction for better query generation
+    - [ ] Add comprehensive documentation for GraphRAG usage
+    - [ ] Implement advanced context-aware responses
 
 [ ] 12. Enhance data visualization
     - [ ] Implement more interactive visualizations for data exploration
     - [ ] Add customization options for graph visualizations
     - [ ] Create dashboards for data insights
+    - [✓] Add status indicators (green/black dots) for connection states
 
 [ ] 13. Improve file scanning functionality
     - [ ] Add support for more file formats and metadata extraction

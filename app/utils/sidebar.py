@@ -34,19 +34,19 @@ def database_sidebar():
         🔗\t    Browser: http://{hostname}:{st.session_state['http_port']}\n
          ⚡\t       Bolt: http://{hostname}:{st.session_state['bolt_port']}\n
         ✅\t    IP Addr:  `{hostname}`""")
-    
-    
+
+
             if st.button("🛑 Stop DBMS"):
                 stop_neo4j_container()
                 st.warning("Stopping server... Press again to update page.")
                 status = "stopped"
-    
+
         else:
             st.warning("⚠️ Neo4j is not running.")
             if st.button("🚀 Start DBMS"):
                 start_neo4j_container()
                 st.success("Starting server... Press again to update page.")
-    
+
         # Show latest logs if running
         if status == "running":
             st.subheader("📜 Database Log")
@@ -58,7 +58,7 @@ def database_sidebar():
                 st.error(f"Error fetching logs: {e}")
 
 def jupyter_sidebar():
-    
+
     initialize_jupyter_session()
     container_name = st.session_state["jupyter_container_name"]
     port = st.session_state["jupyter_port"]
@@ -89,7 +89,11 @@ def jupyter_sidebar():
                 st.success("Starting Jupyter... click again in a moment to get the link.")
 
 def neo4j_connector():
-    with st.expander("🔗 DB Link", expanded=False):
+    _exp_header = "⚫ 🔗 DB Link"
+    if st.session_state.connected:
+        _exp_header = "🟢 🔗 DB Link"
+
+    with st.expander(_exp_header, expanded=False):
         # Connection Details in Sidebar
         uri = st.text_input("URI", f"{st.session_state['neo4j_uri']}")
         user = st.text_input("Username", st.session_state['neo4j_user'])
@@ -98,16 +102,34 @@ def neo4j_connector():
         st.session_state["neo4j_user"] = user
         st.session_state["neo4j_password"] = password
 
-        if st.button("Connect"):
-            with st.spinner("Connecting to Neo4j..."):
-                try:
-                    session = get_neo4j_session(uri, user, password)
-                    st.session_state.session = session
-                    st.session_state.connected = True
-                    st.success("Connected!")
-                except Exception as e:
-                    st.sidebar.error(f"Connection failed: {e}")
-                    st.session_state.connected = False
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if not st.session_state.connected:
+                if st.button("Connect", use_container_width=True):
+                    with st.spinner("Connecting to Neo4j..."):
+                        try:
+                            session = get_neo4j_session(uri, user, password)
+                            st.session_state.session = session
+                            st.session_state.connected = True
+                            st.success("Connected!")
+                        except Exception as e:
+                            st.error(f"Connection failed: {e}")
+                            st.session_state.connected = False
+            else:
+                if st.button("Disconnect", use_container_width=True):
+                    with st.spinner("Disconnecting from Neo4j..."):
+                        try:
+                            # Close the session if it exists
+                            if hasattr(st.session_state, 'session') and st.session_state.session:
+                                st.session_state.session.close()
+                            # Reset connection state
+                            st.session_state.connected = False
+                            st.session_state.selected_db = None
+                            st.success("Disconnected!")
+                        except Exception as e:
+                            st.error(f"Error disconnecting: {e}")
+
         if st.session_state.connected:
             with st.spinner("Fetching available databases..."):
                 databases = fetch_databases(st.session_state.session)
