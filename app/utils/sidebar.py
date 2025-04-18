@@ -1,13 +1,21 @@
 import streamlit as st
 import docker
+import os
+from datetime import datetime
+from pathlib import Path
 from utils.database import (
     get_neo4j_status, get_neo4j_hostname,
     start_neo4j_container, stop_neo4j_container,
-    fetch_databases, get_neo4j_session
+    fetch_databases, get_neo4j_session,
+    export_graph_to_file, import_graph_from_file
 )
 from utils.jupyter_server import ( 
     initialize_jupyter_session,
     start_jupyter_container, stop_jupyter_container
+)
+from utils.neodash_server import (
+    initialize_neodash_session,
+    start_neodash_container, stop_neodash_container
 )
 from utils.database import manage_queries, extract_schema
 
@@ -141,6 +149,128 @@ def neo4j_connector():
                     index=databases.index(st.session_state.selected_db) if st.session_state.selected_db else 0
                 )
                 st.session_state.selected_db = selected_db
+
+            # Database Management section
+            st.divider()
+            database_management_header = "💾 Neo4j Database Management"
+            if st.session_state.connected:
+                st.markdown(f"🟢 **{database_management_header}**")
+            else:
+                st.markdown(f"⚫ **{database_management_header}**")
+
+            st.markdown("Save/Load Database via Connection")
+
+            # Create two columns for save and load functionality
+            save_col, load_col = st.columns(2)
+
+            with save_col:
+                st.subheader("Save Graph")
+
+                # Default save directory
+                default_save_dir = os.path.join(os.path.expanduser("~"), "graph_exports")
+                os.makedirs(default_save_dir, exist_ok=True)
+
+                # Generate default filename with timestamp
+                default_filename = f"neo4j_graph_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
+
+                # Save directory input
+                save_dir = st.text_input("Save Directory:", value=default_save_dir, key="db_save_dir")
+
+                # Filename input
+                if 'db_save_filename' not in st.session_state.keys():
+                    st.session_state['db_save_filename'] = default_filename
+                save_filename = st.session_state['db_save_filename']
+                st.session_state['db_save_filename'] = st.text_input("Filename:", value=save_filename, key="db_save_filename_input")
+
+                # Combine directory and filename
+                save_path = os.path.join(save_dir, st.session_state['db_save_filename'])
+
+                # Save button
+                if st.button("Save Graph", use_container_width=True, key="save_graph_button"):
+                    with st.spinner("Exporting graph..."):
+                        success, message = export_graph_to_file(st.session_state.session, save_path)
+                        if success:
+                            st.success(message)
+                            st.info(f"Graph saved to: {save_path}")
+                        else:
+                            st.error(message)
+
+            with load_col:
+                st.subheader("Load Graph")
+
+                # File uploader for graph file
+                uploaded_file = st.file_uploader("Upload graph file:", type=["pkl"], key="graph_file_uploader")
+
+                # Or enter file path
+                load_path = st.text_input("Or enter file path:", key="graph_load_path")
+
+                # Warning about overwriting existing data
+                st.warning("⚠️ Loading a graph will clear the current database!")
+
+                # Confirmation checkbox
+                confirm_load = st.checkbox("I understand that this will overwrite the current database", key="confirm_load_checkbox")
+
+                # Load button
+                if st.button("Load Graph", use_container_width=True, key="load_graph_button"):
+                    if not confirm_load:
+                        st.error("Please confirm that you understand the consequences of loading a graph.")
+                    elif uploaded_file:
+                        # Save the uploaded file to a temporary location
+                        temp_path = os.path.join(os.path.expanduser("~"), "temp_graph.pkl")
+                        with open(temp_path, "wb") as f:
+                            f.write(uploaded_file.getbuffer())
+
+                        # Import the graph
+                        with st.spinner("Importing graph..."):
+                            success, message = import_graph_from_file(st.session_state.session, temp_path)
+                            if success:
+                                st.success(message)
+                            else:
+                                st.error(message)
+
+                        # Clean up the temporary file
+                        try:
+                            os.remove(temp_path)
+                        except:
+                            pass
+                    elif load_path:
+                        # Import the graph from the specified path
+                        with st.spinner("Importing graph..."):
+                            success, message = import_graph_from_file(st.session_state.session, load_path)
+                            if success:
+                                st.success(message)
+                            else:
+                                st.error(message)
+                    else:
+                        st.error("Please upload a file or enter a file path.")
+
+def neodash_sidebar():
+    initialize_neodash_session()
+    container_name = st.session_state["neodash_container_name"]
+    port = st.session_state["neodash_port"]
+    containers = client.containers.list(all=True, filters={"name": container_name})
+    status = containers[0].status if containers else "not found"
+
+    neodash_header = "📊 NeoDash"
+    _exp_header = f"⚫ {neodash_header}"
+    if status == "running":
+        _exp_header = f"🟢 {neodash_header}"
+
+    with st.expander(_exp_header, expanded=False):
+        if status == "running":
+            st.success("NeoDash is running.")
+            neodash_host_ip = containers[0].attrs["NetworkSettings"]["IPAddress"] or "localhost"
+            st.session_state['neodash_host_ip'] = neodash_host_ip
+            url = f"http://{neodash_host_ip}:{port}"
+            st.markdown(f"[🔗 Open NeoDash in browser]({url})")
+            if st.button("🛑 Stop NeoDash"):
+                stop_neodash_container()
+                st.warning("Stopping NeoDash...")
+        else:
+            st.warning("NeoDash is not running.")
+            if st.button("🚀 Start NeoDash"):
+                start_neodash_container()
+                st.success("Starting NeoDash... click again in a moment to get the link.")
 
 def schema_sample_widget():
     with st.sidebar.expander("🕸️ Schema Recall", expanded=False):

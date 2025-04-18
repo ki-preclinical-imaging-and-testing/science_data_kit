@@ -91,6 +91,16 @@ if __name__ == "__main__":
     if "selected_db" not in st.session_state:
         st.session_state.selected_db = None
 
+    # Initialize NeoDash session state variables
+    if "neodash_container_name" not in st.session_state:
+        st.session_state["neodash_container_name"] = "dsk-neodash-instance"
+    if "neodash_port" not in st.session_state:
+        st.session_state["neodash_port"] = 5005
+    if "neodash_connected" not in st.session_state:
+        st.session_state["neodash_connected"] = False
+    if "neodash_host_ip" not in st.session_state:
+        st.session_state["neodash_host_ip"] = "localhost"
+
     from menu import menu
     menu()
 

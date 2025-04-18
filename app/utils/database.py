@@ -11,7 +11,7 @@ import pickle
 import io
 from datetime import datetime
 from pyvis.network import Network
-
+from neo4j.exceptions import ServiceUnavailable
 
 client = docker.from_env()
 
@@ -113,9 +113,13 @@ def stop_neo4j_container():
 # Function to fetch available labels from Neo4j
 def fetch_available_labels():
     with st.session_state["db_connection"].session() as session:
-        result = session.run("CALL db.labels()")
-        labels = [record[0] for record in result]
-        return labels
+        try:
+            result = session.run("CALL db.labels()")
+            labels = [record[0] for record in result]
+            return labels
+        except ServiceUnavailable:
+            st.warning("Database unavailable. Resolve connection to access database features.")
+            return []
 
 def fetch_entity_labels(session):
     """Fetch all node labels from the Neo4j database."""
