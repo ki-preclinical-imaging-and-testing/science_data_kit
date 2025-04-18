@@ -45,7 +45,7 @@ with st.expander("Resolve and define node labels", expanded=True):
             if file_type in ["CSV", "JSON"]:
                 # File uploader for CSV or JSON
                 file_types = {"CSV": ["csv"], "JSON": ["json"]}
-                uploaded_file = st.file_uploader(f"Upload {file_type} file:", type=file_types[file_type])
+                uploaded_file = st.file_uploader(f"Upload {file_type} file:", type=file_types[file_type], key=f"file_uploader_section1_{file_type}")
                 file_path = st.text_input(f"Or enter {file_type} file path:")
 
                 if st.button("Load File") and file_path:
@@ -70,7 +70,7 @@ with st.expander("Resolve and define node labels", expanded=True):
 
             elif file_type == "Excel":
                 # Excel file handling with sheet selection
-                uploaded_excel = st.file_uploader("Upload Excel file:", type=["xlsx", "xls"])
+                uploaded_excel = st.file_uploader("Upload Excel file:", type=["xlsx", "xls"], key="excel_uploader_section1")
                 excel_path = st.text_input("Or enter Excel file path:")
 
                 excel_file = uploaded_excel if uploaded_excel else (excel_path if excel_path else None)
@@ -134,7 +134,7 @@ with st.expander("Resolve and define node labels", expanded=True):
                     st.warning("No scan results available. Please run a scan on the Survey page first.")
 
             else:  # NCDU JSON File
-                uploaded_ncdu = st.file_uploader("Upload NCDU JSON file:", type=["json"])
+                uploaded_ncdu = st.file_uploader("Upload NCDU JSON file:", type=["json"], key="ncdu_uploader")
                 ncdu_path = st.text_input("Or enter NCDU JSON file path:")
 
                 if st.button("Load NCDU File") and (uploaded_ncdu or ncdu_path):
@@ -555,7 +555,7 @@ with st.expander("Assemble ontology, taxonomy, or schema using properties", expa
                 if file_type in ["CSV", "JSON"]:
                     # File uploader for CSV or JSON
                     file_types = {"CSV": ["csv"], "JSON": ["json"]}
-                    uploaded_file = st.file_uploader(f"Upload {file_type} file:", type=file_types[file_type])
+                    uploaded_file = st.file_uploader(f"Upload {file_type} file:", type=file_types[file_type], key=f"file_uploader_section2_{file_type}")
 
                     if uploaded_file:
                         try:
@@ -569,7 +569,7 @@ with st.expander("Assemble ontology, taxonomy, or schema using properties", expa
 
                 elif file_type == "Excel":
                     # Excel file handling with sheet selection
-                    uploaded_excel = st.file_uploader("Upload Excel file:", type=["xlsx", "xls"])
+                    uploaded_excel = st.file_uploader("Upload Excel file:", type=["xlsx", "xls"], key="excel_uploader_section2")
 
                     if uploaded_excel:
                         try:
