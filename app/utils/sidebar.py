@@ -22,10 +22,10 @@ def database_sidebar():
     status = get_neo4j_status()
     hostname = get_neo4j_hostname()  # Get hostname
 
-    # with st.sidebar.expander("📡 DB Server", expanded=False):
-    _exp_header = "⚫ 📡 DB Server"
+    database_header = "📡 Neo4j Database"
+    _exp_header = f"⚫ {database_header}"
     if status == "running":
-        _exp_header = "🟢 📡 DB Server"
+        _exp_header = f"🟢 {database_header}"
 
     with st.expander(_exp_header, expanded=False):
 
@@ -67,9 +67,10 @@ def jupyter_sidebar():
     status = containers[0].status if containers else "not found"
 
     # with st.sidebar.expander("👽 Jupyter Server", expanded=False):
-    _exp_header = "⚫ 👽 Jupyter Server"
+    jupyter_header = "👽 Jupyter Lab"
+    _exp_header = f"⚫ {jupyter_header}"
     if status == "running":
-        _exp_header = "🟢 👽 Jupyter Server"
+        _exp_header = f"🟢 {jupyter_header}"
 
     with st.expander(_exp_header, expanded=False):
 
@@ -89,9 +90,10 @@ def jupyter_sidebar():
                 st.success("Starting Jupyter... click again in a moment to get the link.")
 
 def neo4j_connector():
-    _exp_header = "⚫ 🔗 DB Link"
+    database_connection_header = "🔗 Neo4j Database Connection"
+    _exp_header = f"⚫ {database_connection_header}"
     if st.session_state.connected:
-        _exp_header = "🟢 🔗 DB Link"
+        _exp_header = f"🟢 {database_connection_header}"
 
     with st.expander(_exp_header, expanded=False):
         # Connection Details in Sidebar
