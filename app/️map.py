@@ -30,14 +30,16 @@ with st.expander("Resolve and define node labels", expanded=True):
         # Data source selection
         data_source = st.radio(
             "Get entities from:",
-            ["File", "Database", "NCDU Scan"]
+            ["File", "Database", "NCDU Scan"],
+            key="data_source_section1"
         )
 
         if data_source == "File":
             # File type selection
             file_type = st.radio(
                 "File type:",
-                ["CSV", "Excel", "JSON"]
+                ["CSV", "Excel", "JSON"],
+                key="file_type_section1"
             )
 
             if file_type in ["CSV", "JSON"]:
@@ -119,7 +121,8 @@ with st.expander("Resolve and define node labels", expanded=True):
             # NCDU scan results handling
             ncdu_source = st.radio(
                 "NCDU source:",
-                ["Survey Page Results", "NCDU JSON File"]
+                ["Survey Page Results", "NCDU JSON File"],
+                key="ncdu_source"
             )
 
             if ncdu_source == "Survey Page Results":
@@ -244,7 +247,7 @@ with st.expander("Resolve and define node labels", expanded=True):
         st.subheader("Define Relationships")
 
         # Add option to create a new node label
-        label_option = st.radio("Target Node Label:", ["Existing Label", "New Label"])
+        label_option = st.radio("Target Node Label:", ["Existing Label", "New Label"], key="label_option")
 
         if label_option == "Existing Label":
             target_label = st.selectbox("Select Target Node Label:", options=st.session_state["available_labels"])
@@ -534,7 +537,8 @@ with st.expander("Assemble ontology, taxonomy, or schema using properties", expa
 
         data_source = st.radio(
             "Relate entities from:",
-            ["File", "Database"]
+            ["File", "Database"],
+            key="data_source_section2"
         )
 
         entities_df = st.session_state.get("entities_df", None)
@@ -544,7 +548,8 @@ with st.expander("Assemble ontology, taxonomy, or schema using properties", expa
             if st.session_state["entities_df"] is None:
                 file_type = st.radio(
                     "File type:",
-                    ["CSV", "Excel", "JSON"]
+                    ["CSV", "Excel", "JSON"],
+                    key="file_type_section2"
                 )
 
                 if file_type in ["CSV", "JSON"]:
