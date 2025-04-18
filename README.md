@@ -1,65 +1,118 @@
-# Science Data Kit ("SDK")
+# Science Data Kit (SDK)
 
-Scan your messy science data, remap, visualize, and enrich using built-in knowledge graph capabilities.
+A comprehensive toolkit for indexing, curating, and integrating multimodal research data using knowledge graph capabilities.
 
-## Simplifying FAIR+ data in your lab
+## Overview
 
-### What is this?
-**Science Data Toolkit** helps you index, curate, and integrate multimodal research data. 
+The Science Data Kit (SDK) helps researchers manage and make sense of complex, multimodal scientific data. It follows the FAIR+ data principles to ensure your data is Findable, Accessible, Interoperable, Reusable, and Computable.
 
-### Science Data Toolkit helps you...
-|  |  |
-| ---: | --- |
-|  **start** | *using this toolkit* |
-|  **index** | *filetree metadata* |
-|  **resolve** | *data entities* |
-|  **relate** | *entities via schema* |
-|  **explore** | *data in context* |
-|  **integrate** | *other workflows* |
-|  **ground** | *large language models* |
-|  **learn** | *more about this toolkit* |
+## Features
 
-## FAIR+ Data
-The FAIR(+) Data Principles have been established (and appended). 
+- **Connect** to data sources and spin up necessary infrastructure
+- **Survey** your file systems to extract metadata
+- **Map** entities and relationships to create knowledge graphs
+- **Explore** your data through interactive visualizations
+- **Chat** with your data using natural language
+- **Learn** about knowledge graphs and FAIR data practices
 
-Let's follow them. We can have *nice things*.
+## Application Flow
 
-Science data that is...
+The Science Data Kit follows a logical workflow:
 
-- **F**indable
-- **A**ccessible
-- **I**nteroperable
-- **R**eusable
-- **+** (Computable)
+1. **Connect** 🌐 - Set up your data infrastructure
+   - Host a local Neo4j database
+   - Run Jupyter Lab for data analysis
+   - Launch NeoDash for Neo4j visualization
+   - Connect to existing Neo4j databases
 
-... is *nice things* science data. Let's have it!
+2. **Survey** 🔭 - Scan and analyze your file systems
+   - Locate and scan datasets
+   - View scan results
+   - Label entities for further processing
+   - Push data to Neo4j database
 
-## Getting started
+3. **Map** 🗺 - Define entities and relationships
+   - Load entities from files or database
+   - Define entity structure and properties
+   - Create relationships between entities
+   - Build taxonomies and ontologies
 
-### Spinning up a local instance
+4. **Explore** 🏞 - Visualize and analyze your data
+   - View schema visualizations
+   - Extract and explore node data
+   - Export data for further analysis
 
-From your local clone of science_data_kit,
+5. **Chat** 💬 - Interact with your data using natural language
+   - Connect to LLM providers (OpenAI, Anthropic, Ollama)
+   - Ask questions about your data
+   - Get context-aware responses
 
-    cd $REPO_HOME/science_data_kit
-    conda create -n python=3.13 science_data_kit pip
-    conda activate science_data_kit
-    pip install requirements.txt
+6. **Learn** 📖 - Access resources and documentation
+   - Documentation and tutorials
+   - Knowledge graph basics
+   - Community and support
 
-Ensure all requirements are installed. Then you can run 
+## Directory Structure
 
-    streamlit run start.py
+- **[app/](app/README.md)** - Streamlit application code
+- **[ipynb/](ipynb/README.md)** - Jupyter notebooks for tutorials and examples
+- **[docs/](docs/README.md)** - Documentation files
 
-from the repository base. This works well in `tmux`---otherwise, `nohup`, `bg`
-or something similar should work fine. 
+## FAIR+ Data Principles
 
-### The GUI
+The Science Data Kit is designed around the FAIR+ data principles:
 
-Access the GUI from your browser window by navigating to either the default
+- **F**indable - Data is easy to find
+- **A**ccessible - Data can be accessed with appropriate permissions
+- **I**nteroperable - Data can work with other systems
+- **R**eusable - Data can be reused for different purposes
+- **+** (Computable) - Data can be processed by machines
 
-    localhost:8501
+## Getting Started
 
-or your local instance's unique host and port address. When you launch,
-`streamlit` automatically maps your application to an open port. You can find
-the output of streamlit in your CLI command's output. 
+### Prerequisites
 
+- Python 3.10+
+- Docker (for Neo4j and Jupyter containers)
+- Neo4j Graph Database
 
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/science_data_kit.git
+   cd science_data_kit
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   conda create -n science_data_kit python=3.13 pip
+   conda activate science_data_kit
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Running the Application
+
+Start the Streamlit application:
+
+```bash
+streamlit run app/app.py
+```
+
+Access the GUI from your browser at:
+
+```
+localhost:8501
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
