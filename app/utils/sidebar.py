@@ -23,7 +23,11 @@ def database_sidebar():
     hostname = get_neo4j_hostname()  # Get hostname
 
     # with st.sidebar.expander("📡 DB Server", expanded=False):
-    with st.expander("📡 DB Server", expanded=True):
+    _exp_header = "⚫ 📡 DB Server"
+    if status == "running":
+        _exp_header = "🟢 📡 DB Server"
+
+    with st.expander(_exp_header, expanded=False):
 
         if status == "running":
             st.write(f"""
@@ -59,11 +63,16 @@ def jupyter_sidebar():
     container_name = st.session_state["jupyter_container_name"]
     port = st.session_state["jupyter_port"]
     token = st.session_state["jupyter_token"]
+    containers = client.containers.list(all=True, filters={"name": container_name})
+    status = containers[0].status if containers else "not found"
 
     # with st.sidebar.expander("👽 Jupyter Server", expanded=False):
-    with st.expander("👽 Jupyter Server", expanded=False):
-        containers = client.containers.list(all=True, filters={"name": container_name})
-        status = containers[0].status if containers else "not found"
+    _exp_header = "⚫ 👽 Jupyter Server"
+    if status == "running":
+        _exp_header = "🟢 👽 Jupyter Server"
+
+    with st.expander(_exp_header, expanded=False):
+
         if status == "running":
             st.success("Jupyter is running.")
             jupyter_host_ip = containers[0].attrs["NetworkSettings"]["IPAddress"] or "localhost"

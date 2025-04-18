@@ -3,7 +3,7 @@ from utils.sidebar import database_sidebar, jupyter_sidebar, neo4j_connector
 
 # Title and description
 st.header("Data Resources")
-
+st.markdown("""Spin up servers and connect to your data on this page.""")
 
 server_dict = {
     'Servers': None,
