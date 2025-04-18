@@ -148,14 +148,15 @@ def chat():
             return None
 
     # Title and instructions
-    st.header("Ground: Chat with your data")
+    st.header("Chat with your data")
     st.markdown("""
-    Ask the bot (a retrieval-augmented generator) about your dataset.
-    Configure your LLM provider in the settings panel below.""")
-    with st.expander("LLM Connection", expanded=False):
-        row = st.columns(2)
-        # LLM Settings Form
-        with row[0]:
+    Ask a retrieval-augmented generator questions about your dataset. 
+    Connect your trusted LLM provider in the settings panel below.
+    """)
+    row = st.columns(2)
+    with row[0]:
+        with st.expander("LLM Connection", expanded=False):
+            # LLM Settings Form
             with st.form("llm_settings_form"):
                 col1, col2 = st.columns(2)
 
@@ -232,41 +233,24 @@ def chat():
                         time.sleep(1)
                         st.rerun()
 
-        with row[1]:
-            st.markdown(
-                """        
-                This implementation uses Text2Cypher to convert your natural language questions into Cypher queries 
-                that are executed against your Neo4j database. The results are then used to generate a response.
-        
-                For best results:
-                1. Make sure your Neo4j database is connected
-                2. Use OpenAI as your LLM provider (currently optimized for this)
-                3. Ask questions about the data in your database
-                """
-            )
-            st.button("Connect LLM", key="connect_LLM", use_container_width=False)
-
-
-    # Initialize GraphRAG if not already initialized
-    if st.session_state["graph_rag"] is None:
-        st.warning("GraphRAG is not initialized. Please connect to Neo4j and configure your LLM settings.")
-        if st.session_state["neo4j_uri"] and st.session_state["neo4j_user"] and st.session_state["neo4j_password"]:
-            with st.spinner("Initializing GraphRAG..."):
-                st.session_state["graph_rag"] = initialize_graph_rag(
-                    st.session_state["neo4j_uri"],
-                    st.session_state["neo4j_user"],
-                    st.session_state["neo4j_password"],
-                    st.session_state["llm_provider"],
-                    st.session_state["llm_api_key"],
-                    st.session_state["llm_model"]
+            col3, col4 = st.columns(2)
+            with col3:
+                st.markdown(
+                    """        
+                    This implementation uses **Text2Cypher to convert your natural language questions into Cypher queries** 
+                    that are executed against your Neo4j database. The results are then used to generate a response.
+                    """
                 )
-                st.success("Connected to Neo4j and GraphRAG is initialized.")
-                retriever_type = st.session_state.get("retriever_type", "Unknown")
-                st.info(f"Using {retriever_type} retriever for queries")
-
-    # Display schema information if available
-    row = st.columns(2)
-    with row[0]:
+                st.button("Connect LLM", key="connect_LLM", use_container_width=False)
+            with col4:
+                st.markdown(
+                    """            
+                    This is experimental, so here's what you need to do:
+                    1. Your **database must be connected**
+                    2. Use OpenAI (currently it is the only one that works)
+                    3. Ask questions about the data in your database
+                    """
+                )
         # Display chat history with improved formatting
         with st.expander("Conversation", expanded=True):
             chat_container = st.container(height=400, border=True)
@@ -348,6 +332,26 @@ def chat():
                     if st.button("Clear Chat", use_container_width=True):
                         st.session_state["chat_history"] = []
                         st.rerun()
+
+
+    # Initialize GraphRAG if not already initialized
+    if st.session_state["graph_rag"] is None:
+        st.warning("GraphRAG is not initialized. Please connect to Neo4j and configure your LLM settings.")
+        if st.session_state["neo4j_uri"] and st.session_state["neo4j_user"] and st.session_state["neo4j_password"]:
+            with st.spinner("Initializing GraphRAG..."):
+                st.session_state["graph_rag"] = initialize_graph_rag(
+                    st.session_state["neo4j_uri"],
+                    st.session_state["neo4j_user"],
+                    st.session_state["neo4j_password"],
+                    st.session_state["llm_provider"],
+                    st.session_state["llm_api_key"],
+                    st.session_state["llm_model"]
+                )
+                st.success("Connected to Neo4j and GraphRAG is initialized.")
+                retriever_type = st.session_state.get("retriever_type", "Unknown")
+                st.info(f"Using {retriever_type} retriever for queries")
+
+    # Display schema information if available
     with row[1]:
         with st.expander("Cypher Schema", expanded=False):
             if "neo4j_schema" in st.session_state and st.session_state["neo4j_schema"]:
