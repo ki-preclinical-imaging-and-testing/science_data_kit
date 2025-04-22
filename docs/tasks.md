@@ -24,6 +24,10 @@ This document contains a prioritized list of actionable improvement tasks for th
    - [ ] Create a database abstraction layer to simplify database operations
    - [ ] Add database migration support for schema changes
    - [✓] Implement save and load functionality for Neo4j databases
+   - [ ] Add options for selective export of specific subgraphs
+   - [ ] Create options for updating vs. replacing existing data
+   - [✓] Add backup creation before major operations
+   - [ ] Create a backup rotation strategy
 
 [ ] 5. Improve application state management
    - [ ] Refactor session state management to be more organized and predictable
@@ -67,7 +71,7 @@ This document contains a prioritized list of actionable improvement tasks for th
 [ ] 11a. Enhance the GraphRAG implementation
     - [ ] Improve schema extraction for better query generation
     - [ ] Add comprehensive documentation for GraphRAG usage
-    - [ ] Implement advanced context-aware responses
+    - [ ] Enhance context-aware responses based on graph data
 
 [ ] 12. Enhance data visualization
     - [ ] Implement more interactive visualizations for data exploration

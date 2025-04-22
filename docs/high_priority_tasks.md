@@ -57,6 +57,11 @@ The map functionality currently has issues when there is no Neo4j connection ava
    - Add interactive elements for taxonomy exploration
    - Implement filtering and search capabilities
 
+4. **Add support for importing existing taxonomies**
+   - Implement import functionality for standard taxonomy formats
+   - Create validation for imported taxonomies
+   - Add mapping tools to align imported taxonomies with existing data
+
 ## 2. Neo4j Database Save and Load Feature
 
 ### Current Issues
@@ -144,6 +149,11 @@ The chat functionality in `app/chat.py` is now working in a basic way for OpenAI
    - Implement connection health monitoring
    - Add automatic reconnection for dropped connections
 
+4. **Enhance context-aware responses based on graph data**
+   - Improve query generation based on graph structure
+   - Implement context-aware response formatting
+   - Add graph-based reasoning capabilities
+
 #### Enhance LLM Connections
 1. **Improve credential management**
    - Implement more secure storage for API credentials
@@ -166,7 +176,7 @@ The chat functionality in `app/chat.py` is now working in a basic way for OpenAI
    - Add conversation summarization features
    - Create conversation export functionality
 
-3. **Improve context-aware responses**
+3. **Enhance context-aware responses based on graph data**
    - Enhance responses with more detailed graph context
    - Add visual elements showing relevant graph nodes
    - Implement interactive exploration of related concepts

@@ -22,23 +22,27 @@ These tasks are critical for the core functionality of the application and shoul
    - [ ] Refactor taxonomy management code
    - [ ] Implement cleaner ontology mapping interfaces
    - [ ] Create visualization tools for taxonomy exploration
+   - [ ] Add support for importing existing taxonomies
 
 ### 2. Neo4j Database Save and Load Feature
 
-[ ] Implement database export functionality
-   - [ ] Create NetworkX graph conversion for Pythonic storage
-   - [ ] Develop custom export solution to work with Docker implementation
-   - [ ] Add progress indicators for large database exports
+[✓] Implement database export functionality
+   - [✓] Create NetworkX graph conversion for Pythonic storage
+   - [✓] Develop custom export solution to work with Docker implementation
+   - [✓] Add progress indicators for large database exports
+   - [ ] Add options for selective export of specific subgraphs
 
-[ ] Implement database import functionality
-   - [ ] Create import validation to prevent data corruption
-   - [ ] Develop merge strategies for importing into existing databases
-   - [ ] Add transaction support for safe imports
+[✓] Implement database import functionality
+   - [✓] Create import validation to prevent data corruption
+   - [✓] Develop merge strategies for importing into existing databases
+   - [✓] Add transaction support for safe imports
+   - [ ] Create options for updating vs. replacing existing data
 
 [ ] Add database version management
    - [ ] Implement database versioning system
    - [ ] Create migration tools for version compatibility
-   - [ ] Add backup creation before major operations
+   - [✓] Add backup creation before major operations
+   - [ ] Create a backup rotation strategy
 
 ### 3. Operationalize Chat Page with Neo4j Graph RAG
 
@@ -61,6 +65,7 @@ These tasks are critical for the core functionality of the application and shoul
    - [ ] Improve schema extraction for better query generation
    - [ ] Optimize connection management for high-load scenarios
    - [ ] Add comprehensive logging and monitoring
+   - [ ] Enhance context-aware responses based on graph data
 
 ## Medium Priority Tasks
 
@@ -90,6 +95,7 @@ These tasks are important for improving the application but are not as critical 
    - [ ] Create reusable components for common UI elements
    - [✓] Implement consistent status indicators across components
    - [ ] Extract common database operations into utility functions
+   - [ ] Remove commented-out code and TODOs
 
 [ ] Enhance type safety
    - [ ] Add type hints to function parameters and return values
@@ -146,6 +152,11 @@ These tasks would enhance the application but can be addressed after higher-prio
    - [ ] Create a user guide with screenshots and examples
    - [ ] Add FAQ section for common issues and questions
 
+[ ] Improve developer documentation
+   - [ ] Document the project architecture and design decisions
+   - [ ] Create contribution guidelines for new developers
+   - [ ] Add setup instructions for development environments
+
 [ ] Update placeholder links
    - [ ] Replace example.com links in about.py with actual resources
    - [ ] Add links to relevant documentation and tutorials
@@ -157,6 +168,11 @@ These tasks would enhance the application but can be addressed after higher-prio
    - [ ] Create Docker files for easy deployment
    - [ ] Add docker-compose configuration for local development
    - [ ] Document container deployment options
+
+[ ] Implement CI/CD pipeline
+   - [ ] Set up automated testing for pull requests
+   - [ ] Implement automated deployment to staging and production
+   - [ ] Add version management and release notes
 
 [ ] Enhance security
    - [ ] Implement secure credential management
