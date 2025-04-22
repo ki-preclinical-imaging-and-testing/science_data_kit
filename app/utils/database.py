@@ -56,6 +56,32 @@ def find_free_port(start_port):
         port += 1
 
 
+def update_db_config_auto(hostname, port, username, password, database="neo4j"):
+    """
+    Update the .db_config_auto.yaml file with the current Neo4j connection details.
+
+    Args:
+        hostname (str): The hostname or IP address of the Neo4j server
+        port (int): The bolt port of the Neo4j server
+        username (str): The username for Neo4j authentication
+        password (str): The password for Neo4j authentication
+        database (str): The name of the Neo4j database to connect to
+    """
+    import yaml
+
+    config = {
+        "uri": f"bolt://{hostname}:{port}",
+        "user": username,
+        "password": password,
+        "database": database
+    }
+
+    try:
+        with open(".db_config_auto.yaml", "w") as f:
+            yaml.dump(config, f, default_flow_style=False)
+    except Exception as e:
+        st.warning(f"Could not update .db_config_auto.yaml: {e}")
+
 def start_neo4j_container():
     """Start the Neo4j container with user-defined credentials."""
     initialize_session()
@@ -75,6 +101,15 @@ def start_neo4j_container():
                 if container.status != "running":
                     container.start()
                 st.session_state["container_status"] = "running"
+
+                # Update the .db_config_auto.yaml file with the container's IP address
+                hostname = get_neo4j_hostname()
+                update_db_config_auto(
+                    hostname,
+                    st.session_state["bolt_port"],
+                    st.session_state["username"],
+                    st.session_state["password"]
+                )
                 return
 
         # Start a new container
@@ -92,6 +127,19 @@ def start_neo4j_container():
             tty=True,
         )
         st.session_state["container_status"] = "running"
+
+        # Wait a moment for the container to fully start
+        import time
+        time.sleep(2)
+
+        # Update the .db_config_auto.yaml file with the container's IP address
+        hostname = get_neo4j_hostname()
+        update_db_config_auto(
+            hostname,
+            st.session_state["bolt_port"],
+            st.session_state["username"],
+            st.session_state["password"]
+        )
     except docker.errors.DockerException as e:
         st.sidebar.error(f"Error starting Neo4j: {e}")
 
@@ -307,6 +355,13 @@ def fetch_nodes_by_label(session, label, with_clause):
 
     # Collect unique nodes from both queries
     nodes = [dict(record["node"]) for record in results]
+
+    # Convert lists to tuples in the dictionaries to make them hashable
+    for node in nodes:
+        for key, value in node.items():
+            if isinstance(value, list):
+                node[key] = tuple(value) if value else None
+
     return pd.DataFrame(nodes).drop_duplicates()
 
 

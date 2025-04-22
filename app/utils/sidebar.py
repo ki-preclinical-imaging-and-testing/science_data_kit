@@ -98,6 +98,15 @@ def jupyter_sidebar():
                 st.success("Starting Jupyter... click again in a moment to get the link.")
 
 def neo4j_connector():
+    """
+    Provides a UI for connecting to a Neo4j database and managing the connection.
+
+    This function:
+    1. Displays connection form fields (URI, username, password)
+    2. Provides buttons to connect/disconnect
+    3. Handles connection errors with helpful messages
+    4. Displays database selection when connected
+    """
     database_connection_header = "🔗 Neo4j Database Connection"
     _exp_header = f"⚫ {database_connection_header}"
     if st.session_state.connected:
@@ -112,6 +121,22 @@ def neo4j_connector():
         st.session_state["neo4j_user"] = user
         st.session_state["neo4j_password"] = password
 
+        # Display connection help text
+        if st.toggle("Show Connection Help", False):
+            st.markdown("""
+            ### Connection Troubleshooting
+
+            - **URI Format**: Should be `bolt://hostname:port` (e.g., `bolt://localhost:7687`)
+            - **Default Credentials**: Username: `neo4j`, Password: `neo4jiscool`
+            - **Common Issues**:
+                - Make sure the Neo4j database is running
+                - Check that the port is correct and not blocked by a firewall
+                - Verify that the username and password are correct
+                - If using Docker, ensure the container is running
+
+            You can start a local Neo4j database using the "Neo4j Database" section above.
+            """)
+
         col1, col2 = st.columns(2)
 
         with col1:
@@ -119,12 +144,42 @@ def neo4j_connector():
                 if st.button("Connect", use_container_width=True):
                     with st.spinner("Connecting to Neo4j..."):
                         try:
-                            session = get_neo4j_session(uri, user, password)
-                            st.session_state.session = session
-                            st.session_state.connected = True
-                            st.success("Connected!")
+                            # Validate URI format
+                            if not uri.startswith("bolt://"):
+                                st.error("URI must start with 'bolt://'")
+                                st.info("Example: bolt://localhost:7687")
+                            else:
+                                session = get_neo4j_session(uri, user, password)
+                                st.session_state.session = session
+                                st.session_state.connected = True
+                                st.success("Connected!")
+
+                                # Save successful connection details to .db_config.yaml
+                                try:
+                                    from utils.database import update_db_config_auto
+                                    # Extract hostname and port from URI
+                                    import re
+                                    match = re.match(r'bolt://([^:]+):(\d+)', uri)
+                                    if match:
+                                        hostname, port = match.groups()
+                                        update_db_config_auto(hostname, port, user, password)
+                                except Exception as e:
+                                    st.warning(f"Could not save connection details: {e}")
                         except Exception as e:
-                            st.error(f"Connection failed: {e}")
+                            error_message = str(e)
+                            st.error(f"Connection failed: {error_message}")
+
+                            # Provide more helpful error messages based on common issues
+                            if "Connection refused" in error_message:
+                                st.warning("The database server is not running or the port is incorrect.")
+                                st.info("Try starting the Neo4j database using the 'Neo4j Database' section above.")
+                            elif "authentication failure" in error_message.lower():
+                                st.warning("Invalid username or password.")
+                                st.info("Check your credentials and try again.")
+                            elif "timed out" in error_message.lower():
+                                st.warning("Connection timed out.")
+                                st.info("Check that the hostname is correct and the server is running.")
+
                             st.session_state.connected = False
             else:
                 if st.button("Disconnect", use_container_width=True):
@@ -139,6 +194,10 @@ def neo4j_connector():
                             st.success("Disconnected!")
                         except Exception as e:
                             st.error(f"Error disconnecting: {e}")
+                            st.info("The connection state has been reset, but there might be lingering connections.")
+                            # Force reset connection state even if there was an error
+                            st.session_state.connected = False
+                            st.session_state.selected_db = None
 
         if st.session_state.connected:
             with st.spinner("Fetching available databases..."):
@@ -154,95 +213,93 @@ def neo4j_connector():
             st.divider()
             database_management_header = "💾 Neo4j Database Management"
             if st.session_state.connected:
-                st.markdown(f"🟢 **{database_management_header}**")
-            else:
-                st.markdown(f"⚫ **{database_management_header}**")
+                if st.toggle(f"**{database_management_header}**", value=False):
 
-            st.markdown("Save/Load Database via Connection")
+                    st.markdown("Save/Load Database via Connection")
 
-            # Create two columns for save and load functionality
-            save_col, load_col = st.columns(2)
+                    # Create two columns for save and load functionality
+                    save_col, load_col = st.columns(2)
 
-            with save_col:
-                st.subheader("Save Graph")
+                    with save_col:
+                        st.subheader("Save Graph")
 
-                # Default save directory
-                default_save_dir = os.path.join(os.path.expanduser("~"), "graph_exports")
-                os.makedirs(default_save_dir, exist_ok=True)
+                        # Default save directory
+                        default_save_dir = os.path.join(os.path.expanduser("~"), "graph_exports")
+                        os.makedirs(default_save_dir, exist_ok=True)
 
-                # Generate default filename with timestamp
-                default_filename = f"neo4j_graph_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
+                        # Generate default filename with timestamp
+                        default_filename = f"neo4j_graph_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
 
-                # Save directory input
-                save_dir = st.text_input("Save Directory:", value=default_save_dir, key="db_save_dir")
+                        # Save directory input
+                        save_dir = st.text_input("Save Directory:", value=default_save_dir, key="db_save_dir")
 
-                # Filename input
-                if 'db_save_filename' not in st.session_state.keys():
-                    st.session_state['db_save_filename'] = default_filename
-                save_filename = st.session_state['db_save_filename']
-                st.session_state['db_save_filename'] = st.text_input("Filename:", value=save_filename, key="db_save_filename_input")
+                        # Filename input
+                        if 'db_save_filename' not in st.session_state.keys():
+                            st.session_state['db_save_filename'] = default_filename
+                        save_filename = st.session_state['db_save_filename']
+                        st.session_state['db_save_filename'] = st.text_input("Filename:", value=save_filename, key="db_save_filename_input")
 
-                # Combine directory and filename
-                save_path = os.path.join(save_dir, st.session_state['db_save_filename'])
+                        # Combine directory and filename
+                        save_path = os.path.join(save_dir, st.session_state['db_save_filename'])
 
-                # Save button
-                if st.button("Save Graph", use_container_width=True, key="save_graph_button"):
-                    with st.spinner("Exporting graph..."):
-                        success, message = export_graph_to_file(st.session_state.session, save_path)
-                        if success:
-                            st.success(message)
-                            st.info(f"Graph saved to: {save_path}")
-                        else:
-                            st.error(message)
+                        # Save button
+                        if st.button("Save Graph", use_container_width=True, key="save_graph_button"):
+                            with st.spinner("Exporting graph..."):
+                                success, message = export_graph_to_file(st.session_state.session, save_path)
+                                if success:
+                                    st.success(message)
+                                    st.info(f"Graph saved to: {save_path}")
+                                else:
+                                    st.error(message)
 
-            with load_col:
-                st.subheader("Load Graph")
+                    with load_col:
+                        st.subheader("Load Graph")
 
-                # File uploader for graph file
-                uploaded_file = st.file_uploader("Upload graph file:", type=["pkl"], key="graph_file_uploader")
+                        # File uploader for graph file
+                        uploaded_file = st.file_uploader("Upload graph file:", type=["pkl"], key="graph_file_uploader")
 
-                # Or enter file path
-                load_path = st.text_input("Or enter file path:", key="graph_load_path")
+                        # Or enter file path
+                        load_path = st.text_input("Or enter file path:", key="graph_load_path")
 
-                # Warning about overwriting existing data
-                st.warning("⚠️ Loading a graph will clear the current database!")
+                        # Warning about overwriting existing data
+                        st.warning("⚠️ Loading a graph will clear the current database!")
 
-                # Confirmation checkbox
-                confirm_load = st.checkbox("I understand that this will overwrite the current database", key="confirm_load_checkbox")
+                        # Confirmation checkbox
+                        confirm_load = st.checkbox("I understand that this will overwrite the current database", key="confirm_load_checkbox")
 
-                # Load button
-                if st.button("Load Graph", use_container_width=True, key="load_graph_button"):
-                    if not confirm_load:
-                        st.error("Please confirm that you understand the consequences of loading a graph.")
-                    elif uploaded_file:
-                        # Save the uploaded file to a temporary location
-                        temp_path = os.path.join(os.path.expanduser("~"), "temp_graph.pkl")
-                        with open(temp_path, "wb") as f:
-                            f.write(uploaded_file.getbuffer())
+                        # Load button
+                        if st.button("Load Graph", use_container_width=True, key="load_graph_button"):
+                            if not confirm_load:
+                                st.error("Please confirm that you understand the consequences of loading a graph.")
+                            elif uploaded_file:
+                                # Save the uploaded file to a temporary location
+                                temp_path = os.path.join(os.path.expanduser("~"), "temp_graph.pkl")
+                                with open(temp_path, "wb") as f:
+                                    f.write(uploaded_file.getbuffer())
 
-                        # Import the graph
-                        with st.spinner("Importing graph..."):
-                            success, message = import_graph_from_file(st.session_state.session, temp_path)
-                            if success:
-                                st.success(message)
+                                # Import the graph
+                                with st.spinner("Importing graph..."):
+                                    success, message = import_graph_from_file(st.session_state.session, temp_path)
+                                    if success:
+                                        st.success(message)
+                                    else:
+                                        st.error(message)
+
+                                # Clean up the temporary file
+                                try:
+                                    os.remove(temp_path)
+                                except:
+                                    pass
+                            elif load_path:
+                                # Import the graph from the specified path
+                                with st.spinner("Importing graph..."):
+                                    success, message = import_graph_from_file(st.session_state.session, load_path)
+                                    if success:
+                                        st.success(message)
+                                    else:
+                                        st.error(message)
                             else:
-                                st.error(message)
-
-                        # Clean up the temporary file
-                        try:
-                            os.remove(temp_path)
-                        except:
-                            pass
-                    elif load_path:
-                        # Import the graph from the specified path
-                        with st.spinner("Importing graph..."):
-                            success, message = import_graph_from_file(st.session_state.session, load_path)
-                            if success:
-                                st.success(message)
-                            else:
-                                st.error(message)
-                    else:
-                        st.error("Please upload a file or enter a file path.")
+                                st.error("Please upload a file or enter a file path.")
 
 def neodash_sidebar():
     initialize_neodash_session()

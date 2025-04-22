@@ -22,19 +22,36 @@ class Neo4jConnection:
     A robust Neo4j driver for connecting and executing queries with improved error handling and extended functionality.
     """
 
-    def __init__(self, config=None, config_file=None):
+    def __init__(self, config=None, config_file=None, use_session_state=False):
         """
         Initialize the Neo4jConnection instance.
 
         :param config: Dictionary with database connection details (overrides config_file if provided).
         :param config_file: Path to a YAML file with database connection details.
+        :param use_session_state: If True, use the connection from Streamlit session_state if available.
         """
+        # Try to use session_state connection if requested
+        if use_session_state:
+            try:
+                import streamlit as st
+                if hasattr(st, 'session_state') and 'connected' in st.session_state and st.session_state.connected:
+                    self._driver = st.session_state.session._driver
+                    self.uri = st.session_state.neo4j_uri
+                    self.user = st.session_state.neo4j_user
+                    self.password = st.session_state.neo4j_password
+                    self.database = "neo4j"  # Default database
+                    return
+            except (ImportError, AttributeError):
+                # Fall back to config if session_state is not available or not connected
+                pass
+
+        # Use config if session_state is not available or not requested
         if config is None:
             if config_file:
                 config = load_db_config(config_file)
             else:
                 raise ValueError("Either a config dictionary or a config_file path must be provided.")
-        
+
         required_keys = {"uri", "user", "password", "database"}
         if not all(key in config for key in required_keys):
             raise ValueError(f"Missing required keys in config. Expected keys: {required_keys}")
@@ -42,7 +59,7 @@ class Neo4jConnection:
         self.uri = config["uri"]
         self.user = config["user"]
         self.password = config["password"]
-        self.database = config.get("database", "aipt")
+        self.database = config.get("database", "neo4j")
         self._driver: Driver = None
         self._connect()
 
@@ -73,9 +90,9 @@ class Neo4jConnection:
         """
         if not self._driver:
             raise ConnectionError("Cannot run query. No active connection to Neo4j.")
-        
+
         parameters = parameters or {}
-        
+
         try:
             with self._driver.session(database=self.database) as session:
                 return list(session.run(query, parameters))
@@ -128,23 +145,23 @@ class Neo4jConnection:
         """
         if label_col not in df.columns:
             raise ValueError(f"Label column '{label_col}' not found in DataFrame.")
-        
+
         for _, row in df.iterrows():
             label = row[label_col]
             properties = {col: row[col] for col in property_cols if col in df.columns}
             match_criteria = {col: row[col] for col in match_cols if col in df.columns}
-            
+
             if not match_criteria:
                 raise ValueError("At least one match column must be provided.")
-            
+
             match_string = ", ".join(f"{k}: ${k}" for k in match_criteria.keys())
             properties_string = ", ".join(f"{k}: ${k}" for k in properties.keys())
-            
+
             query = f"""
             MERGE (n:{label} {{ {match_string} }})
             SET n += {{ {properties_string} }}
             """
-            
+
             self.execute_query(query, {**match_criteria, **properties})
 
     def push_and_link_dataframe(self, df: pd.DataFrame, label_col: str, property_cols: list, match_cols: list, node_match_label: str, node_match_properties: list, node_match_relationship_type: str):

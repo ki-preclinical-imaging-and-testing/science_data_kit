@@ -48,6 +48,12 @@ with st.expander("API Documentation", expanded=False):
 
     # Interactive API Tester
     st.subheader("Try the API")
+
+    # Define example function
+    def example_function(param1, param2):
+        """Example function for API demonstration"""
+        return f"{param1} {param2}"
+
     with st.form("api_form"):
         param1 = st.number_input("Parameter 1 (integer):", min_value=0, value=42)
         param2 = st.text_input("Parameter 2 (string):", value="hello")

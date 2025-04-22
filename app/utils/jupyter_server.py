@@ -256,7 +256,7 @@ def find_free_port(start_port):
 #                     time.sleep(3)  # give it a sec to be ready
 #                 else:
 #                     st.info(f"Container '{name}' already running on port {port_binding}")
-            
+
 #                 st.session_state["jupyter_port"] = bound_port
 #                 url = get_container_url(bound_port, token)
 #                 st.success(f"✅ Reconnected to container '{name}'")
@@ -331,48 +331,60 @@ def get_container_port_binding(container, internal_port="8888/tcp"):
         return None
 
 def start_jupyter_container():
+    """
+    Start a Jupyter Lab container or connect to an existing one.
+
+    This function will:
+    1. Check if a container with the configured name already exists
+    2. If it exists, start it if it's not running and return the URL
+    3. If it doesn't exist, create a new container and return the URL
+
+    Returns:
+        str: The URL to access Jupyter Lab, or None if there was an error
+    """
     initialize_jupyter_session()
     name = st.session_state["jupyter_container_name"]
     token = st.session_state["jupyter_token"]
 
     def get_container_ip(container):
+        """Get the IP address of a container, defaulting to localhost if not available"""
         st.session_state['jupyter_host_ip'] = container.attrs["NetworkSettings"]["IPAddress"] or "localhost"
         return st.session_state['jupyter_host_ip']
 
     try:
+        # Try to get an existing container
         container = client.containers.get(name)
-        st.write(f"     Name: {name}")
-        st.write(f"Container: {container}")
-        st.write(f"    Token: {token}")
         port = find_free_port(8888)
-        st.write(f"free port: {port}")
         jupyter_host_ip = get_container_ip(container)
         bound_port = get_container_port_binding(container)
-        st.write(bound_port)
+
         if not bound_port:
             st.error(f"⚠️ Container '{name}' exists but has no bound port.")
-            return
+            return None
 
         st.session_state["jupyter_port"] = bound_port
 
+        # Start the container if it's not running
         if container.status != "running":
-            st.write("found container running, trying to start...")
             container.start()
             st.info(f"🔄 Started container '{name}'...")
             time.sleep(2)
 
+        # Generate and display the URL
         url = f"http://{jupyter_host_ip}:{bound_port}/?token={token}"
         st.success(f"✅ Jupyter Lab started!")
-        st.markdown(f"🔗 Jupyter Lab ({url})")
+        st.markdown(f"🔗 [Open Jupyter Lab]({url})")
         st.code(url)
 
         return url
 
     except NotFound:
-        # Container does not exist yet — safe to create
+        # Container does not exist yet — create a new one
         port = find_free_port(8888)
         st.session_state["jupyter_port"] = port
         st.session_state['jupyter_host_mountpoint'] = os.path.abspath('../')
+
+        # Create and start the container
         container = client.containers.run(
             "jupyter/base-notebook",
             name=name,
@@ -387,13 +399,15 @@ def start_jupyter_container():
             detach=True,
             tty=True,
         )
+
         jupyter_host_ip = get_container_ip(container)
         st.info(f"🚀 Starting new Jupyter container on port {port}...")
         time.sleep(2)
 
+        # Generate and display the URL
         url = f"http://{jupyter_host_ip}:{port}/?token={token}"
         st.success(f"✅ Jupyter Lab Started")
-        st.markdown(f"🔗 Jupyter Lab ({url})")
+        st.markdown(f"🔗 [Open Jupyter Lab]({url})")
         st.code(url)
 
         return url

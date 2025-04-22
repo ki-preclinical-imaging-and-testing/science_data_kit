@@ -1,0 +1,4 @@
+database: neo4j
+password: neo4jiscool
+uri: bolt://localhost:7687
+user: neo4j

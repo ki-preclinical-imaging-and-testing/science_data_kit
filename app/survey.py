@@ -6,6 +6,7 @@ import pandas as pd
 from neomodel import db
 from utils.registry import Folder, File
 
+
 # Initialize session state variables for entity labeling
 if "directory_label" not in st.session_state:
     st.session_state["directory_label"] = "Folder"
@@ -73,6 +74,7 @@ def run_ncdu_scan():
     st.session_state["scan_completed"] = False
     st.session_state["ncdu_output"] = ""
 
+    # Use the scrollable container defined at the top of the file
     status_box = st.empty()
 
     try:
@@ -85,7 +87,8 @@ def run_ncdu_scan():
         ) as process:
             for line in process.stdout:
                 st.session_state["ncdu_output"] += line
-                status_box.text(st.session_state["ncdu_output"])  # Live output
+                # Update the scrollable container with the current output
+                status_box.text_area("Live Output", st.session_state["ncdu_output"], height=300)
 
         # Check if JSON was created
         if output_json_path.exists():
@@ -151,7 +154,8 @@ with st.expander("Run Filesystem Scan", expanded=True):
 
         # Show scan status if available
         if "ncdu_output" in st.session_state and st.session_state["ncdu_output"]:
-            st.text_area("Scan Output", st.session_state["ncdu_output"], height=150)
+            # Use a text area with fixed height for scrollable output
+            st.text_area("Scan Output", st.session_state["ncdu_output"], height=300)
 
         # Reset scan button
         if st.session_state["scan_completed"]:
