@@ -25,6 +25,24 @@ if "llm_temperature" not in st.session_state:
 if "llm_max_tokens" not in st.session_state:
     st.session_state["llm_max_tokens"] = 1000
 
+# Initialize session state for graph visualization if not already present
+if "cached_triples" not in st.session_state:
+    st.session_state["cached_triples"] = set()
+if "cached_labels" not in st.session_state:
+    st.session_state["cached_labels"] = []
+if "cached_layout" not in st.session_state:
+    st.session_state["cached_layout"] = "Hierarchical"
+if "cached_physics_enabled" not in st.session_state:
+    st.session_state["cached_physics_enabled"] = False
+
+# Initialize other required session state variables if not already present
+if "graph_rag" not in st.session_state:
+    st.session_state["graph_rag"] = None
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
+if "neo4j_schema" not in st.session_state:
+    st.session_state["neo4j_schema"] = None
+
 def chat():
     # Function to initialize GraphRAG with connection pooling
     @st.cache_resource

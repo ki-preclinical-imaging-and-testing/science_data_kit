@@ -1,6 +1,7 @@
 import streamlit as st
 import docker
 import os
+import toml
 from datetime import datetime
 from pathlib import Path
 from utils.database import (
@@ -383,3 +384,149 @@ def schema_sample_widget():
                 triples, nodes = extract_schema(results_list)
                 st.session_state.cached_triples = triples
                 st.session_state.cached_labels = sorted(nodes)  # Ensure this is updated
+
+def settings_sidebar():
+    """
+    Provides a UI for changing Streamlit configuration settings, including theme colors.
+
+    This function:
+    1. Reads the current settings from config.toml
+    2. Displays color pickers for theme colors
+    3. Updates config.toml when settings are changed
+    4. Provides a button to reset to default colors
+    """
+    settings_header = "⚙️ App Settings"
+
+    with st.expander(settings_header, expanded=False):
+        st.subheader("Theme Settings")
+
+        # Path to config.toml
+        config_path = Path(".streamlit/config.toml")
+
+        # Read current config
+        try:
+            config = toml.load(config_path)
+        except Exception as e:
+            st.error(f"Error loading config file: {e}")
+            return
+
+        # Get current theme settings with defaults
+        theme = config.get("theme", {})
+        primary_color = theme.get("primaryColor", "#4CAF50")
+        background_color = theme.get("backgroundColor", "#1E3B2C")
+        secondary_background_color = theme.get("secondaryBackgroundColor", "#004D40")
+        text_color = theme.get("textColor", "#FFFFFF")
+
+        # Display color pickers
+        st.markdown("### Choose Theme Colors")
+
+        new_primary_color = st.color_picker("Primary Color (buttons, links)", primary_color, key="primary_color")
+        new_background_color = st.color_picker("Background Color", background_color, key="background_color")
+        new_secondary_background_color = st.color_picker("Sidebar Color", secondary_background_color, key="secondary_background_color")
+        new_text_color = st.color_picker("Text Color", text_color, key="text_color")
+
+        # Check if any colors have changed
+        colors_changed = (
+            new_primary_color != primary_color or
+            new_background_color != background_color or
+            new_secondary_background_color != secondary_background_color or
+            new_text_color != text_color
+        )
+
+        # Save button
+        if colors_changed:
+            st.info("Theme colors have changed. Click 'Save Changes' to apply.")
+
+            if st.button("Save Changes", use_container_width=True):
+                try:
+                    # Update config
+                    if "theme" not in config:
+                        config["theme"] = {}
+
+                    config["theme"]["primaryColor"] = new_primary_color
+                    config["theme"]["backgroundColor"] = new_background_color
+                    config["theme"]["secondaryBackgroundColor"] = new_secondary_background_color
+                    config["theme"]["textColor"] = new_text_color
+
+                    # Write to file
+                    with open(config_path, "w") as f:
+                        toml.dump(config, f)
+
+                    st.success("Theme settings saved! Refresh the page to see changes.")
+                except Exception as e:
+                    st.error(f"Error saving config file: {e}")
+
+        # Reset to defaults button
+        if st.button("Reset to Defaults", use_container_width=True):
+            try:
+                # Set default colors
+                if "theme" not in config:
+                    config["theme"] = {}
+
+                config["theme"]["primaryColor"] = "#4CAF50"
+                config["theme"]["backgroundColor"] = "#1E3B2C"
+                config["theme"]["secondaryBackgroundColor"] = "#004D40"
+                config["theme"]["textColor"] = "#FFFFFF"
+
+                # Write to file
+                with open(config_path, "w") as f:
+                    toml.dump(config, f)
+
+                st.success("Theme settings reset to defaults! Refresh the page to see changes.")
+            except Exception as e:
+                st.error(f"Error resetting config file: {e}")
+
+        # Server settings
+        st.subheader("Server Settings")
+
+        # Get current server settings with defaults
+        server = config.get("server", {})
+        max_message_size = server.get("maxMessageSize", 500)
+
+        # Display server settings
+        new_max_message_size = st.number_input(
+            "Max Message Size (MB)", 
+            min_value=100, 
+            max_value=1000, 
+            value=int(max_message_size),
+            step=50,
+            help="Maximum message size in MB. Increase this value if you encounter 'MessageSizeError'."
+        )
+
+        # Check if server settings have changed
+        server_changed = new_max_message_size != max_message_size
+
+        # Save server settings
+        if server_changed:
+            st.info("Server settings have changed. Click 'Save Server Settings' to apply.")
+
+            if st.button("Save Server Settings", use_container_width=True):
+                try:
+                    # Update config
+                    if "server" not in config:
+                        config["server"] = {}
+
+                    config["server"]["maxMessageSize"] = new_max_message_size
+
+                    # Write to file
+                    with open(config_path, "w") as f:
+                        toml.dump(config, f)
+
+                    st.success("Server settings saved! Restart the application to apply changes.")
+                except Exception as e:
+                    st.error(f"Error saving config file: {e}")
+
+        # Information about config file
+        if st.toggle("About Configuration", value=False):
+            st.markdown("""
+            ### Configuration Information
+
+            The Streamlit configuration is stored in `app/.streamlit/config.toml`. This file contains settings for:
+
+            - **Theme**: Colors and appearance of the application
+            - **Server**: Performance and behavior settings
+
+            Changes to these settings require a page refresh or application restart to take effect.
+
+            For more information, see the [Streamlit configuration documentation](https://docs.streamlit.io/library/advanced-features/configuration).
+            """)

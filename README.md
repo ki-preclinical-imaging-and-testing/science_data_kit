@@ -109,6 +109,28 @@ Access the GUI from your browser at:
 localhost:8501
 ```
 
+### Configuration
+
+The application uses Streamlit's configuration system to handle various settings:
+
+- **Message Size Limits**: For large datasets, the default message size limit (200 MB) may be exceeded. The configuration has been adjusted to handle larger datasets.
+- **Theme Settings**: Visual appearance settings are configured for better user experience.
+
+Configuration files are located in the `app/.streamlit` directory:
+
+```
+app/.streamlit/
+├── config.toml    # Main configuration file
+└── README.md      # Documentation for configuration options
+```
+
+To adjust configuration settings (e.g., if you encounter "MessageSizeError"):
+
+1. Edit `app/.streamlit/config.toml`
+2. Restart the Streamlit application
+
+For more details, see the [configuration documentation](app/.streamlit/README.md).
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

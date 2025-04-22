@@ -179,7 +179,29 @@ with st.expander("Resolve and define node labels", expanded=False):
         st.subheader("Input DataFrame")
 
         # Display the DataFrame
-        st.dataframe(st.session_state["entities_df"], use_container_width=True)
+        try:
+            # Try to display the full dataframe
+            st.dataframe(st.session_state["entities_df"], use_container_width=True)
+        except Exception as e:
+            if "MessageSizeError" in str(e) or "exceeds the message size limit" in str(e):
+                # If the dataframe is too large, show an abbreviated version
+                st.warning("The data is too large to display in full. Showing abbreviated version (first 1000 rows).")
+
+                # Create an abbreviated dataframe
+                abbreviated_df = st.session_state["entities_df"].head(1000)
+                st.dataframe(abbreviated_df, use_container_width=True)
+
+                # Add download button for the full dataset
+                csv_data = st.session_state["entities_df"].to_csv(index=False)
+                st.download_button(
+                    label="Download Full Dataset as CSV",
+                    data=csv_data,
+                    file_name="entities_data.csv",
+                    mime="text/csv",
+                )
+            else:
+                # If it's a different error, show it
+                st.error(f"Error displaying data: {e}")
 
         # Select label column
         st.subheader("Define Entity Structure")
@@ -672,7 +694,24 @@ with st.expander("Assemble ontology, taxonomy, or schema using properties", expa
                         # Display the resulting taxonomy
                         st.subheader("**Generated Taxonomy:**")
                         taxonomy_df = st.session_state["taxonomy"]
-                        st.dataframe(taxonomy_df, use_container_width=True)
+
+                        try:
+                            # Try to display the full taxonomy dataframe
+                            st.dataframe(taxonomy_df, use_container_width=True)
+                        except Exception as e:
+                            if "MessageSizeError" in str(e) or "exceeds the message size limit" in str(e):
+                                # If the dataframe is too large, show an abbreviated version
+                                st.warning("The taxonomy is too large to display in full. Showing abbreviated version (first 1000 rows).")
+
+                                # Create an abbreviated dataframe
+                                abbreviated_df = taxonomy_df.head(1000)
+                                st.dataframe(abbreviated_df, use_container_width=True)
+
+                                # Remind user about download options
+                                st.info("Use the download options on the left to get the complete taxonomy data.")
+                            else:
+                                # If it's a different error, show it
+                                st.error(f"Error displaying taxonomy: {e}")
                     except Exception as e:
                         st.error(f"Error generating taxonomy: {e}")
                 else:

@@ -155,7 +155,20 @@ with st.expander("Run Filesystem Scan", expanded=True):
         # Show scan status if available
         if "ncdu_output" in st.session_state and st.session_state["ncdu_output"]:
             # Use a text area with fixed height for scrollable output
-            st.text_area("Scan Output", st.session_state["ncdu_output"], height=300)
+            try:
+                # Try to display the full output
+                st.text_area("Scan Output", st.session_state["ncdu_output"], height=300)
+            except Exception as e:
+                if "MessageSizeError" in str(e) or "exceeds the message size limit" in str(e):
+                    # If the output is too large, show an abbreviated version
+                    st.warning("The scan output is too large to display in full. Showing abbreviated version.")
+
+                    # Create an abbreviated output (first 10000 characters)
+                    abbreviated_output = st.session_state["ncdu_output"][:10000] + "...\n[Output truncated due to size]"
+                    st.text_area("Scan Output (Abbreviated)", abbreviated_output, height=300)
+                else:
+                    # If it's a different error, show it
+                    st.error(f"Error displaying scan output: {e}")
 
         # Reset scan button
         if st.session_state["scan_completed"]:
@@ -173,7 +186,24 @@ if st.session_state["scan_completed"] and not st.session_state["scanned_files"].
         with result_col1:
             st.subheader("Step 4: View Results")
             st.write("Scanned Files Preview:")
-            st.dataframe(st.session_state["scanned_files"])
+
+            # Handle large dataframes that might cause MessageSizeError
+            try:
+                # Try to display the full dataframe
+                st.dataframe(st.session_state["scanned_files"])
+            except Exception as e:
+                if "MessageSizeError" in str(e) or "exceeds the message size limit" in str(e):
+                    # If the dataframe is too large, show an abbreviated version
+                    st.warning("The scan results are too large to display in full. Showing abbreviated version.")
+
+                    # Create an abbreviated dataframe (first 1000 rows)
+                    abbreviated_df = st.session_state["scanned_files"].head(1000)
+                    st.dataframe(abbreviated_df)
+
+                    st.info("Download the complete results using the 'Download Results as CSV' button below.")
+                else:
+                    # If it's a different error, show it
+                    st.error(f"Error displaying results: {e}")
 
         with result_col2:
             st.subheader("Entity Labeling")
@@ -217,13 +247,27 @@ if st.session_state["scan_completed"] and not st.session_state["scanned_files"].
 
             # Add download option
             if st.button("Download Results as CSV", use_container_width=True):
-                csv_data = st.session_state["scanned_files"].to_csv(index=False)
-                st.download_button(
-                    label="Download CSV",
-                    data=csv_data,
-                    file_name="scan_results.csv",
-                    mime="text/csv",
-                )
+                try:
+                    # Try to convert the dataframe to CSV and create a download button
+                    csv_data = st.session_state["scanned_files"].to_csv(index=False)
+                    st.download_button(
+                        label="Download CSV",
+                        data=csv_data,
+                        file_name="scan_results.csv",
+                        mime="text/csv",
+                    )
+                except Exception as e:
+                    if "MessageSizeError" in str(e) or "exceeds the message size limit" in str(e):
+                        # If the CSV data is too large, suggest alternative approaches
+                        st.warning("The scan results are too large to download directly. Consider these alternatives:")
+                        st.info("""
+                        1. Filter the data to reduce its size before downloading
+                        2. Export in smaller batches
+                        3. Use the database export functionality for very large datasets
+                        """)
+                    else:
+                        # If it's a different error, show it
+                        st.error(f"Error preparing download: {e}")
 
 # Database push functionality in an expander with two columns
 if st.session_state["scan_completed"] and not st.session_state["scanned_files"].empty:

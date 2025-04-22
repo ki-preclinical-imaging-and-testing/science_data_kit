@@ -1,6 +1,6 @@
 import streamlit as st
 
-from utils.sidebar import database_sidebar, jupyter_sidebar, neo4j_connector, neodash_sidebar
+from utils.sidebar import database_sidebar, jupyter_sidebar, neo4j_connector, neodash_sidebar, settings_sidebar
 
 # Title and description
 st.header("Data Resources")
@@ -12,7 +12,9 @@ server_dict = {
     'Run Jupyter Lab to work with your data': jupyter_sidebar,
     'Launch NeoDash for Neo4j visualization': neodash_sidebar,
     'Drivers': None,
-    'Connect to a Neo4j database': neo4j_connector
+    'Connect to a Neo4j database': neo4j_connector,
+    'Settings': None,
+    'Customize application appearance and behavior': settings_sidebar
 }
 
 
