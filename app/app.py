@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 from neo4j import GraphDatabase
+from utils.database import load_db_config
 
 
 if __name__ == "__main__":
@@ -40,13 +41,16 @@ if __name__ == "__main__":
     if "available_labels" not in st.session_state:
         st.session_state["available_labels"] = []
 
+    # Load database configuration from YAML files
+    db_config = load_db_config()
+
     # Session state initialization
     if "neo4j_uri" not in st.session_state:
-        st.session_state["neo4j_uri"] = "bolt://localhost:7687"
+        st.session_state["neo4j_uri"] = db_config['uri']
     if "neo4j_user" not in st.session_state:
-        st.session_state["neo4j_user"] = "neo4j"
+        st.session_state["neo4j_user"] = db_config['user']
     if "neo4j_password" not in st.session_state:
-        st.session_state["neo4j_password"] = "neo4jiscool"
+        st.session_state["neo4j_password"] = db_config['password']
     if "graph_rag" not in st.session_state:
         st.session_state["graph_rag"] = None
     if "chat_history" not in st.session_state:
@@ -70,16 +74,25 @@ if __name__ == "__main__":
     if "http_port" not in st.session_state:
         st.session_state["http_port"] = 7474
     if "bolt_port" not in st.session_state:
-        st.session_state["bolt_port"] = 7687
+        # Extract port from URI if possible
+        uri = db_config['uri']
+        try:
+            # URI format: bolt://hostname:port
+            port = int(uri.split(':')[-1])
+            st.session_state["bolt_port"] = port
+        except (ValueError, IndexError):
+            # Default port if URI doesn't contain a port
+            st.session_state["bolt_port"] = 7687
     if "username" not in st.session_state:
-        st.session_state["username"] = "neo4j"
+        st.session_state["username"] = db_config['user']
     if "password" not in st.session_state:
-        st.session_state["password"] = "neo4jiscool"
+        st.session_state["password"] = db_config['password']
     if "credentials_locked" not in st.session_state:
         st.session_state["credentials_locked"] = False  # Prevent changes after start
     if "db_connection" not in st.session_state:
+        # Use the URI from the config file
         st.session_state["db_connection"] = GraphDatabase.driver(
-            f"bolt://localhost:{st.session_state['bolt_port']}",
+            db_config['uri'],
             auth=(st.session_state['username'],
                   st.session_state['password'])
         )
