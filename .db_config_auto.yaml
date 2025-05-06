@@ -1,4 +1,0 @@
-uri: "bolt://172.17.0.2:7687"
-user: "neo4j"
-password: "neo4jiscool"
-database: "neo4j"
