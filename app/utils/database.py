@@ -332,7 +332,7 @@ def fetch_databases(session):
 def extract_schema(results):
     triples = set()
     for record in results:
-        triples.add((record["subjectLabel"], record["predicateType"], record["objectLabel"]))
+        triples.add((record["subjectLabel"], f'{record["predicateType"][1]} ({record["predicateType"][0]})', record["objectLabel"]))
     nodes = {label for triple in triples for label in (triple[0], triple[2])}
     return triples, nodes
 
@@ -387,9 +387,9 @@ def create_pyvis_graph(triples, layout, physics_enabled):
                 "barnesHut": {
                     "gravitationalConstant": -4000,  # Strength of gravity
                     "centralGravity": 0.5,  # Pull toward center
-                    "springLength": 170,  # Ideal edge length
-                    "springConstant": 0.05,  # Spring stiffness
-                    "damping": 0.09  # Motion damping factor
+                    "springLength": 200,  # Ideal edge length
+                    "springConstant": 0.013,  # Spring stiffness
+                    "damping": 0.1  # Motion damping factor
                 }
             },
             "layout": {"improvedLayout": True}  # Optimize node positioning

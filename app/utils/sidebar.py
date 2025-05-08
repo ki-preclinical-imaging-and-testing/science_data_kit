@@ -371,10 +371,19 @@ def schema_sample_widget():
             session = get_neo4j_session(uri, user, password, database=st.session_state.selected_db)
             limit_clause = "" if include_all else f"LIMIT {sample_size}"
             with_clause = recall_query.strip() if recall_query.strip() else ""
+#            query = f"""
+#            {with_clause}
+#            MATCH (n)-[r]->(m)
+#            RETURN labels(n)[0] AS subjectLabel, type(r) AS predicateType, labels(m)[0] AS objectLabel
+#            {limit_clause}
+#            """
+
             query = f"""
             {with_clause}
-            MATCH (n)-[r]->(m)
-            RETURN labels(n)[0] AS subjectLabel, type(r) AS predicateType, labels(m)[0] AS objectLabel
+            RETURN DISTINCT 
+                labels(n)[0] AS subjectLabel, 
+                [r.id, r.name] AS predicateType, 
+                labels(m)[0] AS objectLabel
             {limit_clause}
             """
             with st.spinner("Sampling schema..."):
