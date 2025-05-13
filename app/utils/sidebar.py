@@ -36,14 +36,13 @@ def database_sidebar():
     if status == "running":
         _exp_header = f"🟢 {database_header}"
 
-    with st.expander(_exp_header, expanded=False):
+    with st.expander(_exp_header, expanded=True):  # Set to expanded by default for better visibility
 
         if status == "running":
             st.write(f"""
         🔗\t    Browser: http://{hostname}:{st.session_state['http_port']}\n
-         ⚡\t       Bolt: http://{hostname}:{st.session_state['bolt_port']}\n
+         ⚡\t       Bolt: bolt://{hostname}:{st.session_state['bolt_port']}\n
         ✅\t    IP Addr:  `{hostname}`""")
-
 
             if st.button("🛑 Stop DBMS"):
                 stop_neo4j_container()
@@ -52,19 +51,57 @@ def database_sidebar():
 
         else:
             st.warning("⚠️ Neo4j is not running.")
-            if st.button("🚀 Start DBMS"):
-                start_neo4j_container()
-                st.success("Starting server... Press again to update page.")
+            start_col, refresh_col = st.columns([3, 1])
+            with start_col:
+                if st.button("🚀 Start DBMS", use_container_width=True):
+                    with st.spinner("Starting Neo4j container..."):
+                        start_neo4j_container()
+                    # Check if the container started successfully
+                    new_status = get_neo4j_status()
+                    if new_status == "running":
+                        st.success("Neo4j server started successfully! Press the refresh button to update the page.")
+                    else:
+                        st.error("Failed to start Neo4j server. Check the logs below for details.")
+            with refresh_col:
+                if st.button("🔄", use_container_width=True):
+                    st.rerun()
 
-        # Show latest logs if running
-        if status == "running":
-            st.subheader("📜 Database Log")
-            try:
-                container = client.containers.get(st.session_state["container_name"])
-                logs = container.logs(tail=10).decode("utf-8")
-                st.text_area("Logs", logs, height=150)
-            except Exception as e:
-                st.error(f"Error fetching logs: {e}")
+        # Show latest logs regardless of status
+        st.subheader("📜 Database Log")
+        try:
+            # Try to get the container even if it's not running
+            existing_containers = client.containers.list(all=True, filters={"name": st.session_state["container_name"]})
+            if existing_containers:
+                container = existing_containers[0]
+                if container.status == "running":
+                    logs = container.logs(tail=20).decode("utf-8")
+                    st.text_area("Container Logs", logs, height=200)
+                else:
+                    # Show last logs even if container is stopped
+                    try:
+                        logs = container.logs(tail=20).decode("utf-8")
+                        st.text_area("Last Container Logs (container is stopped)", logs, height=200)
+                    except Exception:
+                        st.info("No logs available for stopped container.")
+            else:
+                st.info("No Neo4j container found. Click 'Start DBMS' to create one.")
+        except Exception as e:
+            st.error(f"Error fetching logs: {e}")
+
+    # Add Docker status information (moved outside the expander to avoid nesting)
+    st.subheader("Docker Status Information")
+    try:
+        import subprocess
+        docker_info = subprocess.run(["docker", "info"], capture_output=True, text=True)
+        if docker_info.returncode == 0:
+            st.success("Docker daemon is running")
+            st.code(docker_info.stdout, language="bash")
+        else:
+            st.error("Docker daemon is not running or not accessible")
+            st.code(docker_info.stderr, language="bash")
+    except Exception as e:
+        st.error(f"Error checking Docker status: {e}")
+
 
 def jupyter_sidebar():
 

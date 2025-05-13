@@ -8,7 +8,7 @@ st.markdown("""Spin up servers and connect to your data on this page.""")
 
 server_dict = {
     'Servers': None,
-    'Host local Neo4j database to stage your data': database_sidebar,
+    'Launch a Neo4j database to stage your adta': database_sidebar,
     'Run Jupyter Lab to work with your data': jupyter_sidebar,
     'Launch NeoDash for Neo4j visualization': neodash_sidebar,
     'Drivers': None,

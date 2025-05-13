@@ -10,6 +10,15 @@ def load_db_config(fn='db_config.yaml'):
     :param fn: Path to the YAML configuration file.
     :return: Dictionary containing the database configuration.
     """
+    # If the file is .db_config_auto.yaml, try to load it from the app directory first
+    if fn == '.db_config_auto.yaml':
+        try:
+            with open(f"app/{fn}", 'r') as file:
+                return yaml.safe_load(file)
+        except Exception:
+            # Fall back to the original location
+            pass
+
     try:
         with open(fn, 'r') as file:
             return yaml.safe_load(file)
