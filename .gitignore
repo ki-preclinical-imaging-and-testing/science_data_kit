@@ -14,6 +14,7 @@ __pycache__/
 *.pkl
 /*.ipynb
 data/
+app/app/
 
 # Template files for configuration (without sensitive information)
 !*.template.yaml
