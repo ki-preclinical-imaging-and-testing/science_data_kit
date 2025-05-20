@@ -237,6 +237,10 @@ def start_neo4j_container():
                 },
                 environment={
                     "NEO4J_AUTH": f"{st.session_state['username']}/{st.session_state['password']}",
+                    "NEO4J_PLUGINS": "[\"apoc\"]",
+                    "NEO4J_apoc_export_file_enabled": "true",
+                    "NEO4J_apoc_import_file_enabled": "true",
+                    "NEO4J_apoc_import_file_use__neo4j__config": "true",
                 },
                 detach=True,
                 tty=True,

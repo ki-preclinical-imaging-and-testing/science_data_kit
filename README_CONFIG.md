@@ -36,6 +36,17 @@ Where:
 ## Automatic Configuration
 When you start a Neo4j container through the application, it will automatically create or update the `app/.db_config_auto.yaml` file with the connection details for the container. This ensures that the application can connect to the Neo4j instance even if the container's IP address changes.
 
+## Neo4j Plugins
+The Neo4j container started by the application comes with the APOC (Awesome Procedures On Cypher) plugin pre-installed and configured. APOC provides many useful procedures and functions that extend Neo4j's capabilities, such as:
+
+- Data import/export
+- Graph algorithms
+- Data conversion
+- Text processing
+- And many more
+
+You can use APOC procedures and functions in your Cypher queries without any additional configuration.
+
 ## Security Considerations
 - The configuration files contain sensitive information (passwords)
 - Ensure that the configuration files are not committed to version control

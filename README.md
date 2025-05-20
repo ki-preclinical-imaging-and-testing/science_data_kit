@@ -20,7 +20,7 @@ The Science Data Kit (SDK) helps researchers manage and make sense of complex, m
 The Science Data Kit follows a logical workflow:
 
 1. **Connect** 🌐 - Set up your data infrastructure
-   - Host a local Neo4j database
+   - Host a local Neo4j database (with APOC plugin pre-installed)
    - Run Jupyter Lab for data analysis
    - Launch NeoDash for Neo4j visualization
    - Connect to existing Neo4j databases
