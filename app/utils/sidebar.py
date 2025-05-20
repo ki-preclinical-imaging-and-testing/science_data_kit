@@ -88,19 +88,19 @@ def database_sidebar():
         except Exception as e:
             st.error(f"Error fetching logs: {e}")
 
-    # Add Docker status information (moved outside the expander to avoid nesting)
-    st.subheader("Docker Status Information")
-    try:
-        import subprocess
-        docker_info = subprocess.run(["docker", "info"], capture_output=True, text=True)
-        if docker_info.returncode == 0:
-            st.success("Docker daemon is running")
-            st.code(docker_info.stdout, language="bash")
-        else:
-            st.error("Docker daemon is not running or not accessible")
-            st.code(docker_info.stderr, language="bash")
-    except Exception as e:
-        st.error(f"Error checking Docker status: {e}")
+        # Add Docker status information (moved outside the expander to avoid nesting)
+        st.subheader("Docker Status Information")
+        try:
+            import subprocess
+            docker_info = subprocess.run(["docker", "info"], capture_output=True, text=True)
+            if docker_info.returncode == 0:
+                st.success("Docker daemon is running")
+                st.text_area("Docker status", docker_info.stdout, height=200)
+            else:
+                st.error("Docker daemon is not running or not accessible")
+                st.text_area("Docker daemon is not running", docker_info.stderr, height=200)
+        except Exception as e:
+            st.error(f"Error checking Docker status: {e}")
 
 
 def jupyter_sidebar():
