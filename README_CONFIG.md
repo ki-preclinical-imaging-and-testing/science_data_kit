@@ -36,6 +36,21 @@ Where:
 ## Automatic Configuration
 When you start a Neo4j container through the application, it will automatically create or update the `app/.db_config_auto.yaml` file with the connection details for the container. This ensures that the application can connect to the Neo4j instance even if the container's IP address changes.
 
+## Neo4j Version Selection
+The application allows you to select different Neo4j versions when starting a container. This feature is available in the Streamlit interface under the "Neo4j Database" section when the database is not running.
+
+Available versions include:
+- `latest` - The latest stable version of Neo4j
+- `2025.04` - A specific recent version
+- Various older versions (5.x, 4.x series)
+
+To use a specific Neo4j version:
+1. Ensure the Neo4j container is not running
+2. Select your desired version from the dropdown menu
+3. Click "Start DBMS" to start a container with the selected version
+
+Note that changing versions may affect database compatibility. It's recommended to export your data before switching to a different version if you have important data in your database.
+
 ## Neo4j Plugins
 The Neo4j container started by the application comes with the APOC (Awesome Procedures On Cypher) plugin pre-installed and configured. APOC provides many useful procedures and functions that extend Neo4j's capabilities, such as:
 

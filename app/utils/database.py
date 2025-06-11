@@ -65,6 +65,10 @@ def initialize_session():
     username = st.session_state.get('username', db_config['user'])
     password = st.session_state.get('password', db_config['password'])
 
+    # Initialize neo4j_version if not already set
+    if 'neo4j_version' not in st.session_state:
+        st.session_state['neo4j_version'] = 'latest'
+
     # Parse the URI to get the hostname and port
     uri = db_config['uri']
     try:
@@ -216,20 +220,24 @@ def start_neo4j_container():
 
         # Start a new container
         try:
+            # Get the selected Neo4j version
+            neo4j_version = st.session_state.get('neo4j_version', 'latest')
+            neo4j_image = f"neo4j:{neo4j_version}"
+
             # Check if the Neo4j image exists
             try:
-                client.images.get("neo4j:latest")
+                client.images.get(neo4j_image)
             except docker.errors.ImageNotFound:
-                st.warning("Neo4j Docker image not found. Attempting to pull it...")
+                st.warning(f"Neo4j Docker image {neo4j_image} not found. Attempting to pull it...")
                 try:
-                    client.images.pull("neo4j:latest")
-                    st.success("Neo4j Docker image pulled successfully.")
+                    client.images.pull(neo4j_image)
+                    st.success(f"Neo4j Docker image {neo4j_image} pulled successfully.")
                 except Exception as e:
-                    st.error(f"Failed to pull Neo4j Docker image: {e}")
+                    st.error(f"Failed to pull Neo4j Docker image {neo4j_image}: {e}")
                     return
 
             container = client.containers.run(
-                "neo4j:latest",
+                neo4j_image,
                 name=container_name,
                 ports={
                     "7474/tcp": st.session_state["http_port"],

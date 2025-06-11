@@ -76,7 +76,59 @@ The Science Data Kit is designed around the FAIR+ data principles:
 - Docker (for Neo4j and Jupyter containers)
 - Neo4j Graph Database
 
+#### Optional Dependencies
+
+- **ISA Tools**: Some features in the ISA browser require the `isatools` package. The application includes a compatibility layer that allows it to run without `isatools`, but with limited functionality. If you need full ISA-Tab file processing capabilities, you have two options:
+
+##### Option 1: Install isatools for Python 3.12+ (Limited Functionality)
+
+We've modified the isatools package to work with Python 3.12+, but with some limitations. Specifically, the mzML file processing functionality is not available in this version.
+
+```bash
+python install_isatools_py312.py
+```
+
+This will create a virtual environment at `~/.venvs/isatools_py312_env` with Python 3.12+ and a modified version of isatools that works without the mzml2isa dependency.
+
+##### Option 2: Install Full isatools with Python 3.9 (Complete Functionality)
+
+For complete functionality including mzML file processing, you can use the provided installation scripts that create a Python 3.9 environment:
+
+1. **Using conda (recommended)**:
+   ```bash
+   bash install_isatools.sh
+   ```
+   This will create a conda environment named `isatools_env` with Python 3.9 and all required dependencies.
+
+2. **Using venv/pip**:
+   ```bash
+   python install_isatools.py
+   ```
+   This will create a virtual environment at `~/.venvs/isatools_env` with Python 3.9 and all required dependencies.
+
+##### Activating the Environment
+
+After installation, you can activate the environment and use isatools:
+```bash
+# For Python 3.12+ version
+source ~/.venvs/isatools_py312_env/bin/activate  # Linux/macOS
+# or
+~\.venvs\isatools_py312_env\Scripts\activate  # Windows
+
+# For Python 3.9 version with conda
+conda activate isatools_env
+
+# For Python 3.9 version with venv
+source ~/.venvs/isatools_env/bin/activate  # Linux/macOS
+# or
+~\.venvs\isatools_env\Scripts\activate  # Windows
+```
+
+The main application will continue to work with Python 3.10+ using the compatibility layer, while the isatools-specific features will be available in the environment you choose to activate.
+
 ### Installation
+
+We provide a comprehensive installation script that handles all the necessary setup steps:
 
 1. Clone the repository:
    ```bash
@@ -84,23 +136,57 @@ The Science Data Kit is designed around the FAIR+ data principles:
    cd science_data_kit
    ```
 
-2. Create and activate a virtual environment:
+2. Run the installation script:
    ```bash
-   conda create -n science_data_kit python=3.13 pip
-   conda activate science_data_kit
+   ./install.sh
    ```
 
-3. Install dependencies:
+The installation script will:
+- Check for system dependencies (Python 3.10+, pip, Docker, Docker Compose)
+- Offer to install missing dependencies
+- Set up a Python virtual environment
+- Install the Science Data Kit package and its dependencies
+- Configure Neo4j in a Docker container
+- Provide options for installing isatools (basic or full version)
+
+#### Manual Installation (Alternative)
+
+If you prefer to install manually:
+
+1. Create and activate a virtual environment:
    ```bash
-   pip install -r requirements.txt
+   python -m venv venv
+   source venv/bin/activate  # Linux/macOS
+   # or
+   venv\Scripts\activate  # Windows
+   ```
+
+2. Install the package:
+   ```bash
+   pip install -e .
+   ```
+
+3. (Optional) Install isatools:
+   ```bash
+   # For basic isatools (Python 3.12+, limited functionality)
+   pip install -e .[isatools]
+
+   # For full isatools (Python 3.9, complete functionality)
+   # See the "Optional Dependencies" section above
    ```
 
 ### Running the Application
 
-Start the Streamlit application:
+After installation, you can start the Science Data Kit application:
 
 ```bash
-streamlit run app/app.py
+# Activate the virtual environment (if not already activated)
+source venv/bin/activate  # Linux/macOS
+# or
+venv\Scripts\activate  # Windows
+
+# Run the application
+science_data_kit
 ```
 
 Access the GUI from your browser at:
@@ -108,6 +194,47 @@ Access the GUI from your browser at:
 ```
 localhost:8501
 ```
+
+### Verifying the Installation
+
+We provide a test script that automatically verifies your installation:
+
+```bash
+./test_installation.py
+```
+
+This script checks:
+- Python version
+- Required dependencies
+- Docker and Neo4j container status
+- Configuration files
+- Optional components like isatools
+
+Alternatively, you can manually verify the installation:
+
+1. Check that the application starts without errors:
+   ```bash
+   science_data_kit
+   ```
+
+2. Verify that Neo4j is running:
+   ```bash
+   docker ps | grep neo4j-instance
+   ```
+   You should see the Neo4j container running.
+
+3. Access the Neo4j browser at `http://localhost:7474` and log in with the default credentials (neo4j/password).
+
+4. If you installed isatools, verify the installation:
+   ```bash
+   # For basic isatools (Python 3.12+)
+   python -c "import isatools; print('isatools version:', isatools.__version__)"
+
+   # For full isatools (Python 3.9)
+   # First activate the appropriate environment
+   conda activate isatools_env  # or source ~/.venvs/isatools_env/bin/activate
+   python -c "import isatools; print('isatools version:', isatools.__version__)"
+   ```
 
 ### Configuration
 

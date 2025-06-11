@@ -24,6 +24,9 @@ dependencies:
   - xz=5.6.4=h5eee18b_1
   - zlib=1.2.13=h5eee18b_1
   - pip:
+    # Note: isatools requires Python 3.9 and is not compatible with Python 3.11+
+    # If you need full isatools functionality, create a separate environment with Python 3.9
+    # The app will work with limited functionality without isatools
     - altair==5.5.0
     - asttokens==3.0.0
     - attrs==25.3.0

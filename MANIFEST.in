@@ -1,0 +1,28 @@
+# Include all Python files
+recursive-include app *.py
+
+# Include Streamlit configuration files
+recursive-include app/.streamlit *
+
+# Include documentation
+include README.md
+include LICENSE
+include requirements.txt
+include environment.yml
+
+# Include installation scripts
+include install.sh
+include install_isatools.py
+include install_isatools_py312.py
+include run_app.py
+include test_installation.py
+
+# Include template files
+include db_config.template.yaml
+
+# Exclude unnecessary files
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .git
+global-exclude .gitignore
+global-exclude .ipynb_checkpoints

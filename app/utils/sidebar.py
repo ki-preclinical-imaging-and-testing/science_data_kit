@@ -51,15 +51,25 @@ def database_sidebar():
 
         else:
             st.warning("⚠️ Neo4j is not running.")
+
+            # Neo4j version selection dropdown
+            neo4j_versions = ["latest", "2025.04", "5.18", "5.17", "5.16", "5.15", "5.14", "5.13", "5.12", "5.11", "5.10", "5.9", "5.8", "5.7", "5.6", "5.5", "5.4", "5.3", "5.2", "5.1", "5.0", "4.4", "4.3", "4.2", "4.1", "4.0"]
+            selected_version = st.selectbox(
+                "Neo4j Version",
+                neo4j_versions,
+                index=neo4j_versions.index(st.session_state.get('neo4j_version', 'latest'))
+            )
+            st.session_state['neo4j_version'] = selected_version
+
             start_col, refresh_col = st.columns([3, 1])
             with start_col:
                 if st.button("🚀 Start DBMS", use_container_width=True):
-                    with st.spinner("Starting Neo4j container..."):
+                    with st.spinner(f"Starting Neo4j {st.session_state['neo4j_version']} container..."):
                         start_neo4j_container()
                     # Check if the container started successfully
                     new_status = get_neo4j_status()
                     if new_status == "running":
-                        st.success("Neo4j server started successfully! Press the refresh button to update the page.")
+                        st.success(f"Neo4j {st.session_state['neo4j_version']} server started successfully! Press the refresh button to update the page.")
                     else:
                         st.error("Failed to start Neo4j server. Check the logs below for details.")
             with refresh_col:
