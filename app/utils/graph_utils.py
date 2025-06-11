@@ -2,6 +2,18 @@ import yaml
 from neo4j import GraphDatabase, Driver
 from neo4j.exceptions import Neo4jError
 import pandas as pd
+from typing import List, Dict, Any, Optional, Union
+from collections import Counter
+
+# Import isatools classes through our compatibility layer
+try:
+    from isatools.model import OntologyAnnotation, OntologySource
+    ISATOOLS_AVAILABLE = True
+except ImportError:
+    from utils.isa_compatibility import get_isa_objects
+    _, OntologyAnnotation, _, _, _, _, _, _ = get_isa_objects()
+    OntologySource = None
+    ISATOOLS_AVAILABLE = False
 
 def load_db_config(fn='db_config.yaml'):
     """
@@ -213,6 +225,159 @@ class Neo4jConnection:
             return True
         except Exception as e:
             raise ConnectionError(f"Connection failed: {e}")
+
+    def summarize_ontology_terms_for_labels(self, label: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
+        """
+        Summarizes available ontology terms used as properties for node labels in Neo4j.
+
+        This function queries the Neo4j database to find properties that contain ontology terms
+        (identified by having both a value and a URI) and summarizes them by label and property name.
+
+        :param label: Optional label to filter the summary. If None, summarizes terms for all labels.
+        :return: A dictionary with label names as keys and dictionaries of property summaries as values.
+        """
+        # Query to find properties that might contain ontology terms
+        if label:
+            query = """
+            MATCH (n:`{label}`)
+            UNWIND keys(n) AS property
+            WITH property, collect(DISTINCT n[property]) AS values
+            WHERE size(values) > 0
+            RETURN '{label}' AS label, property, values, count(values) AS count
+            ORDER BY count DESC
+            """.format(label=label)
+        else:
+            query = """
+            MATCH (n)
+            WHERE NOT n:Resource
+            WITH labels(n) AS labels, keys(n) AS properties, n
+            UNWIND labels AS label
+            UNWIND properties AS property
+            WITH label, property, collect(DISTINCT n[property]) AS values
+            WHERE size(values) > 0
+            RETURN label, property, values, count(values) AS count
+            ORDER BY label, count DESC
+            """
+
+        results = self.execute_query(query)
+
+        # Organize results by label and property
+        summary = {}
+        for record in results:
+            label_name = record["label"]
+            property_name = record["property"]
+            values = record["values"]
+            count = record["count"]
+
+            # Initialize label entry if it doesn't exist
+            if label_name not in summary:
+                summary[label_name] = {}
+
+            # Add property summary
+            summary[label_name][property_name] = {
+                "count": count,
+                "unique_values": len(values),
+                "sample_values": values[:5],  # Show up to 5 sample values
+                "has_uri_pattern": any("://" in str(v) for v in values)  # Check if any value looks like a URI
+            }
+
+        return summary
+
+    def load_ontology_relationships(self, ontology_annotations: List[OntologyAnnotation], 
+                                   create_source_nodes: bool = True,
+                                   relationship_type: str = "HAS_TERM") -> int:
+        """
+        Loads ontology terms and their relationships into Neo4j.
+
+        This function creates nodes for ontology terms and optionally for their sources,
+        and establishes relationships between them.
+
+        :param ontology_annotations: List of OntologyAnnotation objects to load
+        :param create_source_nodes: Whether to create nodes for ontology sources
+        :param relationship_type: The type of relationship to create between source and term nodes
+        :return: Number of relationships created
+        """
+        if not ontology_annotations:
+            return 0
+
+        # Track statistics
+        terms_created = 0
+        sources_created = 0
+        relationships_created = 0
+
+        # Process each ontology annotation
+        for annotation in ontology_annotations:
+            # Skip if term is empty
+            if not annotation.term:
+                continue
+
+            # Create term node
+            term_query = """
+            MERGE (t:OntologyTerm {term: $term})
+            ON CREATE SET t.created = timestamp()
+            SET t.term_accession = $term_accession,
+                t.last_updated = timestamp()
+            RETURN t
+            """
+
+            term_params = {
+                "term": annotation.term,
+                "term_accession": annotation.term_accession or ""
+            }
+
+            term_result = self.execute_query(term_query, term_params)
+            if term_result:
+                terms_created += 1
+
+            # Create source node and relationship if requested
+            if create_source_nodes and annotation.term_source:
+                source_name = annotation.term_source
+                if hasattr(annotation.term_source, 'name'):
+                    source_name = annotation.term_source.name
+
+                if source_name:
+                    # Create source node
+                    source_query = """
+                    MERGE (s:OntologySource {name: $name})
+                    ON CREATE SET s.created = timestamp()
+                    SET s.last_updated = timestamp()
+                    RETURN s
+                    """
+
+                    source_params = {"name": source_name}
+
+                    # Add additional properties if available
+                    if hasattr(annotation.term_source, 'file') and annotation.term_source.file:
+                        source_params["file"] = annotation.term_source.file
+                    if hasattr(annotation.term_source, 'version') and annotation.term_source.version:
+                        source_params["version"] = annotation.term_source.version
+                    if hasattr(annotation.term_source, 'description') and annotation.term_source.description:
+                        source_params["description"] = annotation.term_source.description
+
+                    source_result = self.execute_query(source_query, source_params)
+                    if source_result:
+                        sources_created += 1
+
+                    # Create relationship between source and term
+                    rel_query = """
+                    MATCH (s:OntologySource {name: $source_name})
+                    MATCH (t:OntologyTerm {term: $term})
+                    MERGE (s)-[r:{rel_type}]->(t)
+                    ON CREATE SET r.created = timestamp()
+                    SET r.last_updated = timestamp()
+                    RETURN r
+                    """.format(rel_type=relationship_type)
+
+                    rel_params = {
+                        "source_name": source_name,
+                        "term": annotation.term
+                    }
+
+                    rel_result = self.execute_query(rel_query, rel_params)
+                    if rel_result:
+                        relationships_created += 1
+
+        return relationships_created
 
 
 # Example usage:

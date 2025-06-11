@@ -36,6 +36,8 @@ The Science Data Kit follows a logical workflow:
    - Define entity structure and properties
    - Create relationships between entities
    - Build taxonomies and ontologies
+   - Summarize ontology terms for node labels
+   - Load ontology relationships into Neo4j
 
 4. **Explore** 🏞 - Visualize and analyze your data
    - View schema visualizations
