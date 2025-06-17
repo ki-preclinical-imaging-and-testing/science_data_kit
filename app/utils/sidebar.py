@@ -10,11 +10,11 @@ from utils.db_adapter import (
     fetch_databases, get_neo4j_session,
     export_graph_to_file, import_graph_from_file
 )
-from utils.jupyter_server import ( 
+from utils.jupyter_adapter import ( 
     initialize_jupyter_session,
     start_jupyter_container, stop_jupyter_container
 )
-from utils.neodash_server import (
+from utils.neodash_adapter import (
     initialize_neodash_session,
     start_neodash_container, stop_neodash_container
 )

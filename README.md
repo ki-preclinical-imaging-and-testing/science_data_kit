@@ -38,6 +38,7 @@ The Science Data Kit follows a logical workflow:
    - Build taxonomies and ontologies
    - Summarize ontology terms for node labels
    - Load ontology relationships into Neo4j
+   - [Learn more about ontology features](docs/ONTOLOGY_FEATURES.md)
 
 4. **Explore** 🏞 - Visualize and analyze your data
    - View schema visualizations
@@ -96,17 +97,17 @@ This will create a virtual environment at `~/.venvs/isatools_py312_env` with Pyt
 
 For complete functionality including mzML file processing, you can use the provided installation scripts that create a Python 3.9 environment:
 
-1. **Using conda (recommended)**:
+1. **Using venv with bash script**:
    ```bash
    bash install_isatools.sh
    ```
-   This will create a conda environment named `isatools_env` with Python 3.9 and all required dependencies.
+   This will create a virtual environment at `~/.venvs/isatools_env` with Python 3.9 and all required dependencies.
 
-2. **Using venv/pip**:
+2. **Using venv with Python script**:
    ```bash
    python install_isatools.py
    ```
-   This will create a virtual environment at `~/.venvs/isatools_env` with Python 3.9 and all required dependencies.
+   This will also create a virtual environment at `~/.venvs/isatools_env` with Python 3.9 and all required dependencies.
 
 ##### Activating the Environment
 
@@ -117,10 +118,7 @@ source ~/.venvs/isatools_py312_env/bin/activate  # Linux/macOS
 # or
 ~\.venvs\isatools_py312_env\Scripts\activate  # Windows
 
-# For Python 3.9 version with conda
-conda activate isatools_env
-
-# For Python 3.9 version with venv
+# For Python 3.9 version
 source ~/.venvs/isatools_env/bin/activate  # Linux/macOS
 # or
 ~\.venvs\isatools_env\Scripts\activate  # Windows
@@ -234,7 +232,9 @@ Alternatively, you can manually verify the installation:
 
    # For full isatools (Python 3.9)
    # First activate the appropriate environment
-   conda activate isatools_env  # or source ~/.venvs/isatools_env/bin/activate
+   source ~/.venvs/isatools_env/bin/activate  # Linux/macOS
+   # or
+   ~\.venvs\isatools_env\Scripts\activate  # Windows
    python -c "import isatools; print('isatools version:', isatools.__version__)"
    ```
 
