@@ -1,3 +1,18 @@
+"""
+This module is deprecated and has been moved to science_data_kit/core/utils/file_utils.py.
+Please update your imports to use the new location.
+
+Example:
+    from science_data_kit.core.utils.file_utils import FileOrganizer
+"""
+
+# Raise an ImportError to ensure that any code still using this module will fail
+# and be updated to use the new location
+raise ImportError(
+    "This module has been moved to science_data_kit/core/utils/file_utils.py. "
+    "Please update your imports to use the new location."
+)
+
 import os
 import subprocess
 import pandas as pd
@@ -7,7 +22,7 @@ class FileOrganizer:
     def __init__(self, csv_file, source_dir, symlink_dir, final_export_dir):
         """
         Initializes the FileOrganizer.
-        
+
         :param csv_file: Path to the CSV containing file paths and new hierarchy columns.
         :param source_dir: Original directory where files are located.
         :param symlink_dir: Directory where symlinked structure will be created.
@@ -25,10 +40,10 @@ class FileOrganizer:
         Creates a structured directory with symlinks based on CSV data.
         """
         print("\n📁 Creating symlink structure...\n")
-        
+
         for _, row in tqdm(self.df.iterrows(), total=self.total_files, desc="🔗 Creating symlinks"):
             original_path = os.path.join(self.source_dir, row["filepath"])
-            
+
             # Construct the new path based on hierarchy columns
             new_path = os.path.join(self.symlink_dir, row["col1"], row["col2"], row["col3"], os.path.basename(original_path))
 
@@ -83,4 +98,3 @@ if __name__ == "__main__":
         final_export_dir="/final_export"
     )
     organizer.execute()
-
