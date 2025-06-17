@@ -25,7 +25,7 @@ try:
     ISATOOLS_AVAILABLE = True
 except ImportError:
     try:
-        from utils.isa_compatibility import get_isa_objects
+        from science_data_kit.core.utils.isa_compatibility import get_isa_objects
         _, OntologyAnnotation, _, _, _, _, _, _ = get_isa_objects()
         OntologySource = None
         ISATOOLS_AVAILABLE = False
@@ -100,19 +100,19 @@ def update_db_config_auto(hostname: str, port: str, username: Optional[str] = No
         ConfigError: If the configuration file cannot be updated.
     """
     config_path = Path("app/.db_config_auto.yaml")
-    
+
     # Create config dictionary
     config = {
         "uri": f"bolt://{hostname}:{port}",
     }
-    
+
     if username:
         config["user"] = username
     if password:
         config["password"] = password
     if database:
         config["database"] = database
-    
+
     # Write to file
     try:
         with open(config_path, 'w') as file:
@@ -142,7 +142,7 @@ def find_free_port(start_port: int = 7687) -> int:
 class Neo4jManager:
     """
     A unified manager for Neo4j database operations.
-    
+
     This class provides methods for:
     - Managing Neo4j connections
     - Starting and stopping Neo4j containers
@@ -150,16 +150,16 @@ class Neo4jManager:
     - Importing and exporting data
     - Working with ontologies
     """
-    
+
     _instance = None
-    
+
     def __new__(cls, *args, **kwargs):
         """Implement singleton pattern."""
         if cls._instance is None:
             cls._instance = super(Neo4jManager, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None, 
                 config_file: Optional[str] = None,
                 use_session_state: bool = False):
@@ -177,7 +177,7 @@ class Neo4jManager:
         # Skip initialization if already initialized (singleton pattern)
         if self._initialized:
             return
-            
+
         self._driver = None
         self.uri = None
         self.user = None
@@ -186,7 +186,7 @@ class Neo4jManager:
         self.container_name = "neo4j-instance"
         self.http_port = 7474
         self.bolt_port = 7687
-        
+
         # Try to use session_state connection if requested
         if use_session_state:
             try:
@@ -214,7 +214,7 @@ class Neo4jManager:
                     config = load_db_config('.db_config.yaml')
                 if not config:
                     config = load_db_config('db_config.yaml')
-                    
+
         if not config:
             raise ConnectionError("No configuration provided and no default configuration found.")
 
@@ -226,7 +226,7 @@ class Neo4jManager:
         self.user = config["user"]
         self.password = config["password"]
         self.database = config.get("database", "neo4j")
-        
+
         # Extract port from URI if possible
         try:
             # URI format: bolt://hostname:port
@@ -234,10 +234,10 @@ class Neo4jManager:
         except (ValueError, IndexError):
             # Default port if URI doesn't contain a port
             self.bolt_port = 7687
-            
+
         self._connect()
         self._initialized = True
-    
+
     def _connect(self) -> None:
         """
         Establishes a connection to the Neo4j database.
@@ -253,7 +253,7 @@ class Neo4jManager:
         except Exception as e:
             self._driver = None
             raise ConnectionError(f"Failed to connect to Neo4j: {e}")
-    
+
     def close(self) -> None:
         """
         Closes the Neo4j driver connection.
@@ -261,7 +261,7 @@ class Neo4jManager:
         if self._driver:
             self._driver.close()
             self._driver = None
-    
+
     def is_connected(self) -> bool:
         """
         Checks if the manager is connected to a Neo4j database.
@@ -271,14 +271,14 @@ class Neo4jManager:
         """
         if not self._driver:
             return False
-            
+
         try:
             with self._driver.session(database=self.database) as session:
                 session.run("RETURN 1")
             return True
         except Exception:
             return False
-    
+
     def execute_query(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
         Executes a Cypher query and returns the results.
@@ -305,7 +305,7 @@ class Neo4jManager:
                 return [dict(record) for record in result]
         except Neo4jError as e:
             raise QueryError(f"Query execution failed: {e}")
-    
+
     def query_to_dataframe(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
         """
         Executes a Cypher query and returns the results as a Pandas DataFrame.
@@ -323,7 +323,7 @@ class Neo4jManager:
         """
         results = self.execute_query(query, parameters)
         return pd.DataFrame(results)
-    
+
     def query_to_value(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> Any:
         """
         Executes a Cypher query and returns a single value.
@@ -342,15 +342,15 @@ class Neo4jManager:
         results = self.execute_query(query, parameters)
         if not results:
             return None
-            
+
         values = []
         for record in results:
             record_values = list(record.values())
             if record_values:
                 values.append(record_values[0])
-                
+
         return values[0] if len(values) == 1 else values
-    
+
     def get_container_status(self) -> str:
         """
         Gets the status of the Neo4j container.
@@ -366,7 +366,7 @@ class Neo4jManager:
             return "not found"
         except Exception:
             return "not found"
-    
+
     def get_hostname(self) -> str:
         """
         Gets the hostname for connecting to the Neo4j container.
@@ -385,7 +385,7 @@ class Neo4jManager:
             return "localhost"
         except Exception:
             return "localhost"
-    
+
     def start_container(self, version: str = "latest") -> bool:
         """
         Starts the Neo4j container.
@@ -401,7 +401,7 @@ class Neo4jManager:
         """
         try:
             client = docker.from_env()
-            
+
             # Check if container already exists
             existing_containers = client.containers.list(all=True, filters={"name": self.container_name})
             if existing_containers:
@@ -409,11 +409,11 @@ class Neo4jManager:
                 if container.status != "running":
                     container.start()
                 return True
-                
+
             # Find available ports
             self.http_port = find_free_port(7474)
             self.bolt_port = find_free_port(7687)
-            
+
             # Create and start container
             container = client.containers.run(
                 f"neo4j:{version}",
@@ -437,19 +437,19 @@ class Neo4jManager:
                     f"{self.container_name}-plugins": {"bind": "/plugins", "mode": "rw"}
                 }
             )
-            
+
             # Update connection details
             self.uri = f"bolt://localhost:{self.bolt_port}"
             self.user = "neo4j"
             self.password = "password"
-            
+
             # Update config file
             update_db_config_auto("localhost", str(self.bolt_port), self.user, self.password)
-            
+
             return True
         except Exception as e:
             raise ConnectionError(f"Failed to start Neo4j container: {e}")
-    
+
     def stop_container(self) -> bool:
         """
         Stops the Neo4j container.
@@ -466,7 +466,7 @@ class Neo4jManager:
             return False
         except Exception:
             return False
-    
+
     def fetch_labels(self) -> List[str]:
         """
         Fetches all labels from the Neo4j database.
@@ -480,16 +480,16 @@ class Neo4jManager:
         """
         query = "MATCH (n) RETURN DISTINCT labels(n) as labels"
         results = self.execute_query(query)
-        
+
         all_labels = []
         for result in results:
             for labels_list in result["labels"]:
                 for label in labels_list:
                     if label and isinstance(label, str):
                         all_labels.append(label)
-                        
+
         return sorted(set(all_labels))
-    
+
     def fetch_node_properties(self, label: str) -> List[str]:
         """
         Fetches all property keys for nodes with the given label.
@@ -512,7 +512,7 @@ class Neo4jManager:
         """
         results = self.execute_query(query)
         return [record["property"] for record in results]
-    
+
     def fetch_nodes(self, label: str, properties: Optional[List[str]] = None, 
                    limit: int = 100) -> List[Dict[str, Any]]:
         """
@@ -543,9 +543,9 @@ class Neo4jManager:
             RETURN id(n) AS id, n
             LIMIT {limit}
             """
-            
+
         return self.execute_query(query)
-    
+
     def summarize_ontology_terms(self, label: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
         """
         Summarizes available ontology terms used as properties for node labels.
@@ -606,7 +606,7 @@ class Neo4jManager:
             }
 
         return summary
-    
+
     def load_ontology_relationships(self, ontology_annotations: List[Any], 
                                    create_source_nodes: bool = True,
                                    relationship_type: str = "HAS_TERM") -> int:
@@ -706,7 +706,7 @@ class Neo4jManager:
                         relationships_created += 1
 
         return relationships_created
-    
+
     def export_graph(self, file_path: str) -> Tuple[bool, str]:
         """
         Exports the entire graph to a file.
@@ -722,24 +722,24 @@ class Neo4jManager:
         """
         if not self._driver:
             raise ConnectionError("Cannot export graph. No active connection to Neo4j.")
-            
+
         try:
             # Create a NetworkX graph
             G = nx.MultiDiGraph()
-            
+
             # Get all nodes
             nodes_query = "MATCH (n) RETURN id(n) AS id, labels(n) AS labels, properties(n) AS properties"
             nodes_result = self.execute_query(nodes_query)
-            
+
             # Add nodes to the graph
             for node in nodes_result:
                 node_id = node["id"]
                 labels = node["labels"]
                 properties = node["properties"]
-                
+
                 # Add node to graph with its properties
                 G.add_node(node_id, labels=labels, properties=properties)
-            
+
             # Get all relationships
             rels_query = """
             MATCH (a)-[r]->(b)
@@ -747,7 +747,7 @@ class Neo4jManager:
                    id(r) AS id, properties(r) AS properties
             """
             rels_result = self.execute_query(rels_query)
-            
+
             # Add relationships to the graph
             for rel in rels_result:
                 source = rel["source"]
@@ -755,18 +755,18 @@ class Neo4jManager:
                 rel_type = rel["type"]
                 rel_id = rel["id"]
                 properties = rel["properties"]
-                
+
                 # Add edge to graph with its properties
                 G.add_edge(source, target, key=rel_id, type=rel_type, properties=properties)
-            
+
             # Save the graph to a file
             with open(file_path, 'wb') as f:
                 pickle.dump(G, f)
-                
+
             return True, f"Graph exported successfully with {len(G.nodes)} nodes and {len(G.edges)} relationships"
         except Exception as e:
             return False, f"Error exporting graph: {str(e)}"
-    
+
     def import_graph(self, file_path: str) -> Tuple[bool, str]:
         """
         Imports a graph from a file into Neo4j.
@@ -782,51 +782,51 @@ class Neo4jManager:
         """
         if not self._driver:
             raise ConnectionError("Cannot import graph. No active connection to Neo4j.")
-            
+
         try:
             # Load the graph from file
             with open(file_path, 'rb') as f:
                 G = pickle.load(f)
-                
+
             # Clear the database
             self.execute_query("MATCH (n) DETACH DELETE n")
-            
+
             # Create nodes
             for node_id, node_data in G.nodes(data=True):
                 labels = node_data.get('labels', [])
                 properties = node_data.get('properties', {})
-                
+
                 # Create label string
                 label_string = ":".join(labels)
-                
+
                 # Filter out None values and non-primitive types
                 filtered_props = {}
                 for k, v in properties.items():
                     if v is not None and isinstance(v, (str, int, float, bool, list)):
                         filtered_props[k] = v
-                
+
                 # Create node
                 query = f"CREATE (n:{label_string}) SET n = $props RETURN id(n)"
                 new_id = self.query_to_value(query, {"props": filtered_props})
-                
+
                 # Map old ID to new ID
                 G.nodes[node_id]['new_id'] = new_id
-                
+
             # Create relationships
             for source, target, key, edge_data in G.edges(data=True, keys=True):
                 rel_type = edge_data.get('type', 'RELATED_TO')
                 properties = edge_data.get('properties', {})
-                
+
                 # Get new IDs
                 new_source = G.nodes[source].get('new_id')
                 new_target = G.nodes[target].get('new_id')
-                
+
                 # Filter out None values and non-primitive types
                 filtered_props = {}
                 for k, v in properties.items():
                     if v is not None and isinstance(v, (str, int, float, bool, list)):
                         filtered_props[k] = v
-                
+
                 # Create relationship
                 query = f"""
                 MATCH (a), (b)
@@ -835,9 +835,9 @@ class Neo4jManager:
                 """
                 if filtered_props:
                     query += " SET r = $props"
-                    
+
                 self.execute_query(query, {"props": filtered_props})
-                
+
             return True, f"Graph imported successfully with {len(G.nodes)} nodes and {len(G.edges)} relationships"
         except Exception as e:
             return False, f"Error importing graph: {str(e)}"

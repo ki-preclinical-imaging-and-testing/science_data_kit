@@ -10,7 +10,7 @@ from io import BytesIO
 try:
     from isatools.model import OntologyAnnotation
 except ImportError:
-    from utils.isa_compatibility import OntologyAnnotation
+    from science_data_kit.core.utils.isa_compatibility import OntologyAnnotation
 
 # Constants
 CBIOPORTAL_API_URL = "https://www.cbioportal.org/api"

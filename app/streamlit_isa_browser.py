@@ -16,7 +16,7 @@ try:
     from isatools.model import OntologyAnnotation
     ISATOOLS_AVAILABLE = True
 except ImportError:
-    from utils.isa_compatibility import get_isa_objects
+    from science_data_kit.core.utils.isa_compatibility import get_isa_objects
     isatab, OntologyAnnotation, Investigation, Study, Assay, Process, Material, DataFile = get_isa_objects()
     ISATOOLS_AVAILABLE = False
 
