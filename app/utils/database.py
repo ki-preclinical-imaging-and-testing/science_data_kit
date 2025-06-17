@@ -1,3 +1,24 @@
+"""
+This module is deprecated and has been moved to science_data_kit/core/db/db_manager.py.
+Please update your imports to use the new location.
+
+Example:
+    from science_data_kit.core.db.db_manager import Neo4jManager, load_db_config
+
+    # Initialize the Neo4jManager instance
+    db_manager = Neo4jManager()
+
+    # Use the manager to interact with the database
+    status = db_manager.get_container_status()
+"""
+
+# Raise an ImportError to ensure that any code still using this module will fail
+# and be updated to use the new location
+raise ImportError(
+    "This module has been moved to science_data_kit/core/db/db_manager.py. "
+    "Please update your imports to use the new location."
+)
+
 import docker
 import streamlit as st
 import socket

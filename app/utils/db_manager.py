@@ -6,6 +6,21 @@ It combines functionality from database.py and graph_utils.py into a single,
 consistent API with proper type hinting and error handling.
 """
 
+"""
+This module is deprecated and has been moved to science_data_kit/core/db/db_manager.py.
+Please update your imports to use the new location.
+
+Example:
+    from science_data_kit.core.db.db_manager import Neo4jManager
+"""
+
+# Raise an ImportError to ensure that any code still using this module will fail
+# and be updated to use the new location
+raise ImportError(
+    "This module has been moved to science_data_kit/core/db/db_manager.py. "
+    "Please update your imports to use the new location."
+)
+
 import os
 import yaml
 import socket
