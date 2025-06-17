@@ -29,7 +29,21 @@ ensure_newline_before_comments = true
 skip_glob = ["isa-api/*"]
 
 [tool.pytest]
-testpaths = ["tests"]
+testpaths = ["tests", "science_data_kit/tests"]
 python_files = "test_*.py"
 python_functions = "test_*"
 python_classes = "Test*"
+addopts = "--verbose --cov=science_data_kit --cov-report=term-missing"
+markers = [
+    "unit: marks tests as unit tests",
+    "integration: marks tests as integration tests",
+    "slow: marks tests as slow (skipped by default)",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+required_plugins = ["pytest-cov"]
+filterwarnings = [
+    "ignore::DeprecationWarning:distutils.*:",
+    "ignore::DeprecationWarning:pkg_resources.*:",
+]
