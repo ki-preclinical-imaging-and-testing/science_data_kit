@@ -4,7 +4,7 @@ import os
 import toml
 from datetime import datetime
 from pathlib import Path
-from utils.database import (
+from utils.db_adapter import (
     get_neo4j_status, get_neo4j_hostname,
     start_neo4j_container, stop_neo4j_container,
     fetch_databases, get_neo4j_session,
@@ -18,7 +18,7 @@ from utils.neodash_server import (
     initialize_neodash_session,
     start_neodash_container, stop_neodash_container
 )
-from utils.database import manage_queries, extract_schema
+from utils.db_adapter import manage_queries, extract_schema
 
 
 # Initialize Docker client
@@ -204,7 +204,7 @@ def neo4j_connector():
 
                                 # Save successful connection details to .db_config.yaml
                                 try:
-                                    from utils.database import update_db_config_auto
+                                    from utils.db_adapter import update_db_config_auto
                                     # Extract hostname and port from URI
                                     import re
                                     match = re.match(r'bolt://([^:]+):(\d+)', uri)

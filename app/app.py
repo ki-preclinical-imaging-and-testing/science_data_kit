@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 from neo4j import GraphDatabase
-from utils.database import load_db_config
+from utils.db_adapter import load_db_config
 
 
 if __name__ == "__main__":
