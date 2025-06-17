@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
-from utils.models import  merge_nodes_with_existing
-from utils.database import fetch_available_labels, fetch_entity_labels, fetch_node_properties, fetch_nodes_with_properties
+from science_data_kit.core.models.app_models import merge_nodes_with_existing
+from utils.db_adapter import fetch_available_labels, fetch_entity_labels, fetch_node_properties, fetch_nodes_with_properties
 
 st.session_state["available_labels"] = fetch_available_labels()
 

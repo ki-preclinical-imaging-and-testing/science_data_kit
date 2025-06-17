@@ -1,6 +1,6 @@
 import streamlit as st
 from neo4j import GraphDatabase
-from utils.database import get_neo4j_session, create_pyvis_graph
+from utils.db_adapter import get_neo4j_session, create_pyvis_graph
 import time
 
 # Uncommented GraphRAG imports

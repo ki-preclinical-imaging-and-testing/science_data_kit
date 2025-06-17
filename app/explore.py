@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
-from utils.database import get_neo4j_session, create_pyvis_graph, fetch_nodes_by_label
+from utils.db_adapter import get_neo4j_session, create_pyvis_graph, fetch_nodes_by_label
 
 # st.sidebar.title("Connect")
 

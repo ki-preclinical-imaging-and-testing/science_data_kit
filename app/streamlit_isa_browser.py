@@ -7,7 +7,8 @@ import json
 import requests
 
 # Import Neo4j connection
-from utils.graph_utils import Neo4jConnection, load_db_config
+from science_data_kit.core.db.graph_utils import Neo4jConnection
+from science_data_kit.core.db.db_manager import load_db_config
 
 # Import isatools classes through our compatibility layer
 try:

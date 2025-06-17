@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import pandas as pd
 from neomodel import db
-from utils.registry import Folder, File
+from science_data_kit.core.utils.registry_utils import Folder, File
 
 
 # Initialize session state variables for entity labeling
