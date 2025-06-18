@@ -55,11 +55,53 @@ The Science Data Kit follows a logical workflow:
    - Knowledge graph basics
    - Community and support
 
+## Architecture
+
+The Science Data Kit follows a modular architecture with clear separation of concerns:
+
+### Core Components
+
+- **Core Functionality** - The core functionality is contained in the `science_data_kit.core` package, which provides:
+  - Database utilities for connecting to Neo4j and other databases
+  - File system utilities for scanning and analyzing files
+  - Data models for representing entities and relationships
+  - Visualization utilities for creating interactive visualizations
+  - ISA compatibility layer for working with Investigation-Study-Assay data models
+
+### UI Components
+
+- **UI Framework** - The UI is built using Streamlit and follows a component-based architecture:
+  - Base modules (`ui/__init__.py`, `ui/config.py`, `ui/state.py`) provide common functionality
+  - Adapter modules (`ui/adapters/*`) connect the UI to the core functionality
+  - Component modules (`ui/components/*`) provide reusable UI elements
+  - Page modules (`ui/pages/*`) define the different pages of the application
+  - The main app entry point (`ui/app.py`) ties everything together
+
+### Testing Framework
+
+The project includes a comprehensive testing framework:
+
+- **Unit Tests** - Test individual components in isolation
+  - UI component tests
+  - Core functionality tests
+  - Model tests
+
+- **Integration Tests** - Test the interaction between components
+  - Database connection tests
+  - UI-to-core interaction tests
+  - End-to-end workflow tests
+
 ## Directory Structure
 
-- **[app/](app/README.md)** - Streamlit application code
+- **[science_data_kit/](science_data_kit/README.md)** - Main package directory
+  - **[core/](science_data_kit/core/README.md)** - Core functionality
+  - **[ui/](science_data_kit/ui/README.md)** - UI components and pages
+- **[app/](app/README.md)** - Legacy Streamlit application code (being phased out)
 - **[ipynb/](ipynb/README.md)** - Jupyter notebooks for tutorials and examples
 - **[docs/](docs/README.md)** - Documentation files
+- **[tests/](tests/README.md)** - Test files
+  - **[unit/](tests/unit/README.md)** - Unit tests
+  - **[integration/](tests/integration/README.md)** - Integration tests
 
 ## FAIR+ Data Principles
 
