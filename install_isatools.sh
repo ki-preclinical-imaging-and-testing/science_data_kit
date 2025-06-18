@@ -53,6 +53,20 @@ pip install fastobo==0.13.0
 pip install SQLAlchemy==1.4.52
 
 echo "Installing isatools from the local repository..."
+# Check if isa-api directory exists and has setup.py or pyproject.toml
+if [ ! -d "isa-api" ] || [ ! -f "isa-api/setup.py" -a ! -f "isa-api/pyproject.toml" ]; then
+    echo -e "${YELLOW}The isa-api repository is missing or incomplete. Cloning from GitHub...${NC}"
+    # Remove the directory if it exists but is empty or incomplete
+    [ -d "isa-api" ] && rm -rf isa-api
+    # Clone the repository
+    git clone https://github.com/ISA-tools/isa-api.git
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to clone the isa-api repository. Please check your internet connection and try again.${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}Successfully cloned the isa-api repository.${NC}"
+fi
+
 cd isa-api
 pip install -e .
 cd ..

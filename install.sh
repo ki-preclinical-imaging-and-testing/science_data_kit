@@ -23,13 +23,13 @@ command_exists() {
 # Check system dependencies
 check_dependencies() {
     print_message $BLUE "Checking system dependencies..."
-    
+
     # Check for Python 3.10+
     if command_exists python3; then
         python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
         python_major=$(echo $python_version | cut -d. -f1)
         python_minor=$(echo $python_version | cut -d. -f2)
-        
+
         if [ "$python_major" -lt 3 ] || ([ "$python_major" -eq 3 ] && [ "$python_minor" -lt 10 ]); then
             print_message $RED "Error: Python 3.10 or higher is required (found $python_version)"
             print_message $YELLOW "Please install Python 3.10 or higher before continuing."
@@ -42,7 +42,7 @@ check_dependencies() {
         print_message $YELLOW "Please install Python 3.10 or higher before continuing."
         exit 1
     fi
-    
+
     # Check for pip
     if ! command_exists pip3; then
         print_message $RED "Error: pip3 not found"
@@ -51,7 +51,7 @@ check_dependencies() {
     else
         print_message $GREEN "Found pip3"
     fi
-    
+
     # Check for Docker
     if ! command_exists docker; then
         print_message $YELLOW "Warning: Docker not found"
@@ -71,7 +71,7 @@ check_dependencies() {
             print_message $YELLOW "Please start the Docker daemon before using Science Data Kit."
         fi
     fi
-    
+
     # Check for Docker Compose
     if ! command_exists docker-compose; then
         print_message $YELLOW "Warning: Docker Compose not found"
@@ -91,7 +91,7 @@ check_dependencies() {
 # Install Docker (platform-specific)
 install_docker() {
     print_message $BLUE "Installing Docker..."
-    
+
     # Detect OS
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # Linux
@@ -115,125 +115,182 @@ install_docker() {
             print_message $YELLOW "Please install Docker manually: https://docs.docker.com/engine/install/"
             return 1
         fi
-        
+
         # Start and enable Docker service
         sudo systemctl start docker
         sudo systemctl enable docker
-        
+
         # Add current user to docker group
         sudo usermod -aG docker $USER
         print_message $YELLOW "You may need to log out and log back in for Docker group changes to take effect."
-        
+
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
         print_message $BLUE "Detected macOS system"
         print_message $YELLOW "Please install Docker Desktop for Mac manually:"
         print_message $YELLOW "https://docs.docker.com/desktop/mac/install/"
         return 1
-        
+
     elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
         # Windows
         print_message $BLUE "Detected Windows system"
         print_message $YELLOW "Please install Docker Desktop for Windows manually:"
         print_message $YELLOW "https://docs.docker.com/desktop/windows/install/"
         return 1
-        
+
     else
         print_message $RED "Unsupported operating system: $OSTYPE"
         print_message $YELLOW "Please install Docker manually: https://docs.docker.com/engine/install/"
         return 1
     fi
-    
+
     print_message $GREEN "Docker installed successfully"
 }
 
 # Install Docker Compose
 install_docker_compose() {
     print_message $BLUE "Installing Docker Compose..."
-    
+
     # Get the latest version
     COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
-    
+
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # Linux
         sudo curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
-        
+
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
         print_message $YELLOW "Docker Compose is included with Docker Desktop for Mac."
         print_message $YELLOW "Please install Docker Desktop for Mac if you haven't already."
         return 0
-        
+
     elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
         # Windows
         print_message $YELLOW "Docker Compose is included with Docker Desktop for Windows."
         print_message $YELLOW "Please install Docker Desktop for Windows if you haven't already."
         return 0
-        
+
     else
         print_message $RED "Unsupported operating system: $OSTYPE"
         print_message $YELLOW "Please install Docker Compose manually: https://docs.docker.com/compose/install/"
         return 1
     fi
-    
+
     print_message $GREEN "Docker Compose installed successfully"
 }
 
 # Set up Python virtual environment
 setup_python_env() {
     print_message $BLUE "Setting up Python virtual environment..."
-    
-    # Check if virtualenv is installed
-    if ! command_exists python3 -m venv; then
-        print_message $YELLOW "Installing venv module..."
+
+    # Check if venv module is available
+    if ! python3 -c "import venv" &>/dev/null; then
+        print_message $YELLOW "Python venv module not found. Installing venv module..."
+
+        # Get Python version for specific package installation
+        python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+
         if command_exists apt-get; then
-            sudo apt-get install -y python3-venv
+            print_message $BLUE "Attempting to install python${python_version}-venv package..."
+            sudo apt-get update
+            if ! sudo apt-get install -y python${python_version}-venv; then
+                print_message $YELLOW "Failed to install python${python_version}-venv. Trying python3-venv instead..."
+                if ! sudo apt-get install -y python3-venv; then
+                    print_message $RED "Failed to install venv module. Please install it manually."
+                    print_message $YELLOW "For Ubuntu/Debian: sudo apt-get install python3-venv"
+                    print_message $YELLOW "For other systems: pip3 install virtualenv"
+                    exit 1
+                fi
+            fi
         elif command_exists yum; then
             sudo yum install -y python3-venv
         else
             pip3 install virtualenv
         fi
     fi
-    
-    # Create virtual environment
-    if [ ! -d "venv" ]; then
-        python3 -m venv venv
-        print_message $GREEN "Created virtual environment in ./venv"
-    else
-        print_message $YELLOW "Virtual environment already exists in ./venv"
+
+    # Define possible virtual environment directories
+    VENV_DIRS=("venv" ".venv")
+    VENV_DIR=""
+    ACTIVATE_SCRIPT=""
+
+    # Check if any existing virtual environment is valid
+    for dir in "${VENV_DIRS[@]}"; do
+        if [ -d "$dir" ] && [ -f "$dir/bin/activate" ]; then
+            VENV_DIR="$dir"
+            ACTIVATE_SCRIPT="$dir/bin/activate"
+            print_message $GREEN "Found valid virtual environment in ./$dir"
+            break
+        elif [ -d "$dir" ] && [ ! -f "$dir/bin/activate" ]; then
+            print_message $YELLOW "Found $dir directory but it doesn't contain an activate script."
+            print_message $YELLOW "This suggests the virtual environment is corrupted or incomplete."
+            print_message $YELLOW "Would you like to remove it and create a new one? (y/n)"
+            read -r recreate_venv
+            if [[ "$recreate_venv" =~ ^[Yy]$ ]]; then
+                rm -rf "$dir"
+                print_message $BLUE "Removed corrupted $dir directory."
+            fi
+        fi
+    done
+
+    # Create a new virtual environment if none exists
+    if [ -z "$VENV_DIR" ]; then
+        VENV_DIR="venv"  # Default to venv
+        print_message $BLUE "Creating virtual environment in ./$VENV_DIR..."
+        if ! python3 -m venv "$VENV_DIR"; then
+            print_message $RED "Failed to create virtual environment."
+            print_message $YELLOW "If you're using Python 3.12+, make sure python3-venv or equivalent is installed."
+            print_message $YELLOW "You can try: sudo apt-get install python3-venv"
+            print_message $YELLOW "Or for specific Python version: sudo apt-get install python3.X-venv"
+            exit 1
+        fi
+        ACTIVATE_SCRIPT="$VENV_DIR/bin/activate"
+        print_message $GREEN "Created virtual environment in ./$VENV_DIR"
     fi
-    
+
     # Activate virtual environment
-    source venv/bin/activate
-    
+    if [ -f "$ACTIVATE_SCRIPT" ]; then
+        source "$ACTIVATE_SCRIPT"
+        print_message $GREEN "Activated virtual environment from $ACTIVATE_SCRIPT"
+    else
+        print_message $RED "Virtual environment activate script not found at $ACTIVATE_SCRIPT"
+        print_message $RED "Installation cannot continue."
+        exit 1
+    fi
+
     # Upgrade pip
     pip install --upgrade pip
-    
+
     print_message $GREEN "Python virtual environment set up successfully"
 }
 
 # Install the package and its dependencies
 install_package() {
     print_message $BLUE "Installing Science Data Kit and dependencies..."
-    
+
     # Install the package in development mode
     pip install -e .
-    
+
     print_message $GREEN "Science Data Kit installed successfully"
 }
 
 # Configure Neo4j
 configure_neo4j() {
     print_message $BLUE "Configuring Neo4j..."
-    
+
     # Check if Neo4j container is already running
     if docker ps | grep -q "neo4j-instance"; then
         print_message $YELLOW "Neo4j container is already running"
+    # Check if Neo4j container exists but is not running
+    elif docker ps -a | grep -q "neo4j-instance"; then
+        print_message $YELLOW "Neo4j container exists but is not running. Starting it..."
+        docker start neo4j-instance
+        print_message $GREEN "Neo4j container started"
     else
         # Create a Docker volume for Neo4j data
         docker volume create neo4j-data
-        
+
         # Run Neo4j container
         docker run -d \
             --name neo4j-instance \
@@ -241,44 +298,44 @@ configure_neo4j() {
             -v neo4j-data:/data \
             -e NEO4J_AUTH=neo4j/password \
             neo4j:latest
-        
+
         print_message $GREEN "Neo4j container started"
         print_message $YELLOW "Default credentials: neo4j/password"
         print_message $YELLOW "Neo4j browser available at: http://localhost:7474"
-        
-        # Create db_config.yaml if it doesn't exist
-        if [ ! -f "db_config.yaml" ]; then
-            cat > db_config.yaml << EOL
+    fi
+
+    # Create db_config.yaml if it doesn't exist
+    if [ ! -f "db_config.yaml" ]; then
+        cat > db_config.yaml << EOL
 uri: bolt://localhost:7687
 user: neo4j
 password: password
 EOL
-            print_message $GREEN "Created db_config.yaml with default Neo4j credentials"
-        fi
+        print_message $GREEN "Created db_config.yaml with default Neo4j credentials"
     fi
 }
 
 # Main installation function
 main() {
     print_message $BLUE "=== Science Data Kit Installation ==="
-    
+
     # Check dependencies
     check_dependencies
-    
+
     # Set up Python environment
     setup_python_env
-    
+
     # Install the package
     install_package
-    
+
     # Configure Neo4j
     configure_neo4j
-    
+
     print_message $GREEN "=== Installation Complete ==="
     print_message $GREEN "To start Science Data Kit, run:"
-    print_message $YELLOW "source venv/bin/activate"
+    print_message $YELLOW "source $ACTIVATE_SCRIPT"
     print_message $YELLOW "science_data_kit"
-    
+
     # Optional: Install isatools
     print_message $BLUE "Would you like to install isatools? (y/n)"
     read -r install_isatools
@@ -287,7 +344,7 @@ main() {
         print_message $YELLOW "1) Basic isatools (Python 3.12+, limited functionality)"
         print_message $YELLOW "2) Full isatools (Python 3.9, complete functionality)"
         read -r isatools_version
-        
+
         if [ "$isatools_version" -eq 1 ]; then
             print_message $BLUE "Installing basic isatools for Python 3.12+..."
             pip install -e .[isatools]

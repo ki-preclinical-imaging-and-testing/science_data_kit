@@ -2,6 +2,8 @@ import streamlit as st
 from neo4j import GraphDatabase
 from utils.db_adapter import get_neo4j_session, create_pyvis_graph
 import time
+import requests
+import json
 
 # Uncommented GraphRAG imports
 try:
@@ -12,6 +14,31 @@ try:
     GRAPHRAG_AVAILABLE = True
 except ImportError:
     GRAPHRAG_AVAILABLE = False
+
+# Function to get available Ollama models
+def get_ollama_models(base_url="http://localhost:11434"):
+    """
+    Get a list of available models from Ollama API.
+
+    Args:
+        base_url (str): The base URL for the Ollama API
+
+    Returns:
+        list: A list of available model names
+    """
+    try:
+        response = requests.get(f"{base_url}/api/tags")
+        if response.status_code == 200:
+            models_data = response.json().get("models", [])
+            # Extract model names from the response
+            model_names = [model.get("name") for model in models_data if model.get("name")]
+            return model_names
+        else:
+            st.warning(f"Failed to get Ollama models: {response.status_code}")
+            return ["llama2", "mistral", "mixtral", "phi"]  # Fallback to default models
+    except Exception as e:
+        st.warning(f"Error connecting to Ollama API: {e}")
+        return ["llama2", "mistral", "mixtral", "phi"]  # Fallback to default models
 
 # Initialize session state for LLM settings if not already present
 if "llm_provider" not in st.session_state:
@@ -24,6 +51,26 @@ if "llm_temperature" not in st.session_state:
     st.session_state["llm_temperature"] = 0.7
 if "llm_max_tokens" not in st.session_state:
     st.session_state["llm_max_tokens"] = 1000
+
+# Initialize Ollama-specific settings
+if "ollama_base_url" not in st.session_state:
+    st.session_state["ollama_base_url"] = "http://localhost:11434"
+if "ollama_auth_enabled" not in st.session_state:
+    st.session_state["ollama_auth_enabled"] = False
+if "ollama_username" not in st.session_state:
+    st.session_state["ollama_username"] = ""
+if "ollama_password" not in st.session_state:
+    st.session_state["ollama_password"] = ""
+if "ollama_available_models" not in st.session_state:
+    st.session_state["ollama_available_models"] = ["llama2", "mistral", "mixtral", "phi"]
+    # Try to refresh models on startup
+    try:
+        available_models = get_ollama_models(st.session_state["ollama_base_url"])
+        if available_models:
+            st.session_state["ollama_available_models"] = available_models
+    except:
+        # Silently fail if Ollama is not available
+        pass
 
 # Initialize session state for graph visualization if not already present
 if "cached_triples" not in st.session_state:
@@ -154,9 +201,41 @@ def chat():
                 embeddings = None  # Use default embeddings
                 return GraphRAG(retriever, llm=llm, embeddings=embeddings)
             elif llm_provider == "Ollama":
-                llm = OllamaLLM(model=llm_model or "llama2")
-                embeddings = OllamaEmbeddings(model="llama2")
-                return GraphRAG(retriever, llm=llm, embeddings=embeddings)
+                # Get Ollama settings from session state
+                base_url = st.session_state.get("ollama_base_url", "http://localhost:11434")
+                auth_enabled = st.session_state.get("ollama_auth_enabled", False)
+                username = st.session_state.get("ollama_username", "")
+                password = st.session_state.get("ollama_password", "")
+
+                # Configure Ollama with authentication if enabled
+                ollama_config = {
+                    "base_url": base_url,
+                    "model": llm_model or "llama2"
+                }
+
+                if auth_enabled and username and password:
+                    ollama_config["auth"] = (username, password)
+                    st.info(f"Using authentication for Ollama with username: {username}")
+
+                # Initialize Ollama LLM and embeddings with the configuration
+                try:
+                    llm = OllamaLLM(**ollama_config)
+                    # Use the same model for embeddings as for LLM by default
+                    embeddings = OllamaEmbeddings(model=llm_model or "llama2", base_url=base_url)
+                    if auth_enabled and username and password:
+                        # Set auth for embeddings if supported
+                        try:
+                            embeddings.client.auth = (username, password)
+                        except:
+                            st.warning("Authentication for embeddings might not be supported in this version")
+
+                    return GraphRAG(retriever, llm=llm, embeddings=embeddings)
+                except Exception as e:
+                    st.error(f"Error initializing Ollama: {e}")
+                    # Fallback to a basic configuration
+                    llm = OllamaLLM(model=llm_model or "llama2")
+                    embeddings = OllamaEmbeddings(model=llm_model or "llama2")
+                    return GraphRAG(retriever, llm=llm, embeddings=embeddings)
             else:
                 # Default to a basic GraphRAG instance
                 return GraphRAG(retriever)
@@ -169,6 +248,14 @@ def chat():
     st.markdown("""
     Ask a retrieval-augmented generator questions about your dataset. 
     Connect your trusted LLM provider in the settings panel below.
+
+    ### Supported LLM Providers:
+    - **OpenAI**: Requires API key
+    - **Anthropic**: Requires API key
+    - **Ollama**: Local LLM, supports any available model
+      - Automatically detects available models
+      - Optional authentication support
+      - Customizable base URL for remote Ollama instances
     """)
     row = st.columns(2)
     with row[0]:
@@ -184,12 +271,50 @@ def chat():
                         index=["OpenAI", "Anthropic", "Ollama", "Other"].index(st.session_state["llm_provider"])
                     )
 
-                    llm_api_key = st.text_input(
-                        "API Key",
-                        type="password",
-                        value=st.session_state["llm_api_key"],
-                        disabled=llm_provider == "Ollama"
-                    )
+                    # Show API key input for OpenAI and Anthropic, but not for Ollama
+                    if llm_provider != "Ollama":
+                        llm_api_key = st.text_input(
+                            "API Key",
+                            type="password",
+                            value=st.session_state["llm_api_key"]
+                        )
+
+                    # Show Ollama-specific settings if Ollama is selected
+                    if llm_provider == "Ollama":
+                        ollama_base_url = st.text_input(
+                            "Ollama Base URL",
+                            value=st.session_state["ollama_base_url"]
+                        )
+
+                        # Authentication toggle
+                        ollama_auth_enabled = st.checkbox(
+                            "Enable Authentication",
+                            value=st.session_state["ollama_auth_enabled"]
+                        )
+
+                        # Show authentication fields if enabled
+                        if ollama_auth_enabled:
+                            ollama_username = st.text_input(
+                                "Username",
+                                value=st.session_state["ollama_username"]
+                            )
+
+                            ollama_password = st.text_input(
+                                "Password",
+                                type="password",
+                                value=st.session_state["ollama_password"]
+                            )
+                        else:
+                            ollama_username = ""
+                            ollama_password = ""
+
+                        # Try to fetch available models from Ollama
+                        if st.button("Refresh Models"):
+                            with st.spinner("Fetching available models from Ollama..."):
+                                available_models = get_ollama_models(ollama_base_url)
+                                st.session_state["ollama_available_models"] = available_models
+                                st.success(f"Found {len(available_models)} models")
+                                st.rerun()
 
                 with col2:
                     if llm_provider == "OpenAI":
@@ -197,7 +322,8 @@ def chat():
                     elif llm_provider == "Anthropic":
                         model_options = ["claude-2", "claude-instant-1", "claude-3-opus", "claude-3-sonnet"]
                     elif llm_provider == "Ollama":
-                        model_options = ["llama2", "mistral", "mixtral", "phi"]
+                        # Use available models from Ollama API
+                        model_options = st.session_state["ollama_available_models"]
                     else:
                         model_options = ["custom-model"]
 
@@ -229,7 +355,21 @@ def chat():
                 if submitted:
                     # Save settings to session state
                     st.session_state["llm_provider"] = llm_provider
-                    st.session_state["llm_api_key"] = llm_api_key
+
+                    # Save provider-specific settings
+                    if llm_provider != "Ollama":
+                        st.session_state["llm_api_key"] = llm_api_key
+                    else:
+                        # Save Ollama-specific settings
+                        st.session_state["ollama_base_url"] = ollama_base_url
+                        st.session_state["ollama_auth_enabled"] = ollama_auth_enabled
+                        if ollama_auth_enabled:
+                            st.session_state["ollama_username"] = ollama_username
+                            st.session_state["ollama_password"] = ollama_password
+                        else:
+                            st.session_state["ollama_username"] = ""
+                            st.session_state["ollama_password"] = ""
+
                     st.session_state["llm_model"] = llm_model
                     st.session_state["llm_temperature"] = llm_temperature
                     st.session_state["llm_max_tokens"] = llm_max_tokens
@@ -243,7 +383,7 @@ def chat():
                                 st.session_state["neo4j_user"],
                                 st.session_state["neo4j_password"],
                                 llm_provider,
-                                llm_api_key,
+                                llm_api_key if llm_provider != "Ollama" else None,
                                 llm_model
                             )
                         st.success("LLM settings updated successfully!")
@@ -264,8 +404,11 @@ def chat():
                     """            
                     This is experimental, so here's what you need to do:
                     1. Your **database must be connected**
-                    2. Use OpenAI (currently it is the only one that works)
-                    3. Ask questions about the data in your database
+                    2. Choose your preferred LLM provider:
+                       - **OpenAI/Anthropic**: Provide your API key
+                       - **Ollama**: Configure base URL and optional authentication
+                    3. For Ollama, click "Refresh Models" to see all available models
+                    4. Ask questions about the data in your database
                     """
                 )
         # Display chat history with improved formatting

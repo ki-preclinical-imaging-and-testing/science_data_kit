@@ -35,20 +35,20 @@ def check_python_version():
     python_version = sys.version_info
     if python_version.major == 3 and python_version.minor == 9:
         return True, sys.executable
-    
+
     # Try to find Python 3.9
     python39_paths = ["python3.9", "python39"]
     for path in python39_paths:
         if shutil.which(path):
             return True, path
-    
+
     return False, None
 
 def main():
     print_color(GREEN, "ISA-Tools Installation Script (Python Version)")
     print("This script will install isatools and its dependencies in a Python 3.9 virtual environment.")
     print()
-    
+
     # Check if Python 3.9 is available
     has_python39, python39_path = check_python_version()
     if not has_python39:
@@ -56,10 +56,10 @@ def main():
         print("Please install Python 3.9 first.")
         print("You can download it from: https://www.python.org/downloads/")
         sys.exit(1)
-    
+
     # Define the virtual environment path
     venv_path = Path.home() / ".venvs" / "isatools_env"
-    
+
     # Check if the virtual environment already exists
     if venv_path.exists():
         print_color(YELLOW, f"The virtual environment at {venv_path} already exists.")
@@ -72,7 +72,7 @@ def main():
         print(f"Creating a new Python 3.9 virtual environment at {venv_path}...")
         venv_path.parent.mkdir(parents=True, exist_ok=True)
         run_command(f"{python39_path} -m venv {venv_path}")
-    
+
     # Determine the path to the Python and pip executables in the virtual environment
     if platform.system() == "Windows":
         python_exe = venv_path / "Scripts" / "python.exe"
@@ -80,28 +80,44 @@ def main():
     else:
         python_exe = venv_path / "bin" / "python"
         pip_exe = venv_path / "bin" / "pip"
-    
+
     # Upgrade pip
     print("Upgrading pip...")
     run_command(f"{python_exe} -m pip install --upgrade pip")
-    
+
     # Install the problematic dependencies first with specific versions
     print("Installing isatools dependencies...")
     run_command(f"{pip_exe} install mzml2isa==1.1.1")
     run_command(f"{pip_exe} install fastobo==0.13.0")
     run_command(f"{pip_exe} install SQLAlchemy==1.4.52")
-    
+
     # Install isatools from the local repository
     print("Installing isatools from the local repository...")
     repo_path = Path.cwd() / "isa-api"
-    if not repo_path.exists():
-        print_color(RED, f"Error: isa-api repository not found at {repo_path}")
-        print("Please clone the repository first:")
-        print("git clone https://github.com/ISA-tools/isa-api.git")
-        sys.exit(1)
-    
+
+    # Check if isa-api directory exists and has setup.py or pyproject.toml
+    has_setup = (repo_path / "setup.py").exists()
+    has_pyproject = (repo_path / "pyproject.toml").exists()
+
+    if not repo_path.exists() or (not has_setup and not has_pyproject):
+        print_color(YELLOW, f"The isa-api repository is missing or incomplete. Cloning from GitHub...")
+
+        # Remove the directory if it exists but is empty or incomplete
+        if repo_path.exists():
+            shutil.rmtree(repo_path)
+
+        # Clone the repository
+        clone_result = run_command("git clone https://github.com/ISA-tools/isa-api.git", check=False)
+        if clone_result.returncode != 0:
+            print_color(RED, "Failed to clone the isa-api repository.")
+            print("Please check your internet connection and try again.")
+            print(clone_result.stderr)
+            sys.exit(1)
+
+        print_color(GREEN, "Successfully cloned the isa-api repository.")
+
     run_command(f"{pip_exe} install -e {repo_path}")
-    
+
     print_color(GREEN, "Installation complete!")
     print()
     print("To use isatools, activate the virtual environment:")
