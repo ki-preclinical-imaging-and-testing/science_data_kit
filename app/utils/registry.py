@@ -4,6 +4,9 @@ from neomodel import (
     db)
 import sys
 
+# Import models from file_models.py instead of defining them here
+from science_data_kit.core.models.file_models import Folder, File
+
 MODULE_NAME = "utils.registry"
 
 
@@ -28,10 +31,10 @@ def register_model(class_name, base_class, attributes, relationships=None):
     Returns:
         type: The registered Neomodel class.
     """
-    # Check if the model is already registered
-    for model in db._NODE_CLASS_REGISTRY.values():
-        if model.__name__ == class_name:
-            return model  # Use existing class
+    # Check if the model is already registered using the get_registered_model function
+    existing_model = get_registered_model(class_name)
+    if existing_model:
+        return existing_model  # Use existing class
 
     # ✅ Define new class attributes dynamically, including relationships
     class_attrs = attributes.copy()  # Copy attributes to avoid mutation
@@ -53,27 +56,5 @@ def register_model(class_name, base_class, attributes, relationships=None):
 
     return new_class
 
-
-Folder = register_model(
-    "Folder",
-    StructuredNode,
-    attributes={
-        "uid": UniqueIdProperty(),
-        "filepath": StringProperty(unique_index=True),
-    },
-    relationships={
-        "is_in": "Folder"  # Reference itself in a self-referential relationship
-    }
-)
-
-File = register_model(
-    "File",
-    StructuredNode,
-    attributes={
-        "uid": UniqueIdProperty(),
-        "filepath": StringProperty(unique_index=True),
-    },
-    relationships={
-        "is_in": "Folder"  # Reference itself in a self-referential relationship
-    }
-)
+# Note: Folder and File classes are now imported from science_data_kit.core.models.file_models
+# instead of being defined here
