@@ -49,34 +49,32 @@ class ScienceDataKitApp:
         # Import page modules
         try:
             # Connect page
-            from science_data_kit.ui.pages.connect import render as render_connect
-            self.page_adapter.register_page("Connect", render_connect)
+            from science_data_kit.ui.pages.connect import render_connect_page
+            self.page_adapter.register_page("Connect", render_connect_page)
 
             # Survey page
-            from science_data_kit.ui.pages.survey import render as render_survey
-            self.page_adapter.register_page("Survey", render_survey)
+            from science_data_kit.ui.pages.survey import render_survey_page
+            self.page_adapter.register_page("Survey", render_survey_page)
 
             # Map page
-            from science_data_kit.ui.pages.map import render as render_map
-            self.page_adapter.register_page("Map", render_map)
+            from science_data_kit.ui.pages.map import render_map_page
+            self.page_adapter.register_page("Map", render_map_page)
 
             # Explore page
-            from science_data_kit.ui.pages.explore import render as render_explore
-            self.page_adapter.register_page("Explore", render_explore)
+            from science_data_kit.ui.pages.explore import render_explore_page
+            self.page_adapter.register_page("Explore", render_explore_page)
 
-            # About page (if available)
-            try:
-                from science_data_kit.ui.pages.about import render as render_about
-                self.page_adapter.register_page("About", render_about)
-            except ImportError:
-                pass
+            # Ontology page
+            from science_data_kit.ui.pages.ontology import render_ontology_page
+            self.page_adapter.register_page("Ontology", render_ontology_page)
 
-            # Chat page (if available)
-            try:
-                from science_data_kit.ui.pages.chat import render as render_chat
-                self.page_adapter.register_page("Chat", render_chat)
-            except ImportError:
-                pass
+            # Chat page
+            from science_data_kit.ui.pages.chat import render_chat_page
+            self.page_adapter.register_page("Chat", render_chat_page)
+
+            # About/Learn page
+            from science_data_kit.ui.pages.about import render_about_page
+            self.page_adapter.register_page("About", render_about_page)
 
         except ImportError as e:
             st.error(f"Error importing page modules: {e}")
@@ -96,6 +94,8 @@ class ScienceDataKitApp:
             pages.append(st.Page(self.page_adapter.pages["Map"], title="map", icon="🗺"))
         if "Explore" in self.page_adapter.pages:
             pages.append(st.Page(self.page_adapter.pages["Explore"], title="explore", icon="🏞"))
+        if "Ontology" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Ontology"], title="ontology", icon="🧬"))
         if "Chat" in self.page_adapter.pages:
             pages.append(st.Page(self.page_adapter.pages["Chat"], title="chat", icon="💬"))
         if "About" in self.page_adapter.pages:
