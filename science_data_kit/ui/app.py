@@ -87,19 +87,19 @@ class ScienceDataKitApp:
         # Create a list of Page objects
         pages = []
 
-        # Add pages with icons and explicit paths
+        # Add pages with icons
         if "Connect" in self.page_adapter.pages:
-            pages.append(st.Page(self.page_adapter.pages["Connect"], title="connect", icon="🌐", path="connect"))
+            pages.append(st.Page(self.page_adapter.pages["Connect"], title="connect", icon="🌐"))
         if "Survey" in self.page_adapter.pages:
-            pages.append(st.Page(self.page_adapter.pages["Survey"], title="survey", icon="🔭", path="survey"))
+            pages.append(st.Page(self.page_adapter.pages["Survey"], title="survey", icon="🔭"))
         if "Map" in self.page_adapter.pages:
-            pages.append(st.Page(self.page_adapter.pages["Map"], title="map", icon="🗺", path="map"))
+            pages.append(st.Page(self.page_adapter.pages["Map"], title="map", icon="🗺"))
         if "Explore" in self.page_adapter.pages:
-            pages.append(st.Page(self.page_adapter.pages["Explore"], title="explore", icon="🏞", path="explore"))
+            pages.append(st.Page(self.page_adapter.pages["Explore"], title="explore", icon="🏞"))
         if "Chat" in self.page_adapter.pages:
-            pages.append(st.Page(self.page_adapter.pages["Chat"], title="chat", icon="💬", path="chat"))
+            pages.append(st.Page(self.page_adapter.pages["Chat"], title="chat", icon="💬"))
         if "About" in self.page_adapter.pages:
-            pages.append(st.Page(self.page_adapter.pages["About"], title="learn", icon="📖", path="about"))
+            pages.append(st.Page(self.page_adapter.pages["About"], title="learn", icon="📖"))
 
         # Use Streamlit's navigation
         pg = st.navigation(pages)
