@@ -30,7 +30,7 @@ command_exists() {
 
 # Install Python (platform-specific)
 install_python() {
-    print_message $BLUE "Installing Python 3.10+..."
+    print_message $BLUE "Installing Python 3.10+ (preferably 3.11 or 3.12)..."
 
     # Detect OS
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -44,18 +44,29 @@ install_python() {
             sudo add-apt-repository -y ppa:deadsnakes/ppa
             sudo apt-get update
 
-            # Install Python 3.10 and dev packages
-            print_message $BLUE "Installing Python 3.10..."
-            sudo apt-get install -y python3.10 python3.10-venv python3.10-dev
-
-            # Set Python 3.10 as the default python3
-            if command_exists update-alternatives; then
-                sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+            # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
+            if apt-cache show python3.12 &>/dev/null; then
+                print_message $BLUE "Installing Python 3.12..."
+                sudo apt-get install -y python3.12 python3.12-venv python3.12-dev
+                PYTHON_VERSION="3.12"
+            elif apt-cache show python3.11 &>/dev/null; then
+                print_message $BLUE "Installing Python 3.11..."
+                sudo apt-get install -y python3.11 python3.11-venv python3.11-dev
+                PYTHON_VERSION="3.11"
+            else
+                print_message $BLUE "Installing Python 3.10..."
+                sudo apt-get install -y python3.10 python3.10-venv python3.10-dev
+                PYTHON_VERSION="3.10"
             fi
 
-            # Install pip for Python 3.10
-            print_message $BLUE "Installing pip for Python 3.10..."
-            curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
+            # Set installed Python as the default python3
+            if command_exists update-alternatives; then
+                sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.${PYTHON_VERSION#*.} 1
+            fi
+
+            # Install pip for the installed Python version
+            print_message $BLUE "Installing pip for Python ${PYTHON_VERSION}..."
+            curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.${PYTHON_VERSION#*.}
 
         elif command_exists yum; then
             # RHEL/CentOS/Fedora
@@ -63,15 +74,36 @@ install_python() {
 
             # For RHEL/CentOS 8+
             if grep -q "release 8" /etc/redhat-release 2>/dev/null || grep -q "release 9" /etc/redhat-release 2>/dev/null; then
-                sudo dnf install -y python3.10 python3.10-devel
+                # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
+                if dnf list python3.12 &>/dev/null; then
+                    sudo dnf install -y python3.12 python3.12-devel
+                    PYTHON_VERSION="3.12"
+                elif dnf list python3.11 &>/dev/null; then
+                    sudo dnf install -y python3.11 python3.11-devel
+                    PYTHON_VERSION="3.11"
+                else
+                    sudo dnf install -y python3.10 python3.10-devel
+                    PYTHON_VERSION="3.10"
+                fi
             else
                 # For older versions or Fedora
-                print_message $YELLOW "Installing Python 3.10 on this system requires additional repositories."
-                print_message $YELLOW "Would you like to install Python 3.10 using the EPEL repository? (y/n)"
+                print_message $YELLOW "Installing Python 3.10+ on this system requires additional repositories."
+                print_message $YELLOW "Would you like to install Python using the EPEL repository? (y/n)"
                 read -r install_epel
                 if [[ "$install_epel" =~ ^[Yy]$ ]]; then
                     sudo yum install -y epel-release
-                    sudo yum install -y python3.10 python3.10-devel
+
+                    # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
+                    if yum list python3.12 &>/dev/null; then
+                        sudo yum install -y python3.12 python3.12-devel
+                        PYTHON_VERSION="3.12"
+                    elif yum list python3.11 &>/dev/null; then
+                        sudo yum install -y python3.11 python3.11-devel
+                        PYTHON_VERSION="3.11"
+                    else
+                        sudo yum install -y python3.10 python3.10-devel
+                        PYTHON_VERSION="3.10"
+                    fi
                 else
                     print_message $YELLOW "Please install Python 3.10+ manually."
                     print_message $YELLOW "Visit https://www.python.org/downloads/ for more information."
@@ -79,14 +111,14 @@ install_python() {
                 fi
             fi
 
-            # Install pip for Python 3.10
-            curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
+            # Install pip for the installed Python version
+            curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.${PYTHON_VERSION#*.}
 
         else
             print_message $YELLOW "Automatic Python installation is not supported for this Linux distribution."
             print_message $YELLOW "Please install Python 3.10+ manually:"
             print_message $YELLOW "1. Visit https://www.python.org/downloads/"
-            print_message $YELLOW "2. Download Python 3.10 or higher"
+            print_message $YELLOW "2. Download Python 3.10 or higher (preferably 3.11 or 3.12)"
             print_message $YELLOW "3. Follow the installation instructions for your distribution"
             return 1
         fi
@@ -96,29 +128,53 @@ install_python() {
         print_message $BLUE "Detected macOS system"
 
         if command_exists brew; then
-            print_message $BLUE "Installing Python 3.10 using Homebrew..."
-            brew install python@3.10
+            # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
+            if brew info python@3.12 &>/dev/null; then
+                print_message $BLUE "Installing Python 3.12 using Homebrew..."
+                brew install python@3.12
+                PYTHON_VERSION="3.12"
+            elif brew info python@3.11 &>/dev/null; then
+                print_message $BLUE "Installing Python 3.11 using Homebrew..."
+                brew install python@3.11
+                PYTHON_VERSION="3.11"
+            else
+                print_message $BLUE "Installing Python 3.10 using Homebrew..."
+                brew install python@3.10
+                PYTHON_VERSION="3.10"
+            fi
 
             # Add to PATH if needed
-            if ! command_exists python3.10; then
-                print_message $YELLOW "Python 3.10 installed but not in PATH."
+            if ! command_exists python3.${PYTHON_VERSION#*.}; then
+                print_message $YELLOW "Python ${PYTHON_VERSION} installed but not in PATH."
                 print_message $YELLOW "Add it to your PATH with:"
-                print_message $YELLOW "echo 'export PATH=\"/usr/local/opt/python@3.10/bin:\$PATH\"' >> ~/.zshrc"
+                print_message $YELLOW "echo 'export PATH=\"/usr/local/opt/python@${PYTHON_VERSION}/bin:\$PATH\"' >> ~/.zshrc"
                 print_message $YELLOW "or"
-                print_message $YELLOW "echo 'export PATH=\"/usr/local/opt/python@3.10/bin:\$PATH\"' >> ~/.bash_profile"
+                print_message $YELLOW "echo 'export PATH=\"/usr/local/opt/python@${PYTHON_VERSION}/bin:\$PATH\"' >> ~/.bash_profile"
             fi
         else
             print_message $YELLOW "Homebrew not found. Installing Homebrew first..."
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
             if command_exists brew; then
-                print_message $BLUE "Installing Python 3.10 using Homebrew..."
-                brew install python@3.10
+                # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
+                if brew info python@3.12 &>/dev/null; then
+                    print_message $BLUE "Installing Python 3.12 using Homebrew..."
+                    brew install python@3.12
+                    PYTHON_VERSION="3.12"
+                elif brew info python@3.11 &>/dev/null; then
+                    print_message $BLUE "Installing Python 3.11 using Homebrew..."
+                    brew install python@3.11
+                    PYTHON_VERSION="3.11"
+                else
+                    print_message $BLUE "Installing Python 3.10 using Homebrew..."
+                    brew install python@3.10
+                    PYTHON_VERSION="3.10"
+                fi
             else
                 print_message $RED "Failed to install Homebrew."
                 print_message $YELLOW "Please install Python 3.10+ manually:"
                 print_message $YELLOW "1. Visit https://www.python.org/downloads/"
-                print_message $YELLOW "2. Download Python 3.10 or higher for macOS"
+                print_message $YELLOW "2. Download Python 3.10 or higher for macOS (preferably 3.11 or 3.12)"
                 print_message $YELLOW "3. Follow the installation instructions"
                 return 1
             fi
@@ -129,7 +185,7 @@ install_python() {
         print_message $BLUE "Detected Windows system"
         print_message $YELLOW "Please install Python 3.10+ manually:"
         print_message $YELLOW "1. Visit https://www.python.org/downloads/"
-        print_message $YELLOW "2. Download Python 3.10 or higher for Windows"
+        print_message $YELLOW "2. Download Python 3.10 or higher for Windows (preferably 3.11 or 3.12)"
         print_message $YELLOW "3. During installation, check 'Add Python to PATH'"
         print_message $YELLOW "4. Restart your terminal after installation"
         return 1
@@ -142,15 +198,16 @@ install_python() {
     fi
 
     # Verify Python installation
-    if command_exists python3.10; then
-        print_message $GREEN "Python 3.10 installed successfully"
+    PYTHON_CMD="python3.${PYTHON_VERSION#*.}"
+    if command_exists $PYTHON_CMD; then
+        print_message $GREEN "Python ${PYTHON_VERSION} installed successfully"
         # Create a symlink to python3 if needed
-        if ! command_exists python3 || [[ $(python3 --version 2>&1) != *"3.10"* ]]; then
-            print_message $YELLOW "Creating symlink for python3 -> python3.10"
-            sudo ln -sf $(which python3.10) /usr/local/bin/python3
+        if ! command_exists python3 || [[ $(python3 --version 2>&1) != *"${PYTHON_VERSION}"* ]]; then
+            print_message $YELLOW "Creating symlink for python3 -> ${PYTHON_CMD}"
+            sudo ln -sf $(which $PYTHON_CMD) /usr/local/bin/python3
         fi
     else
-        print_message $RED "Python 3.10 installation may have failed."
+        print_message $RED "Python ${PYTHON_VERSION} installation may have failed."
         print_message $YELLOW "Please try installing manually:"
         print_message $YELLOW "Visit https://www.python.org/downloads/ for more information."
         return 1
@@ -167,7 +224,7 @@ install_python() {
 check_dependencies() {
     print_message $BLUE "Checking system dependencies..."
 
-    # Check for Python 3.10+
+    # Check for Python 3.10+ (preferably 3.11 or 3.12)
     if command_exists python3; then
         python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
         python_major=$(echo $python_version | cut -d. -f1)
@@ -175,7 +232,7 @@ check_dependencies() {
 
         if [ "$python_major" -lt 3 ] || ([ "$python_major" -eq 3 ] && [ "$python_minor" -lt 10 ]); then
             print_message $RED "Error: Python 3.10 or higher is required (found $python_version)"
-            print_message $YELLOW "Would you like to install Python 3.10+? (y/n)"
+            print_message $YELLOW "Would you like to install Python 3.10+ (preferably 3.11 or 3.12)? (y/n)"
             read -r install_python_choice
             if [[ "$install_python_choice" =~ ^[Yy]$ ]]; then
                 install_python
@@ -187,18 +244,18 @@ check_dependencies() {
 
                     if [ "$python_major" -lt 3 ] || ([ "$python_major" -eq 3 ] && [ "$python_minor" -lt 10 ]); then
                         print_message $RED "Python 3.10+ installation failed or not set as default."
-                        print_message $YELLOW "Please install Python 3.10 or higher manually before continuing."
+                        print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) manually before continuing."
                         exit 1
                     else
                         print_message $GREEN "Found Python $python_version"
                     fi
                 else
                     print_message $RED "Python 3 not found after installation attempt."
-                    print_message $YELLOW "Please install Python 3.10 or higher manually before continuing."
+                    print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) manually before continuing."
                     exit 1
                 fi
             else
-                print_message $YELLOW "Please install Python 3.10 or higher before continuing."
+                print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) before continuing."
                 exit 1
             fi
         else
@@ -206,21 +263,21 @@ check_dependencies() {
         fi
     else
         print_message $RED "Error: Python 3 not found"
-        print_message $YELLOW "Would you like to install Python 3.10+? (y/n)"
+        print_message $YELLOW "Would you like to install Python 3.10+ (preferably 3.11 or 3.12)? (y/n)"
         read -r install_python_choice
         if [[ "$install_python_choice" =~ ^[Yy]$ ]]; then
             install_python
             # Check if Python is now available
             if ! command_exists python3; then
                 print_message $RED "Python 3 not found after installation attempt."
-                print_message $YELLOW "Please install Python 3.10 or higher manually before continuing."
+                print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) manually before continuing."
                 exit 1
             else
                 python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
                 print_message $GREEN "Found Python $python_version"
             fi
         else
-            print_message $YELLOW "Please install Python 3.10 or higher before continuing."
+            print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) before continuing."
             exit 1
         fi
     fi
@@ -804,14 +861,33 @@ main() {
     read -r install_isatools
     if [[ "$install_isatools" =~ ^[Yy]$ ]]; then
         print_message $BLUE "Which version of isatools would you like to install?"
-        print_message $YELLOW "1) Basic isatools (Python 3.12+, limited functionality)"
+        print_message $YELLOW "1) Basic isatools (Python 3.10+, limited functionality)"
+        print_message $YELLOW "   - Compatible with Python 3.11 and 3.12"
+        print_message $YELLOW "   - Recommended for newer Python versions"
         print_message $YELLOW "2) Full isatools (Python 3.9, complete functionality)"
+        print_message $YELLOW "   - Includes mzML file processing capabilities"
+        print_message $YELLOW "   - Requires Python 3.9 (will create a separate environment)"
         read -r isatools_version
 
         if [ "$isatools_version" -eq 1 ]; then
-            print_message $BLUE "Installing basic isatools for Python 3.12+..."
-            pip install -e .[isatools]
-            print_message $GREEN "Basic isatools installed successfully"
+            # Get current Python version
+            python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+
+            if [[ $(echo "$python_version" | cut -d. -f1) -eq 3 && $(echo "$python_version" | cut -d. -f2) -ge 12 ]]; then
+                print_message $BLUE "Installing basic isatools for Python $python_version..."
+                pip install -e .[isatools]
+                print_message $GREEN "Basic isatools installed successfully"
+            else
+                print_message $BLUE "Installing basic isatools for Python $python_version..."
+                pip install -e .[isatools]
+                print_message $GREEN "Basic isatools installed successfully"
+                print_message $YELLOW "Note: For Python 3.12+, some additional compatibility fixes are available."
+                print_message $YELLOW "Would you like to run the Python 3.12+ compatibility script? (y/n)"
+                read -r run_compat_script
+                if [[ "$run_compat_script" =~ ^[Yy]$ ]]; then
+                    python install_isatools_py312.py
+                fi
+            fi
         elif [ "$isatools_version" -eq 2 ]; then
             print_message $BLUE "Installing full isatools for Python 3.9..."
             print_message $YELLOW "This will create a separate Python 3.9 environment."
