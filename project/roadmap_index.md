@@ -6,19 +6,29 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 ## Active Roadmaps
 
-### General SDK Development
+### Phase 2: SDK Enhancement and Expansion
 
-This roadmap outlines the plan for releasing the first version of the Science Data Kit, addressing database restructuring, code standards compliance, and installation improvements.
+This roadmap outlines the plan for enhancing and expanding the Science Data Kit, building on the foundation established in Phase 1. It focuses on advanced features, performance optimization, and user experience improvements.
 
-**Latest Version**: [roadmap_07.md](roadmap_07.md)
+**Latest Version**: [roadmap_phase2_00.md](roadmap_phase2_00.md)
 
-**Status**: In Progress - Implementation of high-priority tasks from Phase 1 of the roadmap has made significant progress, with most tasks completed and only a few remaining in progress.
+**Status**: Planning - Defining the scope and priorities for Phase 2 of the SDK development.
 
-**Next Steps**: Complete the documentation improvements, expand the testing infrastructure, and implement query optimization.
+**Next Steps**: Implement advanced database features, enhance the API layer, improve performance, and expand integration capabilities.
 
 ## Archived Roadmaps
 
 The following roadmap sets have been completed and archived. Any remaining tasks from these roadmaps have been added to the [later_phase.md](later_phase.md) file for future consideration.
+
+### Phase 1: General SDK Development
+
+This roadmap outlined the plan for releasing the first version of the Science Data Kit, addressing database restructuring, code standards compliance, and installation improvements.
+
+**Latest Version**: [archive/roadmap_phase1_07.md](archive/roadmap_phase1_07.md)
+
+**Status**: Complete - Implementation of high-priority tasks from Phase 1 of the roadmap has been completed, including database restructuring, code standards compliance, and installation improvements.
+
+**Achievements**: Unified database connection manager, core entity schemas with validation, comprehensive documentation, improved package structure, and robust testing infrastructure.
 
 ### Microsoft Graph API Integration
 
@@ -75,16 +85,17 @@ When a roadmap set is completed (all planned tasks have been implemented):
 2. Extract any remaining tasks (marked as "To Do" or in the "Next Steps" section) and add them to the `later_phase.md` file
 3. Update this master index to reflect that the roadmap set has been completed and archived
 
-For more detailed guidelines on working with roadmaps and the project directory, see [prompt_review.md](prompt_review.md).
+For more detailed guidelines on working with roadmaps and the project directory, see [roadmap_memo.md](roadmap_memo.md).
 
 ## Conclusion
 
-The Science Data Kit project has made significant progress towards its goal of becoming a comprehensive data analysis and visualization tool. Several major roadmaps have been completed and archived:
+The Science Data Kit project has made significant progress towards its goal of becoming a comprehensive data analysis and visualization tool. Phase 1 of development has been completed, with several major roadmaps successfully implemented and archived:
 
-1. **Microsoft Graph API Integration**: Enables the SDK to access and analyze data from Microsoft 365 services.
-2. **Codebase Organization and Documentation**: Improves the organization, reduces redundancy, and enhances documentation in the codebase.
-3. **Application Refactoring**: Refactors the application to improve its architecture, maintainability, and user experience.
+1. **Phase 1: General SDK Development**: Established the foundation with database restructuring, code standards compliance, and installation improvements.
+2. **Microsoft Graph API Integration**: Enables the SDK to access and analyze data from Microsoft 365 services.
+3. **Codebase Organization and Documentation**: Improves the organization, reduces redundancy, and enhances documentation in the codebase.
+4. **Application Refactoring**: Refactors the application to improve its architecture, maintainability, and user experience.
 
-Work is now focused on the General SDK Development roadmap, which addresses database restructuring, code standards compliance, and installation improvements. Any remaining tasks from the completed roadmaps have been collected in the later_phase.md file for future consideration.
+Work is now transitioning to Phase 2, which will focus on enhancing and expanding the SDK with advanced features, performance optimization, and improved user experience. Any remaining tasks from the completed roadmaps have been collected in the later_phase.md file for future consideration.
 
-The project continues to evolve with a focus on maintainability, extensibility, and user experience, ensuring that the Science Data Kit remains a valuable tool for scientific data management and analysis.
+The project continues to evolve with a focus on maintainability, extensibility, and user experience, ensuring that the Science Data Kit remains a valuable tool for scientific data management and analysis. Phase 2 will build upon the solid foundation established in Phase 1, taking the SDK to the next level of functionality and usability.
