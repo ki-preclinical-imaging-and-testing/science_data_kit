@@ -12,6 +12,21 @@ Before you can use the Microsoft Graph API integration, you need to have:
 2. An Azure Active Directory (Azure AD) tenant
 3. Registered an application in Azure AD
 4. The Science Data Kit installed and configured
+5. Microsoft Graph API dependencies installed
+
+### Installing Microsoft Graph API Dependencies
+
+The Microsoft Graph API integration requires additional dependencies that are not installed by default. You can install these dependencies using pip:
+
+```bash
+pip install science_data_kit[msgraph]
+```
+
+Alternatively, you can install the dependencies directly:
+
+```bash
+pip install msgraph-sdk-python azure-identity
+```
 
 ## Registering an Application in Azure AD
 
@@ -154,5 +169,10 @@ After setting up the Microsoft Graph API integration, you can:
 1. Explore Microsoft Graph API data using the SDK's explorer page
 2. Create visualizations of Microsoft Graph API data
 3. Integrate Microsoft Graph API data with other data sources in the SDK
+4. Try out the [Microsoft Graph API tutorials](../../tutorials/) to learn how to use the integration:
+   - [Users and Groups Tutorial](../../tutorials/msgraph_tutorial_users_groups.py)
+   - [Emails Tutorial](../../tutorials/msgraph_tutorial_emails.py)
+   - [Files Tutorial](../../tutorials/msgraph_tutorial_files.py)
+5. Review the [Microsoft Graph API Integration Roadmap](../../project/roadmap_MSGraphAPI_06.md) to understand the current status and future plans
 
 For more information, see the [Microsoft Graph API Usage Guide](msgraph_usage_guide.md).

@@ -42,7 +42,7 @@ connection_manager = MSGraphConnectionManager(
 # Connect to Microsoft Graph API
 if connection_manager.connect():
     print("Connected to Microsoft Graph API")
-    
+
     # Create an adapter (optional, for compatibility with existing code)
     adapter = MSGraphAdapter(connection_manager=connection_manager)
 else:
@@ -253,10 +253,10 @@ while True:
         'top': page_size,
         'skip': skip
     })
-    
+
     if users_page.empty:
         break
-    
+
     all_users.append(users_page)
     skip += page_size
 
@@ -329,6 +329,25 @@ logger = logging.getLogger("msgraph")
 logger.debug(f"Executing query: {resource_path} with parameters: {query_parameters}")
 ```
 
+## Tutorials
+
+The SDK includes several tutorials that demonstrate how to use the Microsoft Graph API integration:
+
+1. **Users and Groups Tutorial**: [msgraph_tutorial_users_groups.py](../../tutorials/msgraph_tutorial_users_groups.py)
+   - Demonstrates how to query and analyze user and group data
+   - Shows how to create organizational charts and group membership visualizations
+   - Includes examples of filtering and sorting user data
+
+2. **Emails Tutorial**: [msgraph_tutorial_emails.py](../../tutorials/msgraph_tutorial_emails.py)
+   - Demonstrates how to query and analyze email data
+   - Shows how to create communication network visualizations
+   - Includes examples of filtering and sorting email data
+
+3. **Files Tutorial**: [msgraph_tutorial_files.py](../../tutorials/msgraph_tutorial_files.py)
+   - Demonstrates how to query and analyze file data
+   - Shows how to create file collaboration visualizations
+   - Includes examples of filtering and sorting file data
+
 ## Next Steps
 
 After mastering the basics of the Microsoft Graph API integration, you can:
@@ -336,5 +355,6 @@ After mastering the basics of the Microsoft Graph API integration, you can:
 1. Explore more advanced queries and data analysis techniques
 2. Create custom visualizations for your specific needs
 3. Integrate Microsoft Graph API data with other data sources in your organization
+4. Review the [Microsoft Graph API Integration Roadmap](../../project/roadmap_MSGraphAPI_06.md) to understand the current status and future plans
 
 For more information, see the [Microsoft Graph API documentation](https://learn.microsoft.com/en-us/graph/api/overview?view=graph-rest-1.0).

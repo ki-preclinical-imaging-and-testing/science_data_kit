@@ -39,6 +39,10 @@ setup(
             'fastobo==0.13.0',
             'SQLAlchemy==1.4.52',
         ],
+        'msgraph': [
+            'msgraph-sdk-python>=1.0.0',
+            'azure-identity>=1.12.0',
+        ],
     },
     entry_points={
         'console_scripts': [
