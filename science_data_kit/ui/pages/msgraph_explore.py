@@ -21,16 +21,17 @@ from science_data_kit.core.utils.msgraph_utils import (
     build_msgraph_query, msgraph_to_dataframe, msgraph_to_network,
     extract_user_data, extract_group_data, extract_message_data
 )
+from science_data_kit.ui.components.msgraph_query_builder import MSGraphQueryBuilder
 
 
 class MSGraphExplorePage(BasePage):
     """
     Page for exploring Microsoft Graph API data.
-    
+
     This page provides functionality for browsing Microsoft Graph API endpoints,
     executing queries, and visualizing the results.
     """
-    
+
     def __init__(self):
         """
         Initialize the Microsoft Graph API explorer page.
@@ -42,7 +43,7 @@ class MSGraphExplorePage(BasePage):
         self.adapter = None
         self.connection_manager = None
         self._setup_sidebar()
-    
+
     def _setup_sidebar(self):
         """
         Set up the sidebar for the Microsoft Graph API explorer page.
@@ -53,11 +54,11 @@ class MSGraphExplorePage(BasePage):
                 "[Connect to Microsoft Graph API](/msgraph_connect)"
             )
         )
-    
+
     def _check_connection(self):
         """
         Check if connected to Microsoft Graph API.
-        
+
         Returns:
             True if connected, False otherwise.
         """
@@ -73,17 +74,17 @@ class MSGraphExplorePage(BasePage):
                     self.adapter = MSGraphAdapter(connection_manager=self.connection_manager)
                     st.session_state["msgraph_adapter"] = self.adapter
                 return True
-        
+
         return False
-    
+
     def _execute_query(self, resource_path: str, query_parameters: Optional[Dict[str, Any]] = None):
         """
         Execute a query against Microsoft Graph API.
-        
+
         Args:
             resource_path: The resource path to query (e.g., '/me', '/users').
             query_parameters: Optional query parameters.
-            
+
         Returns:
             The response from Microsoft Graph API as a dictionary.
         """
@@ -92,15 +93,15 @@ class MSGraphExplorePage(BasePage):
         except Exception as e:
             st.error(f"Error executing query: {str(e)}")
             return None
-    
+
     def _query_to_dataframe(self, resource_path: str, query_parameters: Optional[Dict[str, Any]] = None):
         """
         Execute a query and return results as a pandas DataFrame.
-        
+
         Args:
             resource_path: The resource path to query (e.g., '/me', '/users').
             query_parameters: Optional query parameters.
-            
+
         Returns:
             A pandas DataFrame containing the query results.
         """
@@ -109,11 +110,11 @@ class MSGraphExplorePage(BasePage):
         except Exception as e:
             st.error(f"Error executing query: {str(e)}")
             return pd.DataFrame()
-    
+
     def _export_data(self, data: pd.DataFrame, format: str):
         """
         Export data to a file.
-        
+
         Args:
             data: The data to export.
             format: The format to export to (csv, json, excel).
@@ -135,11 +136,11 @@ class MSGraphExplorePage(BasePage):
             b64 = base64.b64encode(output.getvalue()).decode()
             href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="msgraph_data.xlsx">Download Excel</a>'
             st.markdown(href, unsafe_allow_html=True)
-    
+
     def _get_sample_queries(self):
         """
         Get a list of sample queries for Microsoft Graph API.
-        
+
         Returns:
             A dictionary of sample queries.
         """
@@ -179,25 +180,25 @@ class MSGraphExplorePage(BasePage):
                 }
             }
         }
-    
+
     def render_content(self):
         """
         Render the content of the Microsoft Graph API explorer page.
         """
         st.title("Microsoft Graph API Explorer")
-        
+
         # Check if connected to Microsoft Graph API
         if not self._check_connection():
             st.warning("Not connected to Microsoft Graph API. Please connect first.")
             st.markdown("[Connect to Microsoft Graph API](/msgraph_connect)")
             return
-        
+
         # Create tabs for different sections
-        tab1, tab2, tab3 = st.tabs(["Query Builder", "Results", "Visualization"])
-        
+        tab1, tab2, tab3, tab4 = st.tabs(["Query Builder", "Advanced Query Builder", "Results", "Visualization"])
+
         with tab1:
             st.header("Query Builder")
-            
+
             # Sample queries
             st.subheader("Sample Queries")
             sample_queries = self._get_sample_queries()
@@ -205,84 +206,84 @@ class MSGraphExplorePage(BasePage):
                 "Select a sample query",
                 list(sample_queries.keys())
             )
-            
+
             # Resource path
             resource_path = st.text_input(
                 "Resource Path",
                 value=sample_queries[selected_query]["resource_path"]
             )
-            
+
             # Query parameters
             st.subheader("Query Parameters")
             col1, col2 = st.columns(2)
-            
+
             with col1:
                 select_param = st.text_input(
                     "Select",
                     value=sample_queries[selected_query]["query_parameters"].get("select", ""),
                     help="Comma-separated list of properties to include in the response."
                 )
-            
+
             with col2:
                 filter_param = st.text_input(
                     "Filter",
                     value=sample_queries[selected_query]["query_parameters"].get("filter", ""),
                     help="OData filter query."
                 )
-            
+
             col1, col2 = st.columns(2)
-            
+
             with col1:
                 expand_param = st.text_input(
                     "Expand",
                     value=sample_queries[selected_query]["query_parameters"].get("expand", ""),
                     help="Comma-separated list of relationships to expand."
                 )
-            
+
             with col2:
                 orderby_param = st.text_input(
                     "Order By",
                     value=sample_queries[selected_query]["query_parameters"].get("orderby", ""),
                     help="Comma-separated list of properties to sort by."
                 )
-            
+
             col1, col2 = st.columns(2)
-            
+
             with col1:
                 top_param = st.text_input(
                     "Top",
                     value=sample_queries[selected_query]["query_parameters"].get("top", ""),
                     help="Maximum number of items to return."
                 )
-            
+
             with col2:
                 skip_param = st.text_input(
                     "Skip",
                     value=sample_queries[selected_query]["query_parameters"].get("skip", ""),
                     help="Number of items to skip."
                 )
-            
+
             # Build query parameters
             query_parameters = {}
-            
+
             if select_param:
                 query_parameters["select"] = select_param
-            
+
             if filter_param:
                 query_parameters["filter"] = filter_param
-            
+
             if expand_param:
                 query_parameters["expand"] = expand_param
-            
+
             if orderby_param:
                 query_parameters["orderby"] = orderby_param
-            
+
             if top_param:
                 query_parameters["top"] = top_param
-            
+
             if skip_param:
                 query_parameters["skip"] = skip_param
-            
+
             # Execute query button
             if st.button("Execute Query"):
                 # Store query in session state
@@ -290,61 +291,91 @@ class MSGraphExplorePage(BasePage):
                     "resource_path": resource_path,
                     "query_parameters": query_parameters
                 }
-                
+
                 # Execute query
                 response = self._execute_query(resource_path, query_parameters)
-                
+
                 # Store response in session state
                 if response:
                     st.session_state["msgraph_response"] = response
                     st.success("Query executed successfully.")
-                    
+
                     # Convert response to DataFrame
                     df = msgraph_to_dataframe(response)
-                    
+
                     # Store DataFrame in session state
                     st.session_state["msgraph_dataframe"] = df
-                    
+
                     # Switch to Results tab
                     st.experimental_set_query_params(tab="results")
-        
+
         with tab2:
+            # Create and render the advanced query builder
+            query_builder = MSGraphQueryBuilder(key="msgraph_advanced_query")
+            resource_path, query_parameters = query_builder.render()
+
+            # Execute query button
+            if st.button("Execute Advanced Query"):
+                # Store query in session state
+                st.session_state["msgraph_query"] = {
+                    "resource_path": resource_path,
+                    "query_parameters": query_parameters
+                }
+
+                # Execute query
+                response = self._execute_query(resource_path, query_parameters)
+
+                # Store response in session state
+                if response:
+                    st.session_state["msgraph_response"] = response
+                    st.success("Query executed successfully.")
+
+                    # Convert response to DataFrame
+                    df = msgraph_to_dataframe(response)
+
+                    # Store DataFrame in session state
+                    st.session_state["msgraph_dataframe"] = df
+
+                    # Switch to Results tab
+                    st.experimental_set_query_params(tab="results")
+
+        with tab3:
             st.header("Results")
-            
+
             # Check if response is available
             if "msgraph_response" in st.session_state:
                 response = st.session_state["msgraph_response"]
-                
+
                 # Display response as JSON
                 st.subheader("Response")
                 st.json(response)
-                
+
                 # Display response as DataFrame
                 if "msgraph_dataframe" in st.session_state:
                     df = st.session_state["msgraph_dataframe"]
-                    
+
                     st.subheader("DataFrame")
                     st.dataframe(df)
-                    
+
                     # Export options
                     st.subheader("Export")
                     export_format = st.selectbox(
                         "Export Format",
                         ["csv", "json", "excel"]
                     )
-                    
+
                     if st.button("Export"):
                         self._export_data(df, export_format)
             else:
                 st.info("No query results available. Please execute a query first.")
-        
-        with tab3:
+
+        with tab4:
             st.header("Visualization")
-            
+
             # Check if response is available
             if "msgraph_response" in st.session_state:
                 response = st.session_state["msgraph_response"]
-                
+
                 # Determine entity type
                 entity_type = "unknown"
                 if "msgraph_query" in st.session_state:
@@ -359,19 +390,19 @@ class MSGraphExplorePage(BasePage):
                         entity_type = "events"
                     elif "/drive" in resource_path:
                         entity_type = "drive"
-                
+
                 # Create visualization based on entity type
                 if entity_type in ["users", "groups"]:
                     st.subheader("Network Visualization")
-                    
+
                     # Create network
                     G = msgraph_to_network(response, entity_type)
-                    
+
                     # Create visualization
                     if len(G.nodes) > 0:
                         fig, ax = plt.subplots(figsize=(10, 8))
                         pos = nx.spring_layout(G)
-                        
+
                         # Draw nodes
                         nx.draw_networkx_nodes(
                             G, pos,
@@ -379,21 +410,21 @@ class MSGraphExplorePage(BasePage):
                             node_size=500,
                             alpha=0.8
                         )
-                        
+
                         # Draw edges
                         nx.draw_networkx_edges(
                             G, pos,
                             width=1.0,
                             alpha=0.5
                         )
-                        
+
                         # Draw labels
                         nx.draw_networkx_labels(
                             G, pos,
                             labels={n: G.nodes[n].get('name', n) for n in G.nodes},
                             font_size=10
                         )
-                        
+
                         plt.axis('off')
                         st.pyplot(fig)
                     else:
