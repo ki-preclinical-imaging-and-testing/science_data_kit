@@ -15,6 +15,10 @@ __pycache__/
 /*.ipynb
 data/
 app/app/
-
+# Python package and environment files
+venv/
+*.egg-info/
+dist/
+build/
 # Template files for configuration (without sensitive information)
 !*.template.yaml
