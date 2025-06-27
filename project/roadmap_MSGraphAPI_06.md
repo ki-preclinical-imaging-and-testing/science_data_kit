@@ -4,6 +4,18 @@
 
 This document provides an update on the implementation progress of the Microsoft Graph API integration roadmap outlined in `roadmap_MSGraphAPI_00.md` and updated in `roadmap_MSGraphAPI_01.md`, `roadmap_MSGraphAPI_02.md`, `roadmap_MSGraphAPI_03.md`, `roadmap_MSGraphAPI_04.md`, and `roadmap_MSGraphAPI_05.md`. The integration enables the SDK to access and analyze data from Microsoft 365 services, including Microsoft Teams, SharePoint, OneDrive, Outlook, and user/group information.
 
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 06 | 2023-05-15 | Implemented advanced query builder |
+| 05 | 2023-05-01 | Implemented caching mechanism |
+| 04 | 2023-04-15 | Completed documentation and tutorials |
+| 03 | 2023-04-01 | Implemented UI components and integration with existing components |
+| 02 | 2023-03-15 | Implemented core functionality |
+| 01 | 2023-03-01 | Initial roadmap with task planning |
+| 00 | 2023-02-15 | Initial roadmap creation |
+
 ## Completed Tasks
 
 ### 1. Core Functionality Implementation
