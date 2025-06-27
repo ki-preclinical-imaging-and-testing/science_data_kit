@@ -20,11 +20,11 @@ The Microsoft Graph API integration enables the SDK to access and analyze data f
 
 This roadmap focuses on improving the organization, reducing redundancy, and enhancing documentation in the Science Data Kit codebase.
 
-**Latest Version**: [roadmap_CodebaseOrganization_04.md](roadmap_CodebaseOrganization_04.md)
+**Latest Version**: [roadmap_CodebaseOrganization_05.md](roadmap_CodebaseOrganization_05.md)
 
-**Status**: Complete - All planned tasks have been implemented, including documentation organization, roadmap standardization, code structure improvements, dependency management, documentation cross-referencing, and code quality improvements (unit tests).
+**Status**: Complete - All planned tasks have been implemented, including documentation organization, roadmap standardization, code structure improvements, dependency management, documentation cross-referencing, code quality improvements (unit tests), and API documentation.
 
-**Next Steps**: Future enhancements could include additional code quality improvements (type hints for non-Microsoft Graph API modules) and documentation enhancements (API documentation, developer guide).
+**Next Steps**: Future enhancements could include additional code quality improvements (type hints for non-Microsoft Graph API modules) and documentation enhancements (developer guide).
 
 ## Historical Roadmaps
 
@@ -39,6 +39,7 @@ This roadmap focuses on improving the organization, reducing redundancy, and enh
 
 ### Codebase Organization and Documentation
 
+- [roadmap_CodebaseOrganization_04.md](roadmap_CodebaseOrganization_04.md)
 - [roadmap_CodebaseOrganization_03.md](roadmap_CodebaseOrganization_03.md)
 - [roadmap_CodebaseOrganization_02.md](roadmap_CodebaseOrganization_02.md)
 - [roadmap_CodebaseOrganization_01.md](roadmap_CodebaseOrganization_01.md)

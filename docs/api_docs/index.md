@@ -8,11 +8,15 @@ This directory contains API documentation for the Science Data Kit modules. The 
 
 - [db_manager.py](core/db/db_manager.md) - Database manager for Neo4j connections
 - [graph_utils.py](core/db/graph_utils.md) - Utilities for working with Neo4j graphs
+- [api_manager_base.py](core/db/api_manager_base.md) - Base classes for API managers
+- [msgraph_manager.py](core/db/msgraph_manager.md) - Microsoft Graph API manager
+- [msgraph_adapter.py](core/db/msgraph_adapter.md) - Microsoft Graph API adapter
 
 ### Model Modules
 
 - [file_models.py](core/models/file_models.md) - Models for file and folder objects
 - [app_models.py](core/models/app_models.md) - Models for application objects
+- [msgraph_schemas.py](core/models/msgraph_schemas.md) - Microsoft Graph API entity schemas
 
 ### Utility Modules
 
@@ -20,6 +24,7 @@ This directory contains API documentation for the Science Data Kit modules. The 
 - [isa_utils.py](core/utils/isa_utils.md) - Utilities for working with ISA data models
 - [file_utils.py](core/utils/file_utils.md) - Utilities for file operations
 - [visualization_utils.py](core/utils/visualization_utils.md) - Utilities for data visualization
+- [msgraph_utils.py](core/utils/msgraph_utils.md) - Utilities for Microsoft Graph API
 
 ## UI Modules
 
