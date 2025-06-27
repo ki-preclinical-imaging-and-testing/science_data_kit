@@ -8,10 +8,13 @@ the Science Data Kit to interact with Microsoft 365 services.
 import os
 import json
 import pandas as pd
-import time
 from typing import Dict, List, Optional, Any, Union, Tuple
 from pathlib import Path
 from datetime import datetime, timedelta
+
+from science_data_kit.core.db.api_manager_base import (
+    APIManagerBase, ConnectionError, AuthenticationError, QueryError, ConfigurationError
+)
 
 try:
     from msgraph.core import GraphClient
@@ -21,7 +24,7 @@ except ImportError:
     MSGRAPH_AVAILABLE = False
 
 
-class MSGraphConnectionManager:
+class MSGraphConnectionManager(APIManagerBase):
     """
     Connection manager for Microsoft Graph API.
 
@@ -46,6 +49,9 @@ class MSGraphConnectionManager:
             config_file: Path to a configuration file containing authentication details.
             enable_cache: Whether to enable caching of API responses.
             cache_ttl: Time-to-live for cached responses in seconds (default: 5 minutes).
+
+        Raises:
+            ImportError: If the Microsoft Graph SDK is not installed.
         """
         if not MSGRAPH_AVAILABLE:
             raise ImportError(
@@ -53,115 +59,44 @@ class MSGraphConnectionManager:
                 "Please install it with 'pip install msgraph-sdk-python azure-identity'."
             )
 
+        # Initialize the base class
+        super().__init__(config_file, enable_cache, cache_ttl)
+
         self.tenant_id = tenant_id
         self.client_id = client_id
         self.client_secret = client_secret
         self.auth_method = auth_method
         self.client = None
-        self.connected = False
-
-        # Cache settings
-        self.enable_cache = enable_cache
-        self.cache_ttl = cache_ttl
-        self.cache = {}  # Dictionary to store cached responses
 
         # Load configuration from file if provided
         if config_file:
-            self._load_config(config_file)
+            self._load_config_values(config_file)
 
-    def _load_config(self, config_file: str) -> None:
+    def _load_config_values(self, config_file: str) -> None:
         """
-        Load configuration from a file.
+        Load configuration values from a file.
 
         Args:
             config_file: Path to the configuration file.
+
+        Raises:
+            ConfigurationError: If there is an error loading the configuration.
         """
-        config_path = Path(config_file)
-        if not config_path.exists():
-            raise FileNotFoundError(f"Configuration file not found: {config_file}")
+        try:
+            config = self._load_config(config_file)
 
-        with open(config_path, 'r') as f:
-            config = json.load(f)
+            self.tenant_id = config.get('tenant_id', self.tenant_id)
+            self.client_id = config.get('client_id', self.client_id)
+            self.client_secret = config.get('client_secret', self.client_secret)
+            self.auth_method = config.get('auth_method', self.auth_method)
 
-        self.tenant_id = config.get('tenant_id', self.tenant_id)
-        self.client_id = config.get('client_id', self.client_id)
-        self.client_secret = config.get('client_secret', self.client_secret)
-        self.auth_method = config.get('auth_method', self.auth_method)
-
-        # Load cache settings if provided
-        if 'enable_cache' in config:
-            self.enable_cache = config.get('enable_cache')
-        if 'cache_ttl' in config:
-            self.cache_ttl = config.get('cache_ttl')
-
-    def _get_cache_key(self, resource_path: str, query_parameters: Optional[Dict[str, Any]] = None) -> str:
-        """
-        Generate a cache key for a query.
-
-        Args:
-            resource_path: The resource path to query.
-            query_parameters: Optional query parameters.
-
-        Returns:
-            A string that can be used as a cache key.
-        """
-        if query_parameters:
-            # Sort the parameters to ensure consistent cache keys
-            sorted_params = sorted(query_parameters.items())
-            return f"{resource_path}:{json.dumps(sorted_params)}"
-        else:
-            return resource_path
-
-    def _is_cache_valid(self, cache_key: str) -> bool:
-        """
-        Check if a cached response is still valid.
-
-        Args:
-            cache_key: The cache key to check.
-
-        Returns:
-            True if the cached response is valid, False otherwise.
-        """
-        if not self.enable_cache or cache_key not in self.cache:
-            return False
-
-        timestamp, _ = self.cache[cache_key]
-        current_time = time.time()
-
-        # Check if the cached response has expired
-        return current_time - timestamp < self.cache_ttl
-
-    def _get_from_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
-        """
-        Get a response from the cache.
-
-        Args:
-            cache_key: The cache key to retrieve.
-
-        Returns:
-            The cached response, or None if the cache is invalid.
-        """
-        if self._is_cache_valid(cache_key):
-            _, response = self.cache[cache_key]
-            return response
-        return None
-
-    def _store_in_cache(self, cache_key: str, response: Dict[str, Any]) -> None:
-        """
-        Store a response in the cache.
-
-        Args:
-            cache_key: The cache key to store.
-            response: The response to cache.
-        """
-        if self.enable_cache:
-            self.cache[cache_key] = (time.time(), response)
-
-    def clear_cache(self) -> None:
-        """
-        Clear the cache.
-        """
-        self.cache = {}
+            # Load cache settings if provided
+            if 'enable_cache' in config:
+                self.enable_cache = config.get('enable_cache')
+            if 'cache_ttl' in config:
+                self.cache_ttl = config.get('cache_ttl')
+        except ConfigurationError as e:
+            raise ConfigurationError(f"Error loading Microsoft Graph API configuration: {str(e)}")
 
     def connect(self) -> bool:
         """
@@ -169,12 +104,16 @@ class MSGraphConnectionManager:
 
         Returns:
             True if connection is successful, False otherwise.
+
+        Raises:
+            AuthenticationError: If there is an error with the authentication credentials.
+            ConnectionError: If there is an error connecting to the API.
         """
         try:
             # Create the appropriate credential based on the authentication method
             if self.auth_method == "client_credentials":
                 if not all([self.tenant_id, self.client_id, self.client_secret]):
-                    raise ValueError("tenant_id, client_id, and client_secret are required for client_credentials auth")
+                    raise AuthenticationError("tenant_id, client_id, and client_secret are required for client_credentials auth")
 
                 credential = ClientSecretCredential(
                     tenant_id=self.tenant_id,
@@ -184,7 +123,7 @@ class MSGraphConnectionManager:
 
             elif self.auth_method == "device_code":
                 if not all([self.tenant_id, self.client_id]):
-                    raise ValueError("tenant_id and client_id are required for device_code auth")
+                    raise AuthenticationError("tenant_id and client_id are required for device_code auth")
 
                 credential = DeviceCodeCredential(
                     tenant_id=self.tenant_id,
@@ -193,7 +132,7 @@ class MSGraphConnectionManager:
 
             elif self.auth_method == "interactive":
                 if not all([self.tenant_id, self.client_id]):
-                    raise ValueError("tenant_id and client_id are required for interactive auth")
+                    raise AuthenticationError("tenant_id and client_id are required for interactive auth")
 
                 credential = InteractiveBrowserCredential(
                     tenant_id=self.tenant_id,
@@ -201,7 +140,7 @@ class MSGraphConnectionManager:
                 )
 
             else:
-                raise ValueError(f"Unsupported authentication method: {self.auth_method}")
+                raise AuthenticationError(f"Unsupported authentication method: {self.auth_method}")
 
             # Create the Graph client
             self.client = GraphClient(credential=credential)
@@ -213,12 +152,14 @@ class MSGraphConnectionManager:
                 return True
             else:
                 self.connected = False
-                return False
+                raise ConnectionError(f"Error connecting to Microsoft Graph API: {response.status_code} - {response.text}")
 
+        except AuthenticationError:
+            self.connected = False
+            raise
         except Exception as e:
             self.connected = False
-            print(f"Error connecting to Microsoft Graph API: {str(e)}")
-            return False
+            raise ConnectionError(f"Error connecting to Microsoft Graph API: {str(e)}")
 
     def execute_query(self, resource_path: str, query_parameters: Optional[Dict[str, Any]] = None, 
                   use_cache: bool = True) -> Dict[str, Any]:
@@ -232,6 +173,10 @@ class MSGraphConnectionManager:
 
         Returns:
             The response from Microsoft Graph API as a dictionary.
+
+        Raises:
+            ConnectionError: If not connected to Microsoft Graph API.
+            QueryError: If there is an error executing the query.
         """
         if not self.connected or not self.client:
             raise ConnectionError("Not connected to Microsoft Graph API. Call connect() first.")
@@ -253,21 +198,26 @@ class MSGraphConnectionManager:
             if cached_response:
                 return cached_response
 
-        # Execute the query
-        response = self.client.get(full_resource_path)
+        try:
+            # Execute the query
+            response = self.client.get(full_resource_path)
 
-        # Check if the request was successful
-        if response.status_code == 200:
-            response_data = response.json()
+            # Check if the request was successful
+            if response.status_code == 200:
+                response_data = response.json()
 
-            # Store the response in the cache
-            if use_cache and self.enable_cache:
-                cache_key = self._get_cache_key(resource_path, query_parameters)
-                self._store_in_cache(cache_key, response_data)
+                # Store the response in the cache
+                if use_cache and self.enable_cache:
+                    cache_key = self._get_cache_key(resource_path, query_parameters)
+                    self._store_in_cache(cache_key, response_data)
 
-            return response_data
-        else:
-            raise Exception(f"Error executing query: {response.status_code} - {response.text}")
+                return response_data
+            else:
+                raise QueryError(f"Error executing query: {response.status_code} - {response.text}")
+        except Exception as e:
+            if isinstance(e, QueryError):
+                raise
+            raise QueryError(f"Error executing query: {str(e)}")
 
     def query_to_dataframe(self, resource_path: str, query_parameters: Optional[Dict[str, Any]] = None,
                        use_cache: bool = True) -> pd.DataFrame:
@@ -281,6 +231,10 @@ class MSGraphConnectionManager:
 
         Returns:
             A pandas DataFrame containing the query results.
+
+        Raises:
+            ConnectionError: If not connected to Microsoft Graph API.
+            QueryError: If there is an error executing the query.
         """
         response = self.execute_query(resource_path, query_parameters, use_cache)
 
@@ -301,6 +255,10 @@ class MSGraphConnectionManager:
 
         Returns:
             A pandas DataFrame containing user information.
+
+        Raises:
+            ConnectionError: If not connected to Microsoft Graph API.
+            QueryError: If there is an error executing the query.
         """
         return self.query_to_dataframe('/users', query_parameters, use_cache)
 
@@ -314,6 +272,10 @@ class MSGraphConnectionManager:
 
         Returns:
             A pandas DataFrame containing group information.
+
+        Raises:
+            ConnectionError: If not connected to Microsoft Graph API.
+            QueryError: If there is an error executing the query.
         """
         return self.query_to_dataframe('/groups', query_parameters, use_cache)
 
@@ -326,6 +288,10 @@ class MSGraphConnectionManager:
 
         Returns:
             A dictionary containing information about the current user.
+
+        Raises:
+            ConnectionError: If not connected to Microsoft Graph API.
+            QueryError: If there is an error executing the query.
         """
         return self.execute_query('/me', use_cache=use_cache)
 
@@ -339,6 +305,10 @@ class MSGraphConnectionManager:
 
         Returns:
             A pandas DataFrame containing message information.
+
+        Raises:
+            ConnectionError: If not connected to Microsoft Graph API.
+            QueryError: If there is an error executing the query.
         """
         return self.query_to_dataframe('/me/messages', query_parameters, use_cache)
 
@@ -352,6 +322,10 @@ class MSGraphConnectionManager:
 
         Returns:
             A pandas DataFrame containing event information.
+
+        Raises:
+            ConnectionError: If not connected to Microsoft Graph API.
+            QueryError: If there is an error executing the query.
         """
         return self.query_to_dataframe('/me/events', query_parameters, use_cache)
 
@@ -365,5 +339,9 @@ class MSGraphConnectionManager:
 
         Returns:
             A pandas DataFrame containing file information.
+
+        Raises:
+            ConnectionError: If not connected to Microsoft Graph API.
+            QueryError: If there is an error executing the query.
         """
         return self.query_to_dataframe('/me/drive/root/children', query_parameters, use_cache)
