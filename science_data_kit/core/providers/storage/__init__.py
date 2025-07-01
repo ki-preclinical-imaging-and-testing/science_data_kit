@@ -7,6 +7,6 @@ like Dropbox, Google Sheets, and Microsoft Graph.
 
 # Import providers as they are implemented
 from .dropbox_provider import DropboxProvider
-# from .google_sheets_provider import GoogleSheetsProvider
+from .google_sheets_provider import GoogleSheetsProvider
 
-__all__ = ['DropboxProvider']
+__all__ = ['DropboxProvider', 'GoogleSheetsProvider']
