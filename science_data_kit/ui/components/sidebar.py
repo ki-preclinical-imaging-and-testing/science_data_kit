@@ -9,6 +9,9 @@ import streamlit as st
 from typing import Dict, Any, Optional, List, Callable
 from pathlib import Path
 
+# Import database manager
+from science_data_kit.core.db.db_manager import db_manager
+
 # Check if Microsoft Graph API is available
 try:
     from science_data_kit.core.db.msgraph_manager import MSGraphConnectionManager
@@ -69,6 +72,33 @@ def render_database_sidebar(
     # Initialize active connection in session state if not present
     if "active_connection" not in st.session_state:
         st.session_state["active_connection"] = None
+
+    # Sync connection statuses with backend state
+    def sync_connection_statuses():
+        """
+        Synchronize connection statuses in session state with backend state.
+
+        This ensures that the UI accurately reflects the actual connection status.
+        """
+        if "db_connections" not in st.session_state:
+            return
+
+        # Get all connection names from the backend
+        backend_connections = set(db_manager.get_connection_names())
+
+        # Update connection statuses in session state
+        for name, details in st.session_state["db_connections"].items():
+            # Check if the connection exists in the backend
+            if name in backend_connections:
+                # Check if the connection is actually connected
+                is_connected = db_manager.is_connected(name)
+                details["connected"] = is_connected
+            else:
+                # Connection doesn't exist in the backend
+                details["connected"] = False
+
+    # Sync connection statuses
+    sync_connection_statuses()
 
     # Check if any connection is connected (not just the active one)
     is_connected = False

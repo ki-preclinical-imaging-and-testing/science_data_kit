@@ -77,16 +77,12 @@ class ServerPage(BasePage):
             self.db_manager.password = password
             self.db_manager.database = database
 
-            # Check if we already have a connection with the same URI and database
-            # If so, we'll only deactivate that one when creating the new connection
-            duplicate_connection = None
-            for name, details in st.session_state.get("db_connections", {}).items():
-                if details.get("uri") == uri and details.get("database") == database and name != connection_name:
-                    duplicate_connection = name
-                    break
-
             # Connect to the database with the specified connection name
-            self.db_manager._connect(connection_name)
+            connection_success = self.db_manager._connect(connection_name)
+
+            if not connection_success:
+                st.error(f"Failed to connect to Neo4j: {self.db_manager._connection_error}")
+                return
 
             # Update session state
             st.session_state["active_connection"] = connection_name
@@ -95,9 +91,8 @@ class ServerPage(BasePage):
             if "db_connections" not in st.session_state:
                 st.session_state["db_connections"] = {}
 
-            # Mark all connections with the same URI and database as inactive
-            if duplicate_connection:
-                st.session_state["db_connections"][duplicate_connection]["connected"] = False
+            # Update connection statuses in session state based on backend state
+            self._sync_connection_statuses()
 
             # Update or create the connection in session state
             st.session_state["db_connections"][connection_name] = {
@@ -112,6 +107,29 @@ class ServerPage(BasePage):
         except Exception as e:
             st.error(f"Failed to connect to Neo4j: {e}")
 
+    def _sync_connection_statuses(self):
+        """
+        Synchronize connection statuses in session state with backend state.
+
+        This ensures that the UI accurately reflects the actual connection status.
+        """
+        if "db_connections" not in st.session_state:
+            return
+
+        # Get all connection names from the backend
+        backend_connections = set(self.db_manager.get_connection_names())
+
+        # Update connection statuses in session state
+        for name, details in st.session_state["db_connections"].items():
+            # Check if the connection exists in the backend
+            if name in backend_connections:
+                # Check if the connection is actually connected
+                is_connected = self.db_manager.is_connected(name)
+                details["connected"] = is_connected
+            else:
+                # Connection doesn't exist in the backend
+                details["connected"] = False
+
     def _on_database_disconnect(self):
         """Handle database disconnection."""
         try:
@@ -121,9 +139,8 @@ class ServerPage(BasePage):
             # Close the connection
             self.db_manager.close(active_connection)
 
-            # Update session state
-            if active_connection and active_connection in st.session_state.get("db_connections", {}):
-                st.session_state["db_connections"][active_connection]["connected"] = False
+            # Update connection statuses in session state
+            self._sync_connection_statuses()
 
             st.session_state["active_connection"] = None
 
@@ -257,6 +274,9 @@ class ServerPage(BasePage):
 
         # Database connection section
         st.header("Database Connections")
+
+        # Synchronize connection statuses with backend state
+        self._sync_connection_statuses()
 
         # Get all connections from session state
         connections = st.session_state.get("db_connections", {})
