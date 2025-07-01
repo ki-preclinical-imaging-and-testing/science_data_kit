@@ -16,6 +16,16 @@ This roadmap outlines the plan for enhancing and expanding the Science Data Kit,
 
 **Next Steps**: Implement advanced database features, enhance the API layer, improve performance, and expand integration capabilities.
 
+### Data Source Integration
+
+This roadmap outlines the plan for implementing Google Sheets and Dropbox data source integrations for the Science Data Kit, following the existing provider architecture pattern established with MS Graph API integration.
+
+**Latest Version**: [roadmap_DataSourceIntegration_02.md](roadmap_DataSourceIntegration_02.md)
+
+**Status**: In Progress - Provider architecture, Dropbox integration, and Google Sheets integration completed. Integration phase in progress.
+
+**Next Steps**: Create unified data source selector, register providers in the registry, create integration tests, and update documentation.
+
 ## Archived Roadmaps
 
 The following roadmap sets have been completed and archived. Any remaining tasks from these roadmaps have been added to the [later_phase.md](later_phase.md) file for future consideration.
