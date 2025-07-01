@@ -414,6 +414,22 @@ def manage_queries(recall_query):
 
 # Neo4j Connection
 def get_neo4j_session(uri, user, password, database=None):
+    """
+    Create a Neo4j session using the provided connection parameters.
+
+    This function establishes a connection to a Neo4j database and returns a session
+    that can be used to execute Cypher queries.
+
+    Args:
+        uri (str): The URI of the Neo4j database (e.g., "bolt://localhost:7687").
+        user (str): The username for authentication.
+        password (str): The password for authentication.
+        database (str, optional): The specific database to connect to. If None,
+                                 connects to the default database. Defaults to None.
+
+    Returns:
+        neo4j.Session: A Neo4j session object that can be used to run queries.
+    """
     driver = GraphDatabase.driver(uri, auth=(user, password))
     session = driver.session(database=database) if database else driver.session()
     return session
@@ -421,6 +437,18 @@ def get_neo4j_session(uri, user, password, database=None):
 
 # Fetch available databases
 def fetch_databases(session):
+    """
+    Fetch a list of available databases from a Neo4j instance.
+
+    This function executes a "SHOW DATABASES" query to retrieve all databases
+    available in the connected Neo4j instance.
+
+    Args:
+        session (neo4j.Session): An active Neo4j session.
+
+    Returns:
+        list: A list of database names (strings).
+    """
     query = "SHOW DATABASES"
     results = session.run(query)
     return [record["name"] for record in results]
@@ -428,6 +456,21 @@ def fetch_databases(session):
 
 # Schema Extraction Algorithm
 def extract_schema(results):
+    """
+    Extract schema information from Neo4j query results.
+
+    This function processes query results that contain subject-predicate-object triples
+    and extracts a set of unique triples and a set of unique node labels.
+
+    Args:
+        results (list): A list of Neo4j record objects, each containing "subjectLabel",
+                       "predicateType", and "objectLabel" keys.
+
+    Returns:
+        tuple: A tuple containing:
+            - set: Unique triples as (subject, predicate, object) tuples
+            - set: Unique node labels extracted from the subjects and objects
+    """
     triples = set()
     for record in results:
         triples.add((record["subjectLabel"], f'{record["predicateType"][1]} ({record["predicateType"][0]})', record["objectLabel"]))
@@ -437,6 +480,22 @@ def extract_schema(results):
 
 # Pyvis Graph Creation with Layout Options
 def create_pyvis_graph(triples, layout, physics_enabled):
+    """
+    Create an interactive graph visualization using Pyvis.
+
+    This function generates a network visualization from a set of triples (subject-predicate-object)
+    using the Pyvis library. It supports different layout options (Hierarchical or Force-Directed)
+    and can enable or disable physics simulation.
+
+    Args:
+        triples (set or list): A collection of tuples, each containing (subject, predicate, object)
+                              representing relationships in the graph.
+        layout (str): The layout algorithm to use, either "Hierarchical" or "Force-Directed".
+        physics_enabled (bool): Whether to enable physics simulation for interactive node movement.
+
+    Returns:
+        pyvis.network.Network: A Pyvis Network object that can be used to generate HTML for visualization.
+    """
     net = Network(notebook=False, height="750px", width="100%")
 
     # Common node and edge settings
@@ -508,6 +567,22 @@ def create_pyvis_graph(triples, layout, physics_enabled):
     return net
 
 def fetch_nodes_by_label(session, label, with_clause):
+    """
+    Fetch all nodes with a specific label from the Neo4j database.
+
+    This function executes a Cypher query to retrieve all nodes with the specified label,
+    optionally using a WITH clause for additional filtering or context.
+
+    Args:
+        session (neo4j.Session): An active Neo4j session.
+        label (str): The node label to search for.
+        with_clause (str): An optional WITH clause to include in the Cypher query for
+                          additional context or filtering.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the properties of all nodes with the
+                         specified label, with duplicate nodes removed.
+    """
     query = f"""
     {with_clause}
     MATCH (n:{label})

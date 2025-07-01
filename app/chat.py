@@ -5,6 +5,68 @@ import time
 import requests
 import json
 
+
+def schema_from_triples(labels, triples, properties=None):
+    """
+    Generate a schema representation from labels and triples.
+
+    This function creates a textual representation of a graph schema based on the
+    provided labels, triples (subject-predicate-object relationships), and optional
+    property definitions.
+
+    Args:
+        labels (list): A list of node labels in the graph.
+        triples (list): A list of tuples, each containing (subject, predicate, object)
+                       representing relationships in the graph.
+        properties (dict, optional): A dictionary mapping labels to their properties.
+                                    Each property is a key-value pair where the key is
+                                    the property name and the value is the property type.
+                                    Defaults to None.
+
+    Returns:
+        str: A formatted string representation of the graph schema, including nodes
+             and relationships.
+    """
+    nodes = {}
+    _node_fstrs = []
+    for label in labels:
+        nodes[label] = {
+            'label': label,
+            'var_name': label.lower(),
+            'properties': {}
+        }
+        _properties_fstr = ""
+        if isinstance(properties, dict) and label in properties.keys():
+            nodes[label]['properties'] = properties[label]
+            _properties_fstr = " {"
+            for _prop, _type in properties[label].items():
+                _properties_fstr += f"{_prop}: {_type}"
+                if _prop != list(properties[label].keys())[-1]:
+                    _properties_fstr += ", "
+            _properties_fstr += "}"
+        _node_fstrs.append(f"({nodes[label]['var_name']}:{label}{_properties_fstr})")
+
+    relationships = {}
+    _rel_fstrs = []
+    for subject, predicate, object_ in triples:
+        if subject in nodes.keys() and object_ in nodes.keys():
+            _sub_var_name = nodes[subject]['var_name']
+            _obj_var_name = nodes[object_]['var_name']
+            relationships[subject, predicate, object_] = {
+                'subject': subject,
+                'predicate': predicate,
+                'object': object_,
+            }
+            _rel_fstrs.append(f"({_sub_var_name})-[:{predicate}]->({_obj_var_name})")
+
+    schema = f"Nodes:\n"
+    schema += "\n".join(_node_fstrs)
+    schema += "\n\nRelationships:\n"
+    schema += "\n".join(_rel_fstrs)
+
+    return schema
+
+
 # Uncommented GraphRAG imports
 try:
     from neo4j_graphrag.generation import GraphRAG  # Importing GraphRAG module
@@ -91,9 +153,49 @@ if "neo4j_schema" not in st.session_state:
     st.session_state["neo4j_schema"] = None
 
 def chat():
+    """
+    Render the chat interface for interacting with the graph database using natural language.
+
+    This function creates a Streamlit page that allows users to:
+    1. Configure LLM settings (provider, API key, model, temperature, max tokens)
+    2. Connect to a Neo4j database
+    3. Chat with the data using natural language queries
+    4. View the graph schema
+
+    The function uses GraphRAG (Graph Retrieval Augmented Generation) to convert
+    natural language queries into Cypher queries that are executed against the
+    Neo4j database, with the results used to generate responses.
+
+    Returns:
+        None
+    """
     # Function to initialize GraphRAG with connection pooling
     @st.cache_resource
     def initialize_graph_rag(uri, user, password, llm_provider=None, llm_api_key=None, llm_model=None):
+        """
+        Initialize a GraphRAG instance with connection pooling.
+
+        This function creates a connection to a Neo4j database and initializes a GraphRAG
+        instance with the appropriate LLM (Language Learning Model) based on the provider.
+        It also extracts the schema from the database for use with the Text2Cypher retriever.
+
+        Args:
+            uri (str): The URI of the Neo4j database.
+            user (str): The username for the Neo4j database.
+            password (str): The password for the Neo4j database.
+            llm_provider (str, optional): The LLM provider to use (OpenAI, Anthropic, Ollama).
+                                         Defaults to None.
+            llm_api_key (str, optional): The API key for the LLM provider. Defaults to None.
+            llm_model (str, optional): The specific model to use from the LLM provider.
+                                      Defaults to None.
+
+        Returns:
+            GraphRAG or neo4j.Driver: A GraphRAG instance if initialization is successful,
+                                     or a Neo4j driver if GraphRAG is not available.
+
+        Raises:
+            Exception: If there is an error initializing GraphRAG.
+        """
         st.markdown(f"""
         **Initializing GraphRAG...**
         URI: {uri}
@@ -123,47 +225,6 @@ def chat():
                 from utils.sidebar import schema_sample_widget
                 triples = st.session_state.cached_triples
                 labels = st.session_state.cached_labels
-
-                def schema_from_triples(labels, triples, properties=None):
-                    nodes = {}
-                    _node_fstrs = []
-                    for label in labels:
-                        nodes[label] = {
-                            'label': label,
-                            'var_name': label.lower(),
-                            'properties': {}
-                        }
-                        _properties_fstr = ""
-                        if isinstance(properties, dict) and label in properties.keys():
-                            nodes[label]['properties'] = properties[label]
-                            _properties_fstr = " {"
-                            for _prop, _type in properties[label].items():
-                                _properties_fstr += f"{_prop}: {_type}"
-                                if _prop != list(properties[label].keys())[-1]:
-                                    _properties_fstr += ", "
-                            _properties_fstr += "}"
-                        _node_fstrs.append(f"({nodes[label]['var_name']}:{label}{_properties_fstr})")
-
-                    relationships = {}
-                    _rel_fstrs = []
-                    for subject, predicate, object_ in triples:
-                        if subject in nodes.keys() and object_ in nodes.keys():
-                            _sub_var_name = nodes[subject]['var_name']
-                            _obj_var_name = nodes[object_]['var_name']
-                            relationships[subject, predicate, object_] = {
-                                'subject': subject,
-                                'predicate': predicate,
-                                'object': object_,
-                            }
-                            _rel_fstrs.append(f"({_sub_var_name})-[:{predicate}]->({_obj_var_name})")
-
-                    schema = f"Nodes:\n"
-                    schema += "\n".join(_node_fstrs)
-                    schema += "\n\nRelationships:\n"
-                    schema += "\n".join(_rel_fstrs)
-
-                    return schema
-
                 schema = schema_from_triples(labels, triples)
                 st.session_state["neo4j_schema"] = schema
                 st.success("Successfully extracted schema from Neo4j database")
@@ -413,7 +474,7 @@ def chat():
                 )
         # Display chat history with improved formatting
         with st.expander("Conversation", expanded=True):
-            chat_container = st.container(height=400, border=True)
+            chat_container = st.container(height=800, border=True)
             with chat_container:
                 for entry in st.session_state["chat_history"]:
                     if entry["role"] == "user":
@@ -512,7 +573,7 @@ def chat():
                 st.info(f"Using {retriever_type} retriever for queries")
 
     # Display schema information if available
-    with row[1]:
+    with (row[1]):
         with st.expander("Visual Schema", expanded=False):
             net = create_pyvis_graph(
                 st.session_state.cached_triples,
@@ -523,6 +584,13 @@ def chat():
             st.components.v1.html(net_html, height=800)
 
         with st.expander("Cypher Schema", expanded=False):
-            if "neo4j_schema" in st.session_state and st.session_state["neo4j_schema"]:
+            if "neo4j_schema" not in st.session_state:
+                schema = schema_from_triples(
+                    st.session_state["cached_labels"],
+                    st.session_state["cached_triples"]
+                )
+                st.session_state["neo4j_schema"] = schema
+            else:
                 schema = st.session_state["neo4j_schema"]
-                st.markdown(f"```\n{schema}\n```")
+
+            st.markdown(f"```\n{schema}\n```")

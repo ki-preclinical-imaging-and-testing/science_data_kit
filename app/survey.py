@@ -64,6 +64,21 @@ with st.expander("Scan Your FileTree", expanded=True):
 
 # Function to run NCDU scan with live output
 def run_ncdu_scan():
+    """
+    Run an NCDU (NCurses Disk Usage) scan on the selected folder.
+
+    This function executes the NCDU command-line tool to scan the folder specified
+    in the session state, saves the results to a JSON file, transforms the JSON
+    using jq, and then parses the transformed JSON into a DataFrame. The function
+    provides live output of the scan progress.
+
+    Returns:
+        None
+
+    Side Effects:
+        - Updates session state variables: scan_completed, ncdu_output, scanned_files
+        - Creates a JSON file at the path specified in session state's ncdu_json_path
+    """
     if not st.session_state["folder"]:
         st.error("Please select a folder first.")
         return
@@ -109,6 +124,20 @@ def run_ncdu_scan():
 
             # Convert to DataFrame
             def parse_ncdu_json(node, parent_path=""):
+                """
+                Recursively parse NCDU JSON data to extract file and directory information.
+
+                This function traverses the NCDU JSON structure and extracts information about
+                files and directories, including path, size, disk usage, and type.
+
+                Args:
+                    node (dict): A node in the NCDU JSON structure, representing a file or directory.
+                    parent_path (str, optional): The path of the parent directory. Defaults to "".
+
+                Returns:
+                    list: A list of dictionaries, each containing information about a file or directory.
+                          Each dictionary has keys: "Path", "Size (Bytes)", "Disk Usage (Bytes)", and "Type".
+                """
                 path = f"{parent_path}/{node['name']}" if parent_path else node["name"]
                 file_info = {
                     "Path": path,

@@ -2,13 +2,22 @@ import streamlit as st
 
 
 def about():
+    """
+    Render the 'Learn' page with resources and community information.
 
+    This function creates a Streamlit page that provides documentation links,
+    knowledge graph basics, community support resources, and video tutorials
+    related to the Science Data Toolkit.
+
+    Returns:
+        None
+    """
     # Title and introduction
     st.title("Learn: Resources and Community")
     st.markdown(
         """
         Welcome to the **Learn** page! Here, you'll find resources to deepen your understanding of this toolkit, knowledge graphs, and FAIR data practices.
-    
+
         Use the links below to explore further:
         """
     )
@@ -55,6 +64,3 @@ def about():
         **We value your feedback!** If you have suggestions, questions, or want to contribute, check out the [GitHub repository](https://github.com/your-repo/science-data-toolkit) or reach out to our [community forum](https://example.com/forum).
         """
     )
-
-
-
