@@ -162,7 +162,8 @@ class Neo4jManager:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None, 
                 config_file: Optional[str] = None,
-                use_session_state: bool = False):
+                use_session_state: bool = False,
+                connect_on_init: bool = False):
         """
         Initialize the Neo4jManager instance.
 
@@ -170,9 +171,10 @@ class Neo4jManager:
             config: Dictionary with database connection details.
             config_file: Path to a YAML file with database connection details.
             use_session_state: If True, use the connection from Streamlit session_state if available.
+            connect_on_init: If True, attempt to connect during initialization.
 
         Raises:
-            ConnectionError: If the connection details are invalid or the connection fails.
+            ConnectionError: If connect_on_init is True and the connection details are invalid or the connection fails.
         """
         # Skip initialization if already initialized (singleton pattern)
         if self._initialized:
@@ -186,6 +188,7 @@ class Neo4jManager:
         self.container_name = "neo4j-instance"
         self.http_port = 7474
         self.bolt_port = 7687
+        self._connection_error = None
 
         # Try to use session_state connection if requested
         if use_session_state:
@@ -205,22 +208,42 @@ class Neo4jManager:
 
         # Use config if session_state is not available or not requested
         if config is None:
-            if config_file:
-                config = load_db_config(config_file)
-            else:
-                # Try to load from default locations
-                config = load_db_config('.db_config_auto.yaml')
-                if not config:
-                    config = load_db_config('.db_config.yaml')
-                if not config:
-                    config = load_db_config('db_config.yaml')
+            try:
+                if config_file:
+                    config = load_db_config(config_file)
+                else:
+                    # Try to load from default locations
+                    try:
+                        config = load_db_config('.db_config_auto.yaml')
+                    except ConfigError:
+                        pass
+
+                    if not config:
+                        try:
+                            config = load_db_config('.db_config.yaml')
+                        except ConfigError:
+                            pass
+
+                    if not config:
+                        try:
+                            config = load_db_config('db_config.yaml')
+                        except ConfigError:
+                            pass
+            except Exception as e:
+                self._connection_error = f"Error loading configuration: {e}"
+                self._initialized = True
+                return
 
         if not config:
-            raise ConnectionError("No configuration provided and no default configuration found.")
+            self._connection_error = "No configuration provided and no default configuration found."
+            self._initialized = True
+            return
 
         required_keys = {"uri", "user", "password"}
         if not all(key in config for key in required_keys):
-            raise ConnectionError(f"Missing required keys in config. Expected keys: {required_keys}")
+            self._connection_error = f"Missing required keys in config. Expected keys: {required_keys}"
+            self._initialized = True
+            return
 
         self.uri = config["uri"]
         self.user = config["user"]
@@ -235,24 +258,40 @@ class Neo4jManager:
             # Default port if URI doesn't contain a port
             self.bolt_port = 7687
 
-        self._connect()
+        # Only connect if requested
+        if connect_on_init:
+            try:
+                self._connect()
+            except ConnectionError as e:
+                self._connection_error = str(e)
+
         self._initialized = True
 
-    def _connect(self) -> None:
+    def _connect(self) -> bool:
         """
         Establishes a connection to the Neo4j database.
 
+        Returns:
+            True if connection was successful, False otherwise.
+
         Raises:
-            ConnectionError: If the connection fails.
+            ConnectionError: If the connection fails and raise_error is True.
         """
+        if not self.uri or not self.user or not self.password:
+            self._connection_error = "Missing connection details (uri, user, or password)"
+            return False
+
         try:
             self._driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
             # Test the connection
             with self._driver.session(database=self.database) as session:
                 session.run("RETURN 1")
+            self._connection_error = None
+            return True
         except Exception as e:
             self._driver = None
-            raise ConnectionError(f"Failed to connect to Neo4j: {e}")
+            self._connection_error = f"Failed to connect to Neo4j: {e}"
+            return False
 
     def close(self) -> None:
         """
@@ -294,8 +333,10 @@ class Neo4jManager:
             ConnectionError: If there is no active connection.
             QueryError: If the query execution fails.
         """
+        # Try to connect if not already connected
         if not self._driver:
-            raise ConnectionError("Cannot run query. No active connection to Neo4j.")
+            if not self._connect():
+                raise ConnectionError(f"Cannot run query. No active connection to Neo4j. {self._connection_error}")
 
         parameters = parameters or {}
 
@@ -843,5 +884,5 @@ class Neo4jManager:
             return False, f"Error importing graph: {str(e)}"
 
 
-# Singleton instance
-db_manager = Neo4jManager()
+# Singleton instance - don't connect on initialization to avoid startup errors
+db_manager = Neo4jManager(connect_on_init=False)

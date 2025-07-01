@@ -38,23 +38,25 @@ class ConnectPage(BasePage):
             on_disconnect=self._on_database_disconnect
         )
 
-        self.add_sidebar_item(
-            render_neo4j_container_sidebar,
-            on_start=self._on_neo4j_start,
-            on_stop=self._on_neo4j_stop
-        )
+        # Neo4j container management is currently disabled
+        # self.add_sidebar_item(
+        #     render_neo4j_container_sidebar,
+        #     on_start=self._on_neo4j_start,
+        #     on_stop=self._on_neo4j_stop
+        # )
 
-        self.add_sidebar_item(
-            render_jupyter_sidebar,
-            on_start=self._on_jupyter_start,
-            on_stop=self._on_jupyter_stop
-        )
-
-        self.add_sidebar_item(
-            render_neodash_sidebar,
-            on_start=self._on_neodash_start,
-            on_stop=self._on_neodash_stop
-        )
+        # Jupyter and NeoDash functionality is not yet implemented
+        # self.add_sidebar_item(
+        #     render_jupyter_sidebar,
+        #     on_start=self._on_jupyter_start,
+        #     on_stop=self._on_jupyter_stop
+        # )
+        # 
+        # self.add_sidebar_item(
+        #     render_neodash_sidebar,
+        #     on_start=self._on_neodash_start,
+        #     on_stop=self._on_neodash_stop
+        # )
 
     def _on_database_connect(self, uri: str, username: str, password: str, database: str):
         """
@@ -193,7 +195,7 @@ class ConnectPage(BasePage):
 
     def render_content(self) -> None:
         """Render the Connect page content."""
-        st.write("Connect to data sources and spin up necessary infrastructure.")
+        st.write("Connect to data sources and manage your database connections.")
 
         # Database connection section
         st.header("Database Connection")
@@ -221,51 +223,17 @@ class ConnectPage(BasePage):
         else:
             st.info("Not connected to a Neo4j database. Use the sidebar to connect.")
 
-        # Neo4j container management
-        st.header("Neo4j Container")
-        container_status = st.session_state.get("container_status", "unknown")
-        if container_status == "running":
-            st.success("Neo4j container is running")
+        # Information about disabled features
+        st.header("Additional Features")
+        st.info("""
+        The following features are currently disabled or under development:
 
-            # Display container information
-            try:
-                # This is a placeholder for actual container information
-                st.write("Container Information:")
-                st.write(f"Neo4j Browser: http://localhost:{st.session_state.get('http_port', 7474)}")
-                st.write(f"Bolt URI: bolt://localhost:{st.session_state.get('bolt_port', 7687)}")
-            except Exception as e:
-                st.error(f"Error fetching container information: {e}")
-        elif container_status == "stopped":
-            st.warning("Neo4j container is stopped")
-        elif container_status == "not found":
-            st.error("Neo4j container not found")
-        else:
-            st.info("Neo4j container status unknown")
+        - **Neo4j Container Management**: Direct container management is temporarily disabled.
+        - **Jupyter Lab Integration**: This feature is still under development.
+        - **NeoDash Integration**: This feature is still under development.
 
-        # Jupyter Lab management
-        st.header("Jupyter Lab")
-        jupyter_url = st.session_state.get("jupyter_url", "")
-        jupyter_token = st.session_state.get("jupyter_token", "")
-        if jupyter_url and jupyter_token:
-            st.success(f"Jupyter Lab is running at {jupyter_url}")
-            st.write(f"Token: {jupyter_token}")
-
-            # Display Jupyter Lab link
-            full_url = f"{jupyter_url}/?token={jupyter_token}"
-            st.markdown(f"[Open Jupyter Lab]({full_url})")
-        else:
-            st.info("Jupyter Lab is not running. Use the sidebar to start it.")
-
-        # NeoDash management
-        st.header("NeoDash")
-        neodash_url = st.session_state.get("neodash_url", "")
-        if neodash_url:
-            st.success(f"NeoDash is running at {neodash_url}")
-
-            # Display NeoDash link
-            st.markdown(f"[Open NeoDash]({neodash_url})")
-        else:
-            st.info("NeoDash is not running. Use the sidebar to start it.")
+        Please check back in future updates for these features.
+        """)
 
 def render_connect_page():
     """Render the Connect page."""

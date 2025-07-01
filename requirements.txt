@@ -26,6 +26,7 @@ jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
 MarkupSafe==3.0.2
 matplotlib-inline==0.1.7
+matplotlib==3.7.1
 narwhals==1.33.0
 neo4j==5.28.1
 neomodel==5.4.5
