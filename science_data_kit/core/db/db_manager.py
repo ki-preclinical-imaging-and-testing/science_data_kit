@@ -144,7 +144,7 @@ class Neo4jManager:
     A unified manager for Neo4j database operations.
 
     This class provides methods for:
-    - Managing Neo4j connections
+    - Managing multiple Neo4j connections
     - Starting and stopping Neo4j containers
     - Executing queries and processing results
     - Importing and exporting data
@@ -180,11 +180,27 @@ class Neo4jManager:
         if self._initialized:
             return
 
+        # Dictionary to store multiple connections
+        # Format: {connection_name: {
+        #     "driver": Neo4j driver object,
+        #     "uri": URI string,
+        #     "user": username string,
+        #     "password": password string,
+        #     "database": database name string
+        # }}
+        self._connections = {}
+
+        # Current active connection name
+        self._active_connection = None
+
+        # Default connection parameters (used for backward compatibility)
         self._driver = None
         self.uri = None
         self.user = None
         self.password = None
         self.database = None
+
+        # Container configuration
         self.container_name = "neo4j-instance"
         self.http_port = 7474
         self.bolt_port = 7687
@@ -267,9 +283,13 @@ class Neo4jManager:
 
         self._initialized = True
 
-    def _connect(self) -> bool:
+    def _connect(self, connection_name: Optional[str] = None) -> bool:
         """
         Establishes a connection to the Neo4j database.
+
+        Args:
+            connection_name: Optional name for the connection. If not provided,
+                             uses the current connection parameters.
 
         Returns:
             True if connection was successful, False otherwise.
@@ -277,54 +297,211 @@ class Neo4jManager:
         Raises:
             ConnectionError: If the connection fails and raise_error is True.
         """
-        if not self.uri or not self.user or not self.password:
-            self._connection_error = "Missing connection details (uri, user, or password)"
-            return False
+        # If connection_name is provided, use it to create a new named connection
+        if connection_name:
+            uri = self.uri
+            user = self.user
+            password = self.password
+            database = self.database
+        else:
+            # Use current connection parameters
+            if not self.uri or not self.user or not self.password:
+                self._connection_error = "Missing connection details (uri, user, or password)"
+                return False
+            uri = self.uri
+            user = self.user
+            password = self.password
+            database = self.database or "neo4j"
+            # Use a default connection name if none provided
+            connection_name = "default"
+
+        # Check if we already have a connection with the same URI and database
+        # If so, only close it if it's been manually disconnected or is inactive
+        names_to_remove = []
+        for name, conn in self._connections.items():
+            # Only consider connections with the same URI and database
+            if conn["uri"] == uri and conn["database"] == database and name != connection_name:
+                # Check if the connection is active
+                try:
+                    with conn["driver"].session(database=conn["database"]) as session:
+                        session.run("RETURN 1")
+                    # Connection is active, keep it
+                except Exception:
+                    # Connection is inactive or has been manually disconnected, mark for removal
+                    names_to_remove.append(name)
+
+        # Remove inactive or manually disconnected duplicate connections
+        for name in names_to_remove:
+            conn = self._connections[name]
+            # Close the duplicate connection
+            if conn["driver"]:
+                conn["driver"].close()
+            # Remove it from connections
+            del self._connections[name]
 
         try:
-            self._driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
+            # Create a new driver
+            driver = GraphDatabase.driver(uri, auth=(user, password))
+
             # Test the connection
-            with self._driver.session(database=self.database) as session:
+            with driver.session(database=database) as session:
                 session.run("RETURN 1")
+
+            # Store the connection
+            self._connections[connection_name] = {
+                "driver": driver,
+                "uri": uri,
+                "user": user,
+                "password": password,
+                "database": database
+            }
+
+            # Set as active connection
+            self._active_connection = connection_name
+
+            # Update the default connection parameters for backward compatibility
+            self._driver = driver
+            self.uri = uri
+            self.user = user
+            self.password = password
+            self.database = database
+
             self._connection_error = None
             return True
         except Exception as e:
-            self._driver = None
             self._connection_error = f"Failed to connect to Neo4j: {e}"
             return False
 
-    def close(self) -> None:
+    def close(self, connection_name: Optional[str] = None) -> None:
         """
-        Closes the Neo4j driver connection.
+        Closes a Neo4j driver connection.
+
+        Args:
+            connection_name: Optional name of the connection to close.
+                            If None, closes the active connection.
         """
-        if self._driver:
+        if connection_name is None:
+            # Close the active connection
+            if self._active_connection:
+                connection_name = self._active_connection
+            else:
+                return
+
+        # Close the specified connection
+        if connection_name in self._connections:
+            conn = self._connections[connection_name]
+            if conn["driver"]:
+                conn["driver"].close()
+
+            # Remove from connections
+            del self._connections[connection_name]
+
+            # If this was the active connection, clear it
+            if self._active_connection == connection_name:
+                self._active_connection = None
+                self._driver = None
+
+                # If there are other connections, set one as active
+                if self._connections:
+                    # Get the first connection name
+                    new_active = next(iter(self._connections))
+                    self.set_active_connection(new_active)
+
+        # For backward compatibility
+        if self._driver and (not self._connections or not self._active_connection):
             self._driver.close()
             self._driver = None
 
-    def is_connected(self) -> bool:
+    def is_connected(self, connection_name: Optional[str] = None) -> bool:
         """
         Checks if the manager is connected to a Neo4j database.
+
+        Args:
+            connection_name: Optional name of the connection to check.
+                            If None, checks the active connection.
 
         Returns:
             True if connected, False otherwise.
         """
-        if not self._driver:
-            return False
+        if connection_name is None:
+            # Check the active connection
+            if self._active_connection:
+                connection_name = self._active_connection
+            else:
+                # For backward compatibility
+                if not self._driver:
+                    return False
+                try:
+                    with self._driver.session(database=self.database) as session:
+                        session.run("RETURN 1")
+                    return True
+                except Exception:
+                    return False
 
-        try:
-            with self._driver.session(database=self.database) as session:
-                session.run("RETURN 1")
+        # Check the specified connection
+        if connection_name in self._connections:
+            conn = self._connections[connection_name]
+            try:
+                with conn["driver"].session(database=conn["database"]) as session:
+                    session.run("RETURN 1")
+                return True
+            except Exception:
+                return False
+
+        return False
+
+    def set_active_connection(self, connection_name: str) -> bool:
+        """
+        Sets the active connection.
+
+        Args:
+            connection_name: Name of the connection to set as active.
+
+        Returns:
+            True if successful, False if the connection doesn't exist.
+        """
+        if connection_name in self._connections:
+            self._active_connection = connection_name
+            conn = self._connections[connection_name]
+
+            # Update default connection parameters for backward compatibility
+            self._driver = conn["driver"]
+            self.uri = conn["uri"]
+            self.user = conn["user"]
+            self.password = conn["password"]
+            self.database = conn["database"]
+
             return True
-        except Exception:
-            return False
+        return False
 
-    def execute_query(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def get_connection_names(self) -> List[str]:
+        """
+        Gets the names of all connections.
+
+        Returns:
+            List of connection names.
+        """
+        return list(self._connections.keys())
+
+    def get_active_connection_name(self) -> Optional[str]:
+        """
+        Gets the name of the active connection.
+
+        Returns:
+            Name of the active connection, or None if no active connection.
+        """
+        return self._active_connection
+
+    def execute_query(self, query: str, parameters: Optional[Dict[str, Any]] = None, 
+                      connection_name: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Executes a Cypher query and returns the results.
 
         Args:
             query: The Cypher query to execute.
             parameters: Optional dictionary of parameters to include in the query.
+            connection_name: Optional name of the connection to use.
+                            If None, uses the active connection.
 
         Returns:
             List of dictionaries containing the query results.
@@ -333,27 +510,47 @@ class Neo4jManager:
             ConnectionError: If there is no active connection.
             QueryError: If the query execution fails.
         """
-        # Try to connect if not already connected
-        if not self._driver:
-            if not self._connect():
-                raise ConnectionError(f"Cannot run query. No active connection to Neo4j. {self._connection_error}")
+        # If connection_name is provided, use that specific connection
+        if connection_name:
+            if connection_name not in self._connections:
+                raise ConnectionError(f"Connection '{connection_name}' does not exist")
+
+            conn = self._connections[connection_name]
+            driver = conn["driver"]
+            database = conn["database"]
+        else:
+            # Use the active connection
+            if self._active_connection:
+                conn = self._connections[self._active_connection]
+                driver = conn["driver"]
+                database = conn["database"]
+            else:
+                # Try to connect if not already connected (backward compatibility)
+                if not self._driver:
+                    if not self._connect():
+                        raise ConnectionError(f"Cannot run query. No active connection to Neo4j. {self._connection_error}")
+                driver = self._driver
+                database = self.database
 
         parameters = parameters or {}
 
         try:
-            with self._driver.session(database=self.database) as session:
+            with driver.session(database=database) as session:
                 result = session.run(query, parameters)
                 return [dict(record) for record in result]
         except Neo4jError as e:
             raise QueryError(f"Query execution failed: {e}")
 
-    def query_to_dataframe(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
+    def query_to_dataframe(self, query: str, parameters: Optional[Dict[str, Any]] = None,
+                          connection_name: Optional[str] = None) -> pd.DataFrame:
         """
         Executes a Cypher query and returns the results as a Pandas DataFrame.
 
         Args:
             query: The Cypher query to execute.
             parameters: Optional dictionary of parameters.
+            connection_name: Optional name of the connection to use.
+                            If None, uses the active connection.
 
         Returns:
             A Pandas DataFrame containing the query results.
@@ -362,16 +559,19 @@ class Neo4jManager:
             ConnectionError: If there is no active connection.
             QueryError: If the query execution fails.
         """
-        results = self.execute_query(query, parameters)
+        results = self.execute_query(query, parameters, connection_name)
         return pd.DataFrame(results)
 
-    def query_to_value(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> Any:
+    def query_to_value(self, query: str, parameters: Optional[Dict[str, Any]] = None,
+                      connection_name: Optional[str] = None) -> Any:
         """
         Executes a Cypher query and returns a single value.
 
         Args:
             query: The Cypher query to execute.
             parameters: Optional dictionary of parameters.
+            connection_name: Optional name of the connection to use.
+                            If None, uses the active connection.
 
         Returns:
             A single value if one result is returned, or a list of values if multiple rows are returned.
@@ -380,7 +580,7 @@ class Neo4jManager:
             ConnectionError: If there is no active connection.
             QueryError: If the query execution fails.
         """
-        results = self.execute_query(query, parameters)
+        results = self.execute_query(query, parameters, connection_name)
         if not results:
             return None
 
