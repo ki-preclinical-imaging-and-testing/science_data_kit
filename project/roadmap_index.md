@@ -40,11 +40,11 @@ This roadmap outlines the plan for enhancing the Infrastructure GUI components o
 
 This roadmap outlines the plan for addressing critical bugs in the Science Data Kit application to ensure it functions correctly and provides a good user experience.
 
-**Latest Version**: [roadmap_phase01_bug_fixes_02.md](roadmap_phase01_bug_fixes_02.md)
+**Latest Version**: [roadmap_phase01_bug_fixes_03.md](roadmap_phase01_bug_fixes_03.md)
 
-**Status**: In Progress - Fixed UI navigation, dependency issues, container management, and database connection error handling. Added graceful handling for missing Neo4j procedures.
+**Status**: In Progress - Fixed UI navigation, dependency issues, container management, database connection error handling, and deprecated Streamlit API calls. Added graceful handling for missing Neo4j procedures.
 
-**Next Steps**: Continue monitoring for issues, update tests to reflect current state, and develop comprehensive testing procedures.
+**Next Steps**: Check for other deprecated Streamlit API calls, continue monitoring for issues, update tests to reflect current state, and develop comprehensive testing procedures.
 
 ## Archived Roadmaps
 

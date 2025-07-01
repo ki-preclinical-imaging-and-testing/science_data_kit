@@ -200,7 +200,7 @@ def render_database_sidebar(
                     st.sidebar.error("Cannot delete an active connection. Disconnect first.")
                 else:
                     del st.session_state["db_connections"][selected_connection]
-                    st.experimental_rerun()
+                    st.rerun()
 
 def render_neo4j_container_sidebar(
     on_start: Optional[Callable] = None,
@@ -419,7 +419,7 @@ def render_msgraph_sidebar(
                     if "msgraph_adapter" in st.session_state:
                         del st.session_state["msgraph_adapter"]
                     st.sidebar.success("Disconnected from Microsoft Graph API")
-                    st.experimental_rerun()
+                    st.rerun()
         else:
             st.sidebar.warning("Not connected to Microsoft Graph API")
 
@@ -430,7 +430,7 @@ def render_msgraph_sidebar(
                 else:
                     # Redirect to Microsoft Graph API connection page
                     st.experimental_set_query_params(page="msgraph_connect")
-                    st.experimental_rerun()
+                    st.rerun()
 
         # Links to Microsoft Graph API pages
         st.sidebar.markdown("### Microsoft Graph API Pages")
