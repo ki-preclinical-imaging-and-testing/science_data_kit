@@ -59,7 +59,7 @@ class ServerPage(BasePage):
         #     on_stop=self._on_neodash_stop
         # )
 
-    def _on_database_connect(self, uri: str, username: str, password: str, database: str):
+    def _on_database_connect(self, uri: str, username: str, password: str, database: str, connection_name: str):
         """
         Handle database connection.
 
@@ -68,6 +68,7 @@ class ServerPage(BasePage):
             username: The username for authentication.
             password: The password for authentication.
             database: The name of the database to connect to.
+            connection_name: The name of the connection.
         """
         try:
             # Update connection details
@@ -80,13 +81,21 @@ class ServerPage(BasePage):
             self.db_manager._connect()
 
             # Update session state
-            st.session_state["connected"] = True
-            st.session_state["neo4j_uri"] = uri
-            st.session_state["neo4j_user"] = username
-            st.session_state["neo4j_password"] = password
-            st.session_state["neo4j_database"] = database
+            st.session_state["active_connection"] = connection_name
 
-            st.success(f"Connected to Neo4j database at {uri}")
+            # Store connection details in session state
+            if "db_connections" not in st.session_state:
+                st.session_state["db_connections"] = {}
+
+            st.session_state["db_connections"][connection_name] = {
+                "uri": uri,
+                "user": username,
+                "password": password,
+                "database": database,
+                "connected": True
+            }
+
+            st.success(f"Connected to Neo4j database '{connection_name}' at {uri}")
         except Exception as e:
             st.error(f"Failed to connect to Neo4j: {e}")
 
@@ -97,9 +106,13 @@ class ServerPage(BasePage):
             self.db_manager.close()
 
             # Update session state
-            st.session_state["connected"] = False
+            active_connection = st.session_state.get("active_connection")
+            if active_connection and active_connection in st.session_state.get("db_connections", {}):
+                st.session_state["db_connections"][active_connection]["connected"] = False
 
-            st.success("Disconnected from Neo4j database")
+            st.session_state["active_connection"] = None
+
+            st.success(f"Disconnected from Neo4j database")
         except Exception as e:
             st.error(f"Failed to disconnect from Neo4j: {e}")
 
@@ -228,15 +241,36 @@ class ServerPage(BasePage):
             st.info("Ollama: Not configured")
 
         # Database connection section
-        st.header("Database Connection")
-        if st.session_state.get("connected", False):
-            st.success(f"Connected to Neo4j database at {st.session_state.get('neo4j_uri', '')}")
+        st.header("Database Connections")
 
-            # Display database information
-            if self.db_manager.is_connected():
+        # Get all connections from session state
+        connections = st.session_state.get("db_connections", {})
+        active_connection = st.session_state.get("active_connection")
+
+        if not connections:
+            st.info("No database connections configured. Use the sidebar to create a connection.")
+        else:
+            # Display a table of all connections
+            connection_data = []
+            for name, details in connections.items():
+                status = "🟢 Active" if name == active_connection else "⚫ Inactive"
+                connection_data.append({
+                    "Name": name,
+                    "Status": status,
+                    "URI": details.get("uri", ""),
+                    "Database": details.get("database", "")
+                })
+
+            st.dataframe(connection_data)
+
+            # Display information about the active connection
+            if active_connection and self.db_manager.is_connected():
+                st.subheader(f"Active Connection: {active_connection}")
+                st.success(f"Connected to Neo4j database at {connections[active_connection].get('uri', '')}")
+
                 try:
                     # Get database information
-                    with st.expander("Database Information"):
+                    with st.expander("Database Information", expanded=True):
                         info = self.db_manager.execute_query("CALL dbms.components() YIELD name, versions, edition RETURN name, versions, edition")
                         if info:
                             st.write(f"Name: {info[0]['name']}")
@@ -248,10 +282,19 @@ class ServerPage(BasePage):
                         if size:
                             st.write(f"Database: {size[0]['database']}")
                             st.write(f"Size: {size[0]['totalSize']}")
+
+                        # Get node and relationship counts
+                        counts = self.db_manager.execute_query("MATCH (n) RETURN count(n) as nodes")
+                        if counts:
+                            st.write(f"Nodes: {counts[0]['nodes']}")
+
+                        rel_counts = self.db_manager.execute_query("MATCH ()-[r]->() RETURN count(r) as relationships")
+                        if rel_counts:
+                            st.write(f"Relationships: {rel_counts[0]['relationships']}")
                 except Exception as e:
                     st.error(f"Error fetching database information: {e}")
-        else:
-            st.info("Not connected to a Neo4j database. Use the sidebar to connect.")
+            elif not active_connection:
+                st.info("No active connection. Use the sidebar to connect to a database.")
 
         # Information about features in development
         st.header("Features in Development")

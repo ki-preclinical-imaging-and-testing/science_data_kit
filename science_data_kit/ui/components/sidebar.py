@@ -62,66 +62,142 @@ def render_database_sidebar(
         on_connect: Optional callback function to call when the connect button is clicked.
         on_disconnect: Optional callback function to call when the disconnect button is clicked.
     """
-    # Check if connected
-    is_connected = st.session_state.get("connected", False)
+    # Initialize connections in session state if not present
+    if "db_connections" not in st.session_state:
+        st.session_state["db_connections"] = {}
+
+    # Initialize active connection in session state if not present
+    if "active_connection" not in st.session_state:
+        st.session_state["active_connection"] = None
+
+    # Check if any connection is active
+    is_connected = st.session_state.get("active_connection") is not None
 
     # Render the section header with status indicator
-    expanded = render_sidebar_section("Database Connection", is_connected)
+    expanded = render_sidebar_section("Database Connections", is_connected)
 
     # Only show the content if the section is expanded
     if expanded:
         # Connection status
         if is_connected:
-            st.sidebar.success("Connected to Neo4j")
+            active_conn = st.session_state["active_connection"]
+            st.sidebar.success(f"Connected to {active_conn}")
         else:
-            st.sidebar.warning("Not connected to Neo4j")
+            st.sidebar.warning("Not connected to any database")
+
+        # Connection selector
+        connections = list(st.session_state["db_connections"].keys())
+        if connections:
+            selected_connection = st.sidebar.selectbox(
+                "Saved Connections",
+                ["New Connection"] + connections,
+                index=0
+            )
+        else:
+            selected_connection = "New Connection"
 
         # Connection form
         with st.sidebar.form("neo4j_connection_form"):
+            # Connection name input (only for new connections)
+            if selected_connection == "New Connection":
+                connection_name = st.text_input(
+                    "Connection Name",
+                    value="",
+                    placeholder="Enter a name for this connection"
+                )
+            else:
+                connection_name = selected_connection
+
+            # Load connection details if an existing connection is selected
+            if selected_connection != "New Connection":
+                conn_details = st.session_state["db_connections"][selected_connection]
+                default_uri = conn_details.get("uri", "bolt://localhost:7687")
+                default_user = conn_details.get("user", "neo4j")
+                default_password = conn_details.get("password", "password")
+                default_database = conn_details.get("database", "neo4j")
+            else:
+                default_uri = "bolt://localhost:7687"
+                default_user = "neo4j"
+                default_password = "password"
+                default_database = "neo4j"
+
             # URI input
             uri = st.text_input(
                 "Neo4j URI",
-                value=st.session_state.get("neo4j_uri", "bolt://localhost:7687"),
-                disabled=is_connected
+                value=default_uri,
+                disabled=is_connected and selected_connection == st.session_state.get("active_connection")
             )
 
             # Username input
             username = st.text_input(
                 "Username",
-                value=st.session_state.get("neo4j_user", "neo4j"),
-                disabled=is_connected
+                value=default_user,
+                disabled=is_connected and selected_connection == st.session_state.get("active_connection")
             )
 
             # Password input
             password = st.text_input(
                 "Password",
-                value=st.session_state.get("neo4j_password", "password"),
+                value=default_password,
                 type="password",
-                disabled=is_connected
+                disabled=is_connected and selected_connection == st.session_state.get("active_connection")
             )
 
             # Database input
             database = st.text_input(
                 "Database",
-                value=st.session_state.get("neo4j_database", "neo4j"),
-                disabled=is_connected
+                value=default_database,
+                disabled=is_connected and selected_connection == st.session_state.get("active_connection")
             )
 
-            # Connect/Disconnect button
-            if is_connected:
-                if st.form_submit_button("Disconnect"):
-                    if on_disconnect:
-                        on_disconnect()
-            else:
-                if st.form_submit_button("Connect"):
-                    # Update session state
-                    st.session_state["neo4j_uri"] = uri
-                    st.session_state["neo4j_user"] = username
-                    st.session_state["neo4j_password"] = password
-                    st.session_state["neo4j_database"] = database
+            # Form buttons
+            col1, col2 = st.columns(2)
+
+            with col1:
+                # Connect button
+                connect_disabled = (is_connected and selected_connection == st.session_state.get("active_connection")) or \
+                                  (selected_connection == "New Connection" and not connection_name)
+
+                if st.form_submit_button("Connect", disabled=connect_disabled):
+                    # For new connections, save the connection details
+                    if selected_connection == "New Connection":
+                        st.session_state["db_connections"][connection_name] = {
+                            "uri": uri,
+                            "user": username,
+                            "password": password,
+                            "database": database
+                        }
+
+                    # Update the connection details in case they were modified
+                    if selected_connection != "New Connection":
+                        st.session_state["db_connections"][selected_connection] = {
+                            "uri": uri,
+                            "user": username,
+                            "password": password,
+                            "database": database
+                        }
+
+                    # Set the active connection
+                    conn_name = connection_name if selected_connection == "New Connection" else selected_connection
 
                     if on_connect:
-                        on_connect(uri, username, password, database)
+                        on_connect(uri, username, password, database, conn_name)
+
+            with col2:
+                # Disconnect button
+                if st.form_submit_button("Disconnect", disabled=not is_connected):
+                    if on_disconnect:
+                        on_disconnect()
+
+        # Delete connection button (outside the form)
+        if selected_connection != "New Connection":
+            if st.sidebar.button("Delete Connection", key="delete_connection"):
+                # Don't allow deleting an active connection
+                if selected_connection == st.session_state.get("active_connection"):
+                    st.sidebar.error("Cannot delete an active connection. Disconnect first.")
+                else:
+                    del st.session_state["db_connections"][selected_connection]
+                    st.experimental_rerun()
 
 def render_neo4j_container_sidebar(
     on_start: Optional[Callable] = None,

@@ -30,9 +30,9 @@ This roadmap outlines the plan for implementing Google Sheets and Dropbox data s
 
 This roadmap outlines the plan for enhancing the Infrastructure GUI components of the Science Data Kit application, focusing on improving server management and connection capabilities to provide a more comprehensive and user-friendly experience.
 
-**Latest Version**: [roadmap_infrastructure_gui_01.md](roadmap_infrastructure_gui_01.md)
+**Latest Version**: [roadmap_infrastructure_gui_02.md](roadmap_infrastructure_gui_02.md)
 
-**Status**: In Progress - Phase 1 completed, implementing server management UI enhancements and Neo4j container management.
+**Status**: In Progress - Phase 1 completed, implementing server management UI enhancements, Neo4j container management, and support for multiple named database connections.
 
 **Next Steps**: Begin Phase 2 to re-enable Jupyter Lab and NeoDash container management, implement single/multi-use options for Jupyter, and add Dev/Prod environment selection for Neodash.
 
