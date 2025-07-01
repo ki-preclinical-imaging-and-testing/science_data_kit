@@ -342,23 +342,56 @@ def render_jupyter_sidebar(
         on_start: Optional callback function to call when the start button is clicked.
         on_stop: Optional callback function to call when the stop button is clicked.
     """
-    # Check if Jupyter is running
+    # Import here to avoid circular imports
+    from science_data_kit.core.utils.jupyter_utils import get_jupyter_container_status
+
+    # Get container name from session state
+    container_name = st.session_state.get("jupyter_container_name", "dsk-jupyter-instance")
+
+    # Check if Jupyter is running by verifying container status
+    jupyter_url = st.session_state.get("jupyter_url", "")
     jupyter_token = st.session_state.get("jupyter_token", "")
-    is_running = jupyter_token != ""
+    container_exists, container_status = get_jupyter_container_status(container_name)
+
+    # Check if the service is actually accessible
+    is_accessible = False
+    if jupyter_url and jupyter_token:
+        try:
+            import requests
+            # Try to access the Jupyter server with a timeout
+            response = requests.get(jupyter_url, timeout=2)
+            is_accessible = response.status_code == 200
+        except:
+            is_accessible = False
+
+    # Only consider it running if:
+    # 1. The URL and token are set
+    # 2. The container exists and is running
+    # 3. The service is accessible at the URL (optional check)
+    is_running = jupyter_url and jupyter_token and container_exists and container_status == "running"
+
+    # If we have a URL but the container isn't running, clear the token
+    if jupyter_token and (not container_exists or container_status != "running"):
+        st.session_state["jupyter_token"] = ""
+        is_running = False
 
     # Render the section header with status indicator
     expanded = render_sidebar_section("Jupyter Lab", is_running)
 
     # Only show the content if the section is expanded
     if expanded:
-        # Jupyter URL
-        jupyter_url = st.session_state.get("jupyter_url", "http://localhost:8888")
-
         if is_running:
             st.sidebar.success("Jupyter Lab is running")
             st.sidebar.markdown(f"[Open Jupyter Lab]({jupyter_url})")
+
+            # Show the mode
+            jupyter_mode = st.session_state.get("jupyter_mode", "Single-user")
+            st.sidebar.info(f"Mode: {jupyter_mode}")
         else:
-            st.sidebar.warning("Jupyter Lab is not running")
+            if container_exists and container_status == "running" and not is_accessible:
+                st.sidebar.warning("Jupyter Lab container is running but service is not accessible")
+            else:
+                st.sidebar.warning("Jupyter Lab is not running")
 
         # Jupyter management form
         with st.sidebar.form("jupyter_form"):
@@ -389,8 +422,6 @@ def render_jupyter_sidebar(
                     if on_stop:
                         on_stop()
 
-    # This section is now handled within the expanded section
-
 def render_neodash_sidebar(
     on_start: Optional[Callable] = None,
     on_stop: Optional[Callable] = None
@@ -402,9 +433,26 @@ def render_neodash_sidebar(
         on_start: Optional callback function to call when the start button is clicked.
         on_stop: Optional callback function to call when the stop button is clicked.
     """
-    # Check if NeoDash is running
+    # Import here to avoid circular imports
+    from science_data_kit.core.utils.neodash_utils import get_neodash_container_status, is_neodash_accessible
+
+    # Check if NeoDash is running by verifying container status and accessibility
     neodash_url = st.session_state.get("neodash_url", "")
-    is_running = neodash_url != ""
+    container_exists, container_status = get_neodash_container_status()
+
+    # Check if the service is actually accessible at the URL
+    is_accessible = is_neodash_accessible(neodash_url)
+
+    # Only consider it running if:
+    # 1. The URL is set
+    # 2. The container exists and is running
+    # 3. The service is accessible at the URL
+    is_running = neodash_url != "" and container_exists and container_status == "running" and is_accessible
+
+    # If we have a URL but either the container isn't running or the service isn't accessible, clear the URL
+    if neodash_url and (not container_exists or container_status != "running" or not is_accessible):
+        st.session_state["neodash_url"] = ""
+        is_running = False
 
     # Render the section header with status indicator
     expanded = render_sidebar_section("NeoDash", is_running)

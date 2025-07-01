@@ -188,32 +188,83 @@ class ServerPage(BasePage):
             mode: The mode to use for Jupyter Lab (Single-user or Multi-user).
         """
         try:
-            # This is a placeholder for actual Jupyter Lab start logic
-            # In a real implementation, this would start a Jupyter Lab container
-            # with the specified mode (Single-user or Multi-user)
+            # Import Jupyter utilities
+            from science_data_kit.core.utils.jupyter_utils import start_jupyter_container, get_jupyter_container_status
 
-            # Store the mode in session state
-            st.session_state["jupyter_mode"] = mode
+            # Generate a container name based on the mode
+            container_name = "dsk-jupyter-instance"
+            if mode == "Multi-user":
+                container_name = "dsk-jupyter-multi-instance"
 
-            # Update session state
-            st.session_state["jupyter_url"] = f"http://localhost:{port}"
-            st.session_state["jupyter_token"] = "demo-token"
+            # Set a secure token
+            token = "sdk-jupyter-token"
 
-            st.success(f"Jupyter Lab started in {mode} mode at http://localhost:{port}")
+            # Get the current directory as the mount point
+            import os
+            host_mountpoint = os.path.abspath('.')
+
+            # Start the Jupyter container
+            success, message, url = start_jupyter_container(
+                container_name=container_name,
+                port=port,
+                token=token,
+                host_mountpoint=host_mountpoint
+            )
+
+            # Verify the container is actually running
+            container_exists, container_status = get_jupyter_container_status(container_name)
+
+            if success and container_exists and container_status == "running" and url:
+                # Store the mode and container name in session state
+                st.session_state["jupyter_mode"] = mode
+                st.session_state["jupyter_container_name"] = container_name
+
+                # Update session state with the URL and token
+                st.session_state["jupyter_url"] = url
+                st.session_state["jupyter_token"] = token
+
+                st.success(f"Jupyter Lab started in {mode} mode at {url}")
+            else:
+                # Clear the token if it exists
+                if "jupyter_token" in st.session_state:
+                    st.session_state["jupyter_token"] = ""
+
+                # Show a more informative message based on the issue
+                if container_exists and container_status == "running" and not url:
+                    st.warning(f"Jupyter container is running but URL could not be determined. It may still be starting up or there might be a configuration issue.")
+                else:
+                    st.warning(f"Failed to start Jupyter: {message}")
         except Exception as e:
+            # Clear the token if it exists
+            if "jupyter_token" in st.session_state:
+                st.session_state["jupyter_token"] = ""
             st.error(f"Error starting Jupyter Lab: {e}")
 
     def _on_jupyter_stop(self):
         """Handle Jupyter Lab stop."""
         try:
-            # This is a placeholder for actual Jupyter Lab stop logic
-            # In a real implementation, this would stop the Jupyter Lab container
+            # Import Jupyter utilities
+            from science_data_kit.core.utils.jupyter_utils import stop_jupyter_container
 
-            # Update session state
-            st.session_state["jupyter_token"] = ""
+            # Get the container name from session state
+            container_name = st.session_state.get("jupyter_container_name", "dsk-jupyter-instance")
 
-            st.success("Jupyter Lab stopped")
+            # Stop the Jupyter container
+            success, message = stop_jupyter_container(container_name)
+
+            # Clear the token from session state regardless of success
+            # This ensures the UI shows Jupyter as stopped
+            if "jupyter_token" in st.session_state:
+                st.session_state["jupyter_token"] = ""
+
+            if success:
+                st.success("Jupyter Lab stopped")
+            else:
+                st.warning(f"Jupyter Lab stop issue: {message}")
         except Exception as e:
+            # Clear the token from session state even if there's an error
+            if "jupyter_token" in st.session_state:
+                st.session_state["jupyter_token"] = ""
             st.error(f"Error stopping Jupyter Lab: {e}")
 
     def _on_neodash_start(self, port: int, environment: str):
@@ -225,28 +276,82 @@ class ServerPage(BasePage):
             environment: The environment to use for NeoDash (Development or Production).
         """
         try:
-            # This is a placeholder for actual NeoDash start logic
-            # In a real implementation, this would start a NeoDash container
-            # with the specified environment (Development or Production)
+            # Import here to avoid circular imports
+            from science_data_kit.core.utils.neodash_utils import start_neodash_container, get_neodash_container_status, is_neodash_accessible
 
-            # Store the environment in session state
-            st.session_state["neodash_environment"] = environment
+            # Get Neo4j connection details from the active connection
+            neo4j_uri = "bolt://localhost:7687"  # Default
+            neo4j_user = "neo4j"  # Default
+            neo4j_password = "password"  # Default
 
-            # Update session state
-            st.session_state["neodash_url"] = f"http://localhost:{port}"
+            # If we have an active connection, use its details
+            active_connection = st.session_state.get("active_connection")
+            if active_connection and active_connection in st.session_state.get("db_connections", {}):
+                conn_details = st.session_state["db_connections"][active_connection]
+                neo4j_uri = conn_details.get("uri", neo4j_uri)
+                neo4j_user = conn_details.get("user", neo4j_user)
+                neo4j_password = conn_details.get("password", neo4j_password)
 
-            st.success(f"NeoDash started in {environment} environment at http://localhost:{port}")
+            # Start the NeoDash container
+            success, message, url = start_neodash_container(
+                port=port,
+                neo4j_uri=neo4j_uri,
+                neo4j_user=neo4j_user,
+                neo4j_password=neo4j_password
+            )
+
+            # Verify the container is actually running
+            container_exists, container_status = get_neodash_container_status()
+
+            # Check if the service is actually accessible at the URL
+            is_accessible = is_neodash_accessible(url)
+
+            if success and container_exists and container_status == "running" and url and is_accessible:
+                # Store the environment in session state
+                st.session_state["neodash_environment"] = environment
+
+                # Update session state with the URL
+                st.session_state["neodash_url"] = url
+
+                st.success(f"NeoDash started in {environment} environment at {url}")
+            else:
+                # Clear the URL if it exists
+                if "neodash_url" in st.session_state:
+                    st.session_state["neodash_url"] = ""
+
+                # Show a more informative message based on the issue
+                if container_exists and container_status == "running" and not is_accessible:
+                    st.warning(f"NeoDash container is running but service is not accessible at {url}. It may still be starting up or there might be a configuration issue.")
+                else:
+                    st.warning(f"Failed to start NeoDash: {message}")
         except Exception as e:
+            # Clear the URL if it exists
+            if "neodash_url" in st.session_state:
+                st.session_state["neodash_url"] = ""
             st.error(f"Error starting NeoDash: {e}")
 
     def _on_neodash_stop(self):
         """Handle NeoDash stop."""
         try:
-            # This is a placeholder for actual NeoDash stop logic
-            # In a real implementation, this would stop the NeoDash container
+            # Import here to avoid circular imports
+            from science_data_kit.core.utils.neodash_utils import stop_neodash_container
 
-            st.success("NeoDash stopped")
+            # Stop the NeoDash container
+            success, message = stop_neodash_container()
+
+            # Clear the URL from session state regardless of success
+            # This ensures the UI shows NeoDash as stopped
+            if "neodash_url" in st.session_state:
+                st.session_state["neodash_url"] = ""
+
+            if success:
+                st.success("NeoDash stopped")
+            else:
+                st.warning(f"NeoDash stop issue: {message}")
         except Exception as e:
+            # Clear the URL from session state even if there's an error
+            if "neodash_url" in st.session_state:
+                st.session_state["neodash_url"] = ""
             st.error(f"Error stopping NeoDash: {e}")
 
     def render_content(self) -> None:
@@ -274,21 +379,76 @@ class ServerPage(BasePage):
             st.subheader("Analysis Servers")
 
             # Jupyter status
+            # Import here to avoid circular imports
+            from science_data_kit.core.utils.jupyter_utils import get_jupyter_container_status
+
+            # Get container name from session state
+            container_name = st.session_state.get("jupyter_container_name", "dsk-jupyter-instance")
+
+            # Check if Jupyter is running by verifying container status
+            jupyter_url = st.session_state.get("jupyter_url", "")
             jupyter_token = st.session_state.get("jupyter_token", "")
-            if jupyter_token:
-                jupyter_url = st.session_state.get("jupyter_url", "http://localhost:8888")
+            container_exists, container_status = get_jupyter_container_status(container_name)
+
+            # Check if the service is actually accessible
+            is_accessible = False
+            if jupyter_url and jupyter_token:
+                try:
+                    import requests
+                    # Try to access the Jupyter server with a timeout
+                    response = requests.get(jupyter_url, timeout=2)
+                    is_accessible = response.status_code == 200
+                except:
+                    is_accessible = False
+
+            # Only consider it running if:
+            # 1. The URL and token are set
+            # 2. The container exists and is running
+            is_running = jupyter_url and jupyter_token and container_exists and container_status == "running"
+
+            # If we have a URL but the container isn't running, clear the token
+            if jupyter_token and (not container_exists or container_status != "running"):
+                st.session_state["jupyter_token"] = ""
+                is_running = False
+
+            if is_running:
                 jupyter_mode = st.session_state.get("jupyter_mode", "Single-user")
                 st.success(f"Jupyter Lab: Running in {jupyter_mode} mode at {jupyter_url}")
+                if not is_accessible:
+                    st.info("Note: Jupyter Lab container is running but may not be fully accessible yet. It might still be starting up.")
             else:
-                st.warning("Jupyter Lab: Not running")
+                if container_exists and container_status == "running" and not is_accessible:
+                    st.warning("Jupyter Lab: Container is running but service is not accessible")
+                else:
+                    st.warning("Jupyter Lab: Not running")
 
             # NeoDash status
+            # Import here to avoid circular imports
+            from science_data_kit.core.utils.neodash_utils import get_neodash_container_status, is_neodash_accessible
+
             neodash_url = st.session_state.get("neodash_url", "")
-            if neodash_url:
+            container_exists, container_status = get_neodash_container_status()
+
+            # Check if the service is actually accessible at the URL
+            is_accessible = is_neodash_accessible(neodash_url)
+
+            # Only show as running if:
+            # 1. The URL is set
+            # 2. The container exists and is running
+            # 3. The service is accessible at the URL
+            if neodash_url and container_exists and container_status == "running" and is_accessible:
                 neodash_env = st.session_state.get("neodash_environment", "Development")
                 st.success(f"NeoDash: Running in {neodash_env} environment at {neodash_url}")
             else:
-                st.warning("NeoDash: Not running")
+                # If the URL is set but either the container isn't running or the service isn't accessible, clear the URL
+                if neodash_url and (not container_exists or container_status != "running" or not is_accessible):
+                    st.session_state["neodash_url"] = ""
+
+                # Show a more informative message if the container exists but isn't accessible
+                if container_exists and container_status == "running" and not is_accessible:
+                    st.warning("NeoDash: Container is running but service is not accessible")
+                else:
+                    st.warning("NeoDash: Not running")
 
             # Ollama status (placeholder)
             st.info("Ollama: Not configured")
