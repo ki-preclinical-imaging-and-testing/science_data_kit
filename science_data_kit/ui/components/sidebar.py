@@ -155,12 +155,15 @@ def render_database_sidebar(
 
             with col1:
                 # Connect button
-                connect_disabled = (is_connected and selected_connection == st.session_state.get("active_connection")) or \
-                                  (selected_connection == "New Connection" and not connection_name)
+                connect_disabled = (is_connected and selected_connection == st.session_state.get("active_connection"))
 
                 if st.form_submit_button("Connect", disabled=connect_disabled):
                     # For new connections, save the connection details
                     if selected_connection == "New Connection":
+                        # Generate a default connection name if none is provided
+                        if not connection_name:
+                            connection_name = f"Connection {len(st.session_state['db_connections']) + 1}"
+
                         st.session_state["db_connections"][connection_name] = {
                             "uri": uri,
                             "user": username,
