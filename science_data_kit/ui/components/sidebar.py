@@ -70,8 +70,12 @@ def render_database_sidebar(
     if "active_connection" not in st.session_state:
         st.session_state["active_connection"] = None
 
-    # Check if any connection is active
-    is_connected = st.session_state.get("active_connection") is not None
+    # Check if any connection is connected (not just the active one)
+    is_connected = False
+    for conn_details in st.session_state.get("db_connections", {}).values():
+        if conn_details.get("connected", False):
+            is_connected = True
+            break
 
     # Render the section header with status indicator
     expanded = render_sidebar_section("Database Connections", is_connected)
@@ -80,8 +84,22 @@ def render_database_sidebar(
     if expanded:
         # Connection status
         if is_connected:
+            # Count how many connections are connected
+            connected_count = 0
+            connected_names = []
+            for name, conn_details in st.session_state.get("db_connections", {}).items():
+                if conn_details.get("connected", False):
+                    connected_count += 1
+                    connected_names.append(name)
+
+            # Show active connection and total connected count
             active_conn = st.session_state["active_connection"]
-            st.sidebar.success(f"Connected to {active_conn}")
+            if connected_count == 1:
+                st.sidebar.success(f"Connected to {active_conn}")
+            else:
+                st.sidebar.success(f"Connected to {connected_count} databases. Active: {active_conn}")
+                # Show list of connected databases
+                st.sidebar.info(f"Connected databases: {', '.join(connected_names)}")
         else:
             st.sidebar.warning("Not connected to any database")
 
@@ -163,6 +181,15 @@ def render_database_sidebar(
                         # Generate a default connection name if none is provided
                         if not connection_name:
                             connection_name = f"Connection {len(st.session_state['db_connections']) + 1}"
+
+                        # Check if this connection name already exists
+                        if connection_name in st.session_state["db_connections"]:
+                            # Append a number to make it unique
+                            base_name = connection_name
+                            counter = 1
+                            while f"{base_name} ({counter})" in st.session_state["db_connections"]:
+                                counter += 1
+                            connection_name = f"{base_name} ({counter})"
 
                         st.session_state["db_connections"][connection_name] = {
                             "uri": uri,

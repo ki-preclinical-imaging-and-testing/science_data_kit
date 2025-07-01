@@ -77,8 +77,16 @@ class ServerPage(BasePage):
             self.db_manager.password = password
             self.db_manager.database = database
 
-            # Connect to the database
-            self.db_manager._connect()
+            # Check if we already have a connection with the same URI and database
+            # If so, we'll only deactivate that one when creating the new connection
+            duplicate_connection = None
+            for name, details in st.session_state.get("db_connections", {}).items():
+                if details.get("uri") == uri and details.get("database") == database and name != connection_name:
+                    duplicate_connection = name
+                    break
+
+            # Connect to the database with the specified connection name
+            self.db_manager._connect(connection_name)
 
             # Update session state
             st.session_state["active_connection"] = connection_name
@@ -87,6 +95,11 @@ class ServerPage(BasePage):
             if "db_connections" not in st.session_state:
                 st.session_state["db_connections"] = {}
 
+            # Mark all connections with the same URI and database as inactive
+            if duplicate_connection:
+                st.session_state["db_connections"][duplicate_connection]["connected"] = False
+
+            # Update or create the connection in session state
             st.session_state["db_connections"][connection_name] = {
                 "uri": uri,
                 "user": username,
@@ -102,11 +115,13 @@ class ServerPage(BasePage):
     def _on_database_disconnect(self):
         """Handle database disconnection."""
         try:
+            # Get the active connection name
+            active_connection = st.session_state.get("active_connection")
+
             # Close the connection
-            self.db_manager.close()
+            self.db_manager.close(active_connection)
 
             # Update session state
-            active_connection = st.session_state.get("active_connection")
             if active_connection and active_connection in st.session_state.get("db_connections", {}):
                 st.session_state["db_connections"][active_connection]["connected"] = False
 
@@ -253,7 +268,11 @@ class ServerPage(BasePage):
             # Display a table of all connections
             connection_data = []
             for name, details in connections.items():
-                status = "🟢 Active" if name == active_connection else "⚫ Inactive"
+                # Show green status for all connected connections, not just the active one
+                status = "🟢 Connected" if details.get("connected", False) else "⚫ Disconnected"
+                # Add an indicator for the active connection
+                if name == active_connection:
+                    status += " (Active)"
                 connection_data.append({
                     "Name": name,
                     "Status": status,
@@ -264,14 +283,17 @@ class ServerPage(BasePage):
             st.dataframe(connection_data)
 
             # Display information about the active connection
-            if active_connection and self.db_manager.is_connected():
+            if active_connection and self.db_manager.is_connected(active_connection):
                 st.subheader(f"Active Connection: {active_connection}")
                 st.success(f"Connected to Neo4j database at {connections[active_connection].get('uri', '')}")
 
                 try:
                     # Get database information
                     with st.expander("Database Information", expanded=True):
-                        info = self.db_manager.execute_query("CALL dbms.components() YIELD name, versions, edition RETURN name, versions, edition")
+                        info = self.db_manager.execute_query(
+                            "CALL dbms.components() YIELD name, versions, edition RETURN name, versions, edition",
+                            connection_name=active_connection
+                        )
                         if info:
                             st.write(f"Name: {info[0]['name']}")
                             st.write(f"Version: {info[0]['versions'][0]}")
@@ -279,7 +301,10 @@ class ServerPage(BasePage):
 
                         # Get database size
                         try:
-                            size = self.db_manager.execute_query("CALL dbms.database.size() YIELD database, totalSize RETURN database, totalSize")
+                            size = self.db_manager.execute_query(
+                                "CALL dbms.database.size() YIELD database, totalSize RETURN database, totalSize",
+                                connection_name=active_connection
+                            )
                             if size:
                                 st.write(f"Database: {size[0]['database']}")
                                 st.write(f"Size: {size[0]['totalSize']}")
@@ -292,11 +317,17 @@ class ServerPage(BasePage):
                                 raise e
 
                         # Get node and relationship counts
-                        counts = self.db_manager.execute_query("MATCH (n) RETURN count(n) as nodes")
+                        counts = self.db_manager.execute_query(
+                            "MATCH (n) RETURN count(n) as nodes",
+                            connection_name=active_connection
+                        )
                         if counts:
                             st.write(f"Nodes: {counts[0]['nodes']}")
 
-                        rel_counts = self.db_manager.execute_query("MATCH ()-[r]->() RETURN count(r) as relationships")
+                        rel_counts = self.db_manager.execute_query(
+                            "MATCH ()-[r]->() RETURN count(r) as relationships",
+                            connection_name=active_connection
+                        )
                         if rel_counts:
                             st.write(f"Relationships: {rel_counts[0]['relationships']}")
                 except Exception as e:
