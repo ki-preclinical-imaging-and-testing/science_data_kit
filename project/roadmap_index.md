@@ -36,6 +36,16 @@ This roadmap outlines the plan for enhancing the Infrastructure GUI components o
 
 **Next Steps**: Begin Phase 2 to re-enable Jupyter Lab and NeoDash container management, implement single/multi-use options for Jupyter, and add Dev/Prod environment selection for Neodash.
 
+### Bug Fixes
+
+This roadmap outlines the plan for addressing critical bugs in the Science Data Kit application to ensure it functions correctly and provides a good user experience.
+
+**Latest Version**: [roadmap_phase01_bug_fixes_02.md](roadmap_phase01_bug_fixes_02.md)
+
+**Status**: In Progress - Fixed UI navigation, dependency issues, container management, and database connection error handling. Added graceful handling for missing Neo4j procedures.
+
+**Next Steps**: Continue monitoring for issues, update tests to reflect current state, and develop comprehensive testing procedures.
+
 ## Archived Roadmaps
 
 The following roadmap sets have been completed and archived. Any remaining tasks from these roadmaps have been added to the [later_phase.md](later_phase.md) file for future consideration.

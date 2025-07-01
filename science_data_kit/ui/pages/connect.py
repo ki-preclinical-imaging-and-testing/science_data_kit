@@ -278,10 +278,18 @@ class ServerPage(BasePage):
                             st.write(f"Edition: {info[0]['edition']}")
 
                         # Get database size
-                        size = self.db_manager.execute_query("CALL dbms.database.size() YIELD database, totalSize RETURN database, totalSize")
-                        if size:
-                            st.write(f"Database: {size[0]['database']}")
-                            st.write(f"Size: {size[0]['totalSize']}")
+                        try:
+                            size = self.db_manager.execute_query("CALL dbms.database.size() YIELD database, totalSize RETURN database, totalSize")
+                            if size:
+                                st.write(f"Database: {size[0]['database']}")
+                                st.write(f"Size: {size[0]['totalSize']}")
+                        except Exception as e:
+                            # Handle the case when dbms.database.size() procedure is not available
+                            if "Neo.ClientError.Procedure.ProcedureNotFound" in str(e):
+                                st.info("Database size information not available in this Neo4j version")
+                            else:
+                                # Re-raise if it's a different error
+                                raise e
 
                         # Get node and relationship counts
                         counts = self.db_manager.execute_query("MATCH (n) RETURN count(n) as nodes")
