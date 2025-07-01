@@ -26,6 +26,16 @@ This roadmap outlines the plan for implementing Google Sheets and Dropbox data s
 
 **Next Steps**: Create unified data source selector, register providers in the registry, create integration tests, and update documentation.
 
+### Infrastructure GUI
+
+This roadmap outlines the plan for enhancing the Infrastructure GUI components of the Science Data Kit application, focusing on improving server management and connection capabilities to provide a more comprehensive and user-friendly experience.
+
+**Latest Version**: [roadmap_infrastructure_gui_01.md](roadmap_infrastructure_gui_01.md)
+
+**Status**: In Progress - Phase 1 completed, implementing server management UI enhancements and Neo4j container management.
+
+**Next Steps**: Begin Phase 2 to re-enable Jupyter Lab and NeoDash container management, implement single/multi-use options for Jupyter, and add Dev/Prod environment selection for Neodash.
+
 ## Archived Roadmaps
 
 The following roadmap sets have been completed and archived. Any remaining tasks from these roadmaps have been added to the [later_phase.md](later_phase.md) file for future consideration.
@@ -78,6 +88,8 @@ The Science Data Kit is evolving to become a comprehensive tool for data analysi
 
 5. **Extensibility**: Creating a flexible architecture that allows for easy integration of new data sources and analysis tools.
 
+6. **Infrastructure Management**: Providing robust capabilities for launching and managing containerized servers (Neo4j, Jupyter, Neodash, Ollama) and connecting to various APIs and filesystems.
+
 ## Roadmap Update Process
 
 1. Create a new version by incrementing the version number
@@ -106,6 +118,11 @@ The Science Data Kit project has made significant progress towards its goal of b
 3. **Codebase Organization and Documentation**: Improves the organization, reduces redundancy, and enhances documentation in the codebase.
 4. **Application Refactoring**: Refactors the application to improve its architecture, maintainability, and user experience.
 
-Work is now transitioning to Phase 2, which will focus on enhancing and expanding the SDK with advanced features, performance optimization, and improved user experience. Any remaining tasks from the completed roadmaps have been collected in the later_phase.md file for future consideration.
+Work is now transitioning to Phase 2, which will focus on enhancing and expanding the SDK with advanced features, performance optimization, and improved user experience. Current active roadmaps include:
 
-The project continues to evolve with a focus on maintainability, extensibility, and user experience, ensuring that the Science Data Kit remains a valuable tool for scientific data management and analysis. Phase 2 will build upon the solid foundation established in Phase 1, taking the SDK to the next level of functionality and usability.
+1. **Data Source Integration**: Implementing Google Sheets and Dropbox data source integrations.
+2. **Infrastructure GUI**: Enhancing server management and connection capabilities for containerized services.
+
+These roadmaps address key areas of functionality that will make the Science Data Kit more versatile and user-friendly. Any remaining tasks from the completed roadmaps have been collected in the later_phase.md file for future consideration.
+
+The project continues to evolve with a focus on maintainability, extensibility, user experience, and infrastructure management, ensuring that the Science Data Kit remains a valuable tool for scientific data management and analysis. Phase 2 will build upon the solid foundation established in Phase 1, taking the SDK to the next level of functionality and usability.

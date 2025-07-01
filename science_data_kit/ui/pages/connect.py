@@ -1,8 +1,8 @@
 """
-Connect Page Module for Science Data Kit
+Server Page Module for Science Data Kit
 
-This module provides the Connect page for the Science Data Kit application.
-The Connect page handles connections to data sources and infrastructure management.
+This module provides the Server page for the Science Data Kit application.
+The Server page handles server management, connections to data sources, and infrastructure management.
 """
 
 import streamlit as st
@@ -14,36 +14,37 @@ from science_data_kit.ui.components.sidebar import render_database_sidebar, rend
 from science_data_kit.ui.components.sidebar import render_jupyter_sidebar, render_neodash_sidebar
 from science_data_kit.core.db.db_manager import Neo4jManager, db_manager
 
-class ConnectPage(BasePage):
+class ServerPage(BasePage):
     """
-    Connect page for setting up and managing connections to data sources.
+    Server page for managing infrastructure and connections to data sources.
 
     This page provides functionality for:
-    - Connecting to Neo4j databases
-    - Managing Docker containers
+    - Managing containerized servers (Neo4j, Jupyter, NeoDash, Ollama)
+    - Connecting to databases (Neo4j, PostgreSQL, etc.)
+    - Managing filesystem integrations
     - Starting and stopping services
     """
 
     def __init__(self):
-        """Initialize the Connect page."""
-        super().__init__("Connect", "🌐")
+        """Initialize the Server page."""
+        super().__init__("Server", "🖥️")
         self._setup_sidebar()
         self.db_manager = db_manager
 
     def _setup_sidebar(self):
-        """Set up the sidebar items for the Connect page."""
+        """Set up the sidebar items for the Server page."""
         self.add_sidebar_item(
             render_database_sidebar,
             on_connect=self._on_database_connect,
             on_disconnect=self._on_database_disconnect
         )
 
-        # Neo4j container management is currently disabled
-        # self.add_sidebar_item(
-        #     render_neo4j_container_sidebar,
-        #     on_start=self._on_neo4j_start,
-        #     on_stop=self._on_neo4j_stop
-        # )
+        # Re-enable Neo4j container management
+        self.add_sidebar_item(
+            render_neo4j_container_sidebar,
+            on_start=self._on_neo4j_start,
+            on_stop=self._on_neo4j_stop
+        )
 
         # Jupyter and NeoDash functionality is not yet implemented
         # self.add_sidebar_item(
@@ -194,8 +195,37 @@ class ConnectPage(BasePage):
             st.error(f"Error stopping NeoDash: {e}")
 
     def render_content(self) -> None:
-        """Render the Connect page content."""
-        st.write("Connect to data sources and manage your database connections.")
+        """Render the Server page content."""
+        st.write("Manage your servers and connect to data sources.")
+
+        # Server status overview
+        st.header("Server Status")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.subheader("Database Servers")
+
+            # Neo4j status
+            if st.session_state.get("container_status", "stopped") == "running":
+                st.success("Neo4j: Running")
+            else:
+                st.warning("Neo4j: Stopped")
+
+            # PostgreSQL status (placeholder for future implementation)
+            st.info("PostgreSQL: Not configured")
+
+        with col2:
+            st.subheader("Analysis Servers")
+
+            # Jupyter status (placeholder)
+            st.warning("Jupyter Lab: Not running")
+
+            # NeoDash status (placeholder)
+            st.warning("NeoDash: Not running")
+
+            # Ollama status (placeholder)
+            st.info("Ollama: Not configured")
 
         # Database connection section
         st.header("Database Connection")
@@ -223,19 +253,21 @@ class ConnectPage(BasePage):
         else:
             st.info("Not connected to a Neo4j database. Use the sidebar to connect.")
 
-        # Information about disabled features
-        st.header("Additional Features")
+        # Information about features in development
+        st.header("Features in Development")
         st.info("""
-        The following features are currently disabled or under development:
+        The following features are currently under development:
 
-        - **Neo4j Container Management**: Direct container management is temporarily disabled.
-        - **Jupyter Lab Integration**: This feature is still under development.
-        - **NeoDash Integration**: This feature is still under development.
+        - **Jupyter Lab Integration**: Will be available in a future update.
+        - **NeoDash Integration**: Will be available in a future update.
+        - **Ollama Integration**: Will be available in a future update.
+        - **PostgreSQL Connection**: Will be available in a future update.
+        - **Filesystem Integrations**: Will be available in a future update.
 
-        Please check back in future updates for these features.
+        Neo4j container management is now available in the sidebar.
         """)
 
-def render_connect_page():
-    """Render the Connect page."""
-    page = ConnectPage()
+def render_server_page():
+    """Render the Server page."""
+    page = ServerPage()
     page.render()
