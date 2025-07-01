@@ -8,7 +8,14 @@ and other modules that need to visualize data.
 
 import pandas as pd
 import networkx as nx
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    # Define a placeholder for plt that will raise an error when used
+    class PlaceholderPlt:
+        def __getattr__(self, name):
+            raise ImportError("matplotlib is not installed. Please install it with 'pip install matplotlib'.")
+    plt = PlaceholderPlt()
 import io
 import base64
 from typing import Dict, List, Any, Optional, Union, Tuple
@@ -22,12 +29,12 @@ def create_network_graph(
 ) -> nx.Graph:
     """
     Create a NetworkX graph from nodes and edges.
-    
+
     Args:
         nodes: List of node dictionaries with 'id' and other attributes.
         edges: List of edge dictionaries with 'source', 'target', and other attributes.
         directed: Whether to create a directed graph.
-        
+
     Returns:
         A NetworkX graph.
     """
@@ -36,18 +43,18 @@ def create_network_graph(
         G = nx.DiGraph()
     else:
         G = nx.Graph()
-    
+
     # Add nodes with attributes
     for node in nodes:
         node_id = node.pop('id')
         G.add_node(node_id, **node)
-    
+
     # Add edges with attributes
     for edge in edges:
         source = edge.pop('source')
         target = edge.pop('target')
         G.add_edge(source, target, **edge)
-    
+
     return G
 
 def plot_network_graph(
@@ -64,7 +71,7 @@ def plot_network_graph(
 ) -> Optional[plt.Figure]:
     """
     Plot a NetworkX graph using matplotlib.
-    
+
     Args:
         G: NetworkX graph to plot.
         figsize: Figure size as (width, height) in inches.
@@ -76,13 +83,13 @@ def plot_network_graph(
         layout: Layout algorithm to use ('spring', 'circular', 'random', 'shell', 'kamada_kawai').
         title: Optional title for the plot.
         save_path: Optional path to save the plot.
-        
+
     Returns:
         The matplotlib Figure object if save_path is None, otherwise None.
     """
     # Create figure
     fig, ax = plt.subplots(figsize=figsize)
-    
+
     # Choose layout
     if layout == 'spring':
         pos = nx.spring_layout(G)
@@ -96,7 +103,7 @@ def plot_network_graph(
         pos = nx.kamada_kawai_layout(G)
     else:
         pos = nx.spring_layout(G)
-    
+
     # Draw the graph
     nx.draw(
         G, pos,
@@ -107,26 +114,26 @@ def plot_network_graph(
         edge_color=edge_color,
         font_size=font_size
     )
-    
+
     # Add title if provided
     if title:
         ax.set_title(title)
-    
+
     # Save the plot if a path is provided
     if save_path:
         plt.savefig(save_path, bbox_inches='tight')
         plt.close(fig)
         return None
-    
+
     return fig
 
 def fig_to_base64(fig: plt.Figure) -> str:
     """
     Convert a matplotlib figure to a base64-encoded string.
-    
+
     Args:
         fig: Matplotlib figure to convert.
-        
+
     Returns:
         Base64-encoded string of the figure.
     """
@@ -149,7 +156,7 @@ def create_html_graph(
 ) -> str:
     """
     Create an HTML representation of a NetworkX graph using D3.js.
-    
+
     Args:
         G: NetworkX graph to visualize.
         width: Width of the visualization.
@@ -159,37 +166,37 @@ def create_html_graph(
         node_color: Color of nodes.
         edge_color: Color of edges.
         title: Optional title for the visualization.
-        
+
     Returns:
         HTML string containing the visualization.
     """
     # Determine if the graph is directed
     if directed is None:
         directed = isinstance(G, nx.DiGraph)
-    
+
     # Convert the graph to a JSON-serializable format
     nodes = []
     for node, attrs in G.nodes(data=True):
         node_data = {'id': node}
         node_data.update(attrs)
         nodes.append(node_data)
-    
+
     edges = []
     for source, target, attrs in G.edges(data=True):
         edge_data = {'source': source, 'target': target}
         edge_data.update(attrs)
         edges.append(edge_data)
-    
+
     # Create the graph data
     graph_data = {
         'nodes': nodes,
         'links': edges,
         'directed': directed
     }
-    
+
     # Convert to JSON
     graph_json = json.dumps(graph_data)
-    
+
     # Create the HTML
     html = f"""
     <!DOCTYPE html>
@@ -210,27 +217,27 @@ def create_html_graph(
         <div id="graph"></div>
         <script>
             const graph = {graph_json};
-            
+
             const width = document.getElementById('graph').clientWidth;
             const height = document.getElementById('graph').clientHeight;
-            
+
             const svg = d3.select('#graph')
                 .append('svg')
                 .attr('width', width)
                 .attr('height', height);
-            
+
             const simulation = d3.forceSimulation()
                 .force('link', d3.forceLink().id(d => d.id))
                 .force('charge', d3.forceManyBody())
                 .force('center', d3.forceCenter(width / 2, height / 2));
-            
+
             const link = svg.append('g')
                 .attr('class', 'links')
                 .selectAll('line')
                 .data(graph.links)
                 .enter().append('line')
                 .attr('class', 'link');
-            
+
             const node = svg.append('g')
                 .attr('class', 'nodes')
                 .selectAll('circle')
@@ -243,40 +250,40 @@ def create_html_graph(
                     .on('start', dragstarted)
                     .on('drag', dragged)
                     .on('end', dragended));
-            
+
             node.append('title')
                 .text(d => d.id);
-            
+
             simulation
                 .nodes(graph.nodes)
                 .on('tick', ticked);
-            
+
             simulation.force('link')
                 .links(graph.links);
-            
+
             function ticked() {{
                 link
                     .attr('x1', d => d.source.x)
                     .attr('y1', d => d.source.y)
                     .attr('x2', d => d.target.x)
                     .attr('y2', d => d.target.y);
-                
+
                 node
                     .attr('cx', d => d.x)
                     .attr('cy', d => d.y);
             }}
-            
+
             function dragstarted(d) {{
                 if (!d3.event.active) simulation.alphaTarget(0.3).restart();
                 d.fx = d.x;
                 d.fy = d.y;
             }}
-            
+
             function dragged(d) {{
                 d.fx = d3.event.x;
                 d.fy = d3.event.y;
             }}
-            
+
             function dragended(d) {{
                 if (!d3.event.active) simulation.alphaTarget(0);
                 d.fx = null;
@@ -286,7 +293,7 @@ def create_html_graph(
     </body>
     </html>
     """
-    
+
     return html
 
 def create_sankey_diagram(
@@ -298,21 +305,21 @@ def create_sankey_diagram(
 ) -> str:
     """
     Create a Sankey diagram using Plotly.
-    
+
     Args:
         nodes: List of node dictionaries with 'name' and optional 'color'.
         links: List of link dictionaries with 'source', 'target', and 'value'.
         width: Width of the diagram.
         height: Height of the diagram.
         title: Optional title for the diagram.
-        
+
     Returns:
         HTML string containing the Sankey diagram.
     """
     # Convert nodes and links to JSON
     nodes_json = json.dumps(nodes)
     links_json = json.dumps(links)
-    
+
     # Create the HTML
     html = f"""
     <!DOCTYPE html>
@@ -327,7 +334,7 @@ def create_sankey_diagram(
         <script>
             const nodes = {nodes_json};
             const links = {links_json};
-            
+
             const data = {{
                 type: 'sankey',
                 orientation: 'h',
@@ -348,7 +355,7 @@ def create_sankey_diagram(
                     color: links.map(l => l.color || 'rgba(0, 0, 0, 0.2)')
                 }}
             }};
-            
+
             const layout = {{
                 title: '{title or "Sankey Diagram"}',
                 font: {{
@@ -357,13 +364,13 @@ def create_sankey_diagram(
                 width: {width},
                 height: {height}
             }};
-            
+
             Plotly.newPlot('sankey', [data], layout);
         </script>
     </body>
     </html>
     """
-    
+
     return html
 
 def create_heatmap(
@@ -378,7 +385,7 @@ def create_heatmap(
 ) -> str:
     """
     Create a heatmap using Plotly.
-    
+
     Args:
         data: DataFrame containing the data.
         x_column: Column to use for the x-axis.
@@ -388,18 +395,18 @@ def create_heatmap(
         height: Height of the heatmap.
         colorscale: Colorscale to use.
         title: Optional title for the heatmap.
-        
+
     Returns:
         HTML string containing the heatmap.
     """
     # Pivot the data
     pivot_data = data.pivot(index=y_column, columns=x_column, values=value_column)
-    
+
     # Convert to JSON
     z_values = pivot_data.values.tolist()
     x_values = pivot_data.columns.tolist()
     y_values = pivot_data.index.tolist()
-    
+
     # Create the HTML
     html = f"""
     <!DOCTYPE html>
@@ -419,7 +426,7 @@ def create_heatmap(
                 type: 'heatmap',
                 colorscale: '{colorscale}'
             }}];
-            
+
             const layout = {{
                 title: '{title or "Heatmap"}',
                 width: {width},
@@ -431,13 +438,13 @@ def create_heatmap(
                     title: '{y_column}'
                 }}
             }};
-            
+
             Plotly.newPlot('heatmap', data, layout);
         </script>
     </body>
     </html>
     """
-    
+
     return html
 
 def dataframe_to_network(
@@ -450,7 +457,7 @@ def dataframe_to_network(
 ) -> nx.Graph:
     """
     Convert a DataFrame to a NetworkX graph.
-    
+
     Args:
         df: DataFrame containing the data.
         source_column: Column to use as the source node.
@@ -458,7 +465,7 @@ def dataframe_to_network(
         edge_attr_columns: Optional list of columns to use as edge attributes.
         node_attr_columns: Optional dictionary mapping node attribute names to column names.
         directed: Whether to create a directed graph.
-        
+
     Returns:
         A NetworkX graph.
     """
@@ -467,28 +474,28 @@ def dataframe_to_network(
         G = nx.DiGraph()
     else:
         G = nx.Graph()
-    
+
     # Add edges with attributes
     for _, row in df.iterrows():
         source = row[source_column]
         target = row[target_column]
-        
+
         # Add edge attributes if specified
         edge_attrs = {}
         if edge_attr_columns:
             for col in edge_attr_columns:
                 if col in row:
                     edge_attrs[col] = row[col]
-        
+
         G.add_edge(source, target, **edge_attrs)
-    
+
     # Add node attributes if specified
     if node_attr_columns:
         for node in G.nodes():
             # Find rows where this node appears as source or target
             source_rows = df[df[source_column] == node]
             target_rows = df[df[target_column] == node]
-            
+
             # Use the first row where this node appears
             if not source_rows.empty:
                 row = source_rows.iloc[0]
@@ -496,10 +503,10 @@ def dataframe_to_network(
                 row = target_rows.iloc[0]
             else:
                 continue
-            
+
             # Add node attributes
             for attr_name, col_name in node_attr_columns.items():
                 if col_name in row:
                     G.nodes[node][attr_name] = row[col_name]
-    
+
     return G

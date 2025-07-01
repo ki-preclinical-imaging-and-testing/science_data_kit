@@ -368,7 +368,7 @@ def render_jupyter_sidebar(
     # 1. The URL and token are set
     # 2. The container exists and is running
     # 3. The service is accessible at the URL (optional check)
-    is_running = jupyter_url and jupyter_token and container_exists and container_status == "running"
+    is_running = bool(jupyter_url) and bool(jupyter_token) and container_exists and container_status == "running"
 
     # If we have a URL but the container isn't running, clear the token
     if jupyter_token and (not container_exists or container_status != "running"):

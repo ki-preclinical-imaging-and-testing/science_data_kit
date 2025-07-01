@@ -7,7 +7,11 @@ This module provides a Streamlit page for exploring Microsoft Graph API data.
 import streamlit as st
 import pandas as pd
 import networkx as nx
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    st.error("matplotlib is not installed. Please install it with 'pip install matplotlib'.")
+    plt = None
 import io
 import base64
 from typing import Dict, Any, Optional, List, Union, Callable
