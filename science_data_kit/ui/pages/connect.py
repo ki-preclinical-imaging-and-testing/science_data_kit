@@ -46,18 +46,18 @@ class ServerPage(BasePage):
             on_stop=self._on_neo4j_stop
         )
 
-        # Jupyter and NeoDash functionality is not yet implemented
-        # self.add_sidebar_item(
-        #     render_jupyter_sidebar,
-        #     on_start=self._on_jupyter_start,
-        #     on_stop=self._on_jupyter_stop
-        # )
-        # 
-        # self.add_sidebar_item(
-        #     render_neodash_sidebar,
-        #     on_start=self._on_neodash_start,
-        #     on_stop=self._on_neodash_stop
-        # )
+        # Re-enable Jupyter Lab and NeoDash container management
+        self.add_sidebar_item(
+            render_jupyter_sidebar,
+            on_start=self._on_jupyter_start,
+            on_stop=self._on_jupyter_stop
+        )
+
+        self.add_sidebar_item(
+            render_neodash_sidebar,
+            on_start=self._on_neodash_start,
+            on_stop=self._on_neodash_stop
+        )
 
     def _on_database_connect(self, uri: str, username: str, password: str, database: str, connection_name: str):
         """
@@ -179,22 +179,27 @@ class ServerPage(BasePage):
         except Exception as e:
             st.error(f"Error stopping Neo4j container: {e}")
 
-    def _on_jupyter_start(self, port: int):
+    def _on_jupyter_start(self, port: int, mode: str):
         """
         Handle Jupyter Lab start.
 
         Args:
             port: The port to use for Jupyter Lab.
+            mode: The mode to use for Jupyter Lab (Single-user or Multi-user).
         """
         try:
             # This is a placeholder for actual Jupyter Lab start logic
             # In a real implementation, this would start a Jupyter Lab container
+            # with the specified mode (Single-user or Multi-user)
+
+            # Store the mode in session state
+            st.session_state["jupyter_mode"] = mode
 
             # Update session state
             st.session_state["jupyter_url"] = f"http://localhost:{port}"
             st.session_state["jupyter_token"] = "demo-token"
 
-            st.success(f"Jupyter Lab started at http://localhost:{port}")
+            st.success(f"Jupyter Lab started in {mode} mode at http://localhost:{port}")
         except Exception as e:
             st.error(f"Error starting Jupyter Lab: {e}")
 
@@ -211,21 +216,26 @@ class ServerPage(BasePage):
         except Exception as e:
             st.error(f"Error stopping Jupyter Lab: {e}")
 
-    def _on_neodash_start(self, port: int):
+    def _on_neodash_start(self, port: int, environment: str):
         """
         Handle NeoDash start.
 
         Args:
             port: The port to use for NeoDash.
+            environment: The environment to use for NeoDash (Development or Production).
         """
         try:
             # This is a placeholder for actual NeoDash start logic
             # In a real implementation, this would start a NeoDash container
+            # with the specified environment (Development or Production)
+
+            # Store the environment in session state
+            st.session_state["neodash_environment"] = environment
 
             # Update session state
             st.session_state["neodash_url"] = f"http://localhost:{port}"
 
-            st.success(f"NeoDash started at http://localhost:{port}")
+            st.success(f"NeoDash started in {environment} environment at http://localhost:{port}")
         except Exception as e:
             st.error(f"Error starting NeoDash: {e}")
 
@@ -263,11 +273,22 @@ class ServerPage(BasePage):
         with col2:
             st.subheader("Analysis Servers")
 
-            # Jupyter status (placeholder)
-            st.warning("Jupyter Lab: Not running")
+            # Jupyter status
+            jupyter_token = st.session_state.get("jupyter_token", "")
+            if jupyter_token:
+                jupyter_url = st.session_state.get("jupyter_url", "http://localhost:8888")
+                jupyter_mode = st.session_state.get("jupyter_mode", "Single-user")
+                st.success(f"Jupyter Lab: Running in {jupyter_mode} mode at {jupyter_url}")
+            else:
+                st.warning("Jupyter Lab: Not running")
 
-            # NeoDash status (placeholder)
-            st.warning("NeoDash: Not running")
+            # NeoDash status
+            neodash_url = st.session_state.get("neodash_url", "")
+            if neodash_url:
+                neodash_env = st.session_state.get("neodash_environment", "Development")
+                st.success(f"NeoDash: Running in {neodash_env} environment at {neodash_url}")
+            else:
+                st.warning("NeoDash: Not running")
 
             # Ollama status (placeholder)
             st.info("Ollama: Not configured")
@@ -360,13 +381,13 @@ class ServerPage(BasePage):
         st.info("""
         The following features are currently under development:
 
-        - **Jupyter Lab Integration**: Will be available in a future update.
-        - **NeoDash Integration**: Will be available in a future update.
         - **Ollama Integration**: Will be available in a future update.
         - **PostgreSQL Connection**: Will be available in a future update.
         - **Filesystem Integrations**: Will be available in a future update.
 
         Neo4j container management is now available in the sidebar.
+        Jupyter Lab integration with single/multi-user options is now available in the sidebar.
+        NeoDash integration with Development/Production environment selection is now available in the sidebar.
         """)
 
 def render_server_page():

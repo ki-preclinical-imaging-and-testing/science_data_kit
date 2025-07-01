@@ -362,6 +362,13 @@ def render_jupyter_sidebar(
 
         # Jupyter management form
         with st.sidebar.form("jupyter_form"):
+            # Mode selection
+            mode = st.radio(
+                "Mode",
+                ["Single-user", "Multi-user"],
+                index=0
+            )
+
             # Port input
             port = st.number_input(
                 "Port",
@@ -375,7 +382,7 @@ def render_jupyter_sidebar(
             with col1:
                 if st.form_submit_button("Start Jupyter", disabled=is_running):
                     if on_start:
-                        on_start(port)
+                        on_start(port, mode)
 
             with col2:
                 if st.form_submit_button("Stop Jupyter", disabled=not is_running):
@@ -412,6 +419,13 @@ def render_neodash_sidebar(
 
         # NeoDash management form
         with st.sidebar.form("neodash_form"):
+            # Environment selection
+            environment = st.radio(
+                "Environment",
+                ["Development", "Production"],
+                index=0
+            )
+
             # Port input
             port = st.number_input(
                 "Port",
@@ -425,7 +439,7 @@ def render_neodash_sidebar(
             with col1:
                 if st.form_submit_button("Start NeoDash", disabled=is_running):
                     if on_start:
-                        on_start(port)
+                        on_start(port, environment)
 
             with col2:
                 if st.form_submit_button("Stop NeoDash", disabled=not is_running):
