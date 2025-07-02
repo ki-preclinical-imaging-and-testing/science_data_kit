@@ -72,6 +72,10 @@ class ScienceDataKitApp:
             from science_data_kit.ui.pages.chat import render_chat_page
             self.page_adapter.register_page("Chat", render_chat_page)
 
+            # File Browser page
+            from science_data_kit.ui.pages.file_browser import render_file_browser_page
+            self.page_adapter.register_page("Files", render_file_browser_page)
+
             # About/Learn page
             from science_data_kit.ui.pages.about import render_about_page
             self.page_adapter.register_page("About", render_about_page)
@@ -98,8 +102,16 @@ class ScienceDataKitApp:
             pages.append(st.Page(self.page_adapter.pages["Ontology"], title="ontology", icon="🧬"))
         if "Chat" in self.page_adapter.pages:
             pages.append(st.Page(self.page_adapter.pages["Chat"], title="chat", icon="💬"))
+        if "Files" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Files"], title="files", icon="📁"))
         if "About" in self.page_adapter.pages:
             pages.append(st.Page(self.page_adapter.pages["About"], title="learn", icon="📖"))
+
+        # Check if there are any pages to display
+        if not pages:
+            st.error("No pages available for navigation. Please check the logs for import errors.")
+            st.stop()
+            return None
 
         # Use Streamlit's navigation
         pg = st.navigation(pages)

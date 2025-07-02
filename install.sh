@@ -1004,6 +1004,10 @@ install_package() {
     print_message $BLUE "Ensuring neo4j-graphrag is installed..."
     pip install neo4j-graphrag>=0.6.1
 
+    # Explicitly install psycopg2 for PostgreSQL connections
+    print_message $BLUE "Ensuring psycopg2 is installed..."
+    pip install psycopg2-binary
+
     print_message $GREEN "Science Data Kit installed successfully"
 }
 
