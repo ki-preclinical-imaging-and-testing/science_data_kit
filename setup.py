@@ -30,15 +30,6 @@ setup(
     },
     install_requires=requirements,
     extras_require={
-        'isatools': [
-            'isatools>=0.14.2',
-        ],
-        'isatools_full': [
-            'isatools[mzml]>=0.14.2',
-            'mzml2isa==1.1.1',
-            'fastobo==0.13.0',
-            'SQLAlchemy==1.4.52',
-        ],
         'msgraph': [
             'msgraph-sdk-python>=1.0.0',
             'azure-identity>=1.12.0',
@@ -47,8 +38,6 @@ setup(
     entry_points={
         'console_scripts': [
             'science_data_kit=run_app:main',
-            'install_isatools=install_isatools:main',
-            'install_isatools_py312=install_isatools_py312:main',
         ],
     },
     classifiers=[
@@ -56,8 +45,6 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Bio-Informatics',

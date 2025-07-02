@@ -19,20 +19,11 @@ from datetime import datetime
 from neo4j import GraphDatabase, Driver
 from neo4j.exceptions import Neo4jError, ServiceUnavailable
 
-# Import isatools classes through our compatibility layer
-try:
-    from isatools.model import OntologyAnnotation, OntologySource
-    ISATOOLS_AVAILABLE = True
-except ImportError:
-    try:
-        from science_data_kit.core.utils.isa_compatibility import get_isa_objects
-        _, OntologyAnnotation, _, _, _, _, _, _ = get_isa_objects()
-        OntologySource = None
-        ISATOOLS_AVAILABLE = False
-    except ImportError:
-        OntologyAnnotation = None
-        OntologySource = None
-        ISATOOLS_AVAILABLE = False
+# Import ontology classes from the new module
+from science_data_kit.core.ontology import OntologyAnnotation, OntologySource
+
+# Set ISATOOLS_AVAILABLE for backward compatibility
+ISATOOLS_AVAILABLE = True
 
 
 class DatabaseError(Exception):

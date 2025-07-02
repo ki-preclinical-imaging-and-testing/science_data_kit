@@ -46,6 +46,16 @@ This roadmap outlines the plan for addressing critical bugs in the Science Data 
 
 **Next Steps**: Check for other deprecated Streamlit API calls, continue monitoring for issues, update tests to reflect current state, and develop comprehensive testing procedures.
 
+### Ontology Integration
+
+This roadmap outlines the plan for refactoring the Science Data Kit to focus on ontology integration with Neo4j as the core technology, removing isatools dependencies and implementing a more streamlined approach to ontology management using Neo4j's neosemantics (n10s) plugin.
+
+**Latest Version**: [roadmap_ontology_01.md](roadmap_ontology_01.md)
+
+**Status**: In Progress - Removed isatools dependencies and implemented core ontology module with models, importer, queries, and browser capabilities.
+
+**Next Steps**: Implement Neo4j's neosemantics (n10s) plugin integration, add comprehensive documentation, and create tests.
+
 ## Archived Roadmaps
 
 The following roadmap sets have been completed and archived. Any remaining tasks from these roadmaps have been added to the [later_phase.md](later_phase.md) file for future consideration.
