@@ -10,11 +10,11 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 This roadmap outlines the plan for enhancing and expanding the Science Data Kit, building on the foundation established in Phase 1. It focuses on session management, multimodal data integration, advanced features, performance optimization, and user experience improvements.
 
-**Latest Version**: [roadmap_phase2_00.md](roadmap_phase2_00.md)
+**Latest Version**: [roadmap_phase2_01.md](roadmap_phase2_01.md)
 
-**Status**: Planning - Defined the scope and priorities for Phase 2 of the SDK development, incorporating ontology integration and app consolidation requirements.
+**Status**: In Progress - Implemented session management functionality, including session configuration format, resource registry, and dependency tracking. Defined the scope and priorities for the remaining components of Phase 2.
 
-**Next Steps**: Implement session management, develop multimodal data integration capabilities, enhance database features, improve API layer, optimize performance, and expand integration capabilities.
+**Next Steps**: Complete session management with automatic recovery, implement data source connectors for Office 365 and Dropbox, create pipeline configuration format, and begin database enhancements with query caching and parameterized templates.
 
 ### Data Source Integration
 
