@@ -8,13 +8,13 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 ### Phase 2: SDK Enhancement and Expansion
 
-This roadmap outlines the plan for enhancing and expanding the Science Data Kit, building on the foundation established in Phase 1. It focuses on advanced features, performance optimization, and user experience improvements.
+This roadmap outlines the plan for enhancing and expanding the Science Data Kit, building on the foundation established in Phase 1. It focuses on session management, multimodal data integration, advanced features, performance optimization, and user experience improvements.
 
 **Latest Version**: [roadmap_phase2_00.md](roadmap_phase2_00.md)
 
-**Status**: Planning - Defining the scope and priorities for Phase 2 of the SDK development.
+**Status**: Planning - Defined the scope and priorities for Phase 2 of the SDK development, incorporating ontology integration and app consolidation requirements.
 
-**Next Steps**: Implement advanced database features, enhance the API layer, improve performance, and expand integration capabilities.
+**Next Steps**: Implement session management, develop multimodal data integration capabilities, enhance database features, improve API layer, optimize performance, and expand integration capabilities.
 
 ### Data Source Integration
 
@@ -98,17 +98,21 @@ This roadmap focuses on refactoring the Science Data Kit application to improve 
 
 The Science Data Kit is evolving to become a comprehensive tool for data analysis and visualization, with a focus on:
 
-1. **Integration with Multiple Data Sources**: Adding support for various data sources, with Microsoft Graph API integration being the first major implementation.
+1. **Session Management**: Implementing robust session management to allow users to save and restore their work environment, including server connections, data sources, and pipelines.
 
-2. **Improved Code Organization**: Ensuring the codebase remains maintainable and follows consistent patterns as it grows.
+2. **Multimodal Data Integration**: Supporting various data sources and formats, with configurable pipelines for transforming and mapping data into the knowledge graph.
 
-3. **Comprehensive Documentation**: Providing clear, consistent, and thorough documentation for users and contributors.
+3. **Integration with Multiple Data Sources**: Adding support for various data sources, including Microsoft Graph API, Dropbox, Google Drive, and local storage.
 
-4. **Enhanced User Experience**: Developing intuitive UI components and visualization tools to make data exploration and analysis more accessible.
+4. **Improved Code Organization**: Ensuring the codebase remains maintainable and follows consistent patterns as it grows.
 
-5. **Extensibility**: Creating a flexible architecture that allows for easy integration of new data sources and analysis tools.
+5. **Comprehensive Documentation**: Providing clear, consistent, and thorough documentation for users and contributors.
 
-6. **Infrastructure Management**: Providing robust capabilities for launching and managing containerized servers (Neo4j, Jupyter, Neodash, Ollama) and connecting to various APIs and filesystems.
+6. **Enhanced User Experience**: Developing intuitive UI components and visualization tools to make data exploration and analysis more accessible.
+
+7. **Extensibility**: Creating a flexible architecture that allows for easy integration of new data sources and analysis tools.
+
+8. **Infrastructure Management**: Providing robust capabilities for launching and managing containerized servers (Neo4j, Jupyter, Neodash, Ollama) and connecting to various APIs and filesystems.
 
 ## Roadmap Update Process
 
@@ -138,10 +142,12 @@ The Science Data Kit project has made significant progress towards its goal of b
 3. **Codebase Organization and Documentation**: Improves the organization, reduces redundancy, and enhances documentation in the codebase.
 4. **Application Refactoring**: Refactors the application to improve its architecture, maintainability, and user experience.
 
-Work is now transitioning to Phase 2, which will focus on enhancing and expanding the SDK with advanced features, performance optimization, and improved user experience. Current active roadmaps include:
+Work is now transitioning to Phase 2, which will focus on session management, multimodal data integration, advanced features, performance optimization, and improved user experience. Current active roadmaps include:
 
-1. **Data Source Integration**: Implementing Google Sheets and Dropbox data source integrations.
-2. **Infrastructure GUI**: Enhancing server management and connection capabilities for containerized services.
+1. **Phase 2: SDK Enhancement and Expansion**: Implementing session management, multimodal data integration, advanced database features, API layer enhancement, performance optimization, and user experience improvements.
+2. **Data Source Integration**: Implementing Google Sheets and Dropbox data source integrations.
+3. **Infrastructure GUI**: Enhancing server management and connection capabilities for containerized services.
+4. **Ontology Integration**: Refactoring the SDK to focus on ontology integration with Neo4j as the core technology.
 
 These roadmaps address key areas of functionality that will make the Science Data Kit more versatile and user-friendly. Any remaining tasks from the completed roadmaps have been collected in the later_phase.md file for future consideration.
 
