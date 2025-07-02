@@ -210,7 +210,7 @@ The primary goals for Phase 2 are:
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
 | Update API documentation | Medium | To Do | Update docs/api_docs/ |
-| Create tests for ontology integration | Medium | To Do | Add to tests/ directory |
+| Create tests for ontology integration | Medium | Completed | Added tests for OntologyImporter, OntologyBrowser, and ontology queries |
 | Update existing tests | Medium | To Do | Remove isatools dependencies from tests |
 
 ## Implementation Plan
@@ -245,7 +245,6 @@ The primary goals for Phase 2 are:
 - Integrate with Jupyter notebooks
 - Create comprehensive user guide and interactive tutorials
 - Improve ontology browser visualization
-- Create tests for ontology integration
 
 ### Phase 2.5: Refinement and Expansion (Months 9-10)
 
