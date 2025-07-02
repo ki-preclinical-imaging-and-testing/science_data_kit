@@ -50,11 +50,11 @@ This roadmap outlines the plan for addressing critical bugs in the Science Data 
 
 This roadmap outlines the plan for refactoring the Science Data Kit to focus on ontology integration with Neo4j as the core technology, removing isatools dependencies and implementing a more streamlined approach to ontology management using Neo4j's neosemantics (n10s) plugin.
 
-**Latest Version**: [roadmap_ontology_01.md](roadmap_ontology_01.md)
+**Latest Version**: [roadmap_ontology_02.md](roadmap_ontology_02.md)
 
-**Status**: In Progress - Removed isatools dependencies and implemented core ontology module with models, importer, queries, and browser capabilities.
+**Status**: In Progress - Removed isatools dependencies, implemented core ontology module, and integrated Neo4j's neosemantics (n10s) plugin with comprehensive support for importing ontologies in various formats.
 
-**Next Steps**: Implement Neo4j's neosemantics (n10s) plugin integration, add comprehensive documentation, and create tests.
+**Next Steps**: Update documentation, create tests, and enhance ontology visualization capabilities.
 
 ## Archived Roadmaps
 
