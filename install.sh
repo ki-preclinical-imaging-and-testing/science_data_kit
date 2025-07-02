@@ -54,364 +54,13 @@ fix_apt_pkg() {
     export DIRECT_INSTALL=1
 }
 
-# Install Python (platform-specific)
-install_python() {
-    print_message $BLUE "Installing Python 3.12..."
-
-    # Detect OS
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        # Linux
-        if command_exists apt-get; then
-            # Debian/Ubuntu
-            print_message $BLUE "Detected Debian/Ubuntu system"
-
-            # Try direct installation first without PPA if Python 3.12 is already available
-            if sudo apt-get install -y python3.12 python3.12-venv python3.12-dev; then
-                print_message $GREEN "Python 3.12 installed successfully without adding PPA"
-                PYTHON_VERSION="3.12"
-            else
-                print_message $BLUE "Adding deadsnakes PPA for Python installation..."
-
-                # Check for apt_pkg and set up workarounds if needed
-                fix_apt_pkg
-
-                # If we're in direct installation mode, skip the PPA setup
-                if [ "${DIRECT_INSTALL:-0}" = "1" ]; then
-                    print_message $YELLOW "Skipping PPA setup, trying direct installation..."
-                else
-                    sudo apt-get update || true
-                    sudo apt-get install -y software-properties-common
-
-                    # If APT_PKG_UNAVAILABLE is set or add-apt-repository fails, use the manual approach
-                    if [ "${APT_PKG_UNAVAILABLE:-0}" = "1" ] || ! sudo add-apt-repository -y ppa:deadsnakes/ppa; then
-                        print_message $YELLOW "add-apt-repository failed. Adding PPA manually..."
-
-                        # Get Ubuntu codename, with fallback if lsb_release fails
-                        UBUNTU_CODENAME=$(lsb_release -cs 2>/dev/null || grep -oP 'VERSION_CODENAME=\K\w+' /etc/os-release 2>/dev/null || echo "jammy")
-                        print_message $YELLOW "Detected Ubuntu codename: $UBUNTU_CODENAME"
-
-                        echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu $UBUNTU_CODENAME main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
-
-                        # Use multiple methods to add the key, trying each until one works
-                        print_message $YELLOW "Adding deadsnakes PPA key..."
-
-                        # Method 1: Direct download from Ubuntu key server
-                        if ! curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/deadsnakes.gpg 2>/dev/null; then
-                            print_message $YELLOW "Method 1 failed. Trying alternative key import method..."
-
-                            # Method 2: Use apt-key (deprecated but might work)
-                            if ! sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776 2>/dev/null; then
-                                print_message $YELLOW "Method 2 failed. Trying alternative key import method..."
-
-                                # Method 3: Use direct key data
-                                print_message $YELLOW "Using hardcoded key data as fallback..."
-                                # This is the deadsnakes PPA key in base64 format
-                                echo "mQINBFTlMNUBEADDLj7FrRzRpYN8cRo5FQeOj7Z5V6Y/6uZL886yKbCgLRkOvGqnRqpXoLzFXBMIrLR/w4INOlCiIjPQX+X1AuLaAH9SQ0HyKFG+cZ3zx/ZOFfRHvzI2IzLjYXLTRnKi6TmYKJQqMj/z3lbllR0GYqXTvUXgFfJJyHzCxaXAOHQHAZCZQTK5FT4UQXjQkLZYQ4Jw9WdYBs6JF98GgwUNxwZnEcnZeiILJ2z8ZtBXlGKsdf4dJUJLVWUUi76UNKLCKqLNEX7imGZRZNW0EYFWsQlYXjOglnVZacsVs6XrQVZU8xWI3iz5WyGMQeBSMZGPkMJFpu+ZuNPk0ftpQnwILF9uxJEPW41O9Dj1AJn9S8GJL0YJIbE7FJJ1ucQTKuFY8QU+AwLOXs8RsXOKUkHMP0g7ARvZZRX8rNBUuGCdF/AUY8cPjVOCVGnLLJl0Cz1qhKkQQOUS/8YEjlZPJMsKvMtGQnSUJK8zXgkxZLiOjbUKXPdEkP9ftJVV8ZU0aUPLFM6UX9kKbPLM3KS2XE7uICzXYXdz3yNYUvTFEXnGHBPsRrLuN5y1vLcPU/bK4CzuCQMnWJ5aZj2uQie8wuHUy1uMZEJLjLzR4sGVlU4HRXbZjGOy2CuQQUYZJLLXI6ULnLJQtj6wJf9ZO/ItD4cUmEqTWz+/vyCUgSZzQzDgj3NIWpuCWpvv+QV/XdRIJZs1aMdmBOJKqpkJE3ts9Mv0uHbdWCUiMz2JsPKEYvQFpi0HxiQ/YpCQOQIDAQABtB9MYXVuY2hwYWQgUFBBIGZvciBkZWFkc25ha2VzIFBQQYkCOAQTAQIAIgUCVOUw1QIbAwYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQumkjZmrXV3ZdORAAwRXYrt1IveFAHhNWJbzGkGTUZ2eWTb/JZ/4qKjKYNsLELtYkUTEYQH9oJUVe9JtSGBRCWLZ9UYzGEPjTyPTFQtjYmL6sn6KZEpCxEHyMIHKBCLJVXPqxdSQYgW6y1aMQcJYLHcKd4s1ceFpQIHxijpxWs5JKbVBkv/QCPB8N8CCCRiZKwSBPTJ98G5uO1/IYPDpFkVeFBQTT6XA2UUZXiJwlIRDQWFZCAtEBU6C2xGmqVoGRWKn+LXXn2E4KzfTsOjXYUBCQvhgqmwm18R7apeTjbHFqjBWxHGIv02WCT9xJNUL+8iBKp2y+c6LqbgOy0/YJMXxmVMrfWsL6YxvMTHGQlbjtjieZUqEyMtOUdvwmPeEQE/Ap9JwKWMhQFRKKAXF2PVOdgLEz/nANwIZJwpvuQdMKmgZPvXpWHaKBFxJZhEfBvAYMYZEsAKgCELHEGGVlxzKnFSZYNkYOsYHmrYgLDQHRiXwQXbF8tNDjPgj+Xj5hEXDR4T+UMrUmKnf/qbLUJKClZJl92xAGVCy+JCN/hqVxXxGGZRHUHzUVJdvuJHQjQXLBYEgGnfaA8Vk9ypqLMn0phD3VGVQUgGh6jRJZMcbqMn3YTh7M1r1WdAJlqxTZMFq8mSCnmIaRFrCpIUEwD4ZFOEUCAwEAAQ==" | base64 -d | sudo tee /etc/apt/trusted.gpg.d/deadsnakes.gpg >/dev/null
-
-                                # Check if the key was added successfully
-                                if [ ! -s /etc/apt/trusted.gpg.d/deadsnakes.gpg ]; then
-                                    print_message $YELLOW "All key import methods failed. Continuing without key verification..."
-                                    print_message $YELLOW "You may see warnings about unauthenticated packages."
-                                else
-                                    print_message $GREEN "PPA key added successfully using fallback method."
-                                fi
-                            else
-                                print_message $GREEN "PPA key added successfully using apt-key."
-                            fi
-                        else
-                            print_message $GREEN "PPA key added successfully using direct download."
-                        fi
-                    fi
-                fi
-            fi
-            sudo apt-get update || true
-
-            # If we haven't already installed Python 3.12 directly
-            if [ -z "$PYTHON_VERSION" ]; then
-                # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
-                # Use a direct approach if apt-cache might fail due to apt_pkg issues
-                if [ "${APT_PKG_UNAVAILABLE:-0}" = "1" ] || [ "${DIRECT_INSTALL:-0}" = "1" ]; then
-                    print_message $YELLOW "Using direct Python installation approach..."
-
-                    # Try Python 3.12 first
-                    if sudo apt-get install -y python3.12 python3.12-venv python3.12-dev; then
-                        print_message $GREEN "Python 3.12 installed successfully"
-                        PYTHON_VERSION="3.12"
-                    # Then try Python 3.11
-                    elif sudo apt-get install -y python3.11 python3.11-venv python3.11-dev; then
-                        print_message $GREEN "Python 3.11 installed successfully"
-                        PYTHON_VERSION="3.11"
-                    # Finally try Python 3.10
-                    elif sudo apt-get install -y python3.10 python3.10-venv python3.10-dev; then
-                        print_message $GREEN "Python 3.10 installed successfully"
-                        PYTHON_VERSION="3.10"
-                    else
-                        print_message $RED "Failed to install Python. Please install Python 3.12+ manually."
-                        return 1
-                    fi
-                else
-                    # Normal approach using apt-cache
-                    if apt-cache show python3.12 &>/dev/null; then
-                        print_message $BLUE "Installing Python 3.12..."
-                        sudo apt-get install -y python3.12 python3.12-venv python3.12-dev
-                        PYTHON_VERSION="3.12"
-                    elif apt-cache show python3.11 &>/dev/null; then
-                        print_message $BLUE "Installing Python 3.11..."
-                        sudo apt-get install -y python3.11 python3.11-venv python3.11-dev
-                        PYTHON_VERSION="3.11"
-                    else
-                        print_message $BLUE "Installing Python 3.10..."
-                        sudo apt-get install -y python3.10 python3.10-venv python3.10-dev
-                        PYTHON_VERSION="3.10"
-                    fi
-                fi
-            fi
-
-            # Set installed Python as the default python3
-            if command_exists update-alternatives; then
-                sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.${PYTHON_VERSION#*.} 1
-            fi
-
-            # Install pip for the installed Python version
-            print_message $BLUE "Installing pip for Python ${PYTHON_VERSION}..."
-            curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.${PYTHON_VERSION#*.}
-
-        elif command_exists yum; then
-            # RHEL/CentOS/Fedora
-            print_message $BLUE "Detected RHEL/CentOS/Fedora system"
-
-            # For RHEL/CentOS 8+
-            if grep -q "release 8" /etc/redhat-release 2>/dev/null || grep -q "release 9" /etc/redhat-release 2>/dev/null; then
-                # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
-                if dnf list python3.12 &>/dev/null; then
-                    sudo dnf install -y python3.12 python3.12-devel
-                    PYTHON_VERSION="3.12"
-                elif dnf list python3.11 &>/dev/null; then
-                    sudo dnf install -y python3.11 python3.11-devel
-                    PYTHON_VERSION="3.11"
-                else
-                    sudo dnf install -y python3.10 python3.10-devel
-                    PYTHON_VERSION="3.10"
-                fi
-            else
-                # For older versions or Fedora
-                print_message $YELLOW "Installing Python 3.10+ on this system requires additional repositories."
-                print_message $YELLOW "Would you like to install Python using the EPEL repository? (y/n)"
-                read -r install_epel
-                if [[ "$install_epel" =~ ^[Yy]$ ]]; then
-                    sudo yum install -y epel-release
-
-                    # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
-                    if yum list python3.12 &>/dev/null; then
-                        sudo yum install -y python3.12 python3.12-devel
-                        PYTHON_VERSION="3.12"
-                    elif yum list python3.11 &>/dev/null; then
-                        sudo yum install -y python3.11 python3.11-devel
-                        PYTHON_VERSION="3.11"
-                    else
-                        sudo yum install -y python3.10 python3.10-devel
-                        PYTHON_VERSION="3.10"
-                    fi
-                else
-                    print_message $YELLOW "Please install Python 3.10+ manually."
-                    print_message $YELLOW "Visit https://www.python.org/downloads/ for more information."
-                    return 1
-                fi
-            fi
-
-            # Install pip for the installed Python version
-            curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.${PYTHON_VERSION#*.}
-
-        else
-            print_message $YELLOW "Automatic Python installation is not supported for this Linux distribution."
-            print_message $YELLOW "Please install Python 3.10+ manually:"
-            print_message $YELLOW "1. Visit https://www.python.org/downloads/"
-            print_message $YELLOW "2. Download Python 3.10 or higher (preferably 3.11 or 3.12)"
-            print_message $YELLOW "3. Follow the installation instructions for your distribution"
-            return 1
-        fi
-
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS
-        print_message $BLUE "Detected macOS system"
-
-        if command_exists brew; then
-            # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
-            if brew info python@3.12 &>/dev/null; then
-                print_message $BLUE "Installing Python 3.12 using Homebrew..."
-                brew install python@3.12
-                PYTHON_VERSION="3.12"
-            elif brew info python@3.11 &>/dev/null; then
-                print_message $BLUE "Installing Python 3.11 using Homebrew..."
-                brew install python@3.11
-                PYTHON_VERSION="3.11"
-            else
-                print_message $BLUE "Installing Python 3.10 using Homebrew..."
-                brew install python@3.10
-                PYTHON_VERSION="3.10"
-            fi
-
-            # Add to PATH if needed
-            if ! command_exists python3.${PYTHON_VERSION#*.}; then
-                print_message $YELLOW "Python ${PYTHON_VERSION} installed but not in PATH."
-                print_message $YELLOW "Add it to your PATH with:"
-                print_message $YELLOW "echo 'export PATH=\"/usr/local/opt/python@${PYTHON_VERSION}/bin:\$PATH\"' >> ~/.zshrc"
-                print_message $YELLOW "or"
-                print_message $YELLOW "echo 'export PATH=\"/usr/local/opt/python@${PYTHON_VERSION}/bin:\$PATH\"' >> ~/.bash_profile"
-            fi
-        else
-            print_message $YELLOW "Homebrew not found. Installing Homebrew first..."
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-            if command_exists brew; then
-                # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
-                if brew info python@3.12 &>/dev/null; then
-                    print_message $BLUE "Installing Python 3.12 using Homebrew..."
-                    brew install python@3.12
-                    PYTHON_VERSION="3.12"
-                elif brew info python@3.11 &>/dev/null; then
-                    print_message $BLUE "Installing Python 3.11 using Homebrew..."
-                    brew install python@3.11
-                    PYTHON_VERSION="3.11"
-                else
-                    print_message $BLUE "Installing Python 3.10 using Homebrew..."
-                    brew install python@3.10
-                    PYTHON_VERSION="3.10"
-                fi
-            else
-                print_message $RED "Failed to install Homebrew."
-                print_message $YELLOW "Please install Python 3.10+ manually:"
-                print_message $YELLOW "1. Visit https://www.python.org/downloads/"
-                print_message $YELLOW "2. Download Python 3.10 or higher for macOS (preferably 3.11 or 3.12)"
-                print_message $YELLOW "3. Follow the installation instructions"
-                return 1
-            fi
-        fi
-
-    elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-        # Windows
-        print_message $BLUE "Detected Windows system"
-        print_message $YELLOW "Please install Python 3.10+ manually:"
-        print_message $YELLOW "1. Visit https://www.python.org/downloads/"
-        print_message $YELLOW "2. Download Python 3.10 or higher for Windows (preferably 3.11 or 3.12)"
-        print_message $YELLOW "3. During installation, check 'Add Python to PATH'"
-        print_message $YELLOW "4. Restart your terminal after installation"
-        return 1
-
-    else
-        print_message $RED "Unsupported operating system: $OSTYPE"
-        print_message $YELLOW "Please install Python 3.10+ manually:"
-        print_message $YELLOW "Visit https://www.python.org/downloads/ for more information."
-        return 1
-    fi
-
-    # Verify Python installation
-    PYTHON_CMD="python3.${PYTHON_VERSION#*.}"
-    if command_exists $PYTHON_CMD; then
-        print_message $GREEN "Python ${PYTHON_VERSION} installed successfully"
-        # Create a symlink to python3 if needed
-        if ! command_exists python3 || [[ $(python3 --version 2>&1) != *"${PYTHON_VERSION}"* ]]; then
-            print_message $YELLOW "Creating symlink for python3 -> ${PYTHON_CMD}"
-            sudo ln -sf $(which $PYTHON_CMD) /usr/local/bin/python3
-        fi
-    else
-        print_message $RED "Python ${PYTHON_VERSION} installation may have failed."
-        print_message $YELLOW "Please try installing manually:"
-        print_message $YELLOW "Visit https://www.python.org/downloads/ for more information."
-        return 1
-    fi
-
-    # Install/upgrade pip
-    print_message $BLUE "Ensuring pip is installed and up to date..."
-    python3 -m ensurepip --upgrade || curl -sS https://bootstrap.pypa.io/get-pip.py | python3
-
-    return 0
-}
 
 # Check system dependencies
 check_dependencies() {
     print_message $BLUE "Checking system dependencies..."
 
-    # Check for Python 3.12+
-    # First, try to find Python 3.12 in common locations
-    python312_paths=("python3.12" "/usr/bin/python3.12" "/usr/local/bin/python3.12" "$HOME/.pyenv/shims/python3.12")
-    python312_path=""
-
-    for path in "${python312_paths[@]}"; do
-        if command -v "$path" &>/dev/null; then
-            python312_path="$path"
-            python_version=$("$path" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-            print_message $GREEN "Found Python $python_version at $python312_path"
-            export PYTHON_PATH="$python312_path"
-            break
-        fi
-    done
-
-    # If Python 3.12 wasn't found in common locations, check the default python3
-    if [ -z "$python312_path" ] && command_exists python3; then
-        python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-        python_major=$(echo $python_version | cut -d. -f1)
-        python_minor=$(echo $python_version | cut -d. -f2)
-
-        if [ "$python_major" -eq 3 ] && [ "$python_minor" -ge 12 ]; then
-            python312_path="python3"
-            print_message $GREEN "Found Python $python_version"
-            export PYTHON_PATH="$python312_path"
-        fi
-    fi
-
-    # If Python 3.12+ wasn't found, offer to install it
-    if [ -z "$python312_path" ]; then
-        if command_exists python3; then
-            python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-            print_message $RED "Error: Python 3.12 or higher is required (found $python_version)"
-        else
-            print_message $RED "Error: Python 3 not found"
-        fi
-
-        print_message $YELLOW "Would you like to install Python 3.12? (y/n)"
-        read -r install_python_choice
-        if [[ "$install_python_choice" =~ ^[Yy]$ ]]; then
-            install_python
-
-            # After installation, try to find Python 3.12 again
-            for path in "${python312_paths[@]}"; do
-                if command -v "$path" &>/dev/null; then
-                    python312_path="$path"
-                    python_version=$("$path" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-                    print_message $GREEN "Found Python $python_version at $python312_path"
-                    export PYTHON_PATH="$python312_path"
-                    break
-                fi
-            done
-
-            # If still not found, check default python3
-            if [ -z "$python312_path" ] && command_exists python3; then
-                python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-                python_major=$(echo $python_version | cut -d. -f1)
-                python_minor=$(echo $python_version | cut -d. -f2)
-
-                if [ "$python_major" -eq 3 ] && [ "$python_minor" -ge 12 ]; then
-                    python312_path="python3"
-                    print_message $GREEN "Found Python $python_version"
-                    export PYTHON_PATH="$python312_path"
-                fi
-            fi
-
-            # If still not found, exit
-            if [ -z "$python312_path" ]; then
-                print_message $RED "Python 3.12+ installation failed or not found."
-                print_message $YELLOW "Please install Python 3.12 or higher manually before continuing."
-                exit 1
-            fi
-        else
-            print_message $YELLOW "Please install Python 3.12 or higher before continuing."
-            exit 1
-        fi
-    fi
-
-    # We'll check for pip after setting up the virtual environment
-    # This ensures we're using the pip from the virtual environment
+    # Python check and installation is now handled by setup_python_env
+    # We'll just check for Docker and Docker Compose here
 
     # Check for Docker
     if ! command_exists docker; then
@@ -902,52 +551,205 @@ EOL
 setup_python_env() {
     print_message $BLUE "Setting up Python virtual environment..."
 
-    # Use the Python 3.12+ path found in check_dependencies
-    if [ -n "${PYTHON_PATH}" ]; then
-        python3="${PYTHON_PATH}"
-        python_version=$("$python3" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-        print_message $GREEN "Using Python $python_version at $python3"
-    else
-        print_message $RED "Python 3.12+ path not found. This should not happen."
-        print_message $YELLOW "Trying to use system python3 as fallback..."
-        python3="python3"
-    fi
+    # Define Python version requirements
+    PYTHON_MIN_VERSION="3.12"
+    PYTHON_MAX_VERSION="3.13"
+    VENV_DIR=".venv"
 
-    # Check if venv module is available
-    if ! $python3 -c "import venv" &>/dev/null; then
-        print_message $YELLOW "Python venv module not found. Installing venv module..."
+    # Find suitable Python command
+    PYTHON_CMD=""
+    for cmd in python3.13 python3.12 python3 python; do
+        if command_exists "$cmd"; then
+            version=$($cmd -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
+            major_minor=$(echo $version | cut -d. -f1-2)
 
-        # Get Python version for specific package installation
-        python_version=$($python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+            # Check if version is 3.12 or 3.13
+            if [ "$major_minor" = "3.12" ] || [ "$major_minor" = "3.13" ]; then
+                PYTHON_CMD="$cmd"
+                break
+            fi
+        fi
+    done
 
-        if command_exists apt-get; then
-            # Fix apt_pkg module error
-            fix_apt_pkg
+    # If no suitable Python found, try to install it
+    if [ -z "$PYTHON_CMD" ]; then
+        print_message $YELLOW "No suitable Python version found (need $PYTHON_MIN_VERSION or $PYTHON_MAX_VERSION). Attempting to install..."
 
-            print_message $BLUE "Attempting to install python${python_version}-venv package..."
-            sudo apt-get update || true
-            if ! sudo apt-get install -y python${python_version}-venv; then
-                print_message $YELLOW "Failed to install python${python_version}-venv. Trying python3-venv instead..."
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            # Linux
+            if command_exists apt-get; then
+                # Debian/Ubuntu - try to install both versions, system will pick what's available
+                print_message $BLUE "Detected Debian/Ubuntu system"
 
-                # Fix apt_pkg module error again before next apt-get
-                fix_apt_pkg
+                # Handle apt_pkg issues gracefully
+                print_message $BLUE "Updating package lists..."
+                if ! sudo apt-get update 2>/dev/null; then
+                    print_message $YELLOW "Warning: apt update had some issues, but continuing..."
+                    # Try to fix common apt_pkg issues
+                    sudo apt-get install --reinstall python3-apt 2>/dev/null || true
+                fi
 
-                if ! sudo apt-get install -y python3-venv; then
-                    print_message $RED "Failed to install venv module. Please install it manually."
-                    print_message $YELLOW "For Ubuntu/Debian: sudo apt-get install python3-venv"
-                    print_message $YELLOW "For other systems: pip3 install virtualenv"
+                # Try deadsnakes PPA for newer Python versions
+                if ! apt-cache show python3.13 >/dev/null 2>&1 && ! apt-cache show python3.12 >/dev/null 2>&1; then
+                    print_message $BLUE "Adding deadsnakes PPA for Python 3.12/3.13..."
+                    sudo apt-get install -y software-properties-common || {
+                        print_message $RED "Failed to install software-properties-common"
+                        exit 1
+                    }
+
+                    # Add PPA with error handling
+                    if sudo add-apt-repository -y ppa:deadsnakes/ppa 2>/dev/null; then
+                        print_message $GREEN "Successfully added deadsnakes PPA"
+                        sudo apt-get update 2>/dev/null || print_message $YELLOW "Update had warnings but continuing..."
+                    else
+                        print_message $YELLOW "Failed to add deadsnakes PPA, trying manual method..."
+                        # Manual PPA addition as fallback
+                        echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
+                        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776 2>/dev/null || true
+                        sudo apt-get update 2>/dev/null || print_message $YELLOW "Update had warnings but continuing..."
+                    fi
+                fi
+
+                # Try to install 3.13 first, fall back to 3.12
+                PYTHON_INSTALLED=false
+                if apt-cache show python3.13 >/dev/null 2>&1; then
+                    print_message $BLUE "Installing Python 3.13..."
+                    if sudo apt-get install -y python3.13 python3.13-venv python3.13-dev 2>/dev/null; then
+                        PYTHON_INSTALLED=true
+                        PYTHON_CMD="python3.13"
+                        # Try to install pip for 3.13
+                        sudo apt-get install -y python3.13-pip 2>/dev/null || {
+                            print_message $YELLOW "pip not available via apt, will install via get-pip.py later"
+                        }
+                    fi
+                fi
+
+                if [ "$PYTHON_INSTALLED" = false ] && apt-cache show python3.12 >/dev/null 2>&1; then
+                    print_message $BLUE "Installing Python 3.12..."
+                    if sudo apt-get install -y python3.12 python3.12-venv python3.12-dev 2>/dev/null; then
+                        PYTHON_INSTALLED=true
+                        PYTHON_CMD="python3.12"
+                        # Try to install pip for 3.12
+                        sudo apt-get install -y python3.12-pip 2>/dev/null || {
+                            print_message $YELLOW "pip not available via apt, will install via get-pip.py later"
+                        }
+                    fi
+                fi
+
+                if [ "$PYTHON_INSTALLED" = false ]; then
+                    print_message $RED "Failed to install Python 3.12 or 3.13 from repositories."
+                    print_message $YELLOW "You may need to:"
+                    print_message $YELLOW "1. Fix the apt_pkg issue: sudo apt-get install --reinstall python3-apt"
+                    print_message $YELLOW "2. Or install Python manually from https://python.org/downloads/"
+                    print_message $YELLOW "3. Or use pyenv: curl https://pyenv.run | bash"
                     exit 1
                 fi
+            elif command_exists yum; then
+                # RHEL/CentOS
+                print_message $BLUE "Detected RHEL/CentOS system"
+                print_message $YELLOW "Note: You may need to enable EPEL repository for newer Python versions"
+                if yum list available | grep -q python313; then
+                    sudo yum install -y python313 python313-pip python313-devel
+                    PYTHON_CMD="python3.13"
+                elif yum list available | grep -q python312; then
+                    sudo yum install -y python312 python312-pip python312-devel
+                    PYTHON_CMD="python3.12"
+                else
+                    print_message $RED "Python 3.12/3.13 not available in repositories. Consider using pyenv."
+                    exit 1
+                fi
+            elif command_exists dnf; then
+                # Fedora
+                print_message $BLUE "Detected Fedora system"
+                if dnf list available | grep -q python3.13; then
+                    sudo dnf install -y python3.13 python3.13-pip python3.13-devel
+                    PYTHON_CMD="python3.13"
+                elif dnf list available | grep -q python3.12; then
+                    sudo dnf install -y python3.12 python3.12-pip python3.12-devel
+                    PYTHON_CMD="python3.12"
+                else
+                    print_message $RED "Python 3.12/3.13 not available. Try: sudo dnf install python3 python3-pip"
+                    exit 1
+                fi
+            elif command_exists pacman; then
+                # Arch Linux (usually has latest Python)
+                print_message $BLUE "Detected Arch Linux system"
+                sudo pacman -S --noconfirm python python-pip python-virtualenv
+                PYTHON_CMD="python"
+            else
+                print_message $RED "Unsupported Linux distribution."
+                print_message $YELLOW "Please install Python 3.12 or 3.13 manually, or consider using pyenv:"
+                print_message $YELLOW "curl https://pyenv.run | bash"
+                exit 1
             fi
-        elif command_exists yum; then
-            sudo yum install -y python3-venv
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            print_message $BLUE "Detected macOS system"
+            if command_exists brew; then
+                # Try to install Python 3.13, fall back to 3.12
+                if brew list --formula | grep -q python@3.13; then
+                    brew install python@3.13
+                    PYTHON_CMD="python3.13"
+                elif brew list --formula | grep -q python@3.12; then
+                    brew install python@3.12
+                    PYTHON_CMD="python3.12"
+                else
+                    print_message $BLUE "Installing latest Python (should be 3.12+)..."
+                    brew install python
+                    PYTHON_CMD="python3"
+                fi
+            else
+                print_message $RED "Homebrew not found. Please install Homebrew first:"
+                print_message $YELLOW "/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+                print_message $YELLOW "Or install Python 3.12/3.13 from https://python.org/downloads/"
+                exit 1
+            fi
         else
-            pip3 install virtualenv
+            print_message $RED "Unsupported operating system: $OSTYPE"
+            print_message $YELLOW "Please install Python 3.12 or 3.13 manually from https://python.org/downloads/"
+            exit 1
+        fi
+
+        # Check again after installation
+        if [ -z "$PYTHON_CMD" ]; then
+            for cmd in python3.13 python3.12 python3 python; do
+                if command_exists "$cmd"; then
+                    version=$($cmd -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null)
+                    major_minor=$(echo $version | cut -d. -f1-2)
+
+                    # Check if version is 3.12 or 3.13
+                    if [ "$major_minor" = "3.12" ] || [ "$major_minor" = "3.13" ]; then
+                        PYTHON_CMD="$cmd"
+                        break
+                    fi
+                fi
+            done
+        fi
+
+        if [ -z "$PYTHON_CMD" ]; then
+            print_message $RED "Failed to install suitable Python version."
+            print_message $YELLOW "Please install Python 3.12 or 3.13 manually from https://python.org/downloads/"
+            print_message $YELLOW "Or consider using pyenv: curl https://pyenv.run | bash"
+            exit 1
         fi
     fi
 
-    # Always create a fresh virtual environment in the repository
-    VENV_DIR=".venv"
+    print_message $GREEN "Using Python: $PYTHON_CMD"
+    $PYTHON_CMD --version
+
+    # Check if venv module is available
+    if ! $PYTHON_CMD -m venv --help >/dev/null 2>&1; then
+        print_message $YELLOW "Python venv module not available. Installing..."
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            if command_exists apt-get; then
+                sudo apt-get install -y python3-venv
+            elif command_exists yum; then
+                sudo yum install -y python3-venv
+            elif command_exists dnf; then
+                sudo dnf install -y python3-venv
+            fi
+        fi
+    fi
 
     # Remove existing virtual environment if it exists
     if [ -d "$VENV_DIR" ]; then
@@ -957,8 +759,8 @@ setup_python_env() {
     fi
 
     # Create a new virtual environment
-    print_message $BLUE "Creating virtual environment in ./$VENV_DIR with Python 3.12+..."
-    if ! $python3 -m venv "$VENV_DIR"; then
+    print_message $BLUE "Creating virtual environment in ./$VENV_DIR..."
+    if ! $PYTHON_CMD -m venv "$VENV_DIR"; then
         print_message $RED "Failed to create virtual environment."
         print_message $YELLOW "If you're using Python 3.12+, make sure python3-venv or equivalent is installed."
         print_message $YELLOW "You can try: sudo apt-get install python3-venv"
@@ -967,7 +769,7 @@ setup_python_env() {
     fi
 
     ACTIVATE_SCRIPT="$VENV_DIR/bin/activate"
-    print_message $GREEN "Created virtual environment in ./$VENV_DIR using $python3"
+    print_message $GREEN "Created virtual environment in ./$VENV_DIR using $PYTHON_CMD"
 
     # Activate virtual environment
     if [ -f "$ACTIVATE_SCRIPT" ]; then
@@ -979,16 +781,9 @@ setup_python_env() {
         exit 1
     fi
 
-    # Check for pip in the virtual environment
-    if ! command -v pip &>/dev/null; then
-        print_message $RED "Error: pip not found in virtual environment"
-        print_message $YELLOW "Installing pip in the virtual environment..."
-        curl -sS https://bootstrap.pypa.io/get-pip.py | python
-    else
-        print_message $GREEN "Found pip in virtual environment"
-        # Upgrade pip
-        pip install --upgrade pip
-    fi
+    # Upgrade pip
+    print_message $BLUE "Upgrading pip..."
+    pip install --upgrade pip
 
     print_message $GREEN "Python virtual environment set up successfully"
 }
