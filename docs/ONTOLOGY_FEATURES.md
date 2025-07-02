@@ -94,18 +94,12 @@ The `load_ontology_relationships` method provides a flexible and standardized ap
 
 ```python
 from science_data_kit.core.db.db_manager import Neo4jManager
-from science_data_kit.core.utils.isa_compatibility import OntologyAnnotation
+from science_data_kit.core.ontology import OntologyAnnotation, OntologySource
 
 # Create a Neo4jManager instance
 db_manager = Neo4jManager()
 
 # Create OntologyAnnotation objects
-class OntologySource:
-    def __init__(self, name, version=None, description=None):
-        self.name = name
-        self.version = version
-        self.description = description
-
 annotations = [
     OntologyAnnotation(
         term="Metabolomics",
@@ -320,6 +314,91 @@ for result in results:
     print(f"{result['term1']} and {result['term2']} have similarity {result['similarity']}")
 ```
 
+## Importing Ontologies
+
+The Science Data Kit provides the `OntologyImporter` class for importing ontologies from various sources (local files, URLs) and in various formats (OWL, Turtle, RDF/XML, JSON-LD) into Neo4j.
+
+### Usage
+
+```python
+from science_data_kit.core.db.db_manager import Neo4jManager
+from science_data_kit.core.ontology import OntologyImporter
+
+# Create a Neo4jManager instance
+db_manager = Neo4jManager()
+db_manager.connect(uri="bolt://localhost:7687", user="neo4j", password="password")
+
+# Create an OntologyImporter instance
+importer = OntologyImporter(db_manager)
+
+# Import an ontology from a local file
+importer.load_ontology("path/to/ontology.owl")
+
+# Import an ontology from a URL
+importer.load_ontology("https://example.org/ontology.ttl")
+```
+
+### Features
+
+The `OntologyImporter` class provides the following features:
+
+1. **Support for Various Formats**: Import ontologies in OWL, Turtle (.ttl), RDF/XML, JSON-LD formats
+2. **URL Support**: Import ontologies directly from URLs
+3. **Neo4j Integration**: Uses Neo4j's neosemantics (n10s) plugin for efficient ontology import
+4. **Fallback Implementation**: Uses rdflib when the neosemantics plugin is not available
+5. **Class Hierarchy Preservation**: Preserves class hierarchies as relationships in Neo4j
+6. **Error Handling**: Provides robust error handling and logging
+
+## Browsing and Visualizing Ontologies
+
+The Science Data Kit provides the `OntologyBrowser` class for browsing and visualizing ontologies stored in Neo4j.
+
+### Usage
+
+```python
+from science_data_kit.core.db.db_manager import Neo4jManager
+from science_data_kit.core.ontology import OntologyBrowser
+
+# Create a Neo4jManager instance
+db_manager = Neo4jManager()
+db_manager.connect(uri="bolt://localhost:7687", user="neo4j", password="password")
+
+# Create an OntologyBrowser instance
+browser = OntologyBrowser(db_manager)
+
+# Get statistics about the ontologies in the database
+stats = browser.get_statistics()
+print(f"Number of ontology terms: {stats['term_count']}")
+print(f"Number of ontology sources: {stats['source_count']}")
+print(f"Number of relationships: {stats['relationship_count']}")
+
+# Search for ontology terms
+results = browser.search_terms("metabolomics")
+print(f"Found {len(results)} terms matching 'metabolomics'")
+
+# Get the hierarchy for a specific term
+hierarchy = browser.get_term_hierarchy("Metabolomics")
+print(f"Hierarchy for 'Metabolomics': {hierarchy}")
+
+# Visualize the hierarchy for a specific term
+network = browser.visualize_term_hierarchy("Metabolomics")
+network.show("metabolomics_hierarchy.html")
+
+# Visualize ontology sources and their relationships
+network = browser.visualize_ontology_sources()
+network.show("ontology_sources.html")
+```
+
+### Features
+
+The `OntologyBrowser` class provides the following features:
+
+1. **Term Search**: Search for ontology terms in the database
+2. **Hierarchy Visualization**: Visualize the hierarchy for a specific ontology term
+3. **Source Visualization**: Visualize ontology sources and their relationships
+4. **Statistics**: Get statistics about the ontologies in the database
+5. **Interactive Visualizations**: Create interactive visualizations using pyvis
+
 ## Best Practices
 
 1. **Use URIs for term_accession**: Always use proper URIs for term_accession values to ensure interoperability
@@ -327,3 +406,5 @@ for result in results:
 3. **Batch processing**: Use batch processing for large ontologies
 4. **Relationship types**: Choose meaningful relationship types that reflect the semantic meaning
 5. **Regular updates**: Periodically update your ontology terms to stay current with the latest versions
+6. **Use neosemantics plugin**: Install the Neo4j neosemantics (n10s) plugin for efficient ontology import
+7. **Visualize hierarchies**: Use the visualization capabilities to understand the structure of your ontologies
