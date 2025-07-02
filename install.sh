@@ -1137,41 +1137,10 @@ main() {
     print_message $YELLOW "source $ACTIVATE_SCRIPT"
     print_message $YELLOW "science_data_kit"
 
-    # Optional: Install isatools
-    print_message $BLUE "Would you like to install isatools? (y/n)"
-    read -r install_isatools
-    if [[ "$install_isatools" =~ ^[Yy]$ ]]; then
-        print_message $BLUE "Which version of isatools would you like to install?"
-        print_message $YELLOW "1) Basic isatools (Python 3.12+, limited functionality)"
-        print_message $YELLOW "   - Compatible with Python 3.12+"
-        print_message $YELLOW "   - Recommended for newer Python versions"
-        print_message $YELLOW "2) Full isatools (Python 3.9, complete functionality)"
-        print_message $YELLOW "   - Includes mzML file processing capabilities"
-        print_message $YELLOW "   - Requires Python 3.9 (will create a separate environment)"
-        read -r isatools_version
-
-        if [ "$isatools_version" -eq 1 ]; then
-            # We're already in a Python 3.12+ virtual environment
-            python_version=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-            print_message $BLUE "Installing basic isatools in virtual environment (Python $python_version)..."
-            pip install -e .[isatools]
-            print_message $GREEN "Basic isatools installed successfully"
-            print_message $BLUE "Running Python 3.12+ compatibility script..."
-            python install_isatools_py312.py
-        elif [ "$isatools_version" -eq 2 ]; then
-            print_message $BLUE "Installing full isatools for Python 3.9..."
-            print_message $YELLOW "This will create a separate Python 3.9 environment."
-            if command_exists conda; then
-                bash install_isatools.sh
-            else
-                # Use the system Python for this script since it will create its own environment
-                /usr/bin/python3 install_isatools.py
-            fi
-            print_message $GREEN "Full isatools installed successfully"
-        else
-            print_message $RED "Invalid option. Skipping isatools installation."
-        fi
-    fi
+    # Note: isatools has been removed from the codebase
+    # The Science Data Kit now uses the new ontology module for ontology integration
+    print_message $GREEN "The Science Data Kit now uses Neo4j's neosemantics (n10s) plugin for ontology integration"
+    print_message $GREEN "No additional installation steps are required for ontology support"
 }
 
 # Run the main function
