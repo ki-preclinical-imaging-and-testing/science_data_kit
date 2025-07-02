@@ -57,7 +57,8 @@ The Science Data Kit previously included functionality for launching containeriz
 | Implement persistent connections | High | Completed | Modified connection management to maintain connections to different databases on the same server |
 | Show status indicators for all connected databases | High | Completed | Updated UI to show green status for all connected databases, not just the active one |
 | Synchronize UI connection state with backend | High | Completed | Implemented connection status synchronization to ensure UI accurately reflects backend state |
-| Add Dev/Prod environment selection | Medium | To Do | Allow users to choose between development and production environments |
+| Add Dev/Prod environment selection | Low | Deferred | Demoted in priority to focus on database export/import functionality |
+| Implement database export/import | High | Completed | Added ability to save and load entire databases from a connection |
 | Implement better error handling | Medium | To Do | Improve error messages and recovery options |
 | Add container health monitoring | Low | To Do | Display container health metrics |
 
@@ -89,7 +90,7 @@ The Science Data Kit previously included functionality for launching containeriz
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement Ollama container management | High | To Do | Create sidebar component for Ollama |
+| Implement Ollama container management | High | Completed | Created sidebar component and utility functions for Ollama container management with enhanced error handling, URL validation, progressive retry logic, and detailed diagnostics to help troubleshoot container startup issues |
 | Add model selection and management | Medium | To Do | Allow users to select and manage Ollama models |
 | Implement API for LLM interactions | High | To Do | Create a clean API for interacting with Ollama |
 | Add example prompts and templates | Low | To Do | Provide starter templates for common LLM tasks |
@@ -142,7 +143,7 @@ The Science Data Kit previously included functionality for launching containeriz
    - Add integration between Neodash and Neo4j database
 
 3. **Phase 3: Ollama and Additional Database Connections**
-   - Implement Ollama container management
+   - Implement Ollama container management ✓
    - Implement PostgreSQL connection
    - Add support for other SQL databases
    - Implement API for LLM interactions
@@ -176,13 +177,16 @@ The application now has improved functionality in terms of server management and
 17. Implemented token-based authentication for secure Jupyter Lab access
 18. Fixed type error in form_submit_button where is_running was being treated as a string instead of a boolean
 19. Added try-except blocks around matplotlib imports to handle the case when it's not available
+20. Implemented database export/import functionality, allowing users to save and load entire databases from a connection
+21. Implemented Ollama container management with proper status checking, accessibility verification, enhanced error handling, URL validation, progressive retry logic, and detailed diagnostics to help troubleshoot container startup issues
+22. Updated the application to require Python 3.12+ for better compatibility and performance
 
 ## Next Steps
 
 1. Continue with Phase 2 of the implementation plan
 2. Focus on adding Jupyter notebook templates
 3. Implement dashboard templates for NeoDash and add integration with Neo4j database
-4. Begin Phase 3 with Ollama container management implementation
+4. Continue Phase 3 with PostgreSQL connection implementation and API for LLM interactions
 
 ## Success Metrics
 

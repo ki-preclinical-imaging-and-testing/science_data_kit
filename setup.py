@@ -63,5 +63,5 @@ setup(
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Information Analysis',
     ],
-    python_requires='>=3.10',
+    python_requires='>=3.12',
 )

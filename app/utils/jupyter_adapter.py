@@ -22,6 +22,13 @@ def initialize_jupyter_session():
         st.session_state["jupyter_token"] = "letmein"
     if "jupyter_host_mountpoint" not in st.session_state:
         st.session_state["jupyter_host_mountpoint"] = os.path.abspath('../')
+    # Initialize multi-user settings
+    if "jupyter_admin_user" not in st.session_state:
+        st.session_state["jupyter_admin_user"] = "admin"
+    if "jupyter_admin_password" not in st.session_state:
+        st.session_state["jupyter_admin_password"] = "admin"
+    if "jupyter_enable_multi_user" not in st.session_state:
+        st.session_state["jupyter_enable_multi_user"] = True
 
 def start_jupyter_container():
     """
@@ -36,43 +43,53 @@ def start_jupyter_container():
         str: The URL to access Jupyter Lab, or None if there was an error
     """
     initialize_jupyter_session()
-    
+
     # Create a JupyterManager instance with the session state values
     jupyter_manager = JupyterManager(
         container_name=st.session_state["jupyter_container_name"],
         port=st.session_state["jupyter_port"],
         token=st.session_state["jupyter_token"],
-        host_mountpoint=st.session_state.get("jupyter_host_mountpoint")
+        host_mountpoint=st.session_state.get("jupyter_host_mountpoint"),
+        admin_user=st.session_state["jupyter_admin_user"],
+        admin_password=st.session_state["jupyter_admin_password"],
+        enable_multi_user=st.session_state["jupyter_enable_multi_user"]
     )
-    
+
     try:
         # Start the container using the JupyterManager
-        container_info = jupyter_manager.start_container()
-        
-        if container_info:
-            # Update session state with the actual port used
-            st.session_state["jupyter_port"] = container_info.get("port")
-            
-            # Get the container IP
-            jupyter_host_ip = container_info.get("ip", "localhost")
+        success, message, url = jupyter_manager.start_container()
+
+        if success and url:
+            # Extract port from URL
+            import re
+            port_match = re.search(r':(\d+)/', url)
+            if port_match:
+                port = int(port_match.group(1))
+                st.session_state["jupyter_port"] = port
+
+            # Extract host from URL
+            host_match = re.search(r'http://([^:]+):', url)
+            if host_match:
+                jupyter_host_ip = host_match.group(1)
+            else:
+                jupyter_host_ip = "localhost"
+
             st.session_state['jupyter_host_ip'] = jupyter_host_ip
-            
-            # Generate and display the URL
-            url = f"http://{jupyter_host_ip}:{st.session_state['jupyter_port']}/?token={st.session_state['jupyter_token']}"
-            
-            if container_info.get("status") == "started":
+
+            # Display success message
+            if "Started new" in message:
                 st.success(f"✅ Jupyter Lab started!")
             else:
                 st.info(f"🔄 Connected to existing Jupyter Lab")
-                
+
             st.markdown(f"🔗 [Open Jupyter Lab]({url})")
             st.code(url)
-            
+
             return url
         else:
-            st.error("❌ Failed to start Jupyter container")
+            st.error(f"❌ Failed to start Jupyter container: {message}")
             return None
-            
+
     except Exception as e:
         st.error(f"❌ Failed to start Jupyter container: {e}")
         return None
@@ -82,12 +99,12 @@ def stop_jupyter_container():
     Stop the Jupyter container if it's running.
     """
     initialize_jupyter_session()
-    
+
     # Create a JupyterManager instance with the session state values
     jupyter_manager = JupyterManager(
         container_name=st.session_state["jupyter_container_name"]
     )
-    
+
     # Stop the container using the JupyterManager
     jupyter_manager.stop_container()
 

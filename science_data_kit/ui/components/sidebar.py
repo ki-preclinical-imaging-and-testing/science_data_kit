@@ -557,6 +557,92 @@ def render_msgraph_sidebar(
         st.sidebar.markdown("[Explorer](/msgraph_explore)")
 
 
+def render_ollama_sidebar(
+    on_start: Optional[Callable] = None,
+    on_stop: Optional[Callable] = None
+) -> None:
+    """
+    Render the Ollama management section in the sidebar.
+
+    Args:
+        on_start: Optional callback function to call when the start button is clicked.
+        on_stop: Optional callback function to call when the stop button is clicked.
+    """
+    # Import here to avoid circular imports
+    from science_data_kit.core.utils.ollama_utils import get_ollama_container_status, is_ollama_accessible
+
+    # Get container name from session state
+    container_name = st.session_state.get("ollama_container_name", "dsk-ollama-instance")
+
+    # Check if Ollama is running by verifying container status
+    # Get URL from session state, use default if empty or not set
+    ollama_url = st.session_state.get("ollama_url", "http://localhost:11434")
+    if not ollama_url:  # Handle empty string case
+        ollama_url = "http://localhost:11434"
+    container_exists, container_status = get_ollama_container_status(container_name)
+
+    # Check if the service is actually accessible
+    is_accessible = is_ollama_accessible(ollama_url)
+
+    # Only consider it running if:
+    # 1. The container exists and is running
+    # 2. The service is accessible at the URL
+    is_running = container_exists and container_status == "running" and is_accessible
+
+    # Render the section header with status indicator
+    expanded = render_sidebar_section("Ollama", is_running)
+
+    # Only show the content if the section is expanded
+    if expanded:
+        # Container status
+        if is_running:
+            st.sidebar.success(f"Ollama is running at {ollama_url}")
+        elif container_exists and container_status == "running" and not is_accessible:
+            st.sidebar.warning("Ollama container is running but service is not accessible")
+        elif container_status == "stopped":
+            st.sidebar.warning("Ollama container is stopped")
+        elif container_status == "not found":
+            st.sidebar.info("Ollama container not found")
+        else:
+            st.sidebar.info("Ollama status unknown")
+
+        # Container management form
+        with st.sidebar.form("ollama_container_form"):
+            # Port selection
+            port = st.number_input(
+                "Port",
+                min_value=1024,
+                max_value=65535,
+                value=st.session_state.get("ollama_port", 11434),
+                disabled=is_running
+            )
+
+            # Version selection
+            version = st.selectbox(
+                "Version",
+                ["latest", "0.1.17", "0.1.16", "0.1.15"],
+                index=0,
+                disabled=is_running
+            )
+
+            # Start/Stop button
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.form_submit_button("Start Container", disabled=is_running):
+                    # Update session state
+                    st.session_state["ollama_port"] = port
+                    st.session_state["ollama_version"] = version
+                    st.session_state["ollama_container_name"] = container_name
+                    st.session_state["ollama_url"] = f"http://localhost:{port}"
+
+                    if on_start:
+                        on_start(port, version)
+
+            with col2:
+                if st.form_submit_button("Stop Container", disabled=not is_running):
+                    if on_stop:
+                        on_stop()
+
 def render_settings_sidebar() -> None:
     """Render the settings section in the sidebar."""
     # Render the section header with status indicator
@@ -595,7 +681,7 @@ def render_sidebar(
         callbacks: Optional dictionary mapping callback names to callback functions.
     """
     # Default sections
-    all_sections = ["header", "database", "neo4j", "jupyter", "neodash", "msgraph", "settings"]
+    all_sections = ["header", "database", "neo4j", "jupyter", "neodash", "ollama", "msgraph", "settings"]
 
     # Use specified sections or all sections
     sections_to_render = sections or all_sections
@@ -626,6 +712,11 @@ def render_sidebar(
             render_neodash_sidebar(
                 on_start=callbacks.get("on_neodash_start"),
                 on_stop=callbacks.get("on_neodash_stop")
+            )
+        elif section == "ollama":
+            render_ollama_sidebar(
+                on_start=callbacks.get("on_ollama_start"),
+                on_stop=callbacks.get("on_ollama_stop")
             )
         elif section == "msgraph":
             render_msgraph_sidebar(

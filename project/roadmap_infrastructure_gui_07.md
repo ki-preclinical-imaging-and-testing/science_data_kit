@@ -76,6 +76,7 @@ The Science Data Kit previously included functionality for launching containeriz
 |------|----------|--------|-------|
 | Re-enable Neodash container management | High | Completed | Uncommented and updated the NeoDash sidebar code |
 | Add Dev/Prod environment selection | Medium | Completed | Added radio button for selecting development or production environment |
+| Fix NeoDash status indicator | High | Completed | Fixed issue where NeoDash showed as active when not actually running or accessible |
 | Implement dashboard templates | Low | To Do | Provide starter templates for common visualization needs |
 | Add integration with Neo4j database | Medium | To Do | Ensure seamless connection between Neodash and Neo4j |
 
@@ -83,7 +84,7 @@ The Science Data Kit previously included functionality for launching containeriz
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement Ollama container management | High | To Do | Create sidebar component for Ollama |
+| Implement Ollama container management | High | Completed | Created sidebar component and utility functions for Ollama container management with enhanced error handling, URL validation, progressive retry logic, and detailed diagnostics to help troubleshoot container startup issues |
 | Add model selection and management | Medium | To Do | Allow users to select and manage Ollama models |
 | Implement API for LLM interactions | High | To Do | Create a clean API for interacting with Ollama |
 | Add example prompts and templates | Low | To Do | Provide starter templates for common LLM tasks |
@@ -159,6 +160,8 @@ The application now has improved functionality in terms of server management and
 11. Implemented connection status synchronization to ensure UI accurately reflects backend state
 12. Re-enabled Jupyter Lab container management with single/multi-user options
 13. Re-enabled NeoDash container management with Development/Production environment selection
+14. Implemented Ollama container management with proper status checking, accessibility verification, enhanced error handling, URL validation, progressive retry logic, and detailed diagnostics to help troubleshoot container startup issues
+15. Updated the application to require Python 3.12+ for better compatibility and performance
 
 ## Next Steps
 

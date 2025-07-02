@@ -8,6 +8,7 @@ It includes functions for starting, stopping, and connecting to NeoDash containe
 import time
 import socket
 import docker
+import requests
 from typing import Optional, Dict, Any, Tuple, Union
 from docker.errors import NotFound
 
@@ -17,11 +18,11 @@ client = docker.from_env()
 def is_port_available(port: int, host: str = "0.0.0.0") -> bool:
     """
     Check if a port is available for binding.
-    
+
     Args:
         port: The port number to check.
         host: The host to check the port on.
-        
+
     Returns:
         True if the port is available, False otherwise.
     """
@@ -35,10 +36,10 @@ def is_port_available(port: int, host: str = "0.0.0.0") -> bool:
 def find_free_port(start: int = 5005) -> int:
     """
     Find a free port starting from the given port number.
-    
+
     Args:
         start: The port number to start searching from.
-        
+
     Returns:
         A free port number.
     """
@@ -50,11 +51,11 @@ def find_free_port(start: int = 5005) -> int:
 def get_container_port_binding(container: Any, internal_port: str = "5005/tcp") -> Optional[int]:
     """
     Get the port binding for a container.
-    
+
     Args:
         container: The Docker container object.
         internal_port: The internal port to get the binding for.
-        
+
     Returns:
         The port number if found, None otherwise.
     """
@@ -66,10 +67,10 @@ def get_container_port_binding(container: Any, internal_port: str = "5005/tcp") 
 def get_container_ip(container: Any) -> str:
     """
     Get the IP address of a container.
-    
+
     Args:
         container: The Docker container object.
-        
+
     Returns:
         The IP address of the container, or "localhost" if not available.
     """
@@ -78,9 +79,9 @@ def get_container_ip(container: Any) -> str:
 class NeoDashManager:
     """
     A manager for NeoDash containers.
-    
+
     This class provides methods for starting, stopping, and connecting to NeoDash containers.
-    
+
     Attributes:
         container_name: The name of the NeoDash container.
         port: The port to use for the NeoDash container.
@@ -88,7 +89,7 @@ class NeoDashManager:
         neo4j_user: The username for the Neo4j database.
         neo4j_password: The password for the Neo4j database.
     """
-    
+
     def __init__(
         self, 
         container_name: str = "dsk-neodash-instance", 
@@ -99,7 +100,7 @@ class NeoDashManager:
     ):
         """
         Initialize the NeoDashManager.
-        
+
         Args:
             container_name: The name of the NeoDash container.
             port: The port to use for the NeoDash container.
@@ -112,16 +113,16 @@ class NeoDashManager:
         self.neo4j_uri = neo4j_uri
         self.neo4j_user = neo4j_user
         self.neo4j_password = neo4j_password
-    
+
     def start_container(self) -> Tuple[bool, str, Optional[str]]:
         """
         Start a NeoDash container or connect to an existing one.
-        
+
         This method will:
         1. Check if a container with the configured name already exists
         2. If it exists, start it if it's not running and return the URL
         3. If it doesn't exist, create a new container and return the URL
-        
+
         Returns:
             A tuple containing (success, message, url).
             - success: True if the container was started successfully, False otherwise.
@@ -132,13 +133,13 @@ class NeoDashManager:
             # Try to get an existing container
             container = client.containers.get(self.container_name)
             bound_port = get_container_port_binding(container)
-            
+
             if not bound_port:
                 return False, f"Container '{self.container_name}' exists but has no bound port.", None
-            
+
             # Update the port
             self.port = bound_port
-            
+
             # Start the container if it's not running
             if container.status != "running":
                 container.start()
@@ -146,20 +147,20 @@ class NeoDashManager:
                 message = f"Started container '{self.container_name}'."
             else:
                 message = f"Container '{self.container_name}' is already running."
-            
+
             # Get the container IP
             neodash_host_ip = get_container_ip(container)
-            
+
             # Generate the URL
             url = f"http://{neodash_host_ip}:{bound_port}"
-            
+
             return True, message, url
-            
+
         except NotFound:
             # Container does not exist yet — create a new one
             port = find_free_port(self.port)
             self.port = port
-            
+
             # Create and start the container
             try:
                 container = client.containers.run(
@@ -174,26 +175,26 @@ class NeoDashManager:
                     detach=True,
                     tty=True,
                 )
-                
+
                 # Get the container IP
                 neodash_host_ip = get_container_ip(container)
                 time.sleep(2)  # Give it a moment to start up
-                
+
                 # Generate the URL
                 url = f"http://{neodash_host_ip}:{port}"
-                
+
                 return True, f"Started new NeoDash container on port {port}.", url
-                
+
             except Exception as e:
                 return False, f"Failed to start NeoDash container: {e}", None
-                
+
         except Exception as e:
             return False, f"Error handling NeoDash container: {e}", None
-    
+
     def stop_container(self) -> Tuple[bool, str]:
         """
         Stop the NeoDash container.
-        
+
         Returns:
             A tuple containing (success, message).
             - success: True if the container was stopped successfully, False otherwise.
@@ -210,11 +211,11 @@ class NeoDashManager:
             return False, f"Container '{self.container_name}' not found."
         except Exception as e:
             return False, f"Error stopping container: {e}"
-    
+
     def get_container_status(self) -> Tuple[bool, str]:
         """
         Get the status of the NeoDash container.
-        
+
         Returns:
             A tuple containing (exists, status).
             - exists: True if the container exists, False otherwise.
@@ -239,14 +240,14 @@ def start_neodash_container(
 ) -> Tuple[bool, str, Optional[str]]:
     """
     Start a NeoDash container or connect to an existing one.
-    
+
     Args:
         container_name: The name of the NeoDash container.
         port: The port to use for the NeoDash container.
         neo4j_uri: The URI of the Neo4j database to connect to.
         neo4j_user: The username for the Neo4j database.
         neo4j_password: The password for the Neo4j database.
-        
+
     Returns:
         A tuple containing (success, message, url).
         - success: True if the container was started successfully, False otherwise.
@@ -259,10 +260,10 @@ def start_neodash_container(
 def stop_neodash_container(container_name: str = "dsk-neodash-instance") -> Tuple[bool, str]:
     """
     Stop the NeoDash container.
-    
+
     Args:
         container_name: The name of the NeoDash container.
-        
+
     Returns:
         A tuple containing (success, message).
         - success: True if the container was stopped successfully, False otherwise.
@@ -274,10 +275,10 @@ def stop_neodash_container(container_name: str = "dsk-neodash-instance") -> Tupl
 def get_neodash_container_status(container_name: str = "dsk-neodash-instance") -> Tuple[bool, str]:
     """
     Get the status of the NeoDash container.
-    
+
     Args:
         container_name: The name of the NeoDash container.
-        
+
     Returns:
         A tuple containing (exists, status).
         - exists: True if the container exists, False otherwise.
@@ -285,3 +286,38 @@ def get_neodash_container_status(container_name: str = "dsk-neodash-instance") -
     """
     manager = NeoDashManager(container_name)
     return manager.get_container_status()
+
+def is_neodash_accessible(url: str, timeout: int = 3, retries: int = 2, retry_delay: int = 2) -> bool:
+    """
+    Check if NeoDash is accessible at the given URL.
+
+    Args:
+        url: The URL to check.
+        timeout: The timeout in seconds for the request.
+        retries: Number of retry attempts if the initial request fails.
+        retry_delay: Delay in seconds between retry attempts.
+
+    Returns:
+        True if NeoDash is accessible, False otherwise.
+    """
+    if not url:
+        return False
+
+    # Try multiple times with a delay between attempts
+    # This accounts for the service potentially still starting up
+    for attempt in range(retries + 1):  # +1 for the initial attempt
+        try:
+            response = requests.get(url, timeout=timeout)
+            if response.status_code == 200:
+                return True
+
+            # If this isn't the last attempt, wait before retrying
+            if attempt < retries:
+                time.sleep(retry_delay)
+        except requests.RequestException:
+            # If this isn't the last attempt, wait before retrying
+            if attempt < retries:
+                time.sleep(retry_delay)
+
+    # If we've exhausted all retries and still haven't returned True, return False
+    return False

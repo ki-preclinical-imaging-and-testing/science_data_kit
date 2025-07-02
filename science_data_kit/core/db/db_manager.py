@@ -948,12 +948,14 @@ class Neo4jManager:
 
         return relationships_created
 
-    def export_graph(self, file_path: str) -> Tuple[bool, str]:
+    def export_graph(self, file_path: str, connection_name: Optional[str] = None) -> Tuple[bool, str]:
         """
         Exports the entire graph to a file.
 
         Args:
             file_path: Path where the graph will be saved.
+            connection_name: Optional name of the connection to use.
+                            If None, uses the active connection.
 
         Returns:
             A tuple containing (success, message).
@@ -961,8 +963,21 @@ class Neo4jManager:
         Raises:
             ConnectionError: If there is no active connection.
         """
-        if not self._driver:
-            raise ConnectionError("Cannot export graph. No active connection to Neo4j.")
+        # If connection_name is provided, use that specific connection
+        if connection_name:
+            if connection_name not in self._connections:
+                raise ConnectionError(f"Connection '{connection_name}' does not exist")
+
+            if not self._connections[connection_name]["connected"]:
+                raise ConnectionError(f"Connection '{connection_name}' is not connected")
+        else:
+            # Use the active connection
+            if self._active_connection:
+                connection_name = self._active_connection
+            else:
+                # Try to use the default connection
+                if not self._driver:
+                    raise ConnectionError("Cannot export graph. No active connection to Neo4j.")
 
         try:
             # Create a NetworkX graph
@@ -970,7 +985,7 @@ class Neo4jManager:
 
             # Get all nodes
             nodes_query = "MATCH (n) RETURN id(n) AS id, labels(n) AS labels, properties(n) AS properties"
-            nodes_result = self.execute_query(nodes_query)
+            nodes_result = self.execute_query(nodes_query, connection_name=connection_name)
 
             # Add nodes to the graph
             for node in nodes_result:
@@ -987,7 +1002,7 @@ class Neo4jManager:
             RETURN id(a) AS source, id(b) AS target, type(r) AS type, 
                    id(r) AS id, properties(r) AS properties
             """
-            rels_result = self.execute_query(rels_query)
+            rels_result = self.execute_query(rels_query, connection_name=connection_name)
 
             # Add relationships to the graph
             for rel in rels_result:
@@ -1008,12 +1023,14 @@ class Neo4jManager:
         except Exception as e:
             return False, f"Error exporting graph: {str(e)}"
 
-    def import_graph(self, file_path: str) -> Tuple[bool, str]:
+    def import_graph(self, file_path: str, connection_name: Optional[str] = None) -> Tuple[bool, str]:
         """
         Imports a graph from a file into Neo4j.
 
         Args:
             file_path: Path to the file containing the graph.
+            connection_name: Optional name of the connection to use.
+                            If None, uses the active connection.
 
         Returns:
             A tuple containing (success, message).
@@ -1021,8 +1038,21 @@ class Neo4jManager:
         Raises:
             ConnectionError: If there is no active connection.
         """
-        if not self._driver:
-            raise ConnectionError("Cannot import graph. No active connection to Neo4j.")
+        # If connection_name is provided, use that specific connection
+        if connection_name:
+            if connection_name not in self._connections:
+                raise ConnectionError(f"Connection '{connection_name}' does not exist")
+
+            if not self._connections[connection_name]["connected"]:
+                raise ConnectionError(f"Connection '{connection_name}' is not connected")
+        else:
+            # Use the active connection
+            if self._active_connection:
+                connection_name = self._active_connection
+            else:
+                # Try to use the default connection
+                if not self._driver:
+                    raise ConnectionError("Cannot import graph. No active connection to Neo4j.")
 
         try:
             # Load the graph from file
@@ -1030,7 +1060,7 @@ class Neo4jManager:
                 G = pickle.load(f)
 
             # Clear the database
-            self.execute_query("MATCH (n) DETACH DELETE n")
+            self.execute_query("MATCH (n) DETACH DELETE n", connection_name=connection_name)
 
             # Create nodes
             for node_id, node_data in G.nodes(data=True):
@@ -1048,7 +1078,7 @@ class Neo4jManager:
 
                 # Create node
                 query = f"CREATE (n:{label_string}) SET n = $props RETURN id(n)"
-                new_id = self.query_to_value(query, {"props": filtered_props})
+                new_id = self.query_to_value(query, {"props": filtered_props}, connection_name=connection_name)
 
                 # Map old ID to new ID
                 G.nodes[node_id]['new_id'] = new_id
@@ -1077,7 +1107,7 @@ class Neo4jManager:
                 if filtered_props:
                     query += " SET r = $props"
 
-                self.execute_query(query, {"props": filtered_props})
+                self.execute_query(query, {"props": filtered_props}, connection_name=connection_name)
 
             return True, f"Graph imported successfully with {len(G.nodes)} nodes and {len(G.edges)} relationships"
         except Exception as e:

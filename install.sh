@@ -28,9 +28,35 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Fix apt_pkg module error - only if needed for specific operations
+fix_apt_pkg() {
+    # Check if we've already set the workaround flag
+    if [ "${APT_PKG_UNAVAILABLE:-0}" = "1" ]; then
+        return 0
+    fi
+
+    # Check if apt_pkg is already available
+    if python3 -c "import apt_pkg" &>/dev/null; then
+        return 0
+    fi
+
+    # Only try to fix apt_pkg if we're not in direct installation mode
+    if [ "${DIRECT_INSTALL:-0}" = "1" ]; then
+        export APT_PKG_UNAVAILABLE=1
+        return 0
+    fi
+
+    print_message $YELLOW "apt_pkg module not found. This is only needed for some apt operations."
+    print_message $YELLOW "Setting up workarounds for apt commands..."
+    export APT_PKG_UNAVAILABLE=1
+
+    # We'll try a direct installation approach instead of fixing apt_pkg
+    export DIRECT_INSTALL=1
+}
+
 # Install Python (platform-specific)
 install_python() {
-    print_message $BLUE "Installing Python 3.10+ (preferably 3.11 or 3.12)..."
+    print_message $BLUE "Installing Python 3.12..."
 
     # Detect OS
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -38,25 +64,107 @@ install_python() {
         if command_exists apt-get; then
             # Debian/Ubuntu
             print_message $BLUE "Detected Debian/Ubuntu system"
-            print_message $BLUE "Adding deadsnakes PPA for Python installation..."
-            sudo apt-get update
-            sudo apt-get install -y software-properties-common
-            sudo add-apt-repository -y ppa:deadsnakes/ppa
-            sudo apt-get update
 
-            # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
-            if apt-cache show python3.12 &>/dev/null; then
-                print_message $BLUE "Installing Python 3.12..."
-                sudo apt-get install -y python3.12 python3.12-venv python3.12-dev
+            # Try direct installation first without PPA if Python 3.12 is already available
+            if sudo apt-get install -y python3.12 python3.12-venv python3.12-dev; then
+                print_message $GREEN "Python 3.12 installed successfully without adding PPA"
                 PYTHON_VERSION="3.12"
-            elif apt-cache show python3.11 &>/dev/null; then
-                print_message $BLUE "Installing Python 3.11..."
-                sudo apt-get install -y python3.11 python3.11-venv python3.11-dev
-                PYTHON_VERSION="3.11"
             else
-                print_message $BLUE "Installing Python 3.10..."
-                sudo apt-get install -y python3.10 python3.10-venv python3.10-dev
-                PYTHON_VERSION="3.10"
+                print_message $BLUE "Adding deadsnakes PPA for Python installation..."
+
+                # Check for apt_pkg and set up workarounds if needed
+                fix_apt_pkg
+
+                # If we're in direct installation mode, skip the PPA setup
+                if [ "${DIRECT_INSTALL:-0}" = "1" ]; then
+                    print_message $YELLOW "Skipping PPA setup, trying direct installation..."
+                else
+                    sudo apt-get update || true
+                    sudo apt-get install -y software-properties-common
+
+                    # If APT_PKG_UNAVAILABLE is set or add-apt-repository fails, use the manual approach
+                    if [ "${APT_PKG_UNAVAILABLE:-0}" = "1" ] || ! sudo add-apt-repository -y ppa:deadsnakes/ppa; then
+                        print_message $YELLOW "add-apt-repository failed. Adding PPA manually..."
+
+                        # Get Ubuntu codename, with fallback if lsb_release fails
+                        UBUNTU_CODENAME=$(lsb_release -cs 2>/dev/null || grep -oP 'VERSION_CODENAME=\K\w+' /etc/os-release 2>/dev/null || echo "jammy")
+                        print_message $YELLOW "Detected Ubuntu codename: $UBUNTU_CODENAME"
+
+                        echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu $UBUNTU_CODENAME main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
+
+                        # Use multiple methods to add the key, trying each until one works
+                        print_message $YELLOW "Adding deadsnakes PPA key..."
+
+                        # Method 1: Direct download from Ubuntu key server
+                        if ! curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/deadsnakes.gpg 2>/dev/null; then
+                            print_message $YELLOW "Method 1 failed. Trying alternative key import method..."
+
+                            # Method 2: Use apt-key (deprecated but might work)
+                            if ! sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776 2>/dev/null; then
+                                print_message $YELLOW "Method 2 failed. Trying alternative key import method..."
+
+                                # Method 3: Use direct key data
+                                print_message $YELLOW "Using hardcoded key data as fallback..."
+                                # This is the deadsnakes PPA key in base64 format
+                                echo "mQINBFTlMNUBEADDLj7FrRzRpYN8cRo5FQeOj7Z5V6Y/6uZL886yKbCgLRkOvGqnRqpXoLzFXBMIrLR/w4INOlCiIjPQX+X1AuLaAH9SQ0HyKFG+cZ3zx/ZOFfRHvzI2IzLjYXLTRnKi6TmYKJQqMj/z3lbllR0GYqXTvUXgFfJJyHzCxaXAOHQHAZCZQTK5FT4UQXjQkLZYQ4Jw9WdYBs6JF98GgwUNxwZnEcnZeiILJ2z8ZtBXlGKsdf4dJUJLVWUUi76UNKLCKqLNEX7imGZRZNW0EYFWsQlYXjOglnVZacsVs6XrQVZU8xWI3iz5WyGMQeBSMZGPkMJFpu+ZuNPk0ftpQnwILF9uxJEPW41O9Dj1AJn9S8GJL0YJIbE7FJJ1ucQTKuFY8QU+AwLOXs8RsXOKUkHMP0g7ARvZZRX8rNBUuGCdF/AUY8cPjVOCVGnLLJl0Cz1qhKkQQOUS/8YEjlZPJMsKvMtGQnSUJK8zXgkxZLiOjbUKXPdEkP9ftJVV8ZU0aUPLFM6UX9kKbPLM3KS2XE7uICzXYXdz3yNYUvTFEXnGHBPsRrLuN5y1vLcPU/bK4CzuCQMnWJ5aZj2uQie8wuHUy1uMZEJLjLzR4sGVlU4HRXbZjGOy2CuQQUYZJLLXI6ULnLJQtj6wJf9ZO/ItD4cUmEqTWz+/vyCUgSZzQzDgj3NIWpuCWpvv+QV/XdRIJZs1aMdmBOJKqpkJE3ts9Mv0uHbdWCUiMz2JsPKEYvQFpi0HxiQ/YpCQOQIDAQABtB9MYXVuY2hwYWQgUFBBIGZvciBkZWFkc25ha2VzIFBQQYkCOAQTAQIAIgUCVOUw1QIbAwYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQumkjZmrXV3ZdORAAwRXYrt1IveFAHhNWJbzGkGTUZ2eWTb/JZ/4qKjKYNsLELtYkUTEYQH9oJUVe9JtSGBRCWLZ9UYzGEPjTyPTFQtjYmL6sn6KZEpCxEHyMIHKBCLJVXPqxdSQYgW6y1aMQcJYLHcKd4s1ceFpQIHxijpxWs5JKbVBkv/QCPB8N8CCCRiZKwSBPTJ98G5uO1/IYPDpFkVeFBQTT6XA2UUZXiJwlIRDQWFZCAtEBU6C2xGmqVoGRWKn+LXXn2E4KzfTsOjXYUBCQvhgqmwm18R7apeTjbHFqjBWxHGIv02WCT9xJNUL+8iBKp2y+c6LqbgOy0/YJMXxmVMrfWsL6YxvMTHGQlbjtjieZUqEyMtOUdvwmPeEQE/Ap9JwKWMhQFRKKAXF2PVOdgLEz/nANwIZJwpvuQdMKmgZPvXpWHaKBFxJZhEfBvAYMYZEsAKgCELHEGGVlxzKnFSZYNkYOsYHmrYgLDQHRiXwQXbF8tNDjPgj+Xj5hEXDR4T+UMrUmKnf/qbLUJKClZJl92xAGVCy+JCN/hqVxXxGGZRHUHzUVJdvuJHQjQXLBYEgGnfaA8Vk9ypqLMn0phD3VGVQUgGh6jRJZMcbqMn3YTh7M1r1WdAJlqxTZMFq8mSCnmIaRFrCpIUEwD4ZFOEUCAwEAAQ==" | base64 -d | sudo tee /etc/apt/trusted.gpg.d/deadsnakes.gpg >/dev/null
+
+                                # Check if the key was added successfully
+                                if [ ! -s /etc/apt/trusted.gpg.d/deadsnakes.gpg ]; then
+                                    print_message $YELLOW "All key import methods failed. Continuing without key verification..."
+                                    print_message $YELLOW "You may see warnings about unauthenticated packages."
+                                else
+                                    print_message $GREEN "PPA key added successfully using fallback method."
+                                fi
+                            else
+                                print_message $GREEN "PPA key added successfully using apt-key."
+                            fi
+                        else
+                            print_message $GREEN "PPA key added successfully using direct download."
+                        fi
+                    fi
+                fi
+            fi
+            sudo apt-get update || true
+
+            # If we haven't already installed Python 3.12 directly
+            if [ -z "$PYTHON_VERSION" ]; then
+                # Try to install Python 3.12 first, then fall back to 3.11, then 3.10
+                # Use a direct approach if apt-cache might fail due to apt_pkg issues
+                if [ "${APT_PKG_UNAVAILABLE:-0}" = "1" ] || [ "${DIRECT_INSTALL:-0}" = "1" ]; then
+                    print_message $YELLOW "Using direct Python installation approach..."
+
+                    # Try Python 3.12 first
+                    if sudo apt-get install -y python3.12 python3.12-venv python3.12-dev; then
+                        print_message $GREEN "Python 3.12 installed successfully"
+                        PYTHON_VERSION="3.12"
+                    # Then try Python 3.11
+                    elif sudo apt-get install -y python3.11 python3.11-venv python3.11-dev; then
+                        print_message $GREEN "Python 3.11 installed successfully"
+                        PYTHON_VERSION="3.11"
+                    # Finally try Python 3.10
+                    elif sudo apt-get install -y python3.10 python3.10-venv python3.10-dev; then
+                        print_message $GREEN "Python 3.10 installed successfully"
+                        PYTHON_VERSION="3.10"
+                    else
+                        print_message $RED "Failed to install Python. Please install Python 3.12+ manually."
+                        return 1
+                    fi
+                else
+                    # Normal approach using apt-cache
+                    if apt-cache show python3.12 &>/dev/null; then
+                        print_message $BLUE "Installing Python 3.12..."
+                        sudo apt-get install -y python3.12 python3.12-venv python3.12-dev
+                        PYTHON_VERSION="3.12"
+                    elif apt-cache show python3.11 &>/dev/null; then
+                        print_message $BLUE "Installing Python 3.11..."
+                        sudo apt-get install -y python3.11 python3.11-venv python3.11-dev
+                        PYTHON_VERSION="3.11"
+                    else
+                        print_message $BLUE "Installing Python 3.10..."
+                        sudo apt-get install -y python3.10 python3.10-venv python3.10-dev
+                        PYTHON_VERSION="3.10"
+                    fi
+                fi
             fi
 
             # Set installed Python as the default python3
@@ -224,72 +332,86 @@ install_python() {
 check_dependencies() {
     print_message $BLUE "Checking system dependencies..."
 
-    # Check for Python 3.10+ (preferably 3.11 or 3.12)
-    if command_exists python3; then
+    # Check for Python 3.12+
+    # First, try to find Python 3.12 in common locations
+    python312_paths=("python3.12" "/usr/bin/python3.12" "/usr/local/bin/python3.12" "$HOME/.pyenv/shims/python3.12")
+    python312_path=""
+
+    for path in "${python312_paths[@]}"; do
+        if command -v "$path" &>/dev/null; then
+            python312_path="$path"
+            python_version=$("$path" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+            print_message $GREEN "Found Python $python_version at $python312_path"
+            export PYTHON_PATH="$python312_path"
+            break
+        fi
+    done
+
+    # If Python 3.12 wasn't found in common locations, check the default python3
+    if [ -z "$python312_path" ] && command_exists python3; then
         python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
         python_major=$(echo $python_version | cut -d. -f1)
         python_minor=$(echo $python_version | cut -d. -f2)
 
-        if [ "$python_major" -lt 3 ] || ([ "$python_major" -eq 3 ] && [ "$python_minor" -lt 10 ]); then
-            print_message $RED "Error: Python 3.10 or higher is required (found $python_version)"
-            print_message $YELLOW "Would you like to install Python 3.10+ (preferably 3.11 or 3.12)? (y/n)"
-            read -r install_python_choice
-            if [[ "$install_python_choice" =~ ^[Yy]$ ]]; then
-                install_python
-                # Re-check Python version after installation
-                if command_exists python3; then
-                    python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-                    python_major=$(echo $python_version | cut -d. -f1)
-                    python_minor=$(echo $python_version | cut -d. -f2)
-
-                    if [ "$python_major" -lt 3 ] || ([ "$python_major" -eq 3 ] && [ "$python_minor" -lt 10 ]); then
-                        print_message $RED "Python 3.10+ installation failed or not set as default."
-                        print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) manually before continuing."
-                        exit 1
-                    else
-                        print_message $GREEN "Found Python $python_version"
-                    fi
-                else
-                    print_message $RED "Python 3 not found after installation attempt."
-                    print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) manually before continuing."
-                    exit 1
-                fi
-            else
-                print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) before continuing."
-                exit 1
-            fi
-        else
+        if [ "$python_major" -eq 3 ] && [ "$python_minor" -ge 12 ]; then
+            python312_path="python3"
             print_message $GREEN "Found Python $python_version"
+            export PYTHON_PATH="$python312_path"
         fi
-    else
-        print_message $RED "Error: Python 3 not found"
-        print_message $YELLOW "Would you like to install Python 3.10+ (preferably 3.11 or 3.12)? (y/n)"
+    fi
+
+    # If Python 3.12+ wasn't found, offer to install it
+    if [ -z "$python312_path" ]; then
+        if command_exists python3; then
+            python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+            print_message $RED "Error: Python 3.12 or higher is required (found $python_version)"
+        else
+            print_message $RED "Error: Python 3 not found"
+        fi
+
+        print_message $YELLOW "Would you like to install Python 3.12? (y/n)"
         read -r install_python_choice
         if [[ "$install_python_choice" =~ ^[Yy]$ ]]; then
             install_python
-            # Check if Python is now available
-            if ! command_exists python3; then
-                print_message $RED "Python 3 not found after installation attempt."
-                print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) manually before continuing."
-                exit 1
-            else
+
+            # After installation, try to find Python 3.12 again
+            for path in "${python312_paths[@]}"; do
+                if command -v "$path" &>/dev/null; then
+                    python312_path="$path"
+                    python_version=$("$path" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+                    print_message $GREEN "Found Python $python_version at $python312_path"
+                    export PYTHON_PATH="$python312_path"
+                    break
+                fi
+            done
+
+            # If still not found, check default python3
+            if [ -z "$python312_path" ] && command_exists python3; then
                 python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-                print_message $GREEN "Found Python $python_version"
+                python_major=$(echo $python_version | cut -d. -f1)
+                python_minor=$(echo $python_version | cut -d. -f2)
+
+                if [ "$python_major" -eq 3 ] && [ "$python_minor" -ge 12 ]; then
+                    python312_path="python3"
+                    print_message $GREEN "Found Python $python_version"
+                    export PYTHON_PATH="$python312_path"
+                fi
+            fi
+
+            # If still not found, exit
+            if [ -z "$python312_path" ]; then
+                print_message $RED "Python 3.12+ installation failed or not found."
+                print_message $YELLOW "Please install Python 3.12 or higher manually before continuing."
+                exit 1
             fi
         else
-            print_message $YELLOW "Please install Python 3.10 or higher (preferably 3.11 or 3.12) before continuing."
+            print_message $YELLOW "Please install Python 3.12 or higher before continuing."
             exit 1
         fi
     fi
 
-    # Check for pip
-    if ! command_exists pip3; then
-        print_message $RED "Error: pip3 not found"
-        print_message $YELLOW "Please install pip3 before continuing."
-        exit 1
-    else
-        print_message $GREEN "Found pip3"
-    fi
+    # We'll check for pip after setting up the virtual environment
+    # This ensures we're using the pip from the virtual environment
 
     # Check for Docker
     if ! command_exists docker; then
@@ -337,11 +459,23 @@ install_docker() {
         if command_exists apt-get; then
             # Debian/Ubuntu
             print_message $BLUE "Detected Debian/Ubuntu system"
-            sudo apt-get update
+
+            # Fix apt_pkg module error
+            fix_apt_pkg
+
+            sudo apt-get update || true
             sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-            sudo apt-get update
+
+            # Get Ubuntu codename, with fallback if lsb_release fails
+            UBUNTU_CODENAME=$(lsb_release -cs 2>/dev/null || grep -oP 'VERSION_CODENAME=\K\w+' /etc/os-release 2>/dev/null || echo "jammy")
+            print_message $YELLOW "Detected Ubuntu codename for Docker: $UBUNTU_CODENAME"
+
+            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $UBUNTU_CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            # Fix apt_pkg module error again before next apt-get
+            fix_apt_pkg
+
+            sudo apt-get update || true
             sudo apt-get install -y docker-ce docker-ce-cli containerd.io
         elif command_exists yum; then
             # RHEL/CentOS/Fedora
@@ -423,6 +557,21 @@ install_docker_compose() {
 check_ollama() {
     print_message $BLUE "Checking for Ollama container..."
 
+    # First, check if Ollama API is accessible regardless of container
+    if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+        print_message $GREEN "Ollama API is accessible at http://localhost:11434"
+
+        # Check if it's running in a Docker container
+        if docker ps | grep -q "ollama"; then
+            print_message $GREEN "Ollama is running in a Docker container"
+        else
+            print_message $YELLOW "Ollama is running, but not in a Docker container managed by this script."
+            print_message $YELLOW "This could be a native Ollama installation or a container with a different name."
+        fi
+
+        return 0
+    fi
+
     # Check if docker-compose is available
     if command_exists docker-compose && [ -f "docker-compose.yml" ]; then
         print_message $BLUE "Using Docker Compose to check Ollama status"
@@ -446,9 +595,19 @@ check_ollama() {
         # Fallback to direct Docker commands
         print_message $BLUE "Using direct Docker commands to check Ollama status"
 
-        # Check if Ollama container is running
-        if docker ps | grep -q "ollama-instance"; then
-            print_message $GREEN "Ollama container is running"
+        # Check if Ollama container is running (check both old and new names)
+        if docker ps | grep -q "dsk-ollama-instance"; then
+            print_message $GREEN "Ollama container (dsk-ollama-instance) is running"
+            # Check if Ollama API is accessible
+            if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+                print_message $GREEN "Ollama API is accessible"
+                return 0
+            else
+                print_message $YELLOW "Ollama container is running but the API is not accessible"
+                return 1
+            fi
+        elif docker ps | grep -q "ollama-instance"; then
+            print_message $GREEN "Ollama container (ollama-instance) is running"
             # Check if Ollama API is accessible
             if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
                 print_message $GREEN "Ollama API is accessible"
@@ -468,6 +627,64 @@ check_ollama() {
 install_ollama() {
     print_message $BLUE "Installing Ollama using Docker..."
 
+    # First, check if Ollama API is already accessible
+    print_message $BLUE "Checking if Ollama API is already accessible..."
+    if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+        print_message $GREEN "Ollama API is already accessible at http://localhost:11434"
+        print_message $YELLOW "An Ollama service is already running. No need to start a new container."
+
+        # Check if it's running in a Docker container
+        if docker ps | grep -q "ollama"; then
+            print_message $GREEN "Ollama is running in a Docker container"
+        else
+            print_message $YELLOW "Ollama is running, but not in a Docker container managed by this script."
+            print_message $YELLOW "This could be a native Ollama installation or a container with a different name."
+        fi
+
+        # Pull a default model if needed
+        print_message $BLUE "Checking for default model (llama2)..."
+        if ! curl -s http://localhost:11434/api/tags | grep -q "llama2"; then
+            print_message $BLUE "Downloading default model (llama2)..."
+            curl -X POST http://localhost:11434/api/pull -d '{"name": "llama2"}'
+            print_message $GREEN "Default model downloaded"
+        else
+            print_message $GREEN "Default model (llama2) is already available"
+        fi
+
+        # Still create the docker-compose.yml file if needed
+        if command_exists docker-compose && [ ! -f "docker-compose.yml" ]; then
+            print_message $BLUE "Creating docker-compose.yml file for future use..."
+            cat > docker-compose.yml << EOL
+services:
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j-instance
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+    environment:
+      - NEO4J_AUTH=neo4j/password
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: dsk-ollama-instance
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  neo4j-data:
+  ollama-data:
+EOL
+            print_message $GREEN "Created docker-compose.yml file"
+        fi
+
+        return 0
+    fi
+
     # Check if Docker is installed
     if ! command_exists docker; then
         print_message $RED "Docker is required to run Ollama container"
@@ -486,7 +703,6 @@ install_ollama() {
             # Create docker-compose.yml file
             print_message $BLUE "Creating docker-compose.yml file..."
             cat > docker-compose.yml << EOL
-version: '3'
 services:
   neo4j:
     image: neo4j:latest
@@ -501,7 +717,7 @@ services:
 
   ollama:
     image: ollama/ollama:latest
-    container_name: ollama-instance
+    container_name: dsk-ollama-instance
     ports:
       - "11434:11434"
     volumes:
@@ -514,9 +730,55 @@ EOL
             print_message $GREEN "Created docker-compose.yml file"
         fi
 
+        # Check if there's a conflicting container using the same port
+        if docker ps | grep -q "0.0.0.0:11434"; then
+            print_message $RED "Port 11434 is already in use by another container"
+            print_message $YELLOW "Checking which container is using port 11434..."
+
+            # Find the container using port 11434
+            container_id=$(docker ps | grep "0.0.0.0:11434" | awk '{print $1}')
+            if [ -n "$container_id" ]; then
+                container_name=$(docker inspect --format='{{.Name}}' "$container_id" | sed 's/\///')
+                print_message $YELLOW "Container '$container_name' ($container_id) is using port 11434"
+
+                # Ask if the user wants to stop the conflicting container
+                print_message $YELLOW "Do you want to stop the conflicting container? (y/n)"
+                read -r stop_container
+                if [[ "$stop_container" =~ ^[Yy]$ ]]; then
+                    print_message $BLUE "Stopping container '$container_name'..."
+                    docker stop "$container_id"
+                    print_message $GREEN "Container stopped"
+                else
+                    print_message $YELLOW "Keeping the existing container. Ollama will not be started."
+                    return 1
+                fi
+            fi
+        fi
+
+        # Check if there's a conflicting container with the same name but not running
+        if docker ps -a | grep -q "dsk-ollama-instance"; then
+            print_message $YELLOW "A container named 'dsk-ollama-instance' exists but is not running"
+            print_message $YELLOW "Attempting to remove the conflicting container..."
+            docker rm -f dsk-ollama-instance >/dev/null 2>&1
+            print_message $GREEN "Conflicting container removed"
+        fi
+
         # Start Ollama container using docker-compose
         print_message $BLUE "Starting Ollama container using docker-compose..."
-        docker-compose up -d ollama
+        if ! docker-compose up -d ollama; then
+            print_message $RED "Failed to start Ollama container with docker-compose"
+            print_message $YELLOW "This could be due to port conflicts or other issues"
+            print_message $YELLOW "Checking if Ollama API is accessible despite the error..."
+
+            if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+                print_message $GREEN "Ollama API is accessible at http://localhost:11434 despite docker-compose error"
+                print_message $YELLOW "An Ollama service is already running. No need to start a new container."
+                return 0
+            else
+                print_message $RED "Ollama API is not accessible. Installation failed."
+                return 1
+            fi
+        fi
 
         # Wait for Ollama to start
         print_message $BLUE "Waiting for Ollama API to become available..."
@@ -534,12 +796,48 @@ EOL
 
         if [ $attempt -eq $max_attempts ]; then
             print_message $RED "Timed out waiting for Ollama API to become accessible"
-            print_message $YELLOW "You may need to check the container logs: docker-compose logs ollama"
+            print_message $YELLOW "Checking container status..."
+            docker ps | grep ollama
+            print_message $YELLOW "Recent logs from Ollama container:"
+            docker logs --tail 20 dsk-ollama-instance
             return 1
         fi
     else
         # Fallback to direct Docker commands
         print_message $BLUE "Docker Compose not found, using direct Docker commands"
+
+        # Check if there's a conflicting container using the same port
+        if docker ps | grep -q "0.0.0.0:11434"; then
+            print_message $RED "Port 11434 is already in use by another container"
+            print_message $YELLOW "Checking which container is using port 11434..."
+
+            # Find the container using port 11434
+            container_id=$(docker ps | grep "0.0.0.0:11434" | awk '{print $1}')
+            if [ -n "$container_id" ]; then
+                container_name=$(docker inspect --format='{{.Name}}' "$container_id" | sed 's/\///')
+                print_message $YELLOW "Container '$container_name' ($container_id) is using port 11434"
+
+                # Ask if the user wants to stop the conflicting container
+                print_message $YELLOW "Do you want to stop the conflicting container? (y/n)"
+                read -r stop_container
+                if [[ "$stop_container" =~ ^[Yy]$ ]]; then
+                    print_message $BLUE "Stopping container '$container_name'..."
+                    docker stop "$container_id"
+                    print_message $GREEN "Container stopped"
+                else
+                    print_message $YELLOW "Keeping the existing container. Ollama will not be started."
+                    return 1
+                fi
+            fi
+        fi
+
+        # Check if there's a conflicting container with the same name but not running
+        if docker ps -a | grep -q "dsk-ollama-instance"; then
+            print_message $YELLOW "A container named 'dsk-ollama-instance' exists but is not running"
+            print_message $YELLOW "Attempting to remove the conflicting container..."
+            docker rm -f dsk-ollama-instance >/dev/null 2>&1
+            print_message $GREEN "Conflicting container removed"
+        fi
 
         # Create a Docker volume for Ollama data
         print_message $BLUE "Creating Docker volume for Ollama data..."
@@ -547,11 +845,25 @@ EOL
 
         # Run Ollama container
         print_message $BLUE "Starting Ollama container..."
-        docker run -d \
-            --name ollama-instance \
+        if ! docker run -d \
+            --name dsk-ollama-instance \
             -p 11434:11434 \
             -v ollama-data:/root/.ollama \
-            ollama/ollama:latest
+            ollama/ollama:latest; then
+
+            print_message $RED "Failed to start Ollama container"
+            print_message $YELLOW "This could be due to port conflicts or other issues"
+            print_message $YELLOW "Checking if Ollama API is accessible despite the error..."
+
+            if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+                print_message $GREEN "Ollama API is accessible at http://localhost:11434 despite container error"
+                print_message $YELLOW "An Ollama service is already running. No need to start a new container."
+                return 0
+            else
+                print_message $RED "Ollama API is not accessible. Installation failed."
+                return 1
+            fi
+        fi
 
         # Wait for Ollama to start
         print_message $BLUE "Waiting for Ollama API to become available..."
@@ -569,7 +881,10 @@ EOL
 
         if [ $attempt -eq $max_attempts ]; then
             print_message $RED "Timed out waiting for Ollama API to become accessible"
-            print_message $YELLOW "You may need to check the container logs: docker logs ollama-instance"
+            print_message $YELLOW "Checking container status..."
+            docker ps | grep ollama
+            print_message $YELLOW "Recent logs from Ollama container:"
+            docker logs --tail 20 dsk-ollama-instance
             return 1
         fi
     fi
@@ -587,18 +902,36 @@ EOL
 setup_python_env() {
     print_message $BLUE "Setting up Python virtual environment..."
 
+    # Use the Python 3.12+ path found in check_dependencies
+    if [ -n "${PYTHON_PATH}" ]; then
+        python3="${PYTHON_PATH}"
+        python_version=$("$python3" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+        print_message $GREEN "Using Python $python_version at $python3"
+    else
+        print_message $RED "Python 3.12+ path not found. This should not happen."
+        print_message $YELLOW "Trying to use system python3 as fallback..."
+        python3="python3"
+    fi
+
     # Check if venv module is available
-    if ! python3 -c "import venv" &>/dev/null; then
+    if ! $python3 -c "import venv" &>/dev/null; then
         print_message $YELLOW "Python venv module not found. Installing venv module..."
 
         # Get Python version for specific package installation
-        python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+        python_version=$($python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
 
         if command_exists apt-get; then
+            # Fix apt_pkg module error
+            fix_apt_pkg
+
             print_message $BLUE "Attempting to install python${python_version}-venv package..."
-            sudo apt-get update
+            sudo apt-get update || true
             if ! sudo apt-get install -y python${python_version}-venv; then
                 print_message $YELLOW "Failed to install python${python_version}-venv. Trying python3-venv instead..."
+
+                # Fix apt_pkg module error again before next apt-get
+                fix_apt_pkg
+
                 if ! sudo apt-get install -y python3-venv; then
                     print_message $RED "Failed to install venv module. Please install it manually."
                     print_message $YELLOW "For Ubuntu/Debian: sudo apt-get install python3-venv"
@@ -613,44 +946,28 @@ setup_python_env() {
         fi
     fi
 
-    # Define possible virtual environment directories
-    VENV_DIRS=("venv" ".venv")
-    VENV_DIR=""
-    ACTIVATE_SCRIPT=""
+    # Always create a fresh virtual environment in the repository
+    VENV_DIR=".venv"
 
-    # Check if any existing virtual environment is valid
-    for dir in "${VENV_DIRS[@]}"; do
-        if [ -d "$dir" ] && [ -f "$dir/bin/activate" ]; then
-            VENV_DIR="$dir"
-            ACTIVATE_SCRIPT="$dir/bin/activate"
-            print_message $GREEN "Found valid virtual environment in ./$dir"
-            break
-        elif [ -d "$dir" ] && [ ! -f "$dir/bin/activate" ]; then
-            print_message $YELLOW "Found $dir directory but it doesn't contain an activate script."
-            print_message $YELLOW "This suggests the virtual environment is corrupted or incomplete."
-            print_message $YELLOW "Would you like to remove it and create a new one? (y/n)"
-            read -r recreate_venv
-            if [[ "$recreate_venv" =~ ^[Yy]$ ]]; then
-                rm -rf "$dir"
-                print_message $BLUE "Removed corrupted $dir directory."
-            fi
-        fi
-    done
-
-    # Create a new virtual environment if none exists
-    if [ -z "$VENV_DIR" ]; then
-        VENV_DIR="venv"  # Default to venv
-        print_message $BLUE "Creating virtual environment in ./$VENV_DIR..."
-        if ! python3 -m venv "$VENV_DIR"; then
-            print_message $RED "Failed to create virtual environment."
-            print_message $YELLOW "If you're using Python 3.12+, make sure python3-venv or equivalent is installed."
-            print_message $YELLOW "You can try: sudo apt-get install python3-venv"
-            print_message $YELLOW "Or for specific Python version: sudo apt-get install python3.X-venv"
-            exit 1
-        fi
-        ACTIVATE_SCRIPT="$VENV_DIR/bin/activate"
-        print_message $GREEN "Created virtual environment in ./$VENV_DIR"
+    # Remove existing virtual environment if it exists
+    if [ -d "$VENV_DIR" ]; then
+        print_message $YELLOW "Found existing virtual environment in ./$VENV_DIR"
+        print_message $YELLOW "Removing it to create a fresh one..."
+        rm -rf "$VENV_DIR"
     fi
+
+    # Create a new virtual environment
+    print_message $BLUE "Creating virtual environment in ./$VENV_DIR with Python 3.12+..."
+    if ! $python3 -m venv "$VENV_DIR"; then
+        print_message $RED "Failed to create virtual environment."
+        print_message $YELLOW "If you're using Python 3.12+, make sure python3-venv or equivalent is installed."
+        print_message $YELLOW "You can try: sudo apt-get install python3-venv"
+        print_message $YELLOW "Or for specific Python version: sudo apt-get install python3.12-venv"
+        exit 1
+    fi
+
+    ACTIVATE_SCRIPT="$VENV_DIR/bin/activate"
+    print_message $GREEN "Created virtual environment in ./$VENV_DIR using $python3"
 
     # Activate virtual environment
     if [ -f "$ACTIVATE_SCRIPT" ]; then
@@ -662,8 +979,16 @@ setup_python_env() {
         exit 1
     fi
 
-    # Upgrade pip
-    pip install --upgrade pip
+    # Check for pip in the virtual environment
+    if ! command -v pip &>/dev/null; then
+        print_message $RED "Error: pip not found in virtual environment"
+        print_message $YELLOW "Installing pip in the virtual environment..."
+        curl -sS https://bootstrap.pypa.io/get-pip.py | python
+    else
+        print_message $GREEN "Found pip in virtual environment"
+        # Upgrade pip
+        pip install --upgrade pip
+    fi
 
     print_message $GREEN "Python virtual environment set up successfully"
 }
@@ -744,17 +1069,104 @@ EOL
 configure_ollama() {
     print_message $BLUE "Configuring Ollama..."
 
+    # First, check if Ollama API is already accessible
+    print_message $BLUE "Checking if Ollama API is already accessible..."
+    if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+        print_message $GREEN "Ollama API is already accessible at http://localhost:11434"
+        print_message $YELLOW "An Ollama service is already running. No need to start a new container."
+
+        # Check if it's running in a Docker container
+        if docker ps | grep -q "ollama"; then
+            print_message $GREEN "Ollama is running in a Docker container"
+        else
+            print_message $YELLOW "Ollama is running, but not in a Docker container managed by this script."
+            print_message $YELLOW "This could be a native Ollama installation or a container with a different name."
+        fi
+
+        # Pull a default model if needed
+        print_message $BLUE "Checking for default model (llama2)..."
+        if ! curl -s http://localhost:11434/api/tags | grep -q "llama2"; then
+            print_message $BLUE "Downloading default model (llama2)..."
+            curl -X POST http://localhost:11434/api/pull -d '{"name": "llama2"}'
+            print_message $GREEN "Default model downloaded"
+        else
+            print_message $GREEN "Default model (llama2) is already available"
+        fi
+
+        return 0
+    fi
+
     # Check if docker-compose is available
     if command_exists docker-compose; then
         print_message $BLUE "Docker Compose is available, using it to manage Ollama container"
 
+        # Check if docker-compose.yml exists
+        if [ ! -f "docker-compose.yml" ]; then
+            print_message $YELLOW "docker-compose.yml file not found. Creating it..."
+            # Call install_ollama to create the docker-compose.yml file
+            install_ollama
+            return $?
+        fi
+
         # Check if the container is already running via docker-compose
-        if docker ps | grep -q "ollama-instance"; then
+        if docker ps | grep -q "dsk-ollama-instance"; then
             print_message $YELLOW "Ollama container is already running"
         else
+            # Check if there's a conflicting container using the same port
+            if docker ps | grep -q "0.0.0.0:11434"; then
+                print_message $RED "Port 11434 is already in use by another container"
+                print_message $YELLOW "Checking which container is using port 11434..."
+
+                # Find the container using port 11434
+                container_id=$(docker ps | grep "0.0.0.0:11434" | awk '{print $1}')
+                if [ -n "$container_id" ]; then
+                    container_name=$(docker inspect --format='{{.Name}}' "$container_id" | sed 's/\///')
+                    print_message $YELLOW "Container '$container_name' ($container_id) is using port 11434"
+
+                    # Ask if the user wants to stop the conflicting container
+                    print_message $YELLOW "Do you want to stop the conflicting container? (y/n)"
+                    read -r stop_container
+                    if [[ "$stop_container" =~ ^[Yy]$ ]]; then
+                        print_message $BLUE "Stopping container '$container_name'..."
+                        docker stop "$container_id"
+                        print_message $GREEN "Container stopped"
+                    else
+                        print_message $YELLOW "Keeping the existing container. Ollama will not be started."
+                        return 1
+                    fi
+                fi
+            fi
+
+            # Check for both old and new container names
+            if docker ps -a | grep -q "dsk-ollama-instance"; then
+                print_message $YELLOW "A container named 'dsk-ollama-instance' exists but is not running"
+                print_message $YELLOW "Attempting to remove the conflicting container..."
+                docker rm -f dsk-ollama-instance >/dev/null 2>&1
+                print_message $GREEN "Conflicting container removed"
+            elif docker ps -a | grep -q "ollama-instance"; then
+                print_message $YELLOW "A container named 'ollama-instance' exists but is not running"
+                print_message $YELLOW "Attempting to remove the conflicting container..."
+                docker rm -f ollama-instance >/dev/null 2>&1
+                print_message $GREEN "Conflicting container removed"
+            fi
+
             # Start the Ollama service using docker-compose
             print_message $BLUE "Starting Ollama container using docker-compose..."
-            docker-compose up -d ollama
+            if ! docker-compose up -d ollama; then
+                print_message $RED "Failed to start Ollama container with docker-compose"
+                print_message $YELLOW "This could be due to port conflicts or other issues"
+                print_message $YELLOW "Checking if Ollama API is accessible despite the error..."
+
+                if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+                    print_message $GREEN "Ollama API is accessible at http://localhost:11434 despite docker-compose error"
+                    print_message $YELLOW "An Ollama service is already running. No need to start a new container."
+                    return 0
+                else
+                    print_message $RED "Ollama API is not accessible. Installation failed."
+                    return 1
+                fi
+            fi
+
             print_message $GREEN "Ollama container started with docker-compose"
 
             # Wait for Ollama to start
@@ -771,6 +1183,15 @@ configure_ollama() {
                 sleep 2
             done
 
+            if [ $attempt -eq $max_attempts ]; then
+                print_message $RED "Timed out waiting for Ollama API to become accessible"
+                print_message $YELLOW "Checking container status..."
+                docker ps | grep ollama
+                print_message $YELLOW "Recent logs from Ollama container:"
+                docker logs --tail 20 dsk-ollama-instance
+                return 1
+            fi
+
             # Pull a default model
             print_message $BLUE "Downloading a default model (llama2)..."
             curl -X POST http://localhost:11434/api/pull -d '{"name": "llama2"}'
@@ -781,23 +1202,75 @@ configure_ollama() {
         print_message $BLUE "Docker Compose not found, using direct Docker commands"
 
         # Check if Ollama container is already running
-        if docker ps | grep -q "ollama-instance"; then
+        if docker ps | grep -q "dsk-ollama-instance"; then
             print_message $YELLOW "Ollama container is already running"
-        # Check if Ollama container exists but is not running
-        elif docker ps -a | grep -q "ollama-instance"; then
+        # Check for both old and new container names
+        elif docker ps -a | grep -q "dsk-ollama-instance"; then
             print_message $YELLOW "Ollama container exists but is not running. Starting it..."
-            docker start ollama-instance
-            print_message $GREEN "Ollama container started"
+            if ! docker start dsk-ollama-instance; then
+                print_message $RED "Failed to start existing Ollama container"
+                print_message $YELLOW "Removing the container and trying to create a new one..."
+                docker rm -f dsk-ollama-instance >/dev/null 2>&1
+                # Continue to the container creation code below
+            else
+                print_message $GREEN "Ollama container started"
+            fi
+        elif docker ps -a | grep -q "ollama-instance"; then
+            print_message $YELLOW "Old Ollama container exists but is not running."
+            print_message $YELLOW "Removing the old container and creating a new one with updated name..."
+            docker rm -f ollama-instance >/dev/null 2>&1
+            # Continue to the container creation code below
         else
+            # Check if there's a conflicting container using the same port
+            if docker ps | grep -q "0.0.0.0:11434"; then
+                print_message $RED "Port 11434 is already in use by another container"
+                print_message $YELLOW "Checking which container is using port 11434..."
+
+                # Find the container using port 11434
+                container_id=$(docker ps | grep "0.0.0.0:11434" | awk '{print $1}')
+                if [ -n "$container_id" ]; then
+                    container_name=$(docker inspect --format='{{.Name}}' "$container_id" | sed 's/\///')
+                    print_message $YELLOW "Container '$container_name' ($container_id) is using port 11434"
+
+                    # Ask if the user wants to stop the conflicting container
+                    print_message $YELLOW "Do you want to stop the conflicting container? (y/n)"
+                    read -r stop_container
+                    if [[ "$stop_container" =~ ^[Yy]$ ]]; then
+                        print_message $BLUE "Stopping container '$container_name'..."
+                        docker stop "$container_id"
+                        print_message $GREEN "Container stopped"
+                    else
+                        print_message $YELLOW "Keeping the existing container. Ollama will not be started."
+                        return 1
+                    fi
+                fi
+            fi
+
             # Create a Docker volume for Ollama data
+            print_message $BLUE "Creating Docker volume for Ollama data..."
             docker volume create ollama-data
 
             # Run Ollama container
-            docker run -d \
-                --name ollama-instance \
+            print_message $BLUE "Starting Ollama container..."
+            if ! docker run -d \
+                --name dsk-ollama-instance \
                 -p 11434:11434 \
                 -v ollama-data:/root/.ollama \
-                ollama/ollama:latest
+                ollama/ollama:latest; then
+
+                print_message $RED "Failed to start Ollama container"
+                print_message $YELLOW "This could be due to port conflicts or other issues"
+                print_message $YELLOW "Checking if Ollama API is accessible despite the error..."
+
+                if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+                    print_message $GREEN "Ollama API is accessible at http://localhost:11434 despite container error"
+                    print_message $YELLOW "An Ollama service is already running. No need to start a new container."
+                    return 0
+                else
+                    print_message $RED "Ollama API is not accessible. Installation failed."
+                    return 1
+                fi
+            fi
 
             print_message $GREEN "Ollama container started"
             print_message $YELLOW "Ollama API available at: http://localhost:11434"
@@ -815,6 +1288,15 @@ configure_ollama() {
                 print_message $YELLOW "Waiting for Ollama API to start (attempt $attempt/$max_attempts)..."
                 sleep 2
             done
+
+            if [ $attempt -eq $max_attempts ]; then
+                print_message $RED "Timed out waiting for Ollama API to become accessible"
+                print_message $YELLOW "Checking container status..."
+                docker ps | grep ollama
+                print_message $YELLOW "Recent logs from Ollama container:"
+                docker logs --tail 20 dsk-ollama-instance
+                return 1
+            fi
 
             # Pull a default model
             print_message $BLUE "Downloading a default model (llama2)..."
@@ -861,8 +1343,8 @@ main() {
     read -r install_isatools
     if [[ "$install_isatools" =~ ^[Yy]$ ]]; then
         print_message $BLUE "Which version of isatools would you like to install?"
-        print_message $YELLOW "1) Basic isatools (Python 3.10+, limited functionality)"
-        print_message $YELLOW "   - Compatible with Python 3.11 and 3.12"
+        print_message $YELLOW "1) Basic isatools (Python 3.12+, limited functionality)"
+        print_message $YELLOW "   - Compatible with Python 3.12+"
         print_message $YELLOW "   - Recommended for newer Python versions"
         print_message $YELLOW "2) Full isatools (Python 3.9, complete functionality)"
         print_message $YELLOW "   - Includes mzML file processing capabilities"
@@ -870,31 +1352,21 @@ main() {
         read -r isatools_version
 
         if [ "$isatools_version" -eq 1 ]; then
-            # Get current Python version
-            python_version=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-
-            if [[ $(echo "$python_version" | cut -d. -f1) -eq 3 && $(echo "$python_version" | cut -d. -f2) -ge 12 ]]; then
-                print_message $BLUE "Installing basic isatools for Python $python_version..."
-                pip install -e .[isatools]
-                print_message $GREEN "Basic isatools installed successfully"
-            else
-                print_message $BLUE "Installing basic isatools for Python $python_version..."
-                pip install -e .[isatools]
-                print_message $GREEN "Basic isatools installed successfully"
-                print_message $YELLOW "Note: For Python 3.12+, some additional compatibility fixes are available."
-                print_message $YELLOW "Would you like to run the Python 3.12+ compatibility script? (y/n)"
-                read -r run_compat_script
-                if [[ "$run_compat_script" =~ ^[Yy]$ ]]; then
-                    python install_isatools_py312.py
-                fi
-            fi
+            # We're already in a Python 3.12+ virtual environment
+            python_version=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+            print_message $BLUE "Installing basic isatools in virtual environment (Python $python_version)..."
+            pip install -e .[isatools]
+            print_message $GREEN "Basic isatools installed successfully"
+            print_message $BLUE "Running Python 3.12+ compatibility script..."
+            python install_isatools_py312.py
         elif [ "$isatools_version" -eq 2 ]; then
             print_message $BLUE "Installing full isatools for Python 3.9..."
             print_message $YELLOW "This will create a separate Python 3.9 environment."
             if command_exists conda; then
                 bash install_isatools.sh
             else
-                python install_isatools.py
+                # Use the system Python for this script since it will create its own environment
+                /usr/bin/python3 install_isatools.py
             fi
             print_message $GREEN "Full isatools installed successfully"
         else

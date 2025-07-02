@@ -135,12 +135,45 @@ def jupyter_sidebar():
             jupyter_host_ip = containers[0].attrs["NetworkSettings"]["IPAddress"] or "localhost"
             st.session_state['jupyter_host_ip'] = jupyter_host_ip
             url = f"http://{jupyter_host_ip}:{port}/?token={token}"
+
+            # Display multi-user information if enabled
+            if st.session_state["jupyter_enable_multi_user"]:
+                st.info("🔑 Multi-user mode is enabled")
+                st.markdown(f"**Admin User:** {st.session_state['jupyter_admin_user']}")
+                st.markdown(f"**Admin Password:** {'•' * len(st.session_state['jupyter_admin_password'])}")
+                st.markdown("Other users can access this Jupyter instance and create their own accounts.")
+
             st.markdown(f"[🔗 Open Jupyter in browser]({url})")
             if st.button("🛑 Stop Jupyter"):
                 stop_jupyter_container()
                 st.warning("Stopping Jupyter...")
         else:
             st.warning("Jupyter is not running.")
+
+            # Multi-user configuration
+            with st.expander("⚙️ Jupyter Configuration", expanded=False):
+                # Enable/disable multi-user functionality
+                enable_multi_user = st.toggle("Enable Multi-User Mode", 
+                                             value=st.session_state["jupyter_enable_multi_user"],
+                                             help="Allow multiple users to access the same Jupyter instance")
+                st.session_state["jupyter_enable_multi_user"] = enable_multi_user
+
+                if enable_multi_user:
+                    # Admin user configuration
+                    st.subheader("Admin User Configuration")
+                    admin_user = st.text_input("Admin Username", 
+                                              value=st.session_state["jupyter_admin_user"],
+                                              help="Username for the Jupyter admin user")
+                    admin_password = st.text_input("Admin Password", 
+                                                 value=st.session_state["jupyter_admin_password"],
+                                                 type="password",
+                                                 help="Password for the Jupyter admin user")
+
+                    st.session_state["jupyter_admin_user"] = admin_user
+                    st.session_state["jupyter_admin_password"] = admin_password
+
+                    st.info("The admin user will be created when Jupyter starts and can manage other users.")
+
             if st.button("🚀 Start Jupyter"):
                 start_jupyter_container()
                 st.success("Starting Jupyter... click again in a moment to get the link.")

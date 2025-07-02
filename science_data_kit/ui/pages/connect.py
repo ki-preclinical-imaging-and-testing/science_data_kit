@@ -8,10 +8,12 @@ The Server page handles server management, connections to data sources, and infr
 import streamlit as st
 from typing import Dict, Any, Optional, List, Union, Callable
 from pathlib import Path
+from datetime import datetime
+import docker
 
 from science_data_kit.ui.pages.base_page import BasePage
 from science_data_kit.ui.components.sidebar import render_database_sidebar, render_neo4j_container_sidebar
-from science_data_kit.ui.components.sidebar import render_jupyter_sidebar, render_neodash_sidebar
+from science_data_kit.ui.components.sidebar import render_jupyter_sidebar, render_neodash_sidebar, render_ollama_sidebar
 from science_data_kit.core.db.db_manager import Neo4jManager, db_manager
 
 class ServerPage(BasePage):
@@ -57,6 +59,13 @@ class ServerPage(BasePage):
             render_neodash_sidebar,
             on_start=self._on_neodash_start,
             on_stop=self._on_neodash_stop
+        )
+
+        # Add Ollama container management
+        self.add_sidebar_item(
+            render_ollama_sidebar,
+            on_start=self._on_ollama_start,
+            on_stop=self._on_ollama_stop
         )
 
     def _on_database_connect(self, uri: str, username: str, password: str, database: str, connection_name: str):
@@ -354,6 +363,172 @@ class ServerPage(BasePage):
                 st.session_state["neodash_url"] = ""
             st.error(f"Error stopping NeoDash: {e}")
 
+    def _on_ollama_start(self, port: int, version: str):
+        """
+        Handle Ollama start.
+
+        Args:
+            port: The port to use for Ollama.
+            version: The version of Ollama to use.
+        """
+        try:
+            # Import here to avoid circular imports
+            from science_data_kit.core.utils.ollama_utils import start_ollama_container, get_ollama_container_status, is_ollama_accessible
+            import time
+
+            # Display a message to the user
+            with st.spinner("Starting Ollama container..."):
+                # Check if Ollama API is already accessible before trying to start the container
+                ollama_url = f"http://localhost:{port}"
+                st.info(f"Checking if Ollama API is already accessible at {ollama_url}...")
+                if is_ollama_accessible(ollama_url):
+                    st.success(f"Ollama API is already accessible at {ollama_url}")
+                    st.session_state["ollama_url"] = ollama_url
+                    return
+
+                # Start the Ollama container
+                container_name = st.session_state.get("ollama_container_name", "dsk-ollama-instance")
+                st.info(f"Attempting to start Ollama container '{container_name}' with version '{version}' on port {port}...")
+
+                success, message = start_ollama_container(
+                    container_name=container_name,
+                    port=port,
+                    version=version
+                )
+
+                if not success:
+                    st.error(f"Failed to start Ollama container: {message}")
+                    # Clear the URL if it exists
+                    if "ollama_url" in st.session_state:
+                        st.session_state["ollama_url"] = ""
+                    return
+
+                # Give the container more time to initialize (Ollama can take longer to start)
+                st.info("Container started. Waiting for Ollama service to initialize...")
+                time.sleep(10)  # Wait 10 seconds for the container to initialize
+
+                # Verify the container is actually running
+                st.info("Checking container status...")
+                container_exists, container_status = get_ollama_container_status(container_name)
+
+                if not container_exists or container_status != "running":
+                    st.error(f"Ollama container exists: {container_exists}, status: {container_status}")
+                    # Clear the URL if it exists
+                    if "ollama_url" in st.session_state:
+                        st.session_state["ollama_url"] = ""
+                    return
+
+                # Check if the service is actually accessible
+                ollama_url = f"http://localhost:{port}"
+                if not ollama_url:  # Handle empty string case (shouldn't happen, but just in case)
+                    ollama_url = f"http://localhost:{port}"
+                st.info(f"Checking if Ollama service is accessible at {ollama_url}...")
+
+                # Try multiple times with a delay between attempts (more attempts and longer delays)
+                is_accessible = False
+                max_attempts = 6  # Increase from 3 to 6 attempts
+                for attempt in range(max_attempts):
+                    is_accessible = is_ollama_accessible(ollama_url)
+                    if is_accessible:
+                        st.success(f"Ollama API is accessible on attempt {attempt+1}/{max_attempts}")
+                        break
+
+                    # Increase wait time for later attempts
+                    wait_time = 5 + (attempt * 2)  # 5, 7, 9, 11, 13, 15 seconds
+                    st.info(f"Attempt {attempt+1}/{max_attempts}: Service not accessible yet. Waiting {wait_time} seconds...")
+                    time.sleep(wait_time)
+
+            # Final status update
+            # Prioritize API accessibility over container status
+            if is_accessible:
+                # If the API is accessible, consider it a success regardless of container status
+                st.session_state["ollama_url"] = ollama_url
+                st.success(f"Ollama API is accessible at {ollama_url}")
+
+                # If container status doesn't match but API is accessible, show an informational message
+                if not (container_exists and container_status == "running"):
+                    st.info(f"Note: Ollama API is accessible, but container '{container_name}' status is '{container_status}'. This may indicate that Ollama is running outside of Docker or with a different container name.")
+            elif success and container_exists and container_status == "running":
+                # Container is running but API is not accessible yet
+                st.session_state["ollama_url"] = ollama_url
+                st.warning(f"Ollama container is running but API is not yet accessible at {ollama_url}. It may need more time to initialize.")
+            else:
+                # Clear the URL if it exists
+                if "ollama_url" in st.session_state:
+                    st.session_state["ollama_url"] = ""
+
+                # Show a more informative message based on the issue
+                if container_exists and container_status == "running" and not is_accessible:
+                    # Get container logs to help diagnose the issue
+                    try:
+                        client = docker.from_env()
+                        container = client.containers.get(container_name)
+                        logs = container.logs(tail=30).decode('utf-8', errors='replace')
+
+                        st.warning(f"""
+                        Ollama container is running but service is not accessible at {ollama_url}.
+
+                        This could be due to:
+                        1. The service is still starting up (it may take up to a minute)
+                        2. The container is running but the Ollama service inside it failed to start
+                        3. There might be a port conflict or networking issue
+
+                        Recent container logs:
+                        ```
+                        {logs}
+                        ```
+
+                        Try stopping and starting the container again, or check the logs for more information.
+                        """)
+                    except Exception as log_error:
+                        st.warning(f"""
+                        Ollama container is running but service is not accessible at {ollama_url}.
+
+                        This could be due to:
+                        1. The service is still starting up (it may take up to a minute)
+                        2. The container is running but the Ollama service inside it failed to start
+                        3. There might be a port conflict or networking issue
+
+                        Could not retrieve container logs: {str(log_error)}
+
+                        Try stopping and starting the container again, or check the logs for more information.
+                        """)
+                else:
+                    st.warning(f"Failed to start Ollama: {message}")
+        except Exception as e:
+            # Clear the URL if it exists
+            if "ollama_url" in st.session_state:
+                st.session_state["ollama_url"] = ""
+            st.error(f"Error starting Ollama: {str(e)}")
+            import traceback
+            st.error(f"Traceback: {traceback.format_exc()}")
+
+    def _on_ollama_stop(self):
+        """Handle Ollama stop."""
+        try:
+            # Import here to avoid circular imports
+            from science_data_kit.core.utils.ollama_utils import stop_ollama_container
+
+            # Stop the Ollama container
+            success, message = stop_ollama_container(
+                st.session_state.get("ollama_container_name", "dsk-ollama-instance")
+            )
+
+            # Clear the URL from session state regardless of success
+            # This ensures the UI shows Ollama as stopped
+            if "ollama_url" in st.session_state:
+                st.session_state["ollama_url"] = ""
+
+            if success:
+                st.success("Ollama stopped")
+            else:
+                st.warning(f"Ollama stop issue: {message}")
+        except Exception as e:
+            # Clear the URL from session state even if there's an error
+            if "ollama_url" in st.session_state:
+                st.session_state["ollama_url"] = ""
+            st.error(f"Error stopping Ollama: {e}")
+
     def render_content(self) -> None:
         """Render the Server page content."""
         st.write("Manage your servers and connect to data sources.")
@@ -450,8 +625,41 @@ class ServerPage(BasePage):
                 else:
                     st.warning("NeoDash: Not running")
 
-            # Ollama status (placeholder)
-            st.info("Ollama: Not configured")
+            # Ollama status
+            # Import here to avoid circular imports
+            from science_data_kit.core.utils.ollama_utils import get_ollama_container_status, is_ollama_accessible
+
+            # Get URL from session state, use default if empty or not set
+            ollama_url = st.session_state.get("ollama_url", "")
+            if not ollama_url:  # Handle empty string case
+                ollama_url = "http://localhost:11434"
+            container_name = st.session_state.get("ollama_container_name", "dsk-ollama-instance")
+            container_exists, container_status = get_ollama_container_status(container_name)
+
+            # Check if the service is actually accessible
+            is_accessible = is_ollama_accessible(ollama_url)
+
+            # Prioritize API accessibility over container status
+            # If the API is accessible, consider it running regardless of container status
+            if is_accessible:
+                st.success(f"Ollama: Running at {ollama_url}")
+
+                # If container status doesn't match but API is accessible, show an informational message
+                if not (container_exists and container_status == "running"):
+                    st.info(f"Note: Ollama API is accessible, but container '{container_name}' status is '{container_status}'. This may indicate that Ollama is running outside of Docker or with a different container name.")
+            elif container_exists and container_status == "running":
+                # Container is running but API is not accessible yet
+                st.warning("Ollama: Container is running but service is not accessible")
+
+                # Keep the URL in session state in case the API becomes accessible later
+                if ollama_url:
+                    st.session_state["ollama_url"] = ollama_url
+            else:
+                # If the URL is set but API is not accessible and container is not running, clear the URL
+                if ollama_url:
+                    st.session_state["ollama_url"] = ""
+
+                st.warning("Ollama: Not running")
 
         # Database connection section
         st.header("Database Connections")
@@ -533,6 +741,49 @@ class ServerPage(BasePage):
                             st.write(f"Relationships: {rel_counts[0]['relationships']}")
                 except Exception as e:
                     st.error(f"Error fetching database information: {e}")
+
+                # Database Export/Import
+                with st.expander("Database Export/Import", expanded=False):
+                    st.write("Export or import the entire database.")
+
+                    # Export section
+                    st.subheader("Export Database")
+                    export_path = st.text_input("Export file path", 
+                                               value=f"neo4j_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl",
+                                               key="export_path")
+
+                    if st.button("Export Database", key="export_btn"):
+                        try:
+                            with st.spinner("Exporting database..."):
+                                success, message = self.db_manager.export_graph(export_path, connection_name=active_connection)
+
+                            if success:
+                                st.success(message)
+                            else:
+                                st.error(message)
+                        except Exception as e:
+                            st.error(f"Error exporting database: {e}")
+
+                    # Import section
+                    st.subheader("Import Database")
+                    st.warning("Importing will replace all data in the current database. Make sure to backup your data first.")
+
+                    import_path = st.text_input("Import file path", key="import_path")
+
+                    if st.button("Import Database", key="import_btn"):
+                        if not import_path:
+                            st.error("Please specify a file to import")
+                        else:
+                            try:
+                                with st.spinner("Importing database..."):
+                                    success, message = self.db_manager.import_graph(import_path, connection_name=active_connection)
+
+                                if success:
+                                    st.success(message)
+                                else:
+                                    st.error(message)
+                            except Exception as e:
+                                st.error(f"Error importing database: {e}")
             elif not active_connection:
                 st.info("No active connection. Use the sidebar to connect to a database.")
 
@@ -541,13 +792,14 @@ class ServerPage(BasePage):
         st.info("""
         The following features are currently under development:
 
-        - **Ollama Integration**: Will be available in a future update.
         - **PostgreSQL Connection**: Will be available in a future update.
         - **Filesystem Integrations**: Will be available in a future update.
 
         Neo4j container management is now available in the sidebar.
         Jupyter Lab integration with single/multi-user options is now available in the sidebar.
         NeoDash integration with Development/Production environment selection is now available in the sidebar.
+        Ollama integration is now available in the sidebar.
+        Database export/import functionality is now available for connected databases.
         """)
 
 def render_server_page():
