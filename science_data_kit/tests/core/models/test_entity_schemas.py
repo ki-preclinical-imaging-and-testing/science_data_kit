@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 from science_data_kit.core.models.entity_schemas import (
-    BaseEntity, Dataset, File, Entity, Relationship, OntologyTerm, validate_entity
+    VersionedEntity, BaseEntity, Dataset, File, Entity, Relationship, OntologyTerm, validate_entity
 )
 
 
@@ -20,7 +20,7 @@ class TestBaseEntity:
     def test_create_base_entity(self):
         """Test creating a BaseEntity instance."""
         entity = BaseEntity(id="test-id")
-        
+
         assert entity.id == "test-id"
         assert isinstance(entity.created_at, datetime)
         assert isinstance(entity.updated_at, datetime)
@@ -31,7 +31,7 @@ class TestBaseEntity:
         """Test creating a BaseEntity with custom properties."""
         properties = {"key1": "value1", "key2": 123}
         entity = BaseEntity(id="test-id", properties=properties)
-        
+
         assert entity.properties == properties
         assert entity.properties["key1"] == "value1"
         assert entity.properties["key2"] == 123
@@ -44,7 +44,7 @@ class TestDataset:
     def test_create_dataset(self):
         """Test creating a Dataset instance."""
         dataset = Dataset(id="dataset-001", name="Test Dataset")
-        
+
         assert dataset.id == "dataset-001"
         assert dataset.name == "Test Dataset"
         assert dataset.description == ""
@@ -58,7 +58,7 @@ class TestDataset:
         """Test creating a Dataset with all attributes."""
         files = ["file1.csv", "file2.txt"]
         metadata = {"author": "Test Author", "date": "2023-01-01"}
-        
+
         dataset = Dataset(
             id="dataset-001",
             name="Test Dataset",
@@ -67,7 +67,7 @@ class TestDataset:
             files=files,
             metadata=metadata
         )
-        
+
         assert dataset.id == "dataset-001"
         assert dataset.name == "Test Dataset"
         assert dataset.description == "A test dataset"
@@ -83,7 +83,7 @@ class TestFile:
     def test_create_file(self):
         """Test creating a File instance."""
         file = File(id="file-001", name="test.csv", path="/path/to/test.csv")
-        
+
         assert file.id == "file-001"
         assert file.name == "test.csv"
         assert file.path == "/path/to/test.csv"
@@ -96,7 +96,7 @@ class TestFile:
     def test_file_with_all_attributes(self):
         """Test creating a File with all attributes."""
         metadata = {"columns": ["id", "name"], "rows": 100}
-        
+
         file = File(
             id="file-001",
             name="test.csv",
@@ -106,7 +106,7 @@ class TestFile:
             dataset_id="dataset-001",
             metadata=metadata
         )
-        
+
         assert file.id == "file-001"
         assert file.name == "test.csv"
         assert file.path == "/path/to/test.csv"
@@ -123,7 +123,7 @@ class TestEntity:
     def test_create_entity(self):
         """Test creating an Entity instance."""
         entity = Entity(id="entity-001", name="Test Entity", label="TestLabel")
-        
+
         assert entity.id == "entity-001"
         assert entity.name == "Test Entity"
         assert entity.label == "TestLabel"
@@ -138,7 +138,7 @@ class TestEntity:
             {"target_id": "entity-002", "type": "RELATED_TO"},
             {"target_id": "entity-003", "type": "DEPENDS_ON"}
         ]
-        
+
         entity = Entity(
             id="entity-001",
             name="Test Entity",
@@ -147,7 +147,7 @@ class TestEntity:
             source="dataset-001",
             relationships=relationships
         )
-        
+
         assert entity.id == "entity-001"
         assert entity.name == "Test Entity"
         assert entity.label == "TestLabel"
@@ -170,7 +170,7 @@ class TestRelationship:
             target_id="entity-002",
             type="RELATED_TO"
         )
-        
+
         assert relationship.source_id == "entity-001"
         assert relationship.target_id == "entity-002"
         assert relationship.type == "RELATED_TO"
@@ -180,14 +180,14 @@ class TestRelationship:
     def test_relationship_with_properties(self):
         """Test creating a Relationship with properties."""
         properties = {"weight": 0.8, "since": "2023-01-01"}
-        
+
         relationship = Relationship(
             source_id="entity-001",
             target_id="entity-002",
             type="RELATED_TO",
             properties=properties
         )
-        
+
         assert relationship.source_id == "entity-001"
         assert relationship.target_id == "entity-002"
         assert relationship.type == "RELATED_TO"
@@ -203,7 +203,7 @@ class TestOntologyTerm:
     def test_create_ontology_term(self):
         """Test creating an OntologyTerm instance."""
         term = OntologyTerm(id="term-001", term="Test Term")
-        
+
         assert term.id == "term-001"
         assert term.term == "Test Term"
         assert term.term_accession == ""
@@ -219,12 +219,101 @@ class TestOntologyTerm:
             term_source="Example Ontology",
             definition="A test ontology term"
         )
-        
+
         assert term.id == "term-001"
         assert term.term == "Test Term"
         assert term.term_accession == "http://example.org/terms/test"
         assert term.term_source == "Example Ontology"
         assert term.definition == "A test ontology term"
+
+
+@pytest.mark.unit
+class TestVersionedEntity:
+    """Tests for the VersionedEntity class."""
+
+    def test_versioned_entity_default_version(self):
+        """Test that a versioned entity has a default version."""
+        entity = BaseEntity(id="test-id")
+
+        assert entity.version == "1.0"
+        assert BaseEntity.schema_version == "1.0"
+
+    def test_register_version(self):
+        """Test registering a schema version."""
+        # Define a new version of BaseEntity
+        @dataclass
+        class BaseEntityV2(BaseEntity):
+            schema_version = "2.0"
+            new_field: str = ""
+
+        # Register the new version
+        BaseEntity.register_version("2.0")
+        BaseEntityV2.register_version("2.0")
+
+        # Check that the version is registered
+        assert "2.0" in BaseEntity.schema_versions
+        assert BaseEntity.schema_versions["2.0"] == BaseEntity
+        assert "2.0" in BaseEntityV2.schema_versions
+        assert BaseEntityV2.schema_versions["2.0"] == BaseEntityV2
+
+    def test_get_version(self):
+        """Test getting a schema class for a specific version."""
+        # Define a new version of BaseEntity
+        @dataclass
+        class BaseEntityV2(BaseEntity):
+            schema_version = "2.0"
+            new_field: str = ""
+
+        # Register the new version
+        BaseEntityV2.register_version("2.0")
+
+        # Get the version
+        cls = BaseEntityV2.get_version("2.0")
+
+        # Check that the correct class is returned
+        assert cls == BaseEntityV2
+
+        # Check that getting a non-existent version raises an error
+        with pytest.raises(ValueError):
+            BaseEntityV2.get_version("3.0")
+
+    def test_migrate(self):
+        """Test migrating an entity from one version to another."""
+        # Define a new version of Dataset
+        @dataclass
+        class DatasetV2(Dataset):
+            schema_version = "2.0"
+            new_field: str = "default_value"
+
+        # Register the new version
+        DatasetV2.register_version("2.0")
+
+        # Create a dataset with version 1.0
+        dataset_v1 = Dataset(id="dataset-001", name="Test Dataset")
+
+        # Migrate to version 2.0
+        dataset_v2 = DatasetV2.migrate(dataset_v1, "2.0")
+
+        # Check that the migrated entity has the correct version and fields
+        assert dataset_v2.version == "2.0"
+        assert dataset_v2.id == dataset_v1.id
+        assert dataset_v2.name == dataset_v1.name
+        assert dataset_v2.new_field == "default_value"
+
+        # Check that migrating to a non-existent version raises an error
+        with pytest.raises(ValueError):
+            DatasetV2.migrate(dataset_v1, "3.0")
+
+    def test_migrate_same_version(self):
+        """Test migrating an entity to the same version."""
+        # Create a dataset with version 1.0
+        dataset = Dataset(id="dataset-001", name="Test Dataset")
+
+        # Migrate to the same version
+        migrated = Dataset.migrate(dataset, "1.0")
+
+        # Check that the same entity is returned
+        assert migrated is dataset
 
 
 @pytest.mark.unit
@@ -235,7 +324,7 @@ class TestValidateEntity:
         """Test validating a valid entity."""
         entity = Dataset(id="dataset-001", name="Test Dataset")
         errors = validate_entity(entity, Dataset)
-        
+
         assert len(errors) == 0
 
     def test_validate_invalid_entity(self):
@@ -243,7 +332,7 @@ class TestValidateEntity:
         # Create a BaseEntity but try to validate it as a Dataset
         entity = BaseEntity(id="test-id")
         errors = validate_entity(entity, Dataset)
-        
+
         assert len(errors) > 0
         assert any("Missing required field: name" in error for error in errors)
 
@@ -254,9 +343,9 @@ class TestValidateEntity:
             def __init__(self):
                 self.id = "test-id"
                 self.name = 123  # Should be a string
-        
+
         entity = InvalidEntity()
         errors = validate_entity(entity, Dataset)
-        
+
         assert len(errors) > 0
         assert any("Field name has invalid type" in error for error in errors)

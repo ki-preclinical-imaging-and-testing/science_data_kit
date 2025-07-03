@@ -1,0 +1,497 @@
+openapi: 3.0.0
+info:
+  title: Science Data Kit API
+  description: |
+    API for the Science Data Kit, providing access to session management and database operations.
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Base API path
+paths:
+  /session:
+    get:
+      summary: Get session information
+      description: Retrieves information about the current session.
+      tags:
+        - Session
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Session information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      summary: Create a new session
+      description: Creates a new session with the provided data.
+      tags:
+        - Session
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionCreate'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    put:
+      summary: Update a session
+      description: Updates an existing session with the provided data.
+      tags:
+        - Session
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionUpdate'
+      responses:
+        '200':
+          description: Session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      summary: Delete a session
+      description: Deletes an existing session.
+      tags:
+        - Session
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Session deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /session/login:
+    post:
+      summary: Log in
+      description: Authenticates a user and creates a new session token.
+      tags:
+        - Session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginCredentials'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /session/logout:
+    delete:
+      summary: Log out
+      description: Logs out the current user by revoking their session token.
+      tags:
+        - Session
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /database:
+    get:
+      summary: Get database information
+      description: Retrieves information about the database.
+      tags:
+        - Database
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Database information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      summary: Create a new database
+      description: Creates a new database with the provided data.
+      tags:
+        - Database
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatabaseCreate'
+      responses:
+        '201':
+          description: Database created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    put:
+      summary: Update a database
+      description: Updates an existing database with the provided data.
+      tags:
+        - Database
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatabaseUpdate'
+      responses:
+        '200':
+          description: Database updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      summary: Delete a database
+      description: Deletes an existing database.
+      tags:
+        - Database
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Database deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /database/query:
+    get:
+      summary: Execute a query
+      description: Executes a database query with the provided parameters.
+      tags:
+        - Database
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          description: The query to execute
+          required: true
+          schema:
+            type: string
+        - name: params
+          in: query
+          description: Parameters for the query
+          required: false
+          schema:
+            type: object
+      responses:
+        '200':
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResults'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      summary: Execute a query
+      description: Executes a database query with the provided data.
+      tags:
+        - Database
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResults'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    SessionInfo:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user associated with the session
+        roles:
+          type: array
+          items:
+            type: string
+          description: The roles assigned to the user
+        permissions:
+          type: array
+          items:
+            type: string
+          description: The permissions granted to the user
+        expires_at:
+          type: string
+          format: date-time
+          description: The expiration time of the session
+    SessionCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the session
+        metadata:
+          type: object
+          description: Additional metadata for the session
+      required:
+        - name
+    SessionCreated:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A success message
+        session_id:
+          type: string
+          description: The ID of the created session
+    SessionUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The new name of the session
+        metadata:
+          type: object
+          description: Updated metadata for the session
+    SessionUpdated:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A success message
+    SessionDeleted:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A success message
+    LoginCredentials:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: The ID of the user
+        password:
+          type: string
+          description: The password of the user
+      required:
+        - user_id
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: The authentication token
+        expires_at:
+          type: string
+          format: date-time
+          description: The expiration time of the token
+        user_id:
+          type: string
+          description: The ID of the authenticated user
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A success message
+    DatabaseInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the database
+        version:
+          type: string
+          description: The version of the database
+        status:
+          type: string
+          description: The status of the database
+    DatabaseCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the database
+        config:
+          type: object
+          description: Configuration for the database
+      required:
+        - name
+    DatabaseCreated:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A success message
+        database_id:
+          type: string
+          description: The ID of the created database
+    DatabaseUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The new name of the database
+        config:
+          type: object
+          description: Updated configuration for the database
+    DatabaseUpdated:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A success message
+    DatabaseDeleted:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A success message
+    QueryRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          description: The query to execute
+        params:
+          type: object
+          description: Parameters for the query
+      required:
+        - query
+    QueryResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+          description: The results of the query
+        count:
+          type: integer
+          description: The number of results
+        execution_time:
+          type: number
+          format: float
+          description: The execution time of the query in seconds
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: The error code
+        message:
+          type: string
+          description: The error message
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServerError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
