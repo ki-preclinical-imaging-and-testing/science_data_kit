@@ -31,12 +31,12 @@ class APIErrorCode(Enum):
 
 class APIError(Exception):
     """Base exception for API-related errors."""
-    
+
     def __init__(self, message: str, code: APIErrorCode = APIErrorCode.UNKNOWN_ERROR, 
                  status_code: int = 500, details: Optional[Dict[str, Any]] = None):
         """
         Initialize the API error.
-        
+
         Args:
             message: The error message.
             code: The error code.
@@ -48,11 +48,11 @@ class APIError(Exception):
         self.status_code = status_code
         self.details = details or {}
         super().__init__(message)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert the error to a dictionary.
-        
+
         Returns:
             A dictionary representation of the error.
         """
@@ -67,12 +67,12 @@ class APIError(Exception):
 
 class APIResponse:
     """Class for formatting API responses."""
-    
+
     def __init__(self, data: Any = None, meta: Optional[Dict[str, Any]] = None, 
                  status_code: int = 200, headers: Optional[Dict[str, str]] = None):
         """
         Initialize the API response.
-        
+
         Args:
             data: The response data.
             meta: Metadata about the response.
@@ -83,11 +83,11 @@ class APIResponse:
         self.meta = meta or {}
         self.status_code = status_code
         self.headers = headers or {}
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert the response to a dictionary.
-        
+
         Returns:
             A dictionary representation of the response.
         """
@@ -97,11 +97,11 @@ class APIResponse:
         if self.meta:
             result["meta"] = self.meta
         return result
-    
+
     def to_json(self) -> str:
         """
         Convert the response to a JSON string.
-        
+
         Returns:
             A JSON string representation of the response.
         """
@@ -110,82 +110,134 @@ class APIResponse:
 
 class APIBase(ABC):
     """Base class for API endpoints."""
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Initialize the API endpoint.
-        
+
         Args:
             config: Configuration for the API endpoint.
         """
         self.config = config or {}
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    
+
+        # Initialize rate limiter if configured
+        self.rate_limiter = None
+        if self.config.get("rate_limiting", {}).get("enabled", False):
+            from .rate_limiter import RateLimiter, RateLimitRule, RateLimitStrategy
+
+            # Create rate limiter with configured rules
+            self.rate_limiter = RateLimiter()
+
+            # Add default rules if configured
+            default_rules = self.config.get("rate_limiting", {}).get("rules", [])
+            for rule_config in default_rules:
+                rule = RateLimitRule(
+                    requests=rule_config.get("requests", 100),
+                    period=rule_config.get("period", 60),
+                    strategy=RateLimitStrategy(rule_config.get("strategy", "fixed_window")),
+                    scope=rule_config.get("scope", "user"),
+                    endpoints=set(rule_config.get("endpoints", [])),
+                    methods=set(rule_config.get("methods", []))
+                )
+                self.rate_limiter.add_rule(rule)
+
     @abstractmethod
     def handle_request(self, method: str, path: str, params: Dict[str, Any], 
                        body: Optional[Dict[str, Any]] = None, 
                        headers: Optional[Dict[str, str]] = None) -> APIResponse:
         """
         Handle an API request.
-        
+
         Args:
             method: The HTTP method (GET, POST, PUT, DELETE, etc.).
             path: The request path.
             params: The query parameters.
             body: The request body.
             headers: The request headers.
-            
+
         Returns:
             An APIResponse object.
-            
+
         Raises:
             APIError: If there is an error handling the request.
         """
         pass
-    
+
+    def check_rate_limit(self, identifier: str, endpoint: str, method: str) -> Dict[str, str]:
+        """
+        Check if a request is allowed based on rate limit rules.
+
+        Args:
+            identifier: The identifier for the request (e.g., user ID, IP address).
+            endpoint: The endpoint being requested.
+            method: The HTTP method being used.
+
+        Returns:
+            A dictionary of rate limit headers.
+
+        Raises:
+            APIError: If the rate limit has been exceeded.
+        """
+        if not self.rate_limiter:
+            return {}
+
+        allowed, rate_limit_info = self.rate_limiter.check_rate_limit(identifier, endpoint, method)
+        headers = self.rate_limiter.get_rate_limit_headers(rate_limit_info)
+
+        if not allowed:
+            raise APIError(
+                message="Rate limit exceeded",
+                code=APIErrorCode.RATE_LIMIT_EXCEEDED,
+                status_code=429,
+                details={"rate_limit_info": rate_limit_info}
+            )
+
+        return headers
+
     def validate_request(self, method: str, path: str, params: Dict[str, Any], 
                          body: Optional[Dict[str, Any]] = None, 
                          headers: Optional[Dict[str, str]] = None) -> None:
         """
         Validate an API request.
-        
+
         Args:
             method: The HTTP method (GET, POST, PUT, DELETE, etc.).
             path: The request path.
             params: The query parameters.
             body: The request body.
             headers: The request headers.
-            
+
         Raises:
             APIError: If the request is invalid.
         """
         # Default implementation does nothing
         pass
-    
+
     def format_response(self, data: Any, meta: Optional[Dict[str, Any]] = None, 
                         status_code: int = 200, 
                         headers: Optional[Dict[str, str]] = None) -> APIResponse:
         """
         Format an API response.
-        
+
         Args:
             data: The response data.
             meta: Metadata about the response.
             status_code: The HTTP status code.
             headers: Additional HTTP headers.
-            
+
         Returns:
             An APIResponse object.
         """
         return APIResponse(data=data, meta=meta, status_code=status_code, headers=headers)
-    
+
     def handle_error(self, error: Exception) -> APIResponse:
         """
         Handle an error.
-        
+
         Args:
             error: The error to handle.
-            
+
         Returns:
             An APIResponse object.
         """
