@@ -66,7 +66,7 @@ The Science Data Kit follows a modular architecture with clear separation of con
   - File system utilities for scanning and analyzing files
   - Data models for representing entities and relationships
   - Visualization utilities for creating interactive visualizations
-  - ISA compatibility layer for working with Investigation-Study-Assay data models
+  - Ontology module for working with ontologies and semantic data models
 
 ### UI Components
 

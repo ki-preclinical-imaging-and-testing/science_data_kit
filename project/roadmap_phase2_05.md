@@ -1,8 +1,19 @@
-# Science Data Kit (SDK) Phase 2 Roadmap
+# Science Data Kit (SDK) Phase 2 Roadmap - Version 05
 
 ## Overview
 
 This document outlines the roadmap for Phase 2 of the Science Data Kit (SDK) development. Building on the solid foundation established in Phase 1, Phase 2 will focus on enhancing and expanding the SDK with advanced features, performance optimization, improved user experience, and comprehensive ontology integration.
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 05 | 2025-07-06 | Updated status of file tree processing, data validation, and parameterized query templates tasks, and added implementation details |
+| 04 | 2025-07-05 | Updated status of data transformation pipelines and query caching tasks, and added implementation details |
+| 03 | 2025-07-04 | Updated status of session management tasks (automatic session recovery and resource access control) and added implementation details |
+| 02 | 2025-07-03 | Updated status of data source connectors and added implementation details |
+| 01 | 2025-07-02 | Updated status of session management tasks and added implementation details |
+| 00 | 2025-06-17 | Initial roadmap for Phase 2 |
 
 ## Background
 
@@ -36,21 +47,21 @@ The primary goals for Phase 2 are:
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement session saving and loading | High | To Do | Allow users to save and restore their work environment |
-| Create session configuration format | High | To Do | Define a format for storing session state |
-| Add metadata annotations for resources | Medium | To Do | Allow users to annotate resources with access information |
-| Implement automatic session recovery | Medium | To Do | Recover from crashes by restoring the last session state |
-| Add session versioning | Low | To Do | Track changes to session configurations over time |
+| Implement session saving and loading | High | Completed | Implemented in science_data_kit/core/session/config.py and session.py |
+| Create session configuration format | High | Completed | Defined SessionConfig class with metadata, resources, and connections |
+| Add metadata annotations for resources | Medium | Completed | Added metadata support in Resource class |
+| Implement automatic session recovery | Medium | Completed | Added functions for automatic session recovery, including signal handlers, exit handlers, and autosave functionality |
+| Add session versioning | Low | Completed | Added version field to SessionConfig |
 
 #### 1.2 Resource Management
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement resource registry | High | To Do | Create a central registry for all resources |
-| Add resource dependency tracking | High | To Do | Track dependencies between resources |
-| Create resource status monitoring | Medium | To Do | Monitor the status of resources and connections |
-| Implement resource cleanup utilities | Medium | To Do | Properly clean up resources when they are no longer needed |
-| Add resource access control | Low | To Do | Control access to resources based on user permissions |
+| Implement resource registry | High | Completed | Created ResourceRegistry class in science_data_kit/core/session/registry.py |
+| Add resource dependency tracking | High | Completed | Implemented dependency tracking in Resource class |
+| Create resource status monitoring | Medium | Completed | Added status field and update_status method to Resource class |
+| Implement resource cleanup utilities | Medium | Completed | Added unregister_resource method to ResourceRegistry |
+| Add resource access control | Low | Completed | Implemented ResourcePermission class and added permission management methods to Resource class |
 
 ### 2. Multimodal Data Integration
 
@@ -58,8 +69,8 @@ The primary goals for Phase 2 are:
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement Office 365 connector | High | To Do | Connect to OneDrive/SharePoint spreadsheets and files |
-| Create Dropbox connector | High | To Do | Connect to Dropbox files and folders |
+| Implement Office 365 connector | High | Completed | Implemented MSGraphProvider in science_data_kit/core/providers/api/msgraph_provider.py |
+| Create Dropbox connector | High | Completed | Implemented DropboxProvider in science_data_kit/core/providers/storage/dropbox_provider.py |
 | Add Google Drive connector | Medium | To Do | Connect to Google Drive files and folders |
 | Implement local storage connector | Medium | To Do | Connect to local files and network mountpoints |
 | Add support for custom connectors | Low | To Do | Allow users to create custom connectors |
@@ -68,10 +79,10 @@ The primary goals for Phase 2 are:
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Create pipeline configuration format | High | To Do | Define a format for configuring data transformation pipelines |
-| Implement tabular data mapping | High | To Do | Map tabular data to nodes with properties |
-| Add support for file tree processing | Medium | To Do | Process folder structures and file metadata |
-| Implement data validation in pipelines | Medium | To Do | Validate data during transformation |
+| Create pipeline configuration format | High | Completed | Implemented PipelineConfig class in science_data_kit/core/pipeline/config.py with support for YAML and JSON formats |
+| Implement tabular data mapping | High | Completed | Created TabularDataMapper class in science_data_kit/core/pipeline/transform.py for mapping tabular data to nodes and relationships |
+| Add support for file tree processing | Medium | Completed | Implemented FileTreeProcessor class in science_data_kit/core/pipeline/transform.py for processing directory structures and file metadata |
+| Implement data validation in pipelines | Medium | Completed | Created DataValidator class in science_data_kit/core/pipeline/transform.py with support for validation rules and actions |
 | Create pipeline templates | Low | To Do | Provide templates for common data transformation scenarios |
 
 ### 3. Advanced Database Features
@@ -80,8 +91,8 @@ The primary goals for Phase 2 are:
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement query caching | High | To Do | Cache frequent queries to reduce database load |
-| Create parameterized query templates | High | To Do | Standardize common queries for better performance and security |
+| Implement query caching | High | Completed | Created QueryCache class in science_data_kit/core/db/cache.py and added caching to execute_query method |
+| Create parameterized query templates | High | Completed | Implemented QueryTemplate and QueryTemplateRegistry classes in science_data_kit/core/db/query_templates.py with common query templates |
 | Add query logging and performance metrics | Medium | To Do | Monitor and optimize slow queries |
 | Implement pagination for large result sets | Medium | To Do | Improve handling of large datasets |
 | Develop advanced filtering capabilities | Medium | To Do | Allow more complex and efficient data filtering |
@@ -217,15 +228,20 @@ The primary goals for Phase 2 are:
 
 ### Phase 2.1: Session Management and Data Integration (Months 1-2)
 
-- Implement session saving and loading
-- Create resource registry
-- Implement Office 365 and Dropbox connectors
-- Create pipeline configuration format
-- Implement tabular data mapping
+- Implement session saving and loading ✓
+- Create resource registry ✓
+- Implement automatic session recovery ✓
+- Add resource access control ✓
+- Implement Office 365 and Dropbox connectors ✓
+- Create pipeline configuration format ✓
+- Implement tabular data mapping ✓
+- Add support for file tree processing ✓
+- Implement data validation in pipelines ✓
 
 ### Phase 2.2: Database and Performance (Months 3-4)
 
-- Implement query caching and parameterized query templates
+- Implement query caching ✓
+- Create parameterized query templates ✓
 - Create relationship management utilities
 - Profile and optimize critical code paths
 - Optimize Neo4j configuration
@@ -254,6 +270,64 @@ The primary goals for Phase 2 are:
 - Implement responsive design and accessibility features
 - Add support for additional platform integrations
 
+## Current Status
+
+Significant progress has been made on the Phase 2 roadmap, with the following components completed:
+
+1. **Session Management**: Implemented a comprehensive session management system with the following features:
+   - Session Configuration Format: Defined SessionConfig class with metadata, resources, and connections
+   - Session Saving and Loading: Created functions to save and load session configurations from/to files (supporting both YAML and JSON formats)
+   - Resource Registry: Implemented a ResourceRegistry class that manages resources, including registering, tracking, and accessing resources
+   - Resource Dependency Tracking: Added support for tracking dependencies between resources
+   - Resource Status Monitoring: Implemented status tracking for resources
+   - Session Versioning: Added version field to SessionConfig
+   - Automatic Session Recovery: Implemented functions for automatic session recovery, including signal handlers, exit handlers, and autosave functionality
+   - Resource Access Control: Added ResourcePermission class and methods for managing permissions in the Resource class
+
+2. **Data Source Connectors**: Implemented key data source connectors for accessing external data:
+   - Office 365 Connector: Created MSGraphProvider in science_data_kit/core/providers/api/msgraph_provider.py for accessing Microsoft 365 services, including OneDrive files, Excel spreadsheets, and SharePoint data
+   - Dropbox Connector: Implemented DropboxProvider in science_data_kit/core/providers/storage/dropbox_provider.py for accessing CSV and Excel files stored in Dropbox
+
+3. **Data Transformation Pipelines**: Implemented core components for data transformation:
+   - Pipeline Configuration Format: Created PipelineConfig class in science_data_kit/core/pipeline/config.py that defines a flexible format for configuring data transformation pipelines, with support for YAML and JSON formats
+   - Tabular Data Mapping: Implemented TabularDataMapper class in science_data_kit/core/pipeline/transform.py that converts tabular data (e.g., CSV, Excel) into nodes and relationships for a knowledge graph, with support for different node label strategies and relationship strategies
+   - File Tree Processing: Implemented FileTreeProcessor class in science_data_kit/core/pipeline/transform.py that processes directory structures and file metadata, creating nodes for directories and files and relationships between them
+   - Data Validation: Created DataValidator class in science_data_kit/core/pipeline/transform.py that validates data against a set of rules to ensure data quality before further processing or loading into a knowledge graph
+
+4. **Query Optimization**: Implemented database enhancements:
+   - Query Caching: Created QueryCache class in science_data_kit/core/db/cache.py that provides an in-memory cache for database queries with TTL expiration, and added caching to the execute_query method in Neo4jManager
+   - Parameterized Query Templates: Implemented QueryTemplate and QueryTemplateRegistry classes in science_data_kit/core/db/query_templates.py that provide a way to define reusable query templates with named parameters, validation, and documentation, along with a set of common query templates for standardized database operations
+
+The session management implementation follows a modular and extensible design, allowing for easy integration with other components of the SDK. The automatic session recovery functionality ensures that users can recover their work environment in case of crashes or unexpected terminations. The resource access control system provides a flexible way to manage permissions for resources, allowing for multi-user scenarios.
+
+The data source connectors provide a consistent interface for accessing data from different sources, with support for listing files, downloading file data, and working with spreadsheets.
+
+The data transformation pipeline implementation provides a flexible and configurable way to transform data from various sources into a knowledge graph. The pipeline configuration format allows users to define complex transformation pipelines with multiple steps, and the tabular data mapping functionality enables converting tabular data to nodes and relationships with customizable mapping rules. The file tree processor allows users to process directory structures and file metadata, and the data validator ensures data quality before loading into the knowledge graph.
+
+The query optimization features improve performance and code reusability. The query caching implementation improves performance for frequently executed queries by caching the results in memory, with support for time-to-live expiration and cache invalidation. The parameterized query templates provide a way to standardize common queries for better performance, security, and code reusability.
+
+## Next Steps
+
+The next priorities for Phase 2 development are:
+
+1. **Complete Data Integration**: 
+   - Create pipeline templates for common data transformation scenarios
+   - Implement Google Drive and local storage connectors
+
+2. **Continue Database Enhancements**:
+   - Add query logging and performance metrics
+   - Implement pagination for large result sets
+   - Develop advanced filtering capabilities
+
+3. **Begin API Layer Development**:
+   - Design comprehensive API architecture
+   - Implement RESTful API endpoints
+   - Add authentication and authorization
+
+4. **Write Tests and Documentation**:
+   - Create comprehensive tests for the data transformation pipelines, data validation, and query templates
+   - Document the new features and provide examples of how to use them
+
 ## Success Metrics
 
 - **Session Management**: Successfully save and restore complex work environments with multiple connections
@@ -263,11 +337,3 @@ The primary goals for Phase 2 are:
 - **Integration**: Successfully integrate with at least 3 new platforms (NExtSEEK, FAIRDOM-Hub, etc.)
 - **API Usage**: At least 10 external applications using the SDK API
 - **Community**: Increase in community contributions and adoption
-
-## Conclusion
-
-Phase 2 of the Science Data Kit development represents a significant step forward in the evolution of the SDK. By focusing on session management, multimodal data integration, advanced features, performance optimization, and user experience improvements, Phase 2 will transform the SDK from a solid foundation into a comprehensive and powerful tool for scientific data management and analysis.
-
-The roadmap outlined in this document provides a clear path forward, with specific tasks, priorities, and timelines. The implementation of robust session management will allow users to save and restore their work environment, including server connections, data sources, and pipelines. The multimodal data integration capabilities will support various data sources and formats, with configurable pipelines for transforming and mapping data into the knowledge graph.
-
-As development progresses, this roadmap will be updated to reflect completed tasks, new priorities, and evolving requirements. The end result will be a more streamlined and consolidated application that provides a seamless experience for scientists working with diverse data sources and complex knowledge graphs.

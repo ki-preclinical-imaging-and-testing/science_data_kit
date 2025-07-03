@@ -1,8 +1,16 @@
-# Science Data Kit (SDK) Phase 2 Roadmap
+# Science Data Kit (SDK) Phase 2 Roadmap - Version 02
 
 ## Overview
 
 This document outlines the roadmap for Phase 2 of the Science Data Kit (SDK) development. Building on the solid foundation established in Phase 1, Phase 2 will focus on enhancing and expanding the SDK with advanced features, performance optimization, improved user experience, and comprehensive ontology integration.
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 02 | 2025-07-03 | Updated status of data source connectors and added implementation details |
+| 01 | 2025-07-02 | Updated status of session management tasks and added implementation details |
+| 00 | 2025-06-17 | Initial roadmap for Phase 2 |
 
 ## Background
 
@@ -36,20 +44,20 @@ The primary goals for Phase 2 are:
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement session saving and loading | High | To Do | Allow users to save and restore their work environment |
-| Create session configuration format | High | To Do | Define a format for storing session state |
-| Add metadata annotations for resources | Medium | To Do | Allow users to annotate resources with access information |
+| Implement session saving and loading | High | Completed | Implemented in science_data_kit/core/session/config.py and session.py |
+| Create session configuration format | High | Completed | Defined SessionConfig class with metadata, resources, and connections |
+| Add metadata annotations for resources | Medium | Completed | Added metadata support in Resource class |
 | Implement automatic session recovery | Medium | To Do | Recover from crashes by restoring the last session state |
-| Add session versioning | Low | To Do | Track changes to session configurations over time |
+| Add session versioning | Low | Completed | Added version field to SessionConfig |
 
 #### 1.2 Resource Management
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement resource registry | High | To Do | Create a central registry for all resources |
-| Add resource dependency tracking | High | To Do | Track dependencies between resources |
-| Create resource status monitoring | Medium | To Do | Monitor the status of resources and connections |
-| Implement resource cleanup utilities | Medium | To Do | Properly clean up resources when they are no longer needed |
+| Implement resource registry | High | Completed | Created ResourceRegistry class in science_data_kit/core/session/registry.py |
+| Add resource dependency tracking | High | Completed | Implemented dependency tracking in Resource class |
+| Create resource status monitoring | Medium | Completed | Added status field and update_status method to Resource class |
+| Implement resource cleanup utilities | Medium | Completed | Added unregister_resource method to ResourceRegistry |
 | Add resource access control | Low | To Do | Control access to resources based on user permissions |
 
 ### 2. Multimodal Data Integration
@@ -58,8 +66,8 @@ The primary goals for Phase 2 are:
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement Office 365 connector | High | To Do | Connect to OneDrive/SharePoint spreadsheets and files |
-| Create Dropbox connector | High | To Do | Connect to Dropbox files and folders |
+| Implement Office 365 connector | High | Completed | Implemented MSGraphProvider in science_data_kit/core/providers/api/msgraph_provider.py |
+| Create Dropbox connector | High | Completed | Implemented DropboxProvider in science_data_kit/core/providers/storage/dropbox_provider.py |
 | Add Google Drive connector | Medium | To Do | Connect to Google Drive files and folders |
 | Implement local storage connector | Medium | To Do | Connect to local files and network mountpoints |
 | Add support for custom connectors | Low | To Do | Allow users to create custom connectors |
@@ -217,9 +225,9 @@ The primary goals for Phase 2 are:
 
 ### Phase 2.1: Session Management and Data Integration (Months 1-2)
 
-- Implement session saving and loading
-- Create resource registry
-- Implement Office 365 and Dropbox connectors
+- Implement session saving and loading ✓
+- Create resource registry ✓
+- Implement Office 365 and Dropbox connectors ✓
 - Create pipeline configuration format
 - Implement tabular data mapping
 
@@ -254,6 +262,45 @@ The primary goals for Phase 2 are:
 - Implement responsive design and accessibility features
 - Add support for additional platform integrations
 
+## Current Status
+
+Significant progress has been made on the Phase 2 roadmap, with the following components completed:
+
+1. **Session Management**: Implemented a comprehensive session management system with the following features:
+   - Session Configuration Format: Defined SessionConfig class with metadata, resources, and connections
+   - Session Saving and Loading: Created functions to save and load session configurations from/to files (supporting both YAML and JSON formats)
+   - Resource Registry: Implemented a ResourceRegistry class that manages resources, including registering, tracking, and accessing resources
+   - Resource Dependency Tracking: Added support for tracking dependencies between resources
+   - Resource Status Monitoring: Implemented status tracking for resources
+   - Session Versioning: Added version field to SessionConfig
+
+2. **Data Source Connectors**: Implemented key data source connectors for accessing external data:
+   - Office 365 Connector: Created MSGraphProvider in science_data_kit/core/providers/api/msgraph_provider.py for accessing Microsoft 365 services, including OneDrive files, Excel spreadsheets, and SharePoint data
+   - Dropbox Connector: Implemented DropboxProvider in science_data_kit/core/providers/storage/dropbox_provider.py for accessing CSV and Excel files stored in Dropbox
+
+The session management implementation follows a modular and extensible design, allowing for easy integration with other components of the SDK. The data source connectors provide a consistent interface for accessing data from different sources, with support for listing files, downloading file data, and working with spreadsheets.
+
+## Next Steps
+
+The next priorities for Phase 2 development are:
+
+1. **Complete Data Integration**: 
+   - Create pipeline configuration format for defining data transformation pipelines
+   - Implement tabular data mapping to convert tabular data to graph nodes and relationships
+   - Add support for file tree processing
+
+2. **Begin Database Enhancements**:
+   - Implement query caching to improve performance for frequently executed queries
+   - Create parameterized query templates for standardized database operations
+
+3. **Enhance Session Management**:
+   - Implement automatic session recovery to handle crashes
+   - Add resource access control for multi-user scenarios
+
+4. **Write Tests and Documentation**:
+   - Create comprehensive tests for the session management and data source connectors
+   - Document the new features and provide examples of how to use them
+
 ## Success Metrics
 
 - **Session Management**: Successfully save and restore complex work environments with multiple connections
@@ -266,8 +313,8 @@ The primary goals for Phase 2 are:
 
 ## Conclusion
 
-Phase 2 of the Science Data Kit development represents a significant step forward in the evolution of the SDK. By focusing on session management, multimodal data integration, advanced features, performance optimization, and user experience improvements, Phase 2 will transform the SDK from a solid foundation into a comprehensive and powerful tool for scientific data management and analysis.
+Phase 2 of the Science Data Kit development is progressing well, with significant achievements in the Session Management and Data Source Connectors components. The implementation of a robust session management system lays the foundation for the other components of Phase 2, particularly Multimodal Data Integration and Advanced Database Features.
 
-The roadmap outlined in this document provides a clear path forward, with specific tasks, priorities, and timelines. The implementation of robust session management will allow users to save and restore their work environment, including server connections, data sources, and pipelines. The multimodal data integration capabilities will support various data sources and formats, with configurable pipelines for transforming and mapping data into the knowledge graph.
+The session management functionality allows users to save and restore their work environment, including resources and their dependencies. The data source connectors provide a consistent interface for accessing data from different sources, making it easier to integrate data from Office 365 and Dropbox into the Science Data Kit.
 
-As development progresses, this roadmap will be updated to reflect completed tasks, new priorities, and evolving requirements. The end result will be a more streamlined and consolidated application that provides a seamless experience for scientists working with diverse data sources and complex knowledge graphs.
+The next steps will focus on creating the pipeline configuration format and implementing tabular data mapping, which will enable users to transform data from various sources into a knowledge graph. These efforts will continue to transform the SDK into a comprehensive and powerful tool for scientific data management and analysis.

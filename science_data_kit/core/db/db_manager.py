@@ -19,20 +19,14 @@ from datetime import datetime
 from neo4j import GraphDatabase, Driver
 from neo4j.exceptions import Neo4jError, ServiceUnavailable
 
-# Import isatools classes through our compatibility layer
-try:
-    from isatools.model import OntologyAnnotation, OntologySource
-    ISATOOLS_AVAILABLE = True
-except ImportError:
-    try:
-        from science_data_kit.core.utils.isa_compatibility import get_isa_objects
-        _, OntologyAnnotation, _, _, _, _, _, _ = get_isa_objects()
-        OntologySource = None
-        ISATOOLS_AVAILABLE = False
-    except ImportError:
-        OntologyAnnotation = None
-        OntologySource = None
-        ISATOOLS_AVAILABLE = False
+# Import ontology classes from the new module
+from science_data_kit.core.ontology import OntologyAnnotation, OntologySource
+
+# Import query cache
+from .cache import cached_query
+
+# Set ISATOOLS_AVAILABLE for backward compatibility
+ISATOOLS_AVAILABLE = True
 
 
 class DatabaseError(Exception):
@@ -492,8 +486,9 @@ class Neo4jManager:
         """
         return self._active_connection
 
+    @cached_query()
     def execute_query(self, query: str, parameters: Optional[Dict[str, Any]] = None, 
-                      connection_name: Optional[str] = None) -> List[Dict[str, Any]]:
+                      connection_name: Optional[str] = None, enable_cache: bool = True) -> List[Dict[str, Any]]:
         """
         Executes a Cypher query and returns the results.
 
@@ -502,6 +497,7 @@ class Neo4jManager:
             parameters: Optional dictionary of parameters to include in the query.
             connection_name: Optional name of the connection to use.
                             If None, uses the active connection.
+            enable_cache: Whether to use query caching for this query.
 
         Returns:
             List of dictionaries containing the query results.
