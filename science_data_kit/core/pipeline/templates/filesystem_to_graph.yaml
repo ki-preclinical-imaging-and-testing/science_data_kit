@@ -1,0 +1,56 @@
+name: File System to Knowledge Graph
+description: Transform a directory structure into nodes and relationships in a knowledge graph
+version: 1.0.0
+source:
+  type: filesystem
+  config:
+    root_path: ""  # Path to the root directory to process
+    include_hidden: false  # Whether to include hidden files and directories
+    file_extensions: null  # List of file extensions to include (null for all)
+    max_depth: null  # Maximum depth to traverse (null for unlimited)
+steps:
+  - name: process_file_tree
+    type: transform
+    description: Process the directory structure into nodes and relationships
+    config:
+      file_node_label: "File"  # Label for file nodes
+      directory_node_label: "Directory"  # Label for directory nodes
+      contains_relationship_type: "CONTAINS"  # Type of relationship between directories and their contents
+      compute_checksums: false  # Whether to compute MD5 checksums for files
+      extract_metadata: true  # Whether to extract metadata from files
+  - name: filter_files
+    type: filter
+    description: Filter files based on criteria
+    enabled: false  # Disabled by default
+    config:
+      criteria:
+        - field: "extension"
+          operator: "in"
+          value: [".txt", ".csv", ".xlsx"]  # Example file extensions to include
+        - field: "size"
+          operator: "<"
+          value: 10000000  # Example size limit (10MB)
+  - name: enrich_metadata
+    type: enrich
+    description: Enrich file metadata with additional information
+    enabled: false  # Disabled by default
+    config:
+      enrichments:
+        - field: "mime_type"
+          source: "extension"
+          mapping:
+            ".txt": "text/plain"
+            ".csv": "text/csv"
+            ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            # Add more mappings as needed
+target:
+  type: neo4j
+  config:
+    batch_size: 1000
+    create_indexes: true
+    merge_nodes: true
+    index_fields: ["path"]  # Fields to create indexes for
+metadata:
+  created: "2025-07-07"
+  author: "Science Data Kit Team"
+  tags: ["filesystem", "directory", "files", "knowledge graph"]

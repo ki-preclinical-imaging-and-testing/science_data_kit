@@ -1,0 +1,87 @@
+name: Data Validation Pipeline
+description: Validate data against a set of rules before further processing
+version: 1.0.0
+source:
+  type: file
+  format: auto  # Auto-detect format based on file extension
+  config:
+    header: true
+steps:
+  - name: validate_data_types
+    type: validate
+    description: Validate data types for each field
+    config:
+      rules:
+        - name: check_numeric_fields
+          fields: []  # Add numeric fields here (e.g., ["age", "price", "quantity"])
+          condition: "is_numeric"
+          error_message: "Field must be numeric"
+          severity: error
+          action: reject
+        - name: check_date_fields
+          fields: []  # Add date fields here (e.g., ["birth_date", "start_date"])
+          condition: "is_date"
+          error_message: "Field must be a valid date"
+          severity: warning
+          action: fix
+        - name: check_email_fields
+          fields: []  # Add email fields here (e.g., ["email", "contact_email"])
+          condition: "is_email"
+          error_message: "Field must be a valid email address"
+          severity: warning
+          action: log
+  - name: validate_value_ranges
+    type: validate
+    description: Validate value ranges for numeric fields
+    config:
+      rules:
+        - name: check_positive_values
+          fields: []  # Add fields that should be positive (e.g., ["price", "quantity"])
+          condition: "greater_than:0"
+          error_message: "Value must be positive"
+          severity: error
+          action: reject
+        - name: check_age_range
+          fields: []  # Add age fields here (e.g., ["age"])
+          condition: "range:0,120"
+          error_message: "Age must be between 0 and 120"
+          severity: warning
+          action: fix
+  - name: validate_required_fields
+    type: validate
+    description: Validate that required fields are present and not empty
+    config:
+      rules:
+        - name: check_required_fields
+          fields: []  # Add required fields here (e.g., ["id", "name", "email"])
+          condition: "not_empty"
+          error_message: "Required field cannot be empty"
+          severity: error
+          action: reject
+  - name: validate_unique_fields
+    type: validate
+    description: Validate that certain fields have unique values
+    config:
+      rules:
+        - name: check_unique_fields
+          fields: []  # Add fields that should be unique (e.g., ["id", "email"])
+          condition: "is_unique"
+          error_message: "Field must have unique values"
+          severity: error
+          action: reject
+  - name: generate_validation_report
+    type: transform
+    description: Generate a report of validation results
+    config:
+      output_format: json
+      include_statistics: true
+      include_errors: true
+target:
+  type: file
+  config:
+    format: json
+    path: "validation_report.json"
+metadata:
+  created: "2025-07-07"
+  author: "Science Data Kit Team"
+  tags: ["validation", "data quality", "preprocessing"]

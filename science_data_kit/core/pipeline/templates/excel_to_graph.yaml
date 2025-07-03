@@ -1,0 +1,68 @@
+name: Excel to Knowledge Graph
+description: Transform Excel data into nodes and relationships in a knowledge graph
+version: 1.0.0
+source:
+  type: file
+  format: excel
+  config:
+    sheet_name: "Sheet1"  # Name of the sheet to read
+    header: 0  # Row number containing column names (0-based)
+    use_columns: null  # List of columns to use (null for all)
+    skiprows: null  # Number of rows to skip at the start
+steps:
+  - name: validate_data
+    type: validate
+    description: Validate the Excel data before transformation
+    config:
+      rules:
+        - name: check_required_fields
+          fields: []  # Add required fields here
+          severity: error
+          action: reject
+        - name: check_data_types
+          field_types: {}  # Add field types here (e.g., {"age": "integer"})
+          severity: warning
+          action: fix
+  - name: transform_data
+    type: transform
+    description: Transform data types and formats
+    config:
+      transformations:
+        - field: ""  # Add field name here
+          type: "string"  # string, integer, float, boolean, date
+          format: ""  # Optional format (e.g., date format)
+  - name: map_to_nodes
+    type: map
+    description: Map Excel rows to nodes in the knowledge graph
+    config:
+      node_label_strategy: fixed  # fixed, column_value, template
+      node_label_config:
+        label: "Node"  # Default label for fixed strategy
+        # column: ""  # Column name for column_value strategy
+        # template: ""  # Template for template strategy (e.g., "{type}Node")
+      mapping_rules:
+        - source_field: "id"
+          target_property: "id"
+          required: true
+        # Add more mapping rules as needed
+  - name: create_relationships
+    type: map
+    description: Create relationships between nodes
+    config:
+      relationship_strategy: none  # none, fixed, column_based, template
+      relationship_config:
+        type: "RELATED_TO"  # Default relationship type for fixed strategy
+        # type_column: ""  # Column for relationship type in column_based strategy
+        # target_column: ""  # Column for relationship target in column_based strategy
+        # type_template: ""  # Template for relationship type in template strategy
+        # target_template: ""  # Template for relationship target in template strategy
+target:
+  type: neo4j
+  config:
+    batch_size: 1000
+    create_indexes: true
+    merge_nodes: true
+metadata:
+  created: "2025-07-07"
+  author: "Science Data Kit Team"
+  tags: ["excel", "tabular", "knowledge graph"]
