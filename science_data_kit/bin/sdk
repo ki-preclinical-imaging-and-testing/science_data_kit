@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+"""
+Science Data Kit Command-Line Interface Entry Point
+
+This script serves as the entry point for the Science Data Kit command-line interface.
+It allows users to interact with the SDK API from the command line.
+"""
+
+import sys
+from science_data_kit.core.api.cli import main
+
+if __name__ == "__main__":
+    sys.exit(main())
