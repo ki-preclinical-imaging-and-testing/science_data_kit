@@ -584,10 +584,10 @@ def render_ollama_sidebar(
     # Check if the service is actually accessible
     is_accessible = is_ollama_accessible(ollama_url)
 
-    # Only consider it running if:
-    # 1. The container exists and is running
-    # 2. The service is accessible at the URL
-    is_running = container_exists and container_status == "running" and is_accessible
+    # Consider Ollama running if either:
+    # 1. The API is accessible (could be running outside Docker)
+    # 2. The container exists and is running (even if API is not yet accessible)
+    is_running = is_accessible or (container_exists and container_status == "running")
 
     # Render the section header with status indicator
     expanded = render_sidebar_section("Ollama", is_running)
@@ -595,8 +595,12 @@ def render_ollama_sidebar(
     # Only show the content if the section is expanded
     if expanded:
         # Container status
-        if is_running:
+        if is_accessible:
             st.sidebar.success(f"Ollama is running at {ollama_url}")
+
+            # If container status doesn't match but API is accessible, show an informational message
+            if not (container_exists and container_status == "running"):
+                st.sidebar.info(f"Note: Ollama API is accessible, but container '{container_name}' status is '{container_status}'. This may indicate that Ollama is running outside of Docker or with a different container name.")
         elif container_exists and container_status == "running" and not is_accessible:
             st.sidebar.warning("Ollama container is running but service is not accessible")
         elif container_status == "stopped":
@@ -645,6 +649,9 @@ def render_ollama_sidebar(
 
 def render_settings_sidebar() -> None:
     """Render the settings section in the sidebar."""
+    # Import here to avoid circular imports
+    from science_data_kit.core.utils.config_utils import save_all_connections, load_all_connections
+
     # Render the section header with status indicator
     expanded = render_sidebar_section("Settings", False)
 
@@ -664,9 +671,535 @@ def render_settings_sidebar() -> None:
             index=0
         )
 
+        # Connection management section
+        st.sidebar.markdown("### Connection Management")
+
+        # Save connections button
+        if st.sidebar.button("Save All Connections", key="save_connections"):
+            if save_all_connections():
+                st.sidebar.success("All connections saved successfully")
+            else:
+                st.sidebar.warning("Some connections could not be saved")
+
+        # Load connections button
+        if st.sidebar.button("Load All Connections", key="load_connections"):
+            if load_all_connections():
+                st.sidebar.success("All connections loaded successfully")
+                st.rerun()  # Rerun to update UI with loaded connections
+            else:
+                st.sidebar.info("Some connections could not be loaded (they may not exist yet)")
+
         # Save settings button
         if st.sidebar.button("Save Settings"):
             st.sidebar.success("Settings saved")
+
+def render_postgresql_sidebar(
+    on_start: Optional[Callable] = None,
+    on_stop: Optional[Callable] = None,
+    on_connect: Optional[Callable] = None,
+    on_disconnect: Optional[Callable] = None
+) -> None:
+    """
+    Render the PostgreSQL management section in the sidebar.
+
+    Args:
+        on_start: Optional callback function to call when the start button is clicked.
+        on_stop: Optional callback function to call when the stop button is clicked.
+        on_connect: Optional callback function to call when the connect button is clicked.
+        on_disconnect: Optional callback function to call when the disconnect button is clicked.
+    """
+    # Import here to avoid circular imports
+    from science_data_kit.core.db.postgres_manager import postgres_manager
+
+    # Initialize connections in session state if not present
+    if "pg_connections" not in st.session_state:
+        st.session_state["pg_connections"] = {}
+
+    # Initialize active connection in session state if not present
+    if "pg_active_connection" not in st.session_state:
+        st.session_state["pg_active_connection"] = None
+
+    # Check if container is running
+    container_status = postgres_manager.get_container_status()
+    is_container_running = container_status == "running"
+
+    # Check if any connection is connected
+    is_connected = False
+    for conn_name in postgres_manager.get_connection_names():
+        if postgres_manager.is_connected(conn_name):
+            is_connected = True
+            break
+
+    # Render the section header with status indicator
+    expanded = render_sidebar_section("PostgreSQL", is_connected or is_container_running)
+
+    # Only show the content if the section is expanded
+    if expanded:
+        # Container status
+        if is_container_running:
+            st.sidebar.success("PostgreSQL container is running")
+        elif container_status == "stopped":
+            st.sidebar.warning("PostgreSQL container is stopped")
+        elif container_status == "not found":
+            st.sidebar.error("PostgreSQL container not found")
+        else:
+            st.sidebar.info("PostgreSQL container status unknown")
+
+        # Connection status
+        if is_connected:
+            # Count how many connections are connected
+            connected_count = 0
+            connected_names = []
+            for name in postgres_manager.get_connection_names():
+                if postgres_manager.is_connected(name):
+                    connected_count += 1
+                    connected_names.append(name)
+
+            # Show active connection and total connected count
+            active_conn = postgres_manager.get_active_connection_name()
+            if connected_count == 1:
+                st.sidebar.success(f"Connected to {active_conn}")
+            else:
+                st.sidebar.success(f"Connected to {connected_count} databases. Active: {active_conn}")
+                # Show list of connected databases
+                st.sidebar.info(f"Connected databases: {', '.join(connected_names)}")
+        else:
+            st.sidebar.warning("Not connected to any PostgreSQL database")
+
+        # Container management form
+        with st.sidebar.form("postgresql_container_form"):
+            st.subheader("Container Management")
+
+            # Version selection
+            version = st.selectbox(
+                "PostgreSQL Version",
+                ["latest", "15", "14", "13", "12", "11", "10"],
+                index=0,
+                disabled=is_container_running
+            )
+
+            # Start/Stop button
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.form_submit_button("Start Container", disabled=is_container_running):
+                    if on_start:
+                        on_start(version)
+
+            with col2:
+                if st.form_submit_button("Stop Container", disabled=not is_container_running):
+                    if on_stop:
+                        on_stop()
+
+        # Connection form
+        with st.sidebar.form("postgresql_connection_form"):
+            st.subheader("Database Connection")
+
+            # Connection selector
+            connections = list(st.session_state["pg_connections"].keys())
+            if connections:
+                selected_connection = st.selectbox(
+                    "Saved Connections",
+                    ["New Connection"] + connections,
+                    index=0
+                )
+            else:
+                selected_connection = "New Connection"
+
+            # Connection name input (only for new connections)
+            if selected_connection == "New Connection":
+                connection_name = st.text_input(
+                    "Connection Name",
+                    value="",
+                    placeholder="Enter a name for this connection"
+                )
+            else:
+                connection_name = selected_connection
+
+            # Load connection details if an existing connection is selected
+            if selected_connection != "New Connection":
+                conn_details = st.session_state["pg_connections"][selected_connection]
+                default_host = conn_details.get("host", "localhost")
+                default_port = conn_details.get("port", "5432")
+                default_user = conn_details.get("user", "postgres")
+                default_password = conn_details.get("password", "postgres")
+                default_database = conn_details.get("database", "postgres")
+            else:
+                default_host = "localhost"
+                default_port = "5432"
+                default_user = "postgres"
+                default_password = "postgres"
+                default_database = "postgres"
+
+            # Host input
+            host = st.text_input(
+                "Host",
+                value=default_host
+            )
+
+            # Port input
+            port = st.text_input(
+                "Port",
+                value=default_port
+            )
+
+            # Username input
+            username = st.text_input(
+                "Username",
+                value=default_user
+            )
+
+            # Password input
+            password = st.text_input(
+                "Password",
+                value=default_password,
+                type="password"
+            )
+
+            # Database input
+            database = st.text_input(
+                "Database",
+                value=default_database
+            )
+
+            # Form buttons
+            col1, col2 = st.columns(2)
+
+            with col1:
+                # Connect button
+                if st.form_submit_button("Connect"):
+                    # For new connections, save the connection details
+                    if selected_connection == "New Connection":
+                        # Generate a default connection name if none is provided
+                        if not connection_name:
+                            connection_name = f"Connection {len(st.session_state['pg_connections']) + 1}"
+
+                        # Check if this connection name already exists
+                        if connection_name in st.session_state["pg_connections"]:
+                            # Append a number to make it unique
+                            base_name = connection_name
+                            counter = 1
+                            while f"{base_name} ({counter})" in st.session_state["pg_connections"]:
+                                counter += 1
+                            connection_name = f"{base_name} ({counter})"
+
+                        st.session_state["pg_connections"][connection_name] = {
+                            "host": host,
+                            "port": port,
+                            "user": username,
+                            "password": password,
+                            "database": database
+                        }
+
+                    # Update the connection details in case they were modified
+                    if selected_connection != "New Connection":
+                        st.session_state["pg_connections"][selected_connection] = {
+                            "host": host,
+                            "port": port,
+                            "user": username,
+                            "password": password,
+                            "database": database
+                        }
+
+                    # Set the active connection
+                    conn_name = connection_name if selected_connection == "New Connection" else selected_connection
+
+                    if on_connect:
+                        on_connect(host, port, username, password, database, conn_name)
+
+            with col2:
+                # Disconnect button
+                if st.form_submit_button("Disconnect", disabled=not is_connected):
+                    if on_disconnect:
+                        on_disconnect()
+
+        # Delete connection button (outside the form)
+        if selected_connection != "New Connection":
+            if st.sidebar.button("Delete Connection", key="delete_pg_connection"):
+                # Don't allow deleting an active connection
+                if selected_connection == postgres_manager.get_active_connection_name():
+                    st.sidebar.error("Cannot delete an active connection. Disconnect first.")
+                else:
+                    del st.session_state["pg_connections"][selected_connection]
+                    st.rerun()
+
+def render_file_connections_sidebar(
+    on_connect: Optional[Callable] = None,
+    on_disconnect: Optional[Callable] = None
+) -> None:
+    """
+    Render the file connections section in the sidebar.
+
+    This section allows users to connect to various file sources like local filesystem,
+    Sharepoint, Dropbox, Google Drive, etc. and browse files and read spreadsheets/tables.
+
+    Args:
+        on_connect: Optional callback function to call when the connect button is clicked.
+        on_disconnect: Optional callback function to call when the disconnect button is clicked.
+    """
+    # Check if any file connection is active
+    is_connected = (
+        st.session_state.get("local_fs_connected", False) or
+        st.session_state.get("sharepoint_connected", False) or
+        st.session_state.get("dropbox_connected", False) or
+        st.session_state.get("gdrive_connected", False)
+    )
+
+    # Render the section header with status indicator
+    expanded = render_sidebar_section("File Connections", is_connected)
+
+    # Only show the content if the section is expanded
+    if expanded:
+        # Show subsections for each file connection type
+        st.sidebar.markdown("### Connection Types")
+
+        # Initialize selected connection type if not present
+        if "file_conn_selected" not in st.session_state:
+            st.session_state["file_conn_selected"] = None
+
+        # Buttons to select specific connection types
+        col1, col2 = st.sidebar.columns(2)
+        with col1:
+            if st.button("Local Filesystem", key="local_fs_btn", 
+                         type="primary" if st.session_state["file_conn_selected"] == "local_fs" else "secondary"):
+                st.session_state["file_conn_selected"] = "local_fs"
+                st.rerun()
+
+            if st.button("Sharepoint", key="sharepoint_btn",
+                         type="primary" if st.session_state["file_conn_selected"] == "sharepoint" else "secondary"):
+                st.session_state["file_conn_selected"] = "sharepoint"
+                st.rerun()
+
+        with col2:
+            if st.button("Dropbox", key="dropbox_btn",
+                         type="primary" if st.session_state["file_conn_selected"] == "dropbox" else "secondary"):
+                st.session_state["file_conn_selected"] = "dropbox"
+                st.rerun()
+
+            if st.button("Google Drive", key="gdrive_btn",
+                         type="primary" if st.session_state["file_conn_selected"] == "gdrive" else "secondary"):
+                st.session_state["file_conn_selected"] = "gdrive"
+                st.rerun()
+
+        # Show the selected connection type's form
+        selected = st.session_state.get("file_conn_selected")
+        if selected == "local_fs":
+            render_local_fs_connection_form(on_connect, on_disconnect)
+        elif selected == "sharepoint":
+            render_sharepoint_connection_form(on_connect, on_disconnect)
+        elif selected == "dropbox":
+            render_dropbox_connection_form(on_connect, on_disconnect)
+        elif selected == "gdrive":
+            render_gdrive_connection_form(on_connect, on_disconnect)
+        else:
+            st.sidebar.info("Select a connection type to configure")
+
+def render_local_fs_connection_form(
+    on_connect: Optional[Callable] = None,
+    on_disconnect: Optional[Callable] = None
+) -> None:
+    """Render the Local Filesystem connection form."""
+    # Connection status
+    is_connected = st.session_state.get("local_fs_connected", False)
+
+    if is_connected:
+        st.sidebar.success("Connected to Local Filesystem")
+
+        # Show connected path
+        path = st.session_state.get("local_fs_path", "")
+        st.sidebar.write(f"Path: {path}")
+
+        # Disconnect button
+        if st.sidebar.button("Disconnect from Local Filesystem"):
+            if on_disconnect:
+                on_disconnect()
+            else:
+                st.session_state["local_fs_connected"] = False
+                st.rerun()
+    else:
+        st.sidebar.warning("Not connected to Local Filesystem")
+
+        # Connection form
+        with st.sidebar.form("local_fs_connection_form"):
+            # Connection name
+            connection_name = st.text_input(
+                "Connection Name",
+                value="",
+                placeholder="Enter a name for this connection"
+            )
+
+            # Path
+            path = st.text_input(
+                "Path",
+                value="",
+                placeholder="/path/to/directory"
+            )
+
+            # Connect button
+            if st.form_submit_button("Connect to Local Filesystem"):
+                if not path:
+                    st.sidebar.error("Path cannot be empty")
+                else:
+                    # Check if path exists
+                    import os
+                    if not os.path.exists(path):
+                        st.sidebar.error(f"Path does not exist: {path}")
+                    else:
+                        # Connect logic
+                        if on_connect:
+                            on_connect(path, connection_name)
+                        else:
+                            st.session_state["local_fs_connected"] = True
+                            st.session_state["local_fs_path"] = path
+                            if connection_name:
+                                st.session_state["local_fs_name"] = connection_name
+                            else:
+                                st.session_state["local_fs_name"] = "Local Filesystem"
+                            st.rerun()
+
+def render_sharepoint_connection_form(
+    on_connect: Optional[Callable] = None,
+    on_disconnect: Optional[Callable] = None
+) -> None:
+    """Render the Sharepoint connection form."""
+    # Check if MSGraph is available
+    if not MSGRAPH_AVAILABLE:
+        st.sidebar.error("Microsoft Graph API is not available")
+        return
+
+    # Connection status
+    is_connected = "msgraph_connection_manager" in st.session_state and st.session_state["msgraph_connection_manager"].connected
+
+    if is_connected:
+        st.sidebar.success("Connected to Sharepoint")
+
+        # Display current user information
+        try:
+            me = st.session_state["msgraph_connection_manager"].get_me()
+            st.sidebar.write(f"User: {me.get('displayName', 'N/A')}")
+            st.sidebar.write(f"Email: {me.get('mail', 'N/A')}")
+        except Exception:
+            pass
+
+        # Disconnect button
+        if st.sidebar.button("Disconnect from Sharepoint"):
+            if on_disconnect:
+                on_disconnect()
+            else:
+                # Remove connection manager from session state
+                del st.session_state["msgraph_connection_manager"]
+                if "msgraph_adapter" in st.session_state:
+                    del st.session_state["msgraph_adapter"]
+                st.session_state["sharepoint_connected"] = False
+                st.sidebar.success("Disconnected from Sharepoint")
+                st.rerun()
+    else:
+        st.sidebar.warning("Not connected to Sharepoint")
+
+        # Connect button
+        if st.sidebar.button("Connect to Sharepoint"):
+            if on_connect:
+                on_connect()
+            else:
+                # Redirect to Microsoft Graph API connection page
+                st.experimental_set_query_params(page="msgraph_connect")
+                st.rerun()
+
+def render_dropbox_connection_form(
+    on_connect: Optional[Callable] = None,
+    on_disconnect: Optional[Callable] = None
+) -> None:
+    """Render the Dropbox connection form."""
+    # Connection status
+    is_connected = st.session_state.get("dropbox_connected", False)
+
+    if is_connected:
+        st.sidebar.success("Connected to Dropbox")
+
+        # Show connected account
+        account = st.session_state.get("dropbox_account", "")
+        st.sidebar.write(f"Account: {account}")
+
+        # Disconnect button
+        if st.sidebar.button("Disconnect from Dropbox"):
+            if on_disconnect:
+                on_disconnect()
+            else:
+                st.session_state["dropbox_connected"] = False
+                st.rerun()
+    else:
+        st.sidebar.warning("Not connected to Dropbox")
+
+        # Connection form
+        with st.sidebar.form("dropbox_connection_form"):
+            # Connection name
+            connection_name = st.text_input(
+                "Connection Name",
+                value="",
+                placeholder="Enter a name for this connection"
+            )
+
+            # API Key
+            api_key = st.text_input(
+                "API Key",
+                value="",
+                type="password",
+                placeholder="Enter your Dropbox API key"
+            )
+
+            # Connect button
+            if st.form_submit_button("Connect to Dropbox"):
+                if not api_key:
+                    st.sidebar.error("API Key cannot be empty")
+                else:
+                    # Connect logic
+                    if on_connect:
+                        on_connect(api_key, connection_name)
+                    else:
+                        st.sidebar.info("Dropbox integration not implemented yet")
+
+def render_gdrive_connection_form(
+    on_connect: Optional[Callable] = None,
+    on_disconnect: Optional[Callable] = None
+) -> None:
+    """Render the Google Drive connection form."""
+    # Connection status
+    is_connected = st.session_state.get("gdrive_connected", False)
+
+    if is_connected:
+        st.sidebar.success("Connected to Google Drive")
+
+        # Show connected account
+        account = st.session_state.get("gdrive_account", "")
+        st.sidebar.write(f"Account: {account}")
+
+        # Disconnect button
+        if st.sidebar.button("Disconnect from Google Drive"):
+            if on_disconnect:
+                on_disconnect()
+            else:
+                st.session_state["gdrive_connected"] = False
+                st.rerun()
+    else:
+        st.sidebar.warning("Not connected to Google Drive")
+
+        # Connection form
+        with st.sidebar.form("gdrive_connection_form"):
+            # Connection name
+            connection_name = st.text_input(
+                "Connection Name",
+                value="",
+                placeholder="Enter a name for this connection"
+            )
+
+            # OAuth
+            st.write("Google Drive requires OAuth authentication")
+
+            # Connect button
+            if st.form_submit_button("Connect to Google Drive"):
+                if on_connect:
+                    on_connect(connection_name)
+                else:
+                    st.sidebar.info("Google Drive integration not implemented yet")
 
 def render_sidebar(
     sections: Optional[List[str]] = None,
@@ -681,7 +1214,13 @@ def render_sidebar(
         callbacks: Optional dictionary mapping callback names to callback functions.
     """
     # Default sections
-    all_sections = ["header", "database", "neo4j", "jupyter", "neodash", "ollama", "msgraph", "settings"]
+    all_sections = [
+        "header", 
+        "database", "postgresql", "other_sql",  # Database connections
+        "neo4j", "jupyter", "neodash", "ollama",  # Container servers
+        "file_connections",  # File connections section
+        "msgraph", "settings"
+    ]
 
     # Use specified sections or all sections
     sections_to_render = sections or all_sections
@@ -717,6 +1256,18 @@ def render_sidebar(
             render_ollama_sidebar(
                 on_start=callbacks.get("on_ollama_start"),
                 on_stop=callbacks.get("on_ollama_stop")
+            )
+        elif section == "postgresql":
+            render_postgresql_sidebar(
+                on_start=callbacks.get("on_postgresql_start"),
+                on_stop=callbacks.get("on_postgresql_stop"),
+                on_connect=callbacks.get("on_postgresql_connect"),
+                on_disconnect=callbacks.get("on_postgresql_disconnect")
+            )
+        elif section == "file_connections":
+            render_file_connections_sidebar(
+                on_connect=callbacks.get("on_file_connect"),
+                on_disconnect=callbacks.get("on_file_disconnect")
             )
         elif section == "msgraph":
             render_msgraph_sidebar(

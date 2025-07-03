@@ -14,7 +14,9 @@ import docker
 from science_data_kit.ui.pages.base_page import BasePage
 from science_data_kit.ui.components.sidebar import render_database_sidebar, render_neo4j_container_sidebar
 from science_data_kit.ui.components.sidebar import render_jupyter_sidebar, render_neodash_sidebar, render_ollama_sidebar
+from science_data_kit.ui.components.sidebar import render_postgresql_sidebar
 from science_data_kit.core.db.db_manager import Neo4jManager, db_manager
+from science_data_kit.core.db.postgres_manager import postgres_manager
 
 class ServerPage(BasePage):
     """
@@ -66,6 +68,15 @@ class ServerPage(BasePage):
             render_ollama_sidebar,
             on_start=self._on_ollama_start,
             on_stop=self._on_ollama_stop
+        )
+
+        # Add PostgreSQL container and connection management
+        self.add_sidebar_item(
+            render_postgresql_sidebar,
+            on_start=self._on_postgresql_start,
+            on_stop=self._on_postgresql_stop,
+            on_connect=self._on_postgresql_connect,
+            on_disconnect=self._on_postgresql_disconnect
         )
 
     def _on_database_connect(self, uri: str, username: str, password: str, database: str, connection_name: str):
@@ -529,6 +540,99 @@ class ServerPage(BasePage):
                 st.session_state["ollama_url"] = ""
             st.error(f"Error stopping Ollama: {e}")
 
+    def _on_postgresql_start(self, version: str):
+        """
+        Handle PostgreSQL container start.
+
+        Args:
+            version: The PostgreSQL version to use.
+        """
+        try:
+            # Start the container
+            success = postgres_manager.start_container(version)
+
+            if success:
+                st.success("PostgreSQL container started successfully")
+            else:
+                st.error("Failed to start PostgreSQL container")
+        except Exception as e:
+            st.error(f"Error starting PostgreSQL container: {e}")
+
+    def _on_postgresql_stop(self):
+        """Handle PostgreSQL container stop."""
+        try:
+            # Stop the container
+            success = postgres_manager.stop_container()
+
+            if success:
+                st.success("PostgreSQL container stopped successfully")
+            else:
+                st.error("Failed to stop PostgreSQL container")
+        except Exception as e:
+            st.error(f"Error stopping PostgreSQL container: {e}")
+
+    def _on_postgresql_connect(self, host: str, port: str, username: str, password: str, database: str, connection_name: str):
+        """
+        Handle PostgreSQL database connection.
+
+        Args:
+            host: The hostname of the PostgreSQL server.
+            port: The port of the PostgreSQL server.
+            username: The username for authentication.
+            password: The password for authentication.
+            database: The name of the database to connect to.
+            connection_name: The name of the connection.
+        """
+        try:
+            # Update connection details
+            postgres_manager.host = host
+            postgres_manager.port = port
+            postgres_manager.user = username
+            postgres_manager.password = password
+            postgres_manager.database = database
+
+            # Connect to the database with the specified connection name
+            connection_success = postgres_manager._connect(connection_name)
+
+            if not connection_success:
+                st.error(f"Failed to connect to PostgreSQL: {postgres_manager._connection_error}")
+                return
+
+            # Update session state
+            st.session_state["pg_active_connection"] = connection_name
+
+            # Store connection details in session state
+            if "pg_connections" not in st.session_state:
+                st.session_state["pg_connections"] = {}
+
+            # Update or create the connection in session state
+            st.session_state["pg_connections"][connection_name] = {
+                "host": host,
+                "port": port,
+                "user": username,
+                "password": password,
+                "database": database
+            }
+
+            st.success(f"Connected to PostgreSQL database '{connection_name}' at {host}:{port}")
+        except Exception as e:
+            st.error(f"Failed to connect to PostgreSQL: {e}")
+
+    def _on_postgresql_disconnect(self):
+        """Handle PostgreSQL database disconnection."""
+        try:
+            # Get the active connection name
+            active_connection = st.session_state.get("pg_active_connection")
+
+            # Close the connection
+            postgres_manager.close(active_connection)
+
+            st.session_state["pg_active_connection"] = None
+
+            st.success(f"Disconnected from PostgreSQL database")
+        except Exception as e:
+            st.error(f"Failed to disconnect from PostgreSQL: {e}")
+
     def render_content(self) -> None:
         """Render the Server page content."""
         st.write("Manage your servers and connect to data sources.")
@@ -547,8 +651,30 @@ class ServerPage(BasePage):
             else:
                 st.warning("Neo4j: Stopped")
 
-            # PostgreSQL status (placeholder for future implementation)
-            st.info("PostgreSQL: Not configured")
+            # PostgreSQL status
+            container_status = postgres_manager.get_container_status()
+            is_container_running = container_status == "running"
+
+            # Check if any connection is connected
+            is_connected = False
+            for conn_name in postgres_manager.get_connection_names():
+                if postgres_manager.is_connected(conn_name):
+                    is_connected = True
+                    break
+
+            if is_container_running:
+                st.success("PostgreSQL: Container running")
+
+                # If connected, show connection details
+                if is_connected:
+                    active_conn = postgres_manager.get_active_connection_name()
+                    st.success(f"PostgreSQL: Connected to {active_conn}")
+            elif is_connected:
+                # Connected but container not running (external PostgreSQL)
+                active_conn = postgres_manager.get_active_connection_name()
+                st.success(f"PostgreSQL: Connected to {active_conn} (external)")
+            else:
+                st.warning("PostgreSQL: Not running")
 
         with col2:
             st.subheader("Analysis Servers")
@@ -792,14 +918,15 @@ class ServerPage(BasePage):
         st.info("""
         The following features are currently under development:
 
-        - **PostgreSQL Connection**: Will be available in a future update.
         - **Filesystem Integrations**: Will be available in a future update.
 
         Neo4j container management is now available in the sidebar.
+        PostgreSQL container management and connection is now available in the sidebar.
         Jupyter Lab integration with single/multi-user options is now available in the sidebar.
         NeoDash integration with Development/Production environment selection is now available in the sidebar.
         Ollama integration is now available in the sidebar.
         Database export/import functionality is now available for connected databases.
+        Connection configuration can be saved and loaded from the Settings sidebar.
         """)
 
 def render_server_page():
