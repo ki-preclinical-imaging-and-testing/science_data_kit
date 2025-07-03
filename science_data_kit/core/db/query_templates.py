@@ -14,11 +14,11 @@ from datetime import datetime
 class QueryTemplate:
     """
     Template for parameterized Cypher queries.
-    
+
     This class provides a way to define reusable query templates with named parameters,
     validation, and documentation.
     """
-    
+
     def __init__(self, 
                  name: str,
                  template: str,
@@ -28,7 +28,7 @@ class QueryTemplate:
                  parameter_validators: Optional[Dict[str, Callable[[Any], bool]]] = None):
         """
         Initialize a query template.
-        
+
         Args:
             name: Name of the template
             template: Cypher query template with named parameters in the format {param_name}
@@ -43,59 +43,59 @@ class QueryTemplate:
         self.parameter_descriptions = parameter_descriptions or {}
         self.required_parameters = required_parameters or set()
         self.parameter_validators = parameter_validators or {}
-        
+
         # Extract parameter names from the template
         self.parameter_names = self._extract_parameter_names(template)
-        
+
         # Validate that required_parameters is a subset of parameter_names
         if not self.required_parameters.issubset(self.parameter_names):
             invalid_params = self.required_parameters - self.parameter_names
             raise ValueError(f"Required parameters not found in template: {invalid_params}")
-        
+
         # Validate that parameter_validators keys are a subset of parameter_names
         if not set(self.parameter_validators.keys()).issubset(self.parameter_names):
             invalid_params = set(self.parameter_validators.keys()) - self.parameter_names
             raise ValueError(f"Validator parameters not found in template: {invalid_params}")
-        
+
         # Initialize logger
         self.logger = logging.getLogger(__name__)
-    
+
     def _extract_parameter_names(self, template: str) -> Set[str]:
         """
         Extract parameter names from a template string.
-        
+
         Args:
             template: Template string with parameters in the format {param_name}
-            
+
         Returns:
             Set of parameter names
         """
         # Use regex to find all parameters in the format {param_name}
         pattern = r'\{([a-zA-Z0-9_]+)\}'
         return set(re.findall(pattern, template))
-    
+
     def validate_parameters(self, parameters: Dict[str, Any]) -> Tuple[bool, List[str]]:
         """
         Validate parameters against the template requirements.
-        
+
         Args:
             parameters: Dictionary of parameter values
-            
+
         Returns:
             Tuple of (is_valid, error_messages)
         """
         errors = []
-        
+
         # Check for missing required parameters
         for param in self.required_parameters:
             if param not in parameters:
                 errors.append(f"Missing required parameter: {param}")
-        
+
         # Check for parameters not in the template
         for param in parameters:
             if param not in self.parameter_names:
                 errors.append(f"Unknown parameter: {param}")
-        
+
         # Apply validators
         for param, validator in self.parameter_validators.items():
             if param in parameters:
@@ -104,19 +104,19 @@ class QueryTemplate:
                         errors.append(f"Invalid value for parameter {param}: {parameters[param]}")
                 except Exception as e:
                     errors.append(f"Error validating parameter {param}: {str(e)}")
-        
+
         return len(errors) == 0, errors
-    
+
     def render(self, parameters: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         """
         Render the template with the given parameters.
-        
+
         Args:
             parameters: Dictionary of parameter values
-            
+
         Returns:
             Tuple of (rendered_query, neo4j_parameters)
-            
+
         Raises:
             ValueError: If parameters are invalid
         """
@@ -124,19 +124,19 @@ class QueryTemplate:
         is_valid, errors = self.validate_parameters(parameters)
         if not is_valid:
             raise ValueError(f"Invalid parameters: {', '.join(errors)}")
-        
+
         # Create a copy of parameters for Neo4j
         neo4j_params = {k: v for k, v in parameters.items() if k in self.parameter_names}
-        
+
         # Render the template
         rendered_query = self.template.format(**parameters)
-        
+
         return rendered_query, neo4j_params
-    
+
     def get_documentation(self) -> Dict[str, Any]:
         """
         Get documentation for the template.
-        
+
         Returns:
             Dictionary with template documentation
         """
@@ -158,83 +158,83 @@ class QueryTemplate:
 class QueryTemplateRegistry:
     """
     Registry for query templates.
-    
+
     This class manages a collection of query templates and provides methods for
     registering, retrieving, and using templates.
     """
-    
+
     def __init__(self):
         """Initialize the query template registry."""
         self._templates: Dict[str, QueryTemplate] = {}
         self.logger = logging.getLogger(__name__)
-    
+
     def register_template(self, template: QueryTemplate) -> None:
         """
         Register a query template.
-        
+
         Args:
             template: Query template to register
-            
+
         Raises:
             ValueError: If a template with the same name already exists
         """
         if template.name in self._templates:
             raise ValueError(f"Template with name '{template.name}' already exists")
-        
+
         self._templates[template.name] = template
-    
+
     def get_template(self, name: str) -> Optional[QueryTemplate]:
         """
         Get a template by name.
-        
+
         Args:
             name: Name of the template
-            
+
         Returns:
             Query template if found, None otherwise
         """
         return self._templates.get(name)
-    
+
     def list_templates(self) -> List[str]:
         """
         List all registered template names.
-        
+
         Returns:
             List of template names
         """
         return list(self._templates.keys())
-    
+
     def render_template(self, name: str, parameters: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         """
         Render a template with the given parameters.
-        
+
         Args:
             name: Name of the template
             parameters: Dictionary of parameter values
-            
+
         Returns:
             Tuple of (rendered_query, neo4j_parameters)
-            
+
         Raises:
             ValueError: If the template is not found or parameters are invalid
         """
         template = self.get_template(name)
         if not template:
             raise ValueError(f"Template not found: {name}")
-        
+
         return template.render(parameters)
-    
+
     def get_documentation(self, name: Optional[str] = None) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Get documentation for templates.
-        
+
         Args:
             name: Optional name of the template to get documentation for
-            
+
         Returns:
             If name is provided, returns documentation for that template.
             Otherwise, returns a list of documentation for all templates.
-            
+
         Raises:
             ValueError: If the specified template is not found
         """
@@ -243,7 +243,7 @@ class QueryTemplateRegistry:
             if not template:
                 raise ValueError(f"Template not found: {name}")
             return template.get_documentation()
-        
+
         return [template.get_documentation() for template in self._templates.values()]
 
 
@@ -254,7 +254,7 @@ template_registry = QueryTemplateRegistry()
 # Register some common query templates
 def register_common_templates():
     """Register common query templates in the registry."""
-    
+
     # Node retrieval templates
     template_registry.register_template(
         QueryTemplate(
@@ -266,7 +266,7 @@ def register_common_templates():
             parameter_validators={"node_id": lambda x: isinstance(x, int) and x >= 0}
         )
     )
-    
+
     template_registry.register_template(
         QueryTemplate(
             name="get_nodes_by_label",
@@ -283,7 +283,7 @@ def register_common_templates():
             }
         )
     )
-    
+
     template_registry.register_template(
         QueryTemplate(
             name="get_nodes_by_property",
@@ -303,7 +303,7 @@ def register_common_templates():
             }
         )
     )
-    
+
     # Relationship templates
     template_registry.register_template(
         QueryTemplate(
@@ -325,7 +325,7 @@ def register_common_templates():
             }
         )
     )
-    
+
     # Path templates
     template_registry.register_template(
         QueryTemplate(
@@ -352,7 +352,7 @@ def register_common_templates():
             }
         )
     )
-    
+
     # Aggregation templates
     template_registry.register_template(
         QueryTemplate(
@@ -364,7 +364,7 @@ def register_common_templates():
             parameter_validators={"label": lambda x: isinstance(x, str) and len(x) > 0}
         )
     )
-    
+
     template_registry.register_template(
         QueryTemplate(
             name="count_relationships_by_type",
@@ -375,7 +375,7 @@ def register_common_templates():
             parameter_validators={"relationship_type": lambda x: isinstance(x, str) and len(x) > 0}
         )
     )
-    
+
     # Creation templates
     template_registry.register_template(
         QueryTemplate(
@@ -393,7 +393,7 @@ def register_common_templates():
             }
         )
     )
-    
+
     template_registry.register_template(
         QueryTemplate(
             name="create_relationship",
@@ -422,7 +422,7 @@ def register_common_templates():
             }
         )
     )
-    
+
     # Update templates
     template_registry.register_template(
         QueryTemplate(
@@ -443,7 +443,7 @@ def register_common_templates():
             }
         )
     )
-    
+
     # Delete templates
     template_registry.register_template(
         QueryTemplate(
@@ -462,7 +462,7 @@ def register_common_templates():
             }
         )
     )
-    
+
     # Pagination templates
     template_registry.register_template(
         QueryTemplate(
@@ -481,6 +481,50 @@ def register_common_templates():
                 "order_by": lambda x: isinstance(x, str) and len(x) > 0,
                 "skip": lambda x: isinstance(x, int) and x >= 0,
                 "limit": lambda x: isinstance(x, int) and x > 0
+            }
+        )
+    )
+
+    template_registry.register_template(
+        QueryTemplate(
+            name="paginated_relationships",
+            template="MATCH (a:{source_label})-[r:{relationship_type}]->(b:{target_label}) RETURN a, r, b ORDER BY r.{order_by} SKIP {skip} LIMIT {limit}",
+            description="Get a paginated list of relationships",
+            parameter_descriptions={
+                "source_label": "Label of the source nodes",
+                "relationship_type": "Type of relationship",
+                "target_label": "Label of the target nodes",
+                "order_by": "Property to order by",
+                "skip": "Number of relationships to skip",
+                "limit": "Maximum number of relationships to return"
+            },
+            required_parameters={"source_label", "relationship_type", "target_label", "order_by", "skip", "limit"},
+            parameter_validators={
+                "source_label": lambda x: isinstance(x, str) and len(x) > 0,
+                "relationship_type": lambda x: isinstance(x, str) and len(x) > 0,
+                "target_label": lambda x: isinstance(x, str) and len(x) > 0,
+                "order_by": lambda x: isinstance(x, str) and len(x) > 0,
+                "skip": lambda x: isinstance(x, int) and x >= 0,
+                "limit": lambda x: isinstance(x, int) and x > 0
+            }
+        )
+    )
+
+    template_registry.register_template(
+        QueryTemplate(
+            name="count_relationships_by_type_and_labels",
+            template="MATCH (a:{source_label})-[r:{relationship_type}]->(b:{target_label}) RETURN count(r) as count",
+            description="Count relationships with specific type and node labels",
+            parameter_descriptions={
+                "source_label": "Label of the source nodes",
+                "relationship_type": "Type of relationship to count",
+                "target_label": "Label of the target nodes"
+            },
+            required_parameters={"source_label", "relationship_type", "target_label"},
+            parameter_validators={
+                "source_label": lambda x: isinstance(x, str) and len(x) > 0,
+                "relationship_type": lambda x: isinstance(x, str) and len(x) > 0,
+                "target_label": lambda x: isinstance(x, str) and len(x) > 0
             }
         )
     )

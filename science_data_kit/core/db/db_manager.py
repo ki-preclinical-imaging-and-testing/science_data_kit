@@ -13,6 +13,8 @@ import docker
 import pandas as pd
 import networkx as nx
 import pickle
+import logging
+import time
 from typing import List, Dict, Any, Optional, Union, Tuple
 from pathlib import Path
 from datetime import datetime
@@ -24,6 +26,7 @@ from science_data_kit.core.ontology import OntologyAnnotation, OntologySource
 
 # Import query cache
 from .cache import cached_query
+from .metrics import QueryMetrics
 
 # Set ISATOOLS_AVAILABLE for backward compatibility
 ISATOOLS_AVAILABLE = True
@@ -173,6 +176,12 @@ class Neo4jManager:
         # Skip initialization if already initialized (singleton pattern)
         if self._initialized:
             return
+
+        # Initialize logger
+        self.logger = logging.getLogger(__name__)
+
+        # Flag for tracking cache hits
+        self._query_from_cache = False
 
         # Dictionary to store multiple connections
         # Format: {connection_name: {
@@ -506,6 +515,10 @@ class Neo4jManager:
             ConnectionError: If there is no active connection.
             QueryError: If the query execution fails.
         """
+        # Record start time for performance measurement
+        start_time = time.time()
+        cache_hit = False
+
         # If connection_name is provided, use that specific connection
         if connection_name:
             if connection_name not in self._connections:
@@ -530,11 +543,54 @@ class Neo4jManager:
 
         parameters = parameters or {}
 
+        # Log query execution
+        self.logger.debug(f"Executing query: {query[:200]}{'...' if len(query) > 200 else ''}")
+        if parameters:
+            self.logger.debug(f"Parameters: {parameters}")
+
         try:
+            # Check if this is a cached result
+            if hasattr(self, '_query_from_cache') and self._query_from_cache:
+                cache_hit = True
+                self._query_from_cache = False
+
+            # Execute the query
             with driver.session(database=database) as session:
                 result = session.run(query, parameters)
-                return [dict(record) for record in result]
+                records = [dict(record) for record in result]
+
+            # Calculate execution time
+            execution_time = time.time() - start_time
+
+            # Record metrics
+            from .metrics import query_metrics
+            query_metrics.record_query(
+                query=query,
+                parameters=parameters,
+                execution_time=execution_time,
+                cache_hit=cache_hit,
+                connection_name=connection_name or self._active_connection
+            )
+
+            # Log execution time
+            self.logger.debug(f"Query executed in {execution_time:.4f} seconds, returned {len(records)} records")
+
+            return records
         except Neo4jError as e:
+            # Record failed query
+            execution_time = time.time() - start_time
+            self.logger.error(f"Query execution failed after {execution_time:.4f} seconds: {e}")
+
+            # Record metrics for failed query
+            from .metrics import query_metrics
+            query_metrics.record_query(
+                query=query,
+                parameters=parameters,
+                execution_time=execution_time,
+                cache_hit=False,
+                connection_name=connection_name or self._active_connection
+            )
+
             raise QueryError(f"Query execution failed: {e}")
 
     def query_to_dataframe(self, query: str, parameters: Optional[Dict[str, Any]] = None,
@@ -782,6 +838,217 @@ class Neo4jManager:
             """
 
         return self.execute_query(query)
+
+    def fetch_nodes_paginated(self, label: str, page: int = 1, page_size: int = 50, 
+                             order_by: str = "id", properties: Optional[List[str]] = None,
+                             connection_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Fetches nodes with the given label with pagination support.
+
+        Args:
+            label: The node label to query.
+            page: Page number (1-based).
+            page_size: Number of nodes per page.
+            order_by: Property to order by.
+            properties: List of property keys to return. If None, returns all properties.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            Dictionary containing:
+                - nodes: List of dictionaries containing node properties
+                - total: Total number of nodes with the given label
+                - page: Current page number
+                - page_size: Number of nodes per page
+                - total_pages: Total number of pages
+
+        Raises:
+            ConnectionError: If there is no active connection.
+            QueryError: If the query execution fails.
+            ValueError: If page or page_size is invalid.
+        """
+        if page < 1:
+            raise ValueError("Page number must be at least 1")
+        if page_size < 1:
+            raise ValueError("Page size must be at least 1")
+
+        # Calculate skip value
+        skip = (page - 1) * page_size
+
+        # Get total count
+        total = self.count_nodes_by_label(label, connection_name)
+
+        # Calculate total pages
+        total_pages = (total + page_size - 1) // page_size
+
+        # Use the paginated_nodes template if no specific properties are requested
+        if not properties:
+            from .query_templates import template_registry
+            query, params = template_registry.render_template(
+                "paginated_nodes",
+                {
+                    "label": label,
+                    "order_by": order_by,
+                    "skip": skip,
+                    "limit": page_size
+                }
+            )
+            nodes = self.execute_query(query, params, connection_name)
+        else:
+            # Custom query with specific properties
+            property_string = ", ".join([f"n.{prop} AS {prop}" for prop in properties])
+            query = f"""
+            MATCH (n:`{label}`)
+            RETURN id(n) AS id, {property_string}
+            ORDER BY n.{order_by}
+            SKIP {skip}
+            LIMIT {page_size}
+            """
+            nodes = self.execute_query(query, connection_name=connection_name)
+
+        return {
+            "nodes": nodes,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages
+        }
+
+    def count_nodes_by_label(self, label: str, connection_name: Optional[str] = None) -> int:
+        """
+        Counts the number of nodes with the given label.
+
+        Args:
+            label: The node label to count.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            Number of nodes with the given label.
+
+        Raises:
+            ConnectionError: If there is no active connection.
+            QueryError: If the query execution fails.
+        """
+        # Use the count_nodes_by_label template
+        from .query_templates import template_registry
+        query, params = template_registry.render_template(
+            "count_nodes_by_label",
+            {"label": label}
+        )
+
+        result = self.query_to_value(query, params, connection_name)
+        return result
+
+    def count_relationships(self, source_label: str, relationship_type: str, target_label: str, 
+                           connection_name: Optional[str] = None) -> int:
+        """
+        Counts the number of relationships with the given type between nodes with the given labels.
+
+        Args:
+            source_label: Label of the source nodes.
+            relationship_type: Type of relationship.
+            target_label: Label of the target nodes.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            Number of relationships.
+
+        Raises:
+            ConnectionError: If there is no active connection.
+            QueryError: If the query execution fails.
+        """
+        # Use the count_relationships_by_type_and_labels template
+        from .query_templates import template_registry
+        query, params = template_registry.render_template(
+            "count_relationships_by_type_and_labels",
+            {
+                "source_label": source_label,
+                "relationship_type": relationship_type,
+                "target_label": target_label
+            }
+        )
+
+        result = self.query_to_value(query, params, connection_name)
+        return result
+
+    def fetch_relationships_paginated(self, source_label: str, relationship_type: str, target_label: str,
+                                     page: int = 1, page_size: int = 50, order_by: str = "id",
+                                     connection_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Fetches relationships with pagination support.
+
+        Args:
+            source_label: Label of the source nodes.
+            relationship_type: Type of relationship.
+            target_label: Label of the target nodes.
+            page: Page number (1-based).
+            page_size: Number of relationships per page.
+            order_by: Property of the relationship to order by.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            Dictionary containing:
+                - relationships: List of dictionaries containing relationship details
+                - total: Total number of relationships
+                - page: Current page number
+                - page_size: Number of relationships per page
+                - total_pages: Total number of pages
+
+        Raises:
+            ConnectionError: If there is no active connection.
+            QueryError: If the query execution fails.
+            ValueError: If page or page_size is invalid.
+        """
+        if page < 1:
+            raise ValueError("Page number must be at least 1")
+        if page_size < 1:
+            raise ValueError("Page size must be at least 1")
+
+        # Calculate skip value
+        skip = (page - 1) * page_size
+
+        # Get total count
+        total = self.count_relationships(source_label, relationship_type, target_label, connection_name)
+
+        # Calculate total pages
+        total_pages = (total + page_size - 1) // page_size
+
+        # Use the paginated_relationships template
+        from .query_templates import template_registry
+        query, params = template_registry.render_template(
+            "paginated_relationships",
+            {
+                "source_label": source_label,
+                "relationship_type": relationship_type,
+                "target_label": target_label,
+                "order_by": order_by,
+                "skip": skip,
+                "limit": page_size
+            }
+        )
+
+        # Execute the query
+        results = self.execute_query(query, params, connection_name)
+
+        # Process results to extract relationship details
+        relationships = []
+        for result in results:
+            source_node = result.get('a', {})
+            relationship = result.get('r', {})
+            target_node = result.get('b', {})
+
+            relationships.append({
+                "source": source_node,
+                "relationship": relationship,
+                "target": target_node
+            })
+
+        return {
+            "relationships": relationships,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages
+        }
 
     def summarize_ontology_terms(self, label: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
         """
