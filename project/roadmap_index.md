@@ -10,11 +10,11 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 This roadmap outlines the plan for enhancing and expanding the Science Data Kit, building on the foundation established in Phase 1. It focuses on session management, multimodal data integration, advanced features, performance optimization, and user experience improvements.
 
-**Latest Version**: [roadmap_phase2_09.md](roadmap_phase2_09.md)
+**Latest Version**: [roadmap_phase2_10.md](roadmap_phase2_10.md)
 
-**Status**: In Progress - Completed session management functionality (including session configuration format, resource registry, dependency tracking, automatic session recovery, and resource access control), data source connectors (Office 365, Dropbox, Google Drive, and local storage), data transformation pipelines (pipeline configuration format, tabular data mapping, file tree processing, data validation, and pipeline templates), and database enhancements (query caching, parameterized query templates, query logging and performance metrics, pagination for large result sets, and relationship management utilities).
+**Status**: In Progress - Completed session management functionality (including session configuration format, resource registry, dependency tracking, automatic session recovery, and resource access control), data source connectors (Office 365, Dropbox, Google Drive, and local storage), data transformation pipelines (pipeline configuration format, tabular data mapping, file tree processing, data validation, and pipeline templates), database enhancements (query caching, parameterized query templates, query logging and performance metrics, pagination for large result sets, and relationship management utilities), and API layer development (API architecture, RESTful endpoints, and authentication/authorization).
 
-**Next Steps**: Begin API layer development, continue data modeling enhancements, and write tests and documentation for the new features.
+**Next Steps**: Continue API layer development with documentation and client libraries, continue data modeling enhancements, and write tests and documentation for the new features.
 
 ### Data Source Integration
 
