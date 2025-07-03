@@ -48,6 +48,10 @@ class ScienceDataKitApp:
         """Set up the application pages."""
         # Import page modules
         try:
+            # Dashboard page
+            from science_data_kit.ui.pages.dashboard import render_dashboard_page
+            self.page_adapter.register_page("Dashboard", render_dashboard_page)
+
             # Server page
             from science_data_kit.ui.pages.connect import render_server_page
             self.page_adapter.register_page("Server", render_server_page)
@@ -90,6 +94,8 @@ class ScienceDataKitApp:
         pages = []
 
         # Add pages with icons
+        if "Dashboard" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Dashboard"], title="dashboard", icon="📊"))
         if "Server" in self.page_adapter.pages:
             pages.append(st.Page(self.page_adapter.pages["Server"], title="server", icon="🖥️"))
         if "Survey" in self.page_adapter.pages:
