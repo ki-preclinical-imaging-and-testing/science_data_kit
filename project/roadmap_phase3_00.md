@@ -81,31 +81,37 @@ The primary goals for Phase 3 are:
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement authentication | High | To Do | Add support for authenticating with NC3Rs EDA tool |
-| Create data retrieval methods | High | To Do | Add methods for retrieving data from NC3Rs EDA tool |
+| Implement JSON file import | High | To Do | Leverage existing code to import NC3Rs data from JSON file format |
+| Create data mapping utilities | High | To Do | Add utilities for mapping NC3Rs data to the SDK's data model |
 | Implement data import | Medium | To Do | Add methods for importing NC3Rs EDA tool data into Neo4j |
-| Create search functionality | Medium | To Do | Add methods for searching for resources in NC3Rs EDA tool |
+| Create search functionality | Medium | To Do | Add methods for searching for resources in NC3Rs data |
 | Add integration to provider registry | Low | To Do | Register NC3Rs EDA tool provider in the integration provider registry |
+| Add attribution for NC3Rs platform | Medium | To Do | Give credit to NC3Rs for their useful platform for designing responsible animal experiments |
 
 #### 2.2 PubMed Integration
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement authentication | High | To Do | Add support for authenticating with PubMed |
+| Implement PubMed open API integration | High | To Do | Add support for connecting to PubMed's open API |
 | Create data retrieval methods | High | To Do | Add methods for retrieving literature data from PubMed |
+| Implement local database querying | High | To Do | Add support for downloading PubMed databases for local querying |
 | Implement data import | Medium | To Do | Add methods for importing PubMed data into Neo4j |
 | Create search functionality | Medium | To Do | Add methods for searching for literature in PubMed |
 | Add integration to provider registry | Low | To Do | Register PubMed provider in the integration provider registry |
+| Create documentation for API usage | Medium | To Do | Document how to use the PubMed API and local database features |
 
 #### 2.3 ISA Tools Integration
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Implement authentication | High | To Do | Add support for authenticating with ISA Tools |
-| Create data retrieval methods | High | To Do | Add methods for retrieving experimental metadata from ISA Tools |
+| Implement RDF/OWL ontology import | High | To Do | Add support for importing entire ontologies via downloadable URL/URI |
+| Create ontology subset selection | High | To Do | Implement ability to pick and choose a subset of the ontology's nodes and remaining relationships |
+| Check for existing ontology import functionality | High | To Do | Verify if ontology import is already included in the app before implementing |
+| Create data retrieval methods | Medium | To Do | Add methods for retrieving experimental metadata from ISA Tools |
 | Implement data import | Medium | To Do | Add methods for importing ISA Tools data into Neo4j |
 | Create search functionality | Medium | To Do | Add methods for searching for metadata in ISA Tools |
 | Add integration to provider registry | Low | To Do | Register ISA Tools provider in the integration provider registry |
+| Create documentation for ontology usage | Medium | To Do | Document how to use the ontology import and subset selection features |
 
 ### 3. Analysis Tools Integration
 
@@ -133,11 +139,13 @@ The primary goals for Phase 3 are:
 
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
+| Implement d3.js integration | High | To Do | Enable integration with d3.js for advanced interactive data visualizations |
 | Add matplotlib integration | High | To Do | Enable integration with matplotlib for basic plotting |
 | Implement plotly integration | High | To Do | Enable integration with plotly for interactive visualizations |
 | Add seaborn integration | Medium | To Do | Enable integration with seaborn for statistical visualizations |
 | Implement bokeh integration | Medium | To Do | Enable integration with bokeh for interactive web visualizations |
 | Add altair integration | Low | To Do | Enable integration with altair for declarative visualizations |
+| Create visualization templates | Medium | To Do | Develop reusable visualization templates for common data types |
 
 ### 4. Performance Optimization
 
