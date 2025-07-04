@@ -1,6 +1,46 @@
 # Science Data Kit (SDK) Later Phase Tasks
 
-This document collects remaining tasks from completed roadmaps that have been moved to the archive. These tasks represent potential future enhancements to the Science Data Kit.
+This document collects remaining tasks from completed roadmaps that have been moved to the archive, as well as tasks from the Phase 4 roadmap that have been designated for implementation in future phases. These tasks represent potential future enhancements to the Science Data Kit.
+
+## Phase 4 Remaining Tasks
+
+These tasks are from the Phase 4 roadmap that have been designated for implementation in future phases:
+
+### 1. Feature Enhancements
+
+#### 1.1 Prioritized Features from Roadmap Later
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Implement responsive design for mobile | High | To Do | Ensure UI works well on various screen sizes |
+| Add customizable user preferences | Medium | To Do | Allow users to personalize their experience |
+| Add MongoDB connector | Medium | To Do | Expand database support |
+| Implement SPARQL endpoint connector | Medium | To Do | Support semantic web data sources |
+| Implement model training pipeline | Low | To Do | Add machine learning capabilities |
+
+#### 1.2 New Feature Recommendations
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Implement real-time collaboration | Medium | To Do | Allow multiple users to work on same dataset |
+| Add automated data quality assessment | Medium | To Do | Create tools to evaluate data quality |
+| Create unified visualization interface | Medium | To Do | Standardize across different backends |
+| Implement workflow automation | Low | To Do | Add tools for data processing workflows |
+
+### 2. Deployment and Distribution
+
+#### 2.1 Containerization
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Create Docker containers | High | To Do | Package application and dependencies |
+| Implement Docker Compose setup | Medium | To Do | Define multi-container configuration |
+| Add Kubernetes configurations | Low | To Do | Support enterprise deployment |
+
+#### 2.2 Package Distribution
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Optimize package structure for PyPI | High | To Do | Prepare for public distribution |
+| Create separate packages for optional components | Medium | To Do | Allow modular installation |
+| Implement proper dependency management | Medium | To Do | Define version constraints |
+| Add installation verification tools | Medium | To Do | Ensure correct installation |
 
 ## Phase 3 Remaining Tasks
 

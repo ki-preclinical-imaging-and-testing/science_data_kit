@@ -10,9 +10,9 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 This roadmap focuses on enhancing the maintainability, performance, and user experience of the Science Data Kit. It outlines a comprehensive plan for code organization, quality assurance, documentation improvements, performance optimization, and architecture enhancements.
 
-**Latest Version**: [roadmap_phase4_16.md](roadmap_phase4_16.md)
+**Latest Version**: [roadmap_phase4_17.md](roadmap_phase4_17.md)
 
-**Status**: In Progress - Implementation continues with the completion of background processing functionality, module template with standardized docstring format, linting with flake8, centralized error handling, abstract base classes for providers, abstract base classes for database connectors, Sphinx documentation system, migration from `app/` to `science_data_kit/ui/`, query profiling, streaming data processing, memory profiling, unit tests for core modules, breaking down large modules, GitHub Actions workflow for continuous integration, Neo4j query optimization with proper indexing, automated dependency updates, and security scanning. Feature Enhancements and Deployment sections have been moved to [toroadmap_later.md](toroadmap_later.md) for future implementation.
+**Status**: In Progress - Implementation continues with the completion of background processing functionality, module template with standardized docstring format, linting with flake8, centralized error handling, abstract base classes for providers, abstract base classes for database connectors, Sphinx documentation system, migration from `app/` to `science_data_kit/ui/`, query profiling, streaming data processing, memory profiling, unit tests for core modules, breaking down large modules, GitHub Actions workflow for continuous integration, Neo4j query optimization with proper indexing, automated dependency updates, security scanning, and deprecation plan for legacy components. Feature Enhancements and Deployment sections from [toroadmap_later.md](toroadmap_later.md) have been merged into [roadmap_later.md](roadmap_later.md) for better organization of future tasks.
 
 ## Archived Roadmaps
 
