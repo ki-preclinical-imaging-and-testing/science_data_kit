@@ -21,9 +21,6 @@ from datetime import datetime
 from neo4j import GraphDatabase, Driver
 from neo4j.exceptions import Neo4jError, ServiceUnavailable
 
-# Import ontology classes from the new module
-from science_data_kit.core.ontology import OntologyAnnotation, OntologySource
-
 # Import query cache
 from .cache import cached_query
 from .metrics import QueryMetrics
@@ -1129,6 +1126,8 @@ class Neo4jManager:
             ConnectionError: If there is no active connection.
             QueryError: If the query execution fails.
         """
+        # Import ontology classes here to avoid circular imports
+        from science_data_kit.core.ontology import OntologyAnnotation, OntologySource
         if not ontology_annotations or not ISATOOLS_AVAILABLE:
             return 0
 
