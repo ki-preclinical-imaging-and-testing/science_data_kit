@@ -1,0 +1,65 @@
+@startuml
+package "Science Data Kit Caching System" {
+  abstract class Cache {
+    - _cache: Dict[Any, Any]
+    - _max_size: Optional[int]
+    - _ttl: Optional[float]
+    - _timestamps: Dict[Any, float]
+    - _access_counts: Dict[Any, int]
+    - _hits: int
+    - _misses: int
+    + get(key: Any, default: Any = None): Any
+    + set(key: Any, value: Any): None
+    + delete(key: Any): None
+    + clear(): None
+    + get_stats(): Dict[str, Any]
+    # _remove_entry(key: Any): None
+    # _evict_entry(): None
+  }
+
+  class LRUCache {
+    - _access_order: List[Any]
+    + get(key: Any, default: Any = None): Any
+    + set(key: Any, value: Any): None
+    # _remove_entry(key: Any): None
+    # _evict_entry(): None
+  }
+
+  class "memoize(decorator)" as memoize {
+    + cache: Cache
+    + clear_cache(): None
+    + get_stats(): Dict[str, Any]
+  }
+
+  function "create_key_from_args()" as create_key_from_args
+
+  LRUCache --|> Cache
+  memoize ..> Cache : uses
+  memoize ..> LRUCache : uses
+  memoize ..> create_key_from_args : uses
+}
+
+note right of Cache
+  Base cache class with support for:
+  - Size limits
+  - TTL (Time To Live)
+  - Statistics tracking
+  - Cache invalidation
+end note
+
+note right of LRUCache
+  Implements Least Recently Used (LRU)
+  eviction policy
+end note
+
+note right of memoize
+  Decorator that caches function results
+  with support for different caching strategies
+end note
+
+note right of create_key_from_args
+  Utility function to create reliable
+  cache keys from function arguments
+end note
+
+@enduml
