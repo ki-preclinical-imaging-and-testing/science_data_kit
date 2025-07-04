@@ -12,6 +12,7 @@ Phase 4 of the Science Data Kit (SDK) focuses on enhancing the maintainability, 
 | 04 | 2023-07-25 | Implemented abstract base classes for providers (Task 1.2.1) |
 | 05 | 2023-07-30 | Implemented abstract base classes for database connectors (Task 1.2.2) |
 | 06 | 2023-08-05 | Set up Sphinx documentation system (Task 3.1.1) |
+| 07 | 2023-08-10 | Completed migration from `app/` to `science_data_kit/ui/` (Task 1.3.1) |
 
 ## Background
 The Science Data Kit has successfully completed three major development phases, resulting in a robust platform with extensive capabilities for scientific data analysis. The project has implemented core features including:
@@ -56,7 +57,7 @@ A comprehensive codebase review has identified several areas for improvement tha
 #### 1.3 Consolidate Legacy Code
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
-| Complete migration from `app/` to `science_data_kit/ui/` | High | To Do | Identify remaining components to migrate |
+| Complete migration from `app/` to `science_data_kit/ui/` | High | Completed | All components successfully migrated as documented in roadmap_phase4_05_oldapp_08.md |
 | Create deprecation plan for legacy components | Medium | To Do | Include timeline and migration path |
 | Add migration guides for users of legacy components | Medium | To Do | Document how to transition to new components |
 | Remove deprecated components after migration period | Low | To Do | Schedule for later in Phase 4 |
@@ -253,16 +254,17 @@ The project has made significant progress in Phase 4, with the completion of sev
 5. Created abstract base classes for providers (Task 1.2.1)
 6. Created abstract base classes for database connectors (Task 1.2.2)
 7. Set up Sphinx documentation system (Task 3.1.1)
+8. Completed migration from `app/` to `science_data_kit/ui/` (Task 1.3.1)
 
 These improvements have enhanced the maintainability, structure, and documentation of the codebase, providing a solid foundation for further development.
 
 ## Next Steps
 The following high-priority tasks are planned for the next iteration:
-1. Complete migration from `app/` to `science_data_kit/ui/` (Task 1.3.1)
-2. Implement query profiling (Task 4.1.1)
-3. Implement streaming data processing (Task 4.2.1)
-4. Break down large modules (Task 5.1.1)
-5. Implement unit tests for core modules (Task 2.1.1)
+1. Implement query profiling (Task 4.1.1)
+2. Implement streaming data processing (Task 4.2.1)
+3. Break down large modules (Task 5.1.1)
+4. Implement unit tests for core modules (Task 2.1.1)
+5. Create deprecation plan for legacy components (Task 1.3.2)
 
 ## Success Metrics
 The success of Phase 4 will be measured by the following metrics:
