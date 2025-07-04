@@ -14,7 +14,8 @@ from .session import (
 # Import and expose database management
 from .db import (
     Neo4jManager, DatabaseError, ConnectionError,
-    load_db_config, update_db_config_auto
+    load_db_config, update_db_config_auto,
+    Neo4jConfigManager, config_manager
 )
 
 # Import and expose ontology integration
@@ -27,11 +28,12 @@ __all__ = [
     # Session management
     'Session', 'create_session', 'load_session', 'list_sessions',
     'Resource', 'ResourceRegistry',
-    
+
     # Database management
     'Neo4jManager', 'DatabaseError', 'ConnectionError',
     'load_db_config', 'update_db_config_auto',
-    
+    'Neo4jConfigManager', 'config_manager',
+
     # Ontology integration
     'OntologyImporter', 'OntologyBrowser',
     'OntologySource', 'OntologyAnnotation'

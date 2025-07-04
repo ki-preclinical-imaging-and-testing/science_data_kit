@@ -25,8 +25,9 @@ from neo4j.exceptions import Neo4jError, ServiceUnavailable
 from .cache import cached_query
 from .metrics import QueryMetrics
 
-# Import indexing (will be available after initialization to avoid circular imports)
+# Import indexing and configuration (will be available after initialization to avoid circular imports)
 indexing_imported = False
+config_imported = False
 
 # Set ISATOOLS_AVAILABLE for backward compatibility
 ISATOOLS_AVAILABLE = True
@@ -679,12 +680,14 @@ class Neo4jManager:
         except Exception:
             return "localhost"
 
-    def start_container(self, version: str = "latest") -> bool:
+    def start_container(self, version: str = "latest", workload_type: Optional[str] = None) -> bool:
         """
-        Starts the Neo4j container.
+        Starts the Neo4j container with optimized configuration.
 
         Args:
             version: The Neo4j version to use.
+            workload_type: Optional workload type for configuration optimization.
+                          If None, uses "balanced" for new containers or keeps existing configuration.
 
         Returns:
             True if the container was started successfully, False otherwise.
@@ -707,6 +710,37 @@ class Neo4jManager:
             self.http_port = find_free_port(7474)
             self.bolt_port = find_free_port(7687)
 
+            # Get optimized configuration environment variables
+            env_vars = {
+                "NEO4J_AUTH": f"neo4j/password",
+                "NEO4J_apoc_export_file_enabled": "true",
+                "NEO4J_apoc_import_file_enabled": "true",
+                "NEO4J_apoc_import_file_use__neo4j__config": "true",
+                "NEO4JLABS_PLUGINS": '["apoc"]'
+            }
+
+            # Add optimized configuration settings
+            if workload_type is None:
+                workload_type = "balanced"  # Default for new containers
+
+            # Import configuration manager
+            global config_imported
+            if not config_imported:
+                try:
+                    from .neo4j_config import config_manager
+                    config_imported = True
+                except ImportError:
+                    self.logger.warning("Failed to import neo4j_config module, using default configuration")
+
+            if config_imported:
+                from .neo4j_config import config_manager
+                config = config_manager.get_recommended_configuration(workload_type)
+
+                # Convert configuration to environment variables
+                for key, value in config.items():
+                    env_key = f"NEO4J_{key.replace('.', '_')}"
+                    env_vars[env_key] = value
+
             # Create and start container
             container = client.containers.run(
                 f"neo4j:{version}",
@@ -716,13 +750,7 @@ class Neo4jManager:
                     '7474/tcp': self.http_port,
                     '7687/tcp': self.bolt_port
                 },
-                environment={
-                    "NEO4J_AUTH": f"neo4j/password",
-                    "NEO4J_apoc_export_file_enabled": "true",
-                    "NEO4J_apoc_import_file_enabled": "true",
-                    "NEO4J_apoc_import_file_use__neo4j__config": "true",
-                    "NEO4JLABS_PLUGINS": '["apoc"]'
-                },
+                environment=env_vars,
                 volumes={
                     f"{self.container_name}-data": {"bind": "/data", "mode": "rw"},
                     f"{self.container_name}-logs": {"bind": "/logs", "mode": "rw"},
@@ -1471,6 +1499,112 @@ class Neo4jManager:
 
         from .indexing import index_manager
         return index_manager.implement_indexing_strategy(auto_create=auto_create)
+
+    # Neo4j Configuration Methods
+
+    def get_current_configuration(self) -> Dict[str, str]:
+        """
+        Get the current Neo4j configuration settings.
+
+        Returns:
+            Dictionary containing current configuration settings
+        """
+        global config_imported
+        if not config_imported:
+            try:
+                from .neo4j_config import config_manager
+                config_imported = True
+            except ImportError:
+                self.logger.error("Failed to import neo4j_config module")
+                return {}
+
+        from .neo4j_config import config_manager
+        return config_manager.get_current_configuration()
+
+    def analyze_workload(self) -> str:
+        """
+        Analyze the database workload to determine the optimal configuration template.
+
+        Returns:
+            String indicating the recommended configuration template
+            ("read_optimized", "write_optimized", "balanced", "high_memory", or "default")
+        """
+        global config_imported
+        if not config_imported:
+            try:
+                from .neo4j_config import config_manager
+                config_imported = True
+            except ImportError:
+                self.logger.error("Failed to import neo4j_config module")
+                return "default"
+
+        from .neo4j_config import config_manager
+        return config_manager.analyze_workload()
+
+    def get_recommended_configuration(self, workload_type: Optional[str] = None) -> Dict[str, str]:
+        """
+        Get recommended configuration settings based on workload type.
+
+        Args:
+            workload_type: Optional workload type. If None, analyzes the current workload.
+
+        Returns:
+            Dictionary containing recommended configuration settings
+        """
+        global config_imported
+        if not config_imported:
+            try:
+                from .neo4j_config import config_manager
+                config_imported = True
+            except ImportError:
+                self.logger.error("Failed to import neo4j_config module")
+                return {}
+
+        from .neo4j_config import config_manager
+        return config_manager.get_recommended_configuration(workload_type)
+
+    def optimize_configuration(self, workload_type: Optional[str] = None, 
+                              auto_apply: bool = False) -> Dict[str, Any]:
+        """
+        Optimize Neo4j configuration based on workload analysis.
+
+        Args:
+            workload_type: Optional workload type. If None, analyzes the current workload.
+            auto_apply: If True, automatically applies the recommended configuration.
+
+        Returns:
+            Dictionary containing optimization results
+        """
+        global config_imported
+        if not config_imported:
+            try:
+                from .neo4j_config import config_manager
+                config_imported = True
+            except ImportError:
+                self.logger.error("Failed to import neo4j_config module")
+                return {"error": "Failed to import neo4j_config module"}
+
+        from .neo4j_config import config_manager
+        return config_manager.optimize_configuration(workload_type, auto_apply)
+
+    def get_performance_metrics(self) -> Dict[str, Any]:
+        """
+        Get performance metrics for the Neo4j database.
+
+        Returns:
+            Dictionary containing performance metrics
+        """
+        global config_imported
+        if not config_imported:
+            try:
+                from .neo4j_config import config_manager
+                config_imported = True
+            except ImportError:
+                self.logger.error("Failed to import neo4j_config module")
+                return {"error": "Failed to import neo4j_config module"}
+
+        from .neo4j_config import config_manager
+        return config_manager.get_performance_metrics()
 
 
 # Singleton instance - don't connect on initialization to avoid startup errors
