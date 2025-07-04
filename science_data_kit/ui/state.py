@@ -8,6 +8,7 @@ It includes functions for initializing, updating, and accessing session state va
 import streamlit as st
 from typing import Dict, Any, Optional, List, Callable
 import yaml
+import pandas as pd
 from pathlib import Path
 
 def initialize_session_state() -> None:
@@ -31,9 +32,18 @@ def initialize_session_state() -> None:
     if "neo4j_database" not in st.session_state:
         st.session_state["neo4j_database"] = "neo4j"
 
+    if "selected_db" not in st.session_state:
+        st.session_state.selected_db = None
+
+    if "db_connection" not in st.session_state:
+        st.session_state["db_connection"] = None
+
     # Container state
     if "container_status" not in st.session_state:
         st.session_state["container_status"] = "unknown"
+
+    if "container_name" not in st.session_state:
+        st.session_state["container_name"] = "neo4j-instance"
 
     if "credentials_locked" not in st.session_state:
         st.session_state["credentials_locked"] = False
@@ -57,8 +67,46 @@ def initialize_session_state() -> None:
     if "folder" not in st.session_state:
         st.session_state["folder"] = None
 
+    if "scan_completed" not in st.session_state:
+        st.session_state["scan_completed"] = False
+
+    if "scanned_files" not in st.session_state:
+        st.session_state["scanned_files"] = pd.DataFrame()
+
+    if "ncdu_output" not in st.session_state:
+        st.session_state["ncdu_output"] = ""
+
+    if "ncdu_json_path" not in st.session_state:
+        st.session_state["ncdu_json_path"] = str(Path.home() / "ncdu_scan.json")  # Default JSON path
+
     if "directory_label" not in st.session_state:
         st.session_state["directory_label"] = "Folder"
+
+    # Entity state
+    if "entities_df" not in st.session_state:
+        st.session_state["entities_df"] = None
+
+    if "selected_entity_index" not in st.session_state:
+        st.session_state["selected_entity_index"] = None
+
+    if "label_column" not in st.session_state:
+        st.session_state["label_column"] = None
+
+    if "property_columns" not in st.session_state:
+        st.session_state["property_columns"] = []
+
+    if "available_labels" not in st.session_state:
+        st.session_state["available_labels"] = []
+
+    # Taxonomy state
+    if "taxonomy_keys" not in st.session_state:
+        st.session_state["taxonomy_keys"] = []
+
+    if "taxonomy" not in st.session_state:
+        st.session_state["taxonomy"] = None
+
+    if "taxonomy_set" not in st.session_state:
+        st.session_state["taxonomy_set"] = False
 
     # Navigation state
     if "current_page" not in st.session_state:
@@ -84,6 +132,25 @@ def initialize_session_state() -> None:
     # NeoDash state
     if "neodash_url" not in st.session_state:
         st.session_state["neodash_url"] = ""
+
+    if "neodash_container_name" not in st.session_state:
+        st.session_state["neodash_container_name"] = "dsk-neodash-instance"
+
+    if "neodash_port" not in st.session_state:
+        st.session_state["neodash_port"] = 5005
+
+    if "neodash_connected" not in st.session_state:
+        st.session_state["neodash_connected"] = False
+
+    if "neodash_host_ip" not in st.session_state:
+        st.session_state["neodash_host_ip"] = "localhost"
+
+    # Chat state
+    if "graph_rag" not in st.session_state:
+        st.session_state["graph_rag"] = None
+
+    if "chat_history" not in st.session_state:
+        st.session_state["chat_history"] = []
 
 def load_state_from_config(config_path: Path) -> None:
     """

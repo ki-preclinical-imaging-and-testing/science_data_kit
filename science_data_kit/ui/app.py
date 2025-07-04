@@ -11,10 +11,12 @@ from typing import Dict, Any, Optional, List, Union, Callable
 from pathlib import Path
 import sys
 import os
+from neo4j import GraphDatabase
 
 from science_data_kit.ui.config import configure_page, DEFAULT_PAGE_CONFIG
 from science_data_kit.ui.state import initialize_session_state
 from science_data_kit.ui.adapters.page_adapter import PageAdapter
+from science_data_kit.core.db.db_manager import load_db_config
 
 class ScienceDataKitApp:
     """
@@ -38,11 +40,49 @@ class ScienceDataKitApp:
         # Initialize session state
         initialize_session_state()
 
+        # Load database configuration
+        self._load_db_config()
+
         # Create page adapter
         self.page_adapter = PageAdapter()
 
         # Set up pages
         self._setup_pages()
+
+    def _load_db_config(self):
+        """Load database configuration and set up connection."""
+        try:
+            # Load database configuration from YAML files
+            db_config = load_db_config()
+
+            # Update session state with database configuration
+            if "neo4j_uri" not in st.session_state or not st.session_state["neo4j_uri"]:
+                st.session_state["neo4j_uri"] = db_config.get('uri', 'bolt://localhost:7687')
+            if "neo4j_user" not in st.session_state or not st.session_state["neo4j_user"]:
+                st.session_state["neo4j_user"] = db_config.get('user', 'neo4j')
+            if "neo4j_password" not in st.session_state or not st.session_state["neo4j_password"]:
+                st.session_state["neo4j_password"] = db_config.get('password', 'password')
+
+            # Extract port from URI if possible
+            uri = st.session_state["neo4j_uri"]
+            try:
+                # URI format: bolt://hostname:port
+                port = int(uri.split(':')[-1])
+                st.session_state["bolt_port"] = port
+            except (ValueError, IndexError):
+                # Default port if URI doesn't contain a port
+                st.session_state["bolt_port"] = 7687
+
+            # Set up database connection if not already set
+            if "db_connection" not in st.session_state or not st.session_state["db_connection"]:
+                st.session_state["db_connection"] = GraphDatabase.driver(
+                    st.session_state["neo4j_uri"],
+                    auth=(st.session_state["neo4j_user"], st.session_state["neo4j_password"])
+                )
+        except Exception as e:
+            st.error(f"Error loading database configuration: {e}")
+            import traceback
+            st.error(traceback.format_exc())
 
     def _setup_pages(self):
         """Set up the application pages."""
