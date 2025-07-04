@@ -25,6 +25,9 @@ from neo4j.exceptions import Neo4jError, ServiceUnavailable
 from .cache import cached_query
 from .metrics import QueryMetrics
 
+# Import indexing (will be available after initialization to avoid circular imports)
+indexing_imported = False
+
 # Set ISATOOLS_AVAILABLE for backward compatibility
 ISATOOLS_AVAILABLE = True
 
@@ -1374,6 +1377,100 @@ class Neo4jManager:
             return True, f"Graph imported successfully with {len(G.nodes)} nodes and {len(G.edges)} relationships"
         except Exception as e:
             return False, f"Error importing graph: {str(e)}"
+
+    # Database indexing methods
+
+    def get_existing_indexes(self) -> List[Dict[str, Any]]:
+        """
+        Get a list of existing indexes in the database.
+
+        Returns:
+            List of dictionaries containing index information
+
+        Raises:
+            ConnectionError: If there is no active connection.
+            QueryError: If the query execution fails.
+        """
+        global indexing_imported
+        if not indexing_imported:
+            try:
+                from .indexing import index_manager
+                indexing_imported = True
+            except ImportError:
+                self.logger.error("Failed to import indexing module")
+                return []
+
+        from .indexing import index_manager
+        return index_manager.get_existing_indexes()
+
+    def create_index(self, label: str, property_name: str, index_name: Optional[str] = None) -> bool:
+        """
+        Create an index on a property for a specific label.
+
+        Args:
+            label: The node label
+            property_name: The property name to index
+            index_name: Optional name for the index
+
+        Returns:
+            True if the index was created successfully, False otherwise
+
+        Raises:
+            ConnectionError: If there is no active connection.
+            QueryError: If the query execution fails.
+        """
+        global indexing_imported
+        if not indexing_imported:
+            try:
+                from .indexing import index_manager
+                indexing_imported = True
+            except ImportError:
+                self.logger.error("Failed to import indexing module")
+                return False
+
+        from .indexing import index_manager
+        return index_manager.create_index(label, property_name, index_name)
+
+    def get_index_recommendations(self) -> List[Dict[str, Any]]:
+        """
+        Get index recommendations based on query patterns.
+
+        Returns:
+            List of dictionaries containing index recommendations
+        """
+        global indexing_imported
+        if not indexing_imported:
+            try:
+                from .indexing import index_manager
+                indexing_imported = True
+            except ImportError:
+                self.logger.error("Failed to import indexing module")
+                return []
+
+        from .indexing import index_manager
+        return index_manager.get_index_recommendations()
+
+    def implement_indexing_strategy(self, auto_create: bool = False) -> Dict[str, Any]:
+        """
+        Implement an indexing strategy based on query analysis.
+
+        Args:
+            auto_create: If True, automatically creates recommended indexes.
+
+        Returns:
+            Dictionary containing implementation results
+        """
+        global indexing_imported
+        if not indexing_imported:
+            try:
+                from .indexing import index_manager
+                indexing_imported = True
+            except ImportError:
+                self.logger.error("Failed to import indexing module")
+                return {"error": "Failed to import indexing module"}
+
+        from .indexing import index_manager
+        return index_manager.implement_indexing_strategy(auto_create=auto_create)
 
 
 # Singleton instance - don't connect on initialization to avoid startup errors
