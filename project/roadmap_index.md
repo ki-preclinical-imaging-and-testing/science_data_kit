@@ -6,7 +6,13 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 ## Active Roadmaps
 
-Currently, there are no active roadmaps. All roadmaps have been completed and archived.
+### Phase 4: SDK Enhancement and Optimization
+
+This roadmap focuses on enhancing the maintainability, performance, and user experience of the Science Data Kit. It outlines a comprehensive plan for code organization, quality assurance, documentation improvements, performance optimization, architecture enhancements, feature additions, and deployment improvements.
+
+**Latest Version**: [roadmap_phase4_00.md](roadmap_phase4_00.md)
+
+**Status**: In Progress - Initial planning phase completed, implementation not yet begun.
 
 ## Archived Roadmaps
 
@@ -94,7 +100,7 @@ This roadmap refactored the Science Data Kit application to improve its architec
 
 ## Project Direction
 
-The Science Data Kit has evolved into a comprehensive tool for data analysis and visualization. All planned phases have been completed, resulting in a robust platform with extensive capabilities.
+The Science Data Kit has evolved into a comprehensive tool for data analysis and visualization. With the completion of the first three development phases, the platform has established robust capabilities. Phase 4 is now underway to further enhance the platform's maintainability, performance, and user experience.
 
 ### Current Capabilities
 
@@ -131,6 +137,6 @@ Please refer to roadmap_memo.md for detailed instructions on working with roadma
 
 The Science Data Kit project has successfully achieved its goal of becoming a comprehensive tool for scientific data analysis and visualization. Through the systematic implementation of nine major roadmaps across three development phases, the SDK has evolved into a robust platform with extensive capabilities.
 
-All planned roadmaps have been completed and archived, with any remaining tasks collected in the [roadmap_later.md](roadmap_later.md) file for future consideration. The project continues to be maintained and enhanced based on user feedback and emerging requirements.
+With the first three phases completed and archived, the project is now entering Phase 4, which focuses on enhancing maintainability, performance, and user experience. Many tasks from previous phases have been collected in the [roadmap_later.md](roadmap_later.md) file and prioritized for implementation in Phase 4. The project continues to be maintained and enhanced based on user feedback and emerging requirements.
 
 For detailed information about specific roadmaps, refer to the archived roadmap files linked in the "Archived Roadmaps" section above. For information about future development directions, see the "Project Direction" section.
