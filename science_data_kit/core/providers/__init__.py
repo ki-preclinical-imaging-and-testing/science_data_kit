@@ -6,6 +6,7 @@ to interact with various data sources like Dropbox, Google Sheets, and Microsoft
 """
 
 from .registry import ProviderRegistry, ProviderType, BaseProvider, registry
+from .abstract_providers import StorageProvider, DatabaseProvider, APIProvider
 from .storage import DropboxProvider, GoogleSheetsProvider
 from .api import MSGraphProvider
 
@@ -15,4 +16,5 @@ registry.register_provider(ProviderType.SPREADSHEET, "google_sheets", GoogleShee
 registry.register_provider(ProviderType.API, "msgraph", MSGraphProvider)
 
 __all__ = ['ProviderRegistry', 'ProviderType', 'BaseProvider', 'registry',
+           'StorageProvider', 'DatabaseProvider', 'APIProvider',
            'DropboxProvider', 'GoogleSheetsProvider', 'MSGraphProvider']
