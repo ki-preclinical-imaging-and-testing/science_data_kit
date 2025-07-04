@@ -52,10 +52,10 @@ def load_db_config(fn: str = 'postgres_config.yaml') -> Dict[str, Any]:
     Raises:
         ConfigError: If the configuration file cannot be loaded.
     """
-    # If the file is .postgres_config_auto.yaml, try to load it from the app directory first
+    # If the file is .postgres_config_auto.yaml, try to load it from the science_data_kit/core/config directory first
     if fn == '.postgres_config_auto.yaml':
         try:
-            with open(f"app/{fn}", 'r') as file:
+            with open(f"science_data_kit/core/config/{fn}", 'r') as file:
                 return yaml.safe_load(file)
         except Exception:
             # Fall back to the original location
@@ -83,7 +83,7 @@ def update_db_config_auto(hostname: str, port: str, username: Optional[str] = No
     Raises:
         ConfigError: If the configuration file cannot be updated.
     """
-    config_path = Path("app/.postgres_config_auto.yaml")
+    config_path = Path("science_data_kit/core/config/.postgres_config_auto.yaml")
 
     # Create config dictionary
     config = {
@@ -529,7 +529,7 @@ class PostgreSQLManager:
             # Use RealDictCursor to get results as dictionaries
             with connection.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute(query, parameters)
-                
+
                 # Check if the query returns results
                 if cursor.description:
                     results = cursor.fetchall()

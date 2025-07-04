@@ -66,10 +66,10 @@ def load_db_config(fn: str = 'db_config.yaml') -> Dict[str, Any]:
     Raises:
         ConfigError: If the configuration file cannot be loaded.
     """
-    # If the file is .db_config_auto.yaml, try to load it from the app directory first
+    # If the file is .db_config_auto.yaml, try to load it from the science_data_kit/core/config directory first
     if fn == '.db_config_auto.yaml':
         try:
-            with open(f"app/{fn}", 'r') as file:
+            with open(f"science_data_kit/core/config/{fn}", 'r') as file:
                 return yaml.safe_load(file)
         except Exception:
             # Fall back to the original location
@@ -97,7 +97,7 @@ def update_db_config_auto(hostname: str, port: str, username: Optional[str] = No
     Raises:
         ConfigError: If the configuration file cannot be updated.
     """
-    config_path = Path("app/.db_config_auto.yaml")
+    config_path = Path("science_data_kit/core/config/.db_config_auto.yaml")
 
     # Create config dictionary
     config = {
