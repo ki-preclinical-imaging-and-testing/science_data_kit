@@ -594,6 +594,119 @@ class Neo4jManager:
 
             raise QueryError(f"Query execution failed: {e}")
 
+    def execute_batch_queries(self, queries: List[str], parameters: Optional[Dict[str, Any]] = None,
+                             connection_name: Optional[str] = None, enable_cache: bool = True) -> List[List[Dict[str, Any]]]:
+        """
+        Executes multiple Cypher queries in a single transaction and returns the results.
+
+        This method is optimized for executing multiple related queries in a single batch,
+        which can significantly improve performance by reducing the number of round trips
+        to the database.
+
+        Args:
+            queries: List of Cypher queries to execute.
+            parameters: Optional dictionary of parameters to include in the queries.
+            connection_name: Optional name of the connection to use.
+                            If None, uses the active connection.
+            enable_cache: Whether to use query caching for these queries.
+
+        Returns:
+            List of lists of dictionaries containing the query results.
+                Each inner list corresponds to the results of one query.
+
+        Raises:
+            ConnectionError: If there is no active connection.
+            QueryError: If the query execution fails.
+        """
+        # Record start time for performance measurement
+        start_time = time.time()
+        cache_hit = False
+
+        # If connection_name is provided, use that specific connection
+        if connection_name:
+            if connection_name not in self._connections:
+                raise ConnectionError(f"Connection '{connection_name}' does not exist")
+
+            conn = self._connections[connection_name]
+            driver = conn["driver"]
+            database = conn["database"]
+        else:
+            # Use the active connection
+            if self._active_connection:
+                conn = self._connections[self._active_connection]
+                driver = conn["driver"]
+                database = conn["database"]
+            else:
+                # Try to connect if not already connected (backward compatibility)
+                if not self._driver:
+                    if not self._connect():
+                        raise ConnectionError(f"Cannot run query. No active connection to Neo4j. {self._connection_error}")
+                driver = self._driver
+                database = self.database
+
+        parameters = parameters or {}
+
+        # Log batch execution
+        self.logger.debug(f"Executing batch of {len(queries)} queries")
+        if parameters:
+            self.logger.debug(f"Parameters: {parameters}")
+
+        try:
+            # Execute the queries in a single transaction
+            with driver.session(database=database) as session:
+                results = []
+
+                def run_batch(tx):
+                    batch_results = []
+                    for query in queries:
+                        result = tx.run(query, parameters)
+                        batch_results.append([dict(record) for record in result])
+                    return batch_results
+
+                results = session.execute_write(run_batch)
+
+            # Calculate execution time
+            execution_time = time.time() - start_time
+
+            # Record metrics for each query
+            from .metrics import query_metrics
+            for i, query in enumerate(queries):
+                query_metrics.record_query(
+                    query=query,
+                    parameters=parameters,
+                    execution_time=execution_time / len(queries),  # Approximate time per query
+                    cache_hit=cache_hit,
+                    connection_name=connection_name or self._active_connection,
+                    batch_index=i,
+                    batch_size=len(queries)
+                )
+
+            # Log execution time
+            total_records = sum(len(records) for records in results)
+            self.logger.debug(f"Batch executed in {execution_time:.4f} seconds, returned {total_records} total records")
+
+            return results
+        except Neo4jError as e:
+            # Record failed query
+            execution_time = time.time() - start_time
+            self.logger.error(f"Batch execution failed after {execution_time:.4f} seconds: {e}")
+
+            # Record metrics for failed batch
+            from .metrics import query_metrics
+            for i, query in enumerate(queries):
+                query_metrics.record_query(
+                    query=query,
+                    parameters=parameters,
+                    execution_time=execution_time / len(queries),  # Approximate time per query
+                    cache_hit=False,
+                    connection_name=connection_name or self._active_connection,
+                    batch_index=i,
+                    batch_size=len(queries),
+                    error=str(e)
+                )
+
+            raise QueryError(f"Batch execution failed: {e}")
+
     def query_to_dataframe(self, query: str, parameters: Optional[Dict[str, Any]] = None,
                           connection_name: Optional[str] = None) -> pd.DataFrame:
         """
@@ -1586,6 +1699,42 @@ class Neo4jManager:
 
         from .neo4j_config import config_manager
         return config_manager.optimize_configuration(workload_type, auto_apply)
+
+    def execute_batch(self, batch_builder, connection_name: Optional[str] = None, 
+                      enable_cache: bool = True) -> List[List[Dict[str, Any]]]:
+        """
+        Executes a batch of queries built with the BatchQueryBuilder.
+
+        This method provides a convenient way to execute a batch of queries
+        built with the BatchQueryBuilder class.
+
+        Args:
+            batch_builder: A BatchQueryBuilder instance containing the queries to execute.
+            connection_name: Optional name of the connection to use.
+                            If None, uses the active connection.
+            enable_cache: Whether to use query caching for these queries.
+
+        Returns:
+            List of lists of dictionaries containing the query results.
+                Each inner list corresponds to the results of one query.
+
+        Raises:
+            ConnectionError: If there is no active connection.
+            QueryError: If the query execution fails.
+            ValueError: If the batch_builder is not a valid BatchQueryBuilder instance.
+        """
+        # Import here to avoid circular imports
+        from .advanced_query_builder import BatchQueryBuilder
+
+        # Validate input
+        if not isinstance(batch_builder, BatchQueryBuilder):
+            raise ValueError("batch_builder must be an instance of BatchQueryBuilder")
+
+        # Build the batch
+        queries, parameters = batch_builder.build()
+
+        # Execute the batch
+        return self.execute_batch_queries(queries, parameters, connection_name, enable_cache)
 
     def get_performance_metrics(self) -> Dict[str, Any]:
         """
