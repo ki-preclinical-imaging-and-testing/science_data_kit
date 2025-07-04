@@ -1,3 +1,0 @@
-[submodule "isa-api"]
-	path = isa-api
-	url = https://github.com/ISA-tools/isa-api.git
