@@ -65,15 +65,15 @@ class StreamingProcessor:
             for item in data_source:
                 # Process the item
                 result = process_func(item)
-                
+
                 # Update progress
                 processed_count += 1
                 if progress_callback and processed_count % 100 == 0:
                     progress_callback(processed_count)
-                
+
                 # Yield the result
                 yield result
-                
+
         except Exception as e:
             self.logger.error(f"Error processing stream: {str(e)}")
             raise
@@ -114,37 +114,37 @@ class StreamingProcessor:
             # Fill the buffer and process in batches
             for item in data_source:
                 buffer.append(item)
-                
+
                 # When buffer is full, process the batch
                 if len(buffer) >= self.buffer_size:
                     # Process the batch
                     results = process_func(buffer)
-                    
+
                     # Update progress
                     processed_count += len(buffer)
                     if progress_callback:
                         progress_callback(processed_count)
-                    
+
                     # Yield the results
                     for result in results:
                         yield result
-                    
+
                     # Clear the buffer
                     buffer = []
-            
+
             # Process any remaining items in the buffer
             if buffer:
                 results = process_func(buffer)
-                
+
                 # Update progress
                 processed_count += len(buffer)
                 if progress_callback:
                     progress_callback(processed_count)
-                
+
                 # Yield the results
                 for result in results:
                     yield result
-                
+
         except Exception as e:
             self.logger.error(f"Error processing stream in batches: {str(e)}")
             raise
@@ -202,47 +202,47 @@ class StreamingDataFrameProcessor:
             Exception: If any processing raises an exception.
         """
         import pandas as pd
-        
+
         processed_rows = 0
         first_chunk = True
 
         try:
             # Create a reader for the CSV file
             reader = pd.read_csv(csv_file, chunksize=self.chunk_size, **csv_kwargs)
-            
+
             # If output_file is provided, process and save chunks
             if output_file:
                 for chunk in reader:
                     # Process the chunk
                     processed_chunk = process_func(chunk)
-                    
+
                     # Update progress
                     processed_rows += len(chunk)
                     if progress_callback:
                         progress_callback(processed_rows)
-                    
+
                     # Save the processed chunk
                     mode = 'w' if first_chunk else 'a'
                     header = first_chunk
                     processed_chunk.to_csv(output_file, mode=mode, header=header, index=False)
                     first_chunk = False
-                
+
                 return None
-            
+
             # If no output_file, yield processed chunks
             else:
                 for chunk in reader:
                     # Process the chunk
                     processed_chunk = process_func(chunk)
-                    
+
                     # Update progress
                     processed_rows += len(chunk)
                     if progress_callback:
                         progress_callback(processed_rows)
-                    
+
                     # Yield the processed chunk
                     yield processed_chunk
-                    
+
         except Exception as e:
             self.logger.error(f"Error processing CSV file: {str(e)}")
             raise
@@ -279,18 +279,18 @@ class StreamingDataFrameProcessor:
             for i in range(0, len(df), self.chunk_size):
                 # Get the chunk
                 chunk = df.iloc[i:i + self.chunk_size].copy()
-                
+
                 # Process the chunk
                 processed_chunk = process_func(chunk)
-                
+
                 # Update progress
                 processed_rows += len(chunk)
                 if progress_callback:
                     progress_callback(processed_rows)
-                
+
                 # Yield the processed chunk
                 yield processed_chunk
-                
+
         except Exception as e:
             self.logger.error(f"Error processing DataFrame in chunks: {str(e)}")
             raise
@@ -366,42 +366,42 @@ def example_streaming_processing():
     import numpy as np
     import tempfile
     import os
-    
+
     # Example 1: Stream processing of items
     def generate_data(n):
         for i in range(n):
             yield i
-    
+
     def square(x):
         return x * x
-    
+
     # Process a stream of numbers
     start_time = time.time()
     results = list(stream_process(generate_data(10000), square))
     stream_time = time.time() - start_time
-    
+
     # Example 2: Stream processing of a CSV file
     # Create a sample CSV file
     with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as temp_file:
         temp_path = temp_file.name
         df = pd.DataFrame({'value': np.random.rand(50000)})
         df.to_csv(temp_path, index=False)
-    
+
     def process_chunk(chunk):
         chunk['squared'] = chunk['value'] ** 2
         return chunk
-    
+
     # Process the CSV file in streaming chunks
     start_time = time.time()
     with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as output_file:
         output_path = output_file.name
         stream_process_csv(temp_path, process_chunk, output_file=output_path)
     csv_time = time.time() - start_time
-    
+
     # Clean up temporary files
     os.unlink(temp_path)
     os.unlink(output_path)
-    
+
     return {
         'example1': {
             'stream_time': stream_time,
