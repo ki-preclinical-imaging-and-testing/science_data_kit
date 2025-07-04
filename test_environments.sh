@@ -14,16 +14,5 @@ else
 fi
 
 echo ""
-echo "Testing isatools environment..."
-if [ -d "science-data-kit-isatools-env" ]; then
-    source science-data-kit-isatools-env/bin/activate
-    echo "isatools environment Python: $(python --version)"
-    echo "isatools environment location: $(which python)"
-    deactivate
-else
-    echo "isatools environment not found!"
-fi
-
-echo ""
 echo "Current system Python: $(python3 --version 2>/dev/null || echo 'Not found')"
 echo "Current system location: $(which python3 2>/dev/null || echo 'Not found')"
