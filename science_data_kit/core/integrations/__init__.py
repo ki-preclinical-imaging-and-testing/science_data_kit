@@ -53,3 +53,21 @@ try:
     register_provider("fairdom", FAIRDOMProvider)
 except ImportError:
     pass
+
+try:
+    from .nc3rs_provider import NC3RsEDAProvider
+    register_provider("nc3rs", NC3RsEDAProvider)
+except ImportError:
+    pass
+
+try:
+    from .pubmed_provider import PubMedProvider
+    register_provider("pubmed", PubMedProvider)
+except ImportError:
+    pass
+
+try:
+    from .isa_tools_provider import ISAToolsProvider
+    register_provider("isa", ISAToolsProvider)
+except ImportError:
+    pass

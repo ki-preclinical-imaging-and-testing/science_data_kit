@@ -9,12 +9,12 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 ### Phase 3: SDK Completion and Advanced Features
 
 This roadmap outlines the plan for completing the Science Data Kit development, building on the achievements of Phase 2. It focuses on completing documentation, implementing additional platform integrations, enhancing analysis tools integration, optimizing performance, and adding advanced features.
-**Latest Version**: [roadmap_phase3_00.md](roadmap_phase3_00.md)
+**Latest Version**: [roadmap_phase3_01.md](roadmap_phase3_01.md)
 
 
-**Status**: Just Started - Created initial roadmap based on remaining tasks from Phase 2 and tasks collected in the later_phase.md file.
+**Status**: In Progress - Completed high-priority documentation tasks and platform integrations. Created comprehensive guides for data transformation, database operations, data modeling, and API layer. Implemented integrations with NC3Rs EDA tool, PubMed, and ISA Tools.
 
-**Next Steps**: Complete the comprehensive user guide by creating guides for data transformation, database operations, data modeling, API layer, Jupyter notebook integration, and user interface. Develop interactive tutorials for session management and data source connectors. Create developer documentation, including architecture overview and contribution guidelines. Implement NC3Rs EDA tool, PubMed, and ISA Tools integrations.
+**Next Steps**: Create interactive tutorials for session management and data source connectors. Create developer documentation, including architecture overview and contribution guidelines. Create documentation for PubMed API usage and ISA Tools ontology usage. Begin work on enhancing analysis tools integration, starting with pandas and scikit-learn integration.
 
 ### Data Source Integration
 
