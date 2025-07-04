@@ -12,7 +12,7 @@ This roadmap focuses on enhancing the maintainability, performance, and user exp
 
 **Latest Version**: [roadmap_phase4_12.md](roadmap_phase4_12.md)
 
-**Status**: In Progress - Implementation continues with the completion of background processing functionality, module template with standardized docstring format, linting with flake8, centralized error handling, abstract base classes for providers, abstract base classes for database connectors, Sphinx documentation system, migration from `app/` to `science_data_kit/ui/`, query profiling, streaming data processing, memory profiling, unit tests for core modules, and breaking down large modules.
+**Status**: In Progress - Implementation continues with the completion of background processing functionality, module template with standardized docstring format, linting with flake8, centralized error handling, abstract base classes for providers, abstract base classes for database connectors, Sphinx documentation system, migration from `app/` to `science_data_kit/ui/`, query profiling, streaming data processing, memory profiling, unit tests for core modules, breaking down large modules, and GitHub Actions workflow for continuous integration.
 
 ## Archived Roadmaps
 
