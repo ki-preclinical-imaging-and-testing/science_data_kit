@@ -9,12 +9,12 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 ### Phase 3: SDK Completion and Advanced Features
 
 This roadmap outlines the plan for completing the Science Data Kit development, building on the achievements of Phase 2. It focuses on completing documentation, implementing additional platform integrations, enhancing analysis tools integration, optimizing performance, and adding advanced features.
-**Latest Version**: [roadmap_phase3_03.md](roadmap_phase3_03.md)
+**Latest Version**: [roadmap_phase3_04.md](roadmap_phase3_04.md)
 
 
-**Status**: In Progress - Completed all high-priority documentation tasks and platform integrations. Created comprehensive guides for data transformation, database operations, data modeling, API layer, and Jupyter notebook integration. Created interactive tutorials for session management and data source connectors. Created developer documentation including architecture overview, contribution guidelines, and code style guide. Created documentation for PubMed API usage and ISA Tools ontology usage. Completed pandas and scikit-learn integration modules, and implemented CSV, JSON, and Excel export functionality.
+**Status**: In Progress - Completed all high-priority documentation tasks and platform integrations. Created comprehensive guides for data transformation, database operations, data modeling, API layer, and Jupyter notebook integration. Created interactive tutorials for session management, data source connectors, data transformation, and database operations. Created developer documentation including architecture overview, contribution guidelines, and code style guide. Created documentation for PubMed API usage and ISA Tools ontology usage. Completed pandas, scikit-learn, matplotlib, and plotly integration modules, and implemented CSV, JSON, and Excel export functionality.
 
-**Next Steps**: Create data transformation and database operations interactive tutorials. Begin work on matplotlib and plotly integration for data visualization. Start profiling and optimizing critical code paths for performance improvements. Implement database indexing strategy for improved database performance. Begin work on advanced query builder and batch requests for enhanced query capabilities.
+**Next Steps**: Begin work on NumPy and SciPy integration for enhanced numerical and scientific computing capabilities. Start profiling and optimizing critical code paths for performance improvements. Implement database indexing strategy for improved database performance. Begin work on advanced query builder and batch requests for enhanced query capabilities. Create API usage tutorial to help users effectively use the Python and JavaScript client libraries.
 
 ### Data Source Integration
 
