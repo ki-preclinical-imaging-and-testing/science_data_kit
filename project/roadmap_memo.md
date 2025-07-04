@@ -11,7 +11,7 @@ The project directory is organized as follows:
   - **templates/**: Contains templates for creating new roadmap files
   - **roadmap_phase?_??.md**: Active roadmap files that are currently being worked on, organized by phase
   - **roadmap_index.md**: Master index of all roadmaps, providing an overview of the project's direction
-  - **later_phase.md**: Collection of tasks from completed roadmaps that are planned for future implementation
+  - **roadmap_later.md**: Collection of tasks from completed roadmaps that are planned for future implementation
   - **roadmap_memo.md**: This file, providing guidelines for working with the project directory
 
 ## Roadmap Organization
@@ -70,7 +70,7 @@ For example:
 When a roadmap phase or component is completed (all planned tasks have been implemented), the roadmap files should be moved to the archive directory:
 
 1. Move all files in the completed roadmap set to the `project/archive/` directory
-2. Extract any remaining tasks (marked as "To Do" or in the "Next Steps" section) and add them to the `later_phase.md` file
+2. Extract any remaining tasks (marked as "To Do" or in the "Next Steps" section) and add them to the `roadmap_later.md` file
 3. Update the roadmap_index.md file to reflect that the roadmap set has been completed and archived
 
 ## Roadmap Content Guidelines
@@ -105,9 +105,9 @@ The roadmap_index.md file should include:
 
 ## Later Phase Tasks
 
-The later_phase.md file collects remaining tasks from completed roadmaps that have been moved to the archive. These tasks represent potential future enhancements to the Science Data Kit.
+The roadmap_later.md file collects remaining tasks from completed roadmaps that have been moved to the archive. These tasks represent potential future enhancements to the Science Data Kit.
 
-When archiving a completed roadmap set, any remaining tasks (marked as "To Do" or in the "Next Steps" section) should be added to the later_phase.md file, organized by the roadmap phase or component they came from.
+When archiving a completed roadmap set, any remaining tasks (marked as "To Do" or in the "Next Steps" section) should be added to the roadmap_later.md file, organized by the roadmap phase or component they came from.
 
 ## Phase Transitions
 
@@ -117,4 +117,4 @@ When transitioning from one phase to another:
 2. Archive all roadmap files from the completed phase
 3. Create a new roadmap file for the next phase (e.g., `roadmap_phase{n+1}_00.md`)
 4. Update the roadmap_index.md file to reflect the phase transition
-5. Add any remaining tasks from the completed phase to the later_phase.md file
+5. Add any remaining tasks from the completed phase to the roadmap_later.md file
