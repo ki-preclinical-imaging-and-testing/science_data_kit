@@ -14,8 +14,13 @@ from .neo4j_config import (
     Neo4jConfigManager, config_manager
 )
 
+from .database_connector_base import (
+    DatabaseConnectorBase, GraphDatabaseConnector, RelationalDatabaseConnector
+)
+
 __all__ = [
     'Neo4jManager', 'DatabaseError', 'ConnectionError',
     'load_db_config', 'update_db_config_auto',
-    'Neo4jConfigManager', 'config_manager'
+    'Neo4jConfigManager', 'config_manager',
+    'DatabaseConnectorBase', 'GraphDatabaseConnector', 'RelationalDatabaseConnector'
 ]
