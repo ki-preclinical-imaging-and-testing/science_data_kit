@@ -1,8 +1,27 @@
+"""
+This module is deprecated and has been moved to science_data_kit/ui/app.py.
+Please use the new module instead.
+
+To run the current version of the application:
+    python run_app.py
+
+For more information, see the migration guide:
+    docs/user_guide/migration_guide.md
+"""
+
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 from neo4j import GraphDatabase
 from utils.db_adapter import load_db_config
+
+import warnings
+warnings.warn(
+    "This module is deprecated and has been moved to science_data_kit/ui/app.py. "
+    "Please use the new module instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 if __name__ == "__main__":
