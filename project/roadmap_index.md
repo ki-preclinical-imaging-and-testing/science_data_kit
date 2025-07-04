@@ -9,12 +9,12 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 ### Phase 3: SDK Completion and Advanced Features
 
 This roadmap outlines the plan for completing the Science Data Kit development, building on the achievements of Phase 2. It focuses on completing documentation, implementing additional platform integrations, enhancing analysis tools integration, optimizing performance, and adding advanced features.
-**Latest Version**: [roadmap_phase3_02.md](roadmap_phase3_02.md)
+**Latest Version**: [roadmap_phase3_03.md](roadmap_phase3_03.md)
 
 
-**Status**: In Progress - Completed all high-priority documentation tasks and platform integrations. Created comprehensive guides for data transformation, database operations, data modeling, API layer, and Jupyter notebook integration. Created interactive tutorials for session management and data source connectors. Created developer documentation including architecture overview, contribution guidelines, and code style guide. Created documentation for PubMed API usage and ISA Tools ontology usage. Began work on enhancing analysis tools integration, with pandas and scikit-learn integration in progress.
+**Status**: In Progress - Completed all high-priority documentation tasks and platform integrations. Created comprehensive guides for data transformation, database operations, data modeling, API layer, and Jupyter notebook integration. Created interactive tutorials for session management and data source connectors. Created developer documentation including architecture overview, contribution guidelines, and code style guide. Created documentation for PubMed API usage and ISA Tools ontology usage. Completed pandas and scikit-learn integration modules, and implemented CSV, JSON, and Excel export functionality.
 
-**Next Steps**: Complete the pandas and scikit-learn integration. Create data transformation and database operations interactive tutorials. Implement CSV and JSON export functionality. Begin work on matplotlib and plotly integration for data visualization. Start profiling and optimizing critical code paths for performance improvements.
+**Next Steps**: Create data transformation and database operations interactive tutorials. Begin work on matplotlib and plotly integration for data visualization. Start profiling and optimizing critical code paths for performance improvements. Implement database indexing strategy for improved database performance. Begin work on advanced query builder and batch requests for enhanced query capabilities.
 
 ### Data Source Integration
 
