@@ -10,6 +10,8 @@ import pandas as pd
 from typing import Dict, Any, Optional, List, Union, Callable
 from pathlib import Path
 import os
+import subprocess
+import json
 
 from science_data_kit.ui.pages.base_page import BasePage
 from science_data_kit.ui.components.sidebar import render_database_sidebar
@@ -45,6 +47,24 @@ class SurveyPage(BasePage):
 
         if "entity_labels" not in st.session_state:
             st.session_state["entity_labels"] = {}
+
+        if "ncdu_json_path" not in st.session_state:
+            st.session_state["ncdu_json_path"] = str(Path.home() / "ncdu_scan.json")
+
+        if "scan_completed" not in st.session_state:
+            st.session_state["scan_completed"] = False
+
+        if "ncdu_output" not in st.session_state:
+            st.session_state["ncdu_output"] = ""
+
+        if "scanned_files" not in st.session_state:
+            st.session_state["scanned_files"] = pd.DataFrame()
+
+        if "directory_label" not in st.session_state:
+            st.session_state["directory_label"] = "Folder"
+
+        if "file_label" not in st.session_state:
+            st.session_state["file_label"] = "File"
 
     def _setup_sidebar(self):
         """Set up the sidebar items for the Survey page."""
@@ -144,6 +164,93 @@ class SurveyPage(BasePage):
 
         return pd.DataFrame(results)
 
+    def _run_ncdu_scan(self, folder_path: str, output_json_path: str) -> bool:
+        """
+        Run an NCDU (NCurses Disk Usage) scan on the specified folder.
+
+        Args:
+            folder_path: The path to the directory to scan.
+            output_json_path: The path where the JSON output will be saved.
+
+        Returns:
+            True if the scan was successful, False otherwise.
+        """
+        if not folder_path:
+            st.error("Please select a folder first.")
+            return False
+
+        st.session_state["scan_completed"] = False
+        st.session_state["ncdu_output"] = ""
+
+        # Create a placeholder for live output
+        status_box = st.empty()
+
+        try:
+            # Run NCDU command
+            with subprocess.Popen(
+                ["ncdu", "-o", output_json_path, folder_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1
+            ) as process:
+                # Capture and display live output
+                for line in process.stdout:
+                    st.session_state["ncdu_output"] += line
+                    status_box.text_area("Live Output", st.session_state["ncdu_output"], height=300)
+
+            # Check if JSON was created
+            if Path(output_json_path).exists():
+                st.success(f"Scan complete! Results saved to `{output_json_path}`")
+                st.session_state["scan_completed"] = True
+
+                # Run jq transformation
+                jq_filter = 'def c: (arrays | .[0] + {children: [.[1:][] | c]}) // .; last | c'
+                result = subprocess.run(
+                    ["jq", jq_filter, output_json_path],
+                    text=True,
+                    capture_output=True,
+                    check=True
+                )
+
+                # Load transformed JSON
+                scan_data = json.loads(result.stdout)
+
+                # Parse NCDU JSON
+                parsed_files = self._parse_ncdu_json(scan_data)
+                st.session_state["scanned_files"] = pd.DataFrame(parsed_files)
+
+                return True
+        except Exception as e:
+            st.error(f"An error occurred while running NCDU: {e}")
+            return False
+
+        return False
+
+    def _parse_ncdu_json(self, node, parent_path=""):
+        """
+        Recursively parse NCDU JSON data to extract file and directory information.
+
+        Args:
+            node: A node in the NCDU JSON structure, representing a file or directory.
+            parent_path: The path of the parent directory.
+
+        Returns:
+            A list of dictionaries, each containing information about a file or directory.
+        """
+        path = f"{parent_path}/{node['name']}" if parent_path else node["name"]
+        file_info = {
+            "Path": path,
+            "Size (Bytes)": node.get("asize", 0),
+            "Disk Usage (Bytes)": node.get("dsize", 0),
+            "Type": "Directory" if "children" in node else "File"
+        }
+        parsed_files = [file_info]
+        if "children" in node:
+            for child in node["children"]:
+                parsed_files.extend(self._parse_ncdu_json(child, path))
+        return parsed_files
+
     def _push_to_neo4j(self, scan_results: pd.DataFrame) -> bool:
         """
         Push scan results to Neo4j.
@@ -199,122 +306,435 @@ class SurveyPage(BasePage):
             st.error(f"Error pushing to Neo4j: {e}")
             return False
 
+    def _push_ncdu_results_to_neo4j(self, include_files: bool = False) -> bool:
+        """
+        Push NCDU scan results to Neo4j.
+
+        Args:
+            include_files: Whether to include files in the push (True) or just directories (False).
+
+        Returns:
+            True if successful, False otherwise.
+        """
+        if not self.db_manager.is_connected():
+            st.error("Not connected to Neo4j. Please connect first.")
+            return False
+
+        if st.session_state["scanned_files"].empty:
+            st.error("No scan results available. Please run a scan first.")
+            return False
+
+        try:
+            # Progress bar
+            bar_total = len(st.session_state["scanned_files"])
+            my_bar = st.progress(0., text="Pushing Filetrees to Database...")
+
+            # Process each row
+            for i, row in st.session_state["scanned_files"].iterrows():
+                # Update progress bar
+                progress_ratio = (float(i)/bar_total)
+                if progress_ratio > 1:
+                    progress_ratio = 1
+                if progress_ratio < 0:
+                    progress_ratio = 0
+                my_bar.progress(progress_ratio, f"{int(100*progress_ratio)}%")
+
+                path = Path(row["Path"]).as_posix()
+                size = row["Size (Bytes)"]
+                disk_usage = row["Disk Usage (Bytes)"]
+                parent_path = Path(path).parent.as_posix()
+
+                # Create parent folder
+                with self.db_manager._driver.session(database=self.db_manager.database) as session:
+                    # Create parent folder
+                    parent_folder = Folder.nodes.first_or_none(filepath=parent_path)
+                    if parent_folder is None:
+                        parent_folder = Folder(filepath=parent_path).save()
+
+                    # Create directory node
+                    if row["Type"] == "Directory":
+                        folder_node = Folder.nodes.first_or_none(filepath=path)
+                        if folder_node is None:
+                            folder_node = Folder(filepath=path).save()
+                            if parent_folder:
+                                folder_node.is_in.connect(parent_folder)
+
+                    # Create file node if include_files is True
+                    if include_files and row["Type"] == "File":
+                        file_node = File.nodes.first_or_none(filepath=path)
+                        if file_node is None:
+                            file_node = File(filepath=path).save()
+                            if parent_folder:
+                                file_node.is_in.connect(parent_folder)
+
+            return True
+        except Exception as e:
+            st.error(f"Error pushing NCDU results to Neo4j: {e}")
+            return False
+
+    def _prepare_for_map_page(self) -> None:
+        """
+        Prepare NCDU scan results for use in the Map page.
+
+        This function adds a Label column to the scanned_files DataFrame based on the Type column
+        and user-specified labels, and sets the necessary session state variables for the Map page.
+        """
+        if st.session_state["scanned_files"].empty:
+            st.error("No scan results available. Please run a scan first.")
+            return
+
+        # Store the necessary data in session state for the map page
+        st.session_state["entities_df"] = st.session_state["scanned_files"]
+        st.session_state["file_uploaded"] = "Survey Scan Results"
+
+        # Add label column based on the Type column and user-specified labels
+        st.session_state["entities_df"]["Label"] = st.session_state["entities_df"]["Type"].apply(
+            lambda x: st.session_state["directory_label"] if x == "Directory" else st.session_state["file_label"]
+        )
+
+        # Set the label column for the map page
+        st.session_state["label_column"] = "Label"
+
     def render_content(self) -> None:
         """Render the Survey page content."""
         st.write("Scan and analyze your file systems.")
 
-        # File system browser
-        st.header("File System Browser")
+        # NCDU Scan section
+        with st.expander("Scan Your FileTree", expanded=True):
+            # Create two columns layout
+            col1, col2 = st.columns(2)
 
-        # Directory input
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            folder_path = st.text_input(
-                "Directory Path",
-                value=st.session_state["folder_path"]
-            )
+            # Right column for instructions
+            with col2:
+                st.markdown(
+                    """
+                    ## Scan Your FileTree
+                    1. **Locate your dataset** - Enter the directory path manually.
+                    2. **Customize output location** - Choose where to save the JSON scan.
+                    3. **View results directly in Streamlit** after scan completion.
+                    """
+                )
 
-        with col2:
-            if st.button("Scan Directory"):
+            # Left column for functionality
+            with col1:
+                # Folder selection
+                st.subheader("Step 1: Select Dataset Location")
+
+                folder_path = st.text_input(
+                    "Enter folder path to scan:", 
+                    value=st.session_state["folder_path"]
+                )
                 if folder_path:
-                    # Update session state
                     st.session_state["folder_path"] = folder_path
 
-                    # Scan directory
-                    with st.spinner("Scanning directory..."):
-                        scan_results = self._scan_directory(folder_path)
-                        st.session_state["scan_results"] = scan_results
+                # Verify folder
+                if st.session_state["folder_path"]:
+                    dataset_path = Path(st.session_state["folder_path"])
+                    if dataset_path.exists() and dataset_path.is_dir():
+                        st.success(f"Folder Verified: `{dataset_path}`")
+                    else:
+                        st.error("Invalid folder. Please enter a valid directory path.")
 
-                        if not scan_results.empty:
-                            st.success(f"Found {len(scan_results)} items")
+                # JSON save location with simplified interface
+                st.subheader("Step 2: Configure Output")
+
+                # Use file browser-like interface
+                save_dir = st.text_input("Save Directory:", value=str(Path.home()))
+                save_filename = st.text_input("Filename:", value="ncdu_scan.json")
+
+                # Combine directory and filename
+                json_save_path = str(Path(save_dir) / save_filename)
+                st.session_state["ncdu_json_path"] = json_save_path
+
+                # Show the full path
+                st.info(f"Output will be saved to: {json_save_path}")
+
+        # Run Scan section
+        with st.expander("Run Filesystem Scan", expanded=True):
+            # Create two columns layout
+            scan_col1, scan_col2 = st.columns(2)
+
+            # Right column for instructions
+            with scan_col2:
+                st.markdown(
+                    """
+                    ## Run Filesystem Scan
+                    1. **Verify your settings** - Make sure your folder path and output location are correct.
+                    2. **Click the scan button** - This will start the NCDU scan process.
+                    3. **Monitor progress** - Watch the live output as the scan progresses.
+                    """
+                )
+
+            # Left column for scan button and status
+            with scan_col1:
+                st.subheader("Step 3: Scanning Filesystem with NCDU")
+
+                # Run scan button
+                if st.button("Run NCDU Scan", use_container_width=True):
+                    if st.session_state["folder_path"]:
+                        self._run_ncdu_scan(
+                            st.session_state["folder_path"],
+                            st.session_state["ncdu_json_path"]
+                        )
+                    else:
+                        st.error("Please enter a folder path first.")
+
+                # Show scan status if available
+                if "ncdu_output" in st.session_state and st.session_state["ncdu_output"]:
+                    # Use a text area with fixed height for scrollable output
+                    try:
+                        # Try to display the full output
+                        st.text_area("Scan Output", st.session_state["ncdu_output"], height=300)
+                    except Exception as e:
+                        if "MessageSizeError" in str(e) or "exceeds the message size limit" in str(e):
+                            # If the output is too large, show an abbreviated version
+                            st.warning("The scan output is too large to display in full. Showing abbreviated version.")
+
+                            # Create an abbreviated output (first 10000 characters)
+                            abbreviated_output = st.session_state["ncdu_output"][:10000] + "...\n[Output truncated due to size]"
+                            st.text_area("Scan Output (Abbreviated)", abbreviated_output, height=300)
                         else:
-                            st.warning("No items found")
-                else:
-                    st.error("Please enter a directory path")
+                            # If it's a different error, show it
+                            st.error(f"Error displaying scan output: {e}")
 
-        # Scan results
-        st.header("Scan Results")
-        scan_results = st.session_state["scan_results"]
+                # Reset scan button
+                if st.session_state["scan_completed"]:
+                    if st.button("Reset Scan", use_container_width=True):
+                        st.session_state["scan_completed"] = False
+                        st.session_state["ncdu_output"] = ""
+                        st.rerun()
 
-        if scan_results is not None and not scan_results.empty:
-            # Display summary
-            st.write("Summary:")
-            col1, col2 = st.columns(2)
+        # Display NCDU scan results
+        if st.session_state["scan_completed"] and not st.session_state["scanned_files"].empty:
+            with st.expander("View Scan Results", expanded=True):
+                # Create two columns layout
+                result_col1, result_col2 = st.columns(2)
+
+                with result_col1:
+                    st.subheader("Step 4: View Results")
+                    st.write("Scanned Files Preview:")
+
+                    # Handle large dataframes that might cause MessageSizeError
+                    try:
+                        # Try to display the full dataframe
+                        st.dataframe(st.session_state["scanned_files"])
+                    except Exception as e:
+                        if "MessageSizeError" in str(e) or "exceeds the message size limit" in str(e):
+                            # If the dataframe is too large, show an abbreviated version
+                            st.warning("The scan results are too large to display in full. Showing abbreviated version.")
+
+                            # Create an abbreviated dataframe (first 1000 rows)
+                            abbreviated_df = st.session_state["scanned_files"].head(1000)
+                            st.dataframe(abbreviated_df)
+
+                            st.info("Download the complete results using the 'Download Results as CSV' button below.")
+                        else:
+                            # If it's a different error, show it
+                            st.error(f"Error displaying results: {e}")
+
+                with result_col2:
+                    st.subheader("Entity Labeling")
+
+                    # Add entity labeling options
+                    st.markdown("""
+                    ### Specify Entity Labels
+                    Define how entities should be labeled when used in the map page.
+                    """)
+
+                    # Default label for directories
+                    dir_label = st.text_input("Directory Label:", value=st.session_state["directory_label"])
+                    if dir_label:
+                        st.session_state["directory_label"] = dir_label
+
+                    # Default label for files
+                    file_label = st.text_input("File Label:", value=st.session_state["file_label"])
+                    if file_label:
+                        st.session_state["file_label"] = file_label
+
+                    # Add a button to send to map page
+                    st.markdown("### Send to Map Page")
+                    if st.button("Use in Map Page", use_container_width=True):
+                        self._prepare_for_map_page()
+                        # Success message with instructions
+                        st.success("Data prepared for Map page! Go to the Map page to continue.")
+                        # Add a link to the map page
+                        st.markdown("[Go to Map Page](/map)")
+
+                    # Add download option
+                    if st.button("Download Results as CSV", use_container_width=True):
+                        try:
+                            # Try to convert the dataframe to CSV and create a download button
+                            csv_data = st.session_state["scanned_files"].to_csv(index=False)
+                            st.download_button(
+                                label="Download CSV",
+                                data=csv_data,
+                                file_name="scan_results.csv",
+                                mime="text/csv",
+                            )
+                        except Exception as e:
+                            if "MessageSizeError" in str(e) or "exceeds the message size limit" in str(e):
+                                # If the CSV data is too large, suggest alternative approaches
+                                st.warning("The scan results are too large to download directly. Consider these alternatives:")
+                                st.info("""
+                                1. Filter the data to reduce its size before downloading
+                                2. Export in smaller batches
+                                3. Use the database export functionality for very large datasets
+                                """)
+                            else:
+                                # If it's a different error, show it
+                                st.error(f"Error preparing download: {e}")
+
+            # Database push functionality
+            with st.expander("Push Data to Database", expanded=True):
+                # Create two columns layout
+                db_col1, db_col2 = st.columns(2)
+
+                # Right column for instructions
+                with db_col2:
+                    st.markdown(
+                        """
+                        ## Push Data to Neo4j
+                        1. **Choose what to include** - Select whether to include files or just directories.
+                        2. **Push to database** - Click the button to start the process.
+                        3. **Monitor progress** - Watch the progress bar as data is pushed to Neo4j.
+
+                        This process will create nodes for each directory and optionally for each file,
+                        establishing relationships between them to represent the filesystem hierarchy.
+                        """
+                    )
+
+                # Left column for push functionality
+                with db_col1:
+                    st.subheader("Step 5: Pushing Data to Neo4j")
+
+                    include_files = st.checkbox("Include Files", value=False)
+                    st.write("Total items to push:", len(st.session_state["scanned_files"]))
+
+                    if st.button("Push to Database"):
+                        if not st.session_state.get("connected", False):
+                            st.error("Not connected to Neo4j. Please connect first.")
+                        else:
+                            with st.spinner("Pushing to Neo4j..."):
+                                success = self._push_ncdu_results_to_neo4j(include_files)
+                                if success:
+                                    st.success("Data successfully pushed to Neo4j!")
+                                else:
+                                    st.error("Failed to push data to Neo4j")
+
+        # Standard file system browser (alternative to NCDU)
+        with st.expander("Standard File System Browser", expanded=False):
+            st.header("File System Browser")
+
+            # Directory input
+            col1, col2 = st.columns([3, 1])
             with col1:
-                st.write(f"Total items: {len(scan_results)}")
-                st.write(f"Folders: {len(scan_results[scan_results['type'] == 'Folder'])}")
-                st.write(f"Files: {len(scan_results[scan_results['type'] == 'File'])}")
+                folder_path = st.text_input(
+                    "Directory Path",
+                    value=st.session_state["folder_path"],
+                    key="standard_folder_path"
+                )
 
             with col2:
-                # Calculate total size
-                total_size = scan_results["size"].sum()
-                st.write(f"Total size: {total_size / (1024 * 1024):.2f} MB")
+                if st.button("Scan Directory"):
+                    if folder_path:
+                        # Update session state
+                        st.session_state["folder_path"] = folder_path
 
-            # Display results table
-            st.write("Results:")
-            st.dataframe(scan_results)
+                        # Scan directory
+                        with st.spinner("Scanning directory..."):
+                            scan_results = self._scan_directory(folder_path)
+                            st.session_state["scan_results"] = scan_results
 
-            # Allow selection of files
-            selected_indices = st.multiselect(
-                "Select items for labeling",
-                options=list(range(len(scan_results))),
-                format_func=lambda i: f"{scan_results.iloc[i]['type']}: {scan_results.iloc[i]['name']}"
-            )
+                            if not scan_results.empty:
+                                st.success(f"Found {len(scan_results)} items")
+                            else:
+                                st.warning("No items found")
+                    else:
+                        st.error("Please enter a directory path")
 
-            if selected_indices:
-                st.session_state["selected_files"] = [
-                    scan_results.iloc[i]["path"] for i in selected_indices
-                ]
-        else:
-            st.info("No scan results available. Please scan a directory first.")
+            # Scan results
+            st.header("Scan Results")
+            scan_results = st.session_state["scan_results"]
 
-        # Entity labeling
-        st.header("Entity Labeling")
+            if scan_results is not None and not scan_results.empty:
+                # Display summary
+                st.write("Summary:")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write(f"Total items: {len(scan_results)}")
+                    st.write(f"Folders: {len(scan_results[scan_results['type'] == 'Folder'])}")
+                    st.write(f"Files: {len(scan_results[scan_results['type'] == 'File'])}")
 
-        if st.session_state["selected_files"]:
-            st.write(f"Selected {len(st.session_state['selected_files'])} items for labeling")
+                with col2:
+                    # Calculate total size
+                    total_size = scan_results["size"].sum()
+                    st.write(f"Total size: {total_size / (1024 * 1024):.2f} MB")
 
-            # Label input
-            label = st.text_input("Enter label for selected items")
+                # Display results table
+                st.write("Results:")
+                st.dataframe(scan_results)
 
-            if st.button("Apply Label") and label:
-                # Update entity labels
-                for file_path in st.session_state["selected_files"]:
-                    if file_path not in st.session_state["entity_labels"]:
-                        st.session_state["entity_labels"][file_path] = []
+                # Allow selection of files
+                selected_indices = st.multiselect(
+                    "Select items for labeling",
+                    options=list(range(len(scan_results))),
+                    format_func=lambda i: f"{scan_results.iloc[i]['type']}: {scan_results.iloc[i]['name']}"
+                )
 
-                    if label not in st.session_state["entity_labels"][file_path]:
-                        st.session_state["entity_labels"][file_path].append(label)
+                if selected_indices:
+                    st.session_state["selected_files"] = [
+                        scan_results.iloc[i]["path"] for i in selected_indices
+                    ]
+            else:
+                st.info("No scan results available. Please scan a directory first.")
 
-                st.success(f"Applied label '{label}' to {len(st.session_state['selected_files'])} items")
+            # Entity labeling
+            st.header("Entity Labeling")
 
-            # Display current labels
-            if st.session_state["entity_labels"]:
-                st.write("Current labels:")
+            if st.session_state["selected_files"]:
+                st.write(f"Selected {len(st.session_state['selected_files'])} items for labeling")
 
-                for file_path, labels in st.session_state["entity_labels"].items():
-                    if file_path in st.session_state["selected_files"]:
-                        st.write(f"{os.path.basename(file_path)}: {', '.join(labels)}")
-        else:
-            st.info("No items selected for labeling")
+                # Label input
+                label = st.text_input("Enter label for selected items")
 
-        # Push to Neo4j
-        st.header("Push to Neo4j")
+                if st.button("Apply Label") and label:
+                    # Update entity labels
+                    for file_path in st.session_state["selected_files"]:
+                        if file_path not in st.session_state["entity_labels"]:
+                            st.session_state["entity_labels"][file_path] = []
 
-        if scan_results is not None and not scan_results.empty:
-            if st.button("Push to Neo4j"):
-                if not st.session_state.get("connected", False):
-                    st.error("Not connected to Neo4j. Please connect first.")
-                else:
-                    with st.spinner("Pushing to Neo4j..."):
-                        success = self._push_to_neo4j(scan_results)
+                        if label not in st.session_state["entity_labels"][file_path]:
+                            st.session_state["entity_labels"][file_path].append(label)
 
-                        if success:
-                            st.success("Successfully pushed to Neo4j")
-                        else:
-                            st.error("Failed to push to Neo4j")
-        else:
-            st.info("No scan results available. Please scan a directory first.")
+                    st.success(f"Applied label '{label}' to {len(st.session_state['selected_files'])} items")
+
+                # Display current labels
+                if st.session_state["entity_labels"]:
+                    st.write("Current labels:")
+
+                    for file_path, labels in st.session_state["entity_labels"].items():
+                        if file_path in st.session_state["selected_files"]:
+                            st.write(f"{os.path.basename(file_path)}: {', '.join(labels)}")
+            else:
+                st.info("No items selected for labeling")
+
+            # Push to Neo4j
+            st.header("Push to Neo4j")
+
+            if scan_results is not None and not scan_results.empty:
+                if st.button("Push to Neo4j", key="standard_push"):
+                    if not st.session_state.get("connected", False):
+                        st.error("Not connected to Neo4j. Please connect first.")
+                    else:
+                        with st.spinner("Pushing to Neo4j..."):
+                            success = self._push_to_neo4j(scan_results)
+
+                            if success:
+                                st.success("Successfully pushed to Neo4j")
+                            else:
+                                st.error("Failed to push to Neo4j")
+            else:
+                st.info("No scan results available. Please scan a directory first.")
 
 def render_survey_page():
     """Render the Survey page."""
