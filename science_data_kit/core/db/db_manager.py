@@ -24,6 +24,7 @@ from neo4j.exceptions import Neo4jError, ServiceUnavailable
 # Import query cache
 from .cache import cached_query
 from .metrics import QueryMetrics
+from .query_profiler import query_profiler
 
 # Import indexing and configuration (will be available after initialization to avoid circular imports)
 indexing_imported = False
@@ -1754,6 +1755,87 @@ class Neo4jManager:
 
         from .neo4j_config import config_manager
         return config_manager.get_performance_metrics()
+
+    # Query Profiling Methods
+
+    def get_slow_queries(self, limit: int = 10, min_execution_time: float = 0.5) -> List[Dict[str, Any]]:
+        """
+        Get a list of slow queries ordered by execution time.
+
+        Args:
+            limit: Maximum number of queries to return
+            min_execution_time: Minimum execution time in seconds to consider a query as slow
+
+        Returns:
+            List of slow query details
+        """
+        return query_profiler.get_slow_queries(limit, min_execution_time)
+
+    def analyze_query_patterns(self) -> Dict[str, Any]:
+        """
+        Analyze query patterns to identify common performance issues.
+
+        Returns:
+            Dictionary containing analysis results with patterns and examples
+        """
+        return query_profiler.analyze_query_patterns()
+
+    def get_query_optimization_recommendations(self) -> List[Dict[str, Any]]:
+        """
+        Get recommendations for query optimization based on analysis.
+
+        Returns:
+            List of recommendation dictionaries with type, title, description, suggestion, examples, and impact
+        """
+        return query_profiler.get_optimization_recommendations()
+
+    def visualize_query_performance(self, format: str = "png") -> str:
+        """
+        Generate a visualization of query performance.
+
+        Args:
+            format: Output format ("png" or "svg")
+
+        Returns:
+            Base64-encoded image data that can be displayed in HTML or notebooks
+        """
+        return query_profiler.visualize_query_performance(format)
+
+    def generate_query_profiling_report(self) -> Dict[str, Any]:
+        """
+        Generate a comprehensive profiling report.
+
+        Returns:
+            Dictionary containing the profiling report with summary, slow queries, 
+            recommendations, and visualization
+        """
+        return query_profiler.generate_profiling_report()
+
+    def explain_query(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Explain a query execution plan.
+
+        Args:
+            query: The query to explain
+            parameters: Optional parameters for the query
+
+        Returns:
+            Dictionary containing the execution plan and analysis
+        """
+        return query_profiler.explain_query(query, parameters)
+
+    def profile_query(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Profile a query execution.
+
+        Args:
+            query: The query to profile
+            parameters: Optional parameters for the query
+
+        Returns:
+            Dictionary containing the execution profile and analysis
+        """
+        return query_profiler.profile_query(query, parameters)
 
 
 # Singleton instance - don't connect on initialization to avoid startup errors
