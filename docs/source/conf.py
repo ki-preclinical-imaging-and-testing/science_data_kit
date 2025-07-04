@@ -36,7 +36,7 @@ html_static_path = ['_static']
 
 # -- AutoAPI configuration --------------------------------------------------
 autoapi_type = 'python'
-autoapi_dirs = ['../../app']
+autoapi_dirs = ['../../science_data_kit', '../../app']
 autoapi_options = [
     'members',
     'undoc-members',

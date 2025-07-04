@@ -10,9 +10,9 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 This roadmap focuses on enhancing the maintainability, performance, and user experience of the Science Data Kit. It outlines a comprehensive plan for code organization, quality assurance, documentation improvements, performance optimization, architecture enhancements, feature additions, and deployment improvements.
 
-**Latest Version**: [roadmap_phase4_05.md](roadmap_phase4_05.md)
+**Latest Version**: [roadmap_phase4_06.md](roadmap_phase4_06.md)
 
-**Status**: In Progress - Implementation continues with the completion of background processing functionality, module template with standardized docstring format, linting with flake8, centralized error handling, abstract base classes for providers, and abstract base classes for database connectors.
+**Status**: In Progress - Implementation continues with the completion of background processing functionality, module template with standardized docstring format, linting with flake8, centralized error handling, abstract base classes for providers, abstract base classes for database connectors, and Sphinx documentation system.
 
 ## Archived Roadmaps
 
