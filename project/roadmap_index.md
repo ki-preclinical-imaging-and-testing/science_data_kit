@@ -6,17 +6,25 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 ## Active Roadmaps
 
-### Phase 4: SDK Enhancement and Optimization
+### Phase 5: SDK Completion and Documentation
 
-This roadmap focuses on enhancing the maintainability, performance, and user experience of the Science Data Kit. It outlines a comprehensive plan for code organization, quality assurance, documentation improvements, performance optimization, and architecture enhancements.
+This roadmap focuses on completing the remaining high-priority tasks from Phase 4 and further enhancing the platform's documentation, testing infrastructure, and code quality. It outlines a comprehensive plan for finalizing the improvements started in Phase 4 and preparing the platform for wider adoption.
 
-**Latest Version**: [roadmap_phase4_20.md](roadmap_phase4_20.md)
+**Latest Version**: [roadmap_phase5_00.md](roadmap_phase5_00.md)
 
-**Status**: In Progress - Implementation continues with the completion of background processing functionality, module template with standardized docstring format, linting with flake8, centralized error handling, abstract base classes for providers, abstract base classes for database connectors, Sphinx documentation system, migration from `app/` to `science_data_kit/ui/`, query profiling, streaming data processing, memory profiling, unit tests for core modules, breaking down large modules, GitHub Actions workflow for continuous integration, Neo4j query optimization with proper indexing, automated dependency updates, security scanning, deprecation plan for legacy components, design decisions documentation, plugin architecture for integrations, shared utility functions for common operations, and integration tests for database and API integrations. Feature Enhancements and Deployment sections from [toroadmap_later.md](toroadmap_later.md) have been merged into [roadmap_later.md](roadmap_later.md) for better organization of future tasks.
+**Status**: In Progress - Initial planning phase with focus on documentation improvements, testing infrastructure enhancements, code quality tools implementation, and dependency injection system design. The roadmap includes tasks for generating API documentation from docstrings, adding architecture diagrams, reviewing and updating user guides, creating end-to-end tests, setting up code coverage reporting, adding type checking with mypy, implementing code formatting with black, enhancing caching mechanisms, designing dependency injection system, and implementing interfaces for core components.
 
 ## Archived Roadmaps
 
 The following roadmap sets have been completed and archived. Any remaining tasks from these roadmaps have been added to the [roadmap_later.md](roadmap_later.md) file for future consideration.
+
+### Phase 4: SDK Enhancement and Optimization
+
+This roadmap focused on enhancing the maintainability, performance, and user experience of the Science Data Kit. It outlined a comprehensive plan for code organization, quality assurance, documentation improvements, performance optimization, and architecture enhancements.
+
+**Latest Version**: [archive/roadmap_phase4_20.md](archive/roadmap_phase4_20.md)
+
+**Status**: Complete - Implemented background processing functionality, module template with standardized docstring format, linting with flake8, centralized error handling, abstract base classes for providers, abstract base classes for database connectors, Sphinx documentation system, migration from `app/` to `science_data_kit/ui/`, query profiling, streaming data processing, memory profiling, unit tests for core modules, breaking down large modules, GitHub Actions workflow for continuous integration, Neo4j query optimization with proper indexing, automated dependency updates, security scanning, deprecation plan for legacy components, design decisions documentation, plugin architecture for integrations, shared utility functions for common operations, and integration tests for database and API integrations. Remaining tasks have been moved to Phase 5 or to the roadmap_later.md file for future implementation.
 
 ### Data Source Integration
 
@@ -100,7 +108,7 @@ This roadmap refactored the Science Data Kit application to improve its architec
 
 ## Project Direction
 
-The Science Data Kit has evolved into a comprehensive tool for data analysis and visualization. With the completion of the first three development phases, the platform has established robust capabilities. Phase 4 is now underway to further enhance the platform's maintainability, performance, and user experience.
+The Science Data Kit has evolved into a comprehensive tool for data analysis and visualization. With the completion of the first four development phases, the platform has established robust capabilities. Phase 5 is now underway to further enhance the platform's documentation, testing infrastructure, and code quality, preparing it for wider adoption.
 
 ### Current Capabilities
 
@@ -108,17 +116,22 @@ The Science Data Kit has evolved into a comprehensive tool for data analysis and
 - **Integrations**: Support for Microsoft 365, Dropbox, Google Sheets, NC3Rs EDA tool, PubMed, and ISA Tools
 - **Analysis Tools**: Integration with pandas, scikit-learn, matplotlib, plotly, NumPy, SciPy, and D3.js
 - **Data Sources**: Support for Neo4j, SQL databases, and RESTful APIs
-- **Performance Features**: Query optimization, parallel processing, and background task management
-- **Documentation**: Comprehensive user guides, interactive tutorials, and developer documentation
+- **Performance Features**: Query optimization, parallel processing, background task management, streaming data processing, and memory profiling
+- **Architecture**: Plugin architecture for integrations, abstract base classes for providers and database connectors, and centralized error handling
+- **Testing**: Comprehensive unit tests and integration tests for core functionality
+- **Documentation**: Sphinx documentation system, design decisions documentation, and user guides
 
 ### Future Directions
 
-Future enhancements, as outlined in the [roadmap_later.md](roadmap_later.md) and [toroadmap_later.md](toroadmap_later.md) files, may include:
+Future enhancements, as outlined in the [roadmap_later.md](roadmap_later.md) file, may include:
 
 - **User Interface Enhancements**: Customizable preferences, responsive design, and accessibility features
 - **Additional Data Sources**: Support for MongoDB, SPARQL endpoints, Kafka, and other data sources
 - **Machine Learning Integration**: Model training, evaluation, and serving capabilities
 - **Reporting Capabilities**: Integration with reporting engines and custom dashboard creation
+- **Advanced Documentation**: Interactive documentation, video tutorials, and more examples and use cases
+- **Performance Optimization**: Optimized data structures for large datasets and consistent pagination
+- **Architecture Enhancements**: Dependency injection system and service locator or container
 
 ## Roadmap Management
 
@@ -128,15 +141,15 @@ The roadmap_memo.md file provides comprehensive guidelines for:
 - Creating new roadmaps
 - Updating existing roadmaps
 - Archiving completed roadmaps
-- Adding remaining tasks to roadmap_later.md and toroadmap_later.md
+- Adding remaining tasks to roadmap_later.md
 - Maintaining consistent roadmap formatting and content
 
 Please refer to roadmap_memo.md for detailed instructions on working with roadmaps in this project.
 
 ## Conclusion
 
-The Science Data Kit project has successfully achieved its goal of becoming a comprehensive tool for scientific data analysis and visualization. Through the systematic implementation of nine major roadmaps across three development phases, the SDK has evolved into a robust platform with extensive capabilities.
+The Science Data Kit project has successfully achieved its goal of becoming a comprehensive tool for scientific data analysis and visualization. Through the systematic implementation of ten major roadmaps across four development phases, the SDK has evolved into a robust platform with extensive capabilities.
 
-With the first three phases completed and archived, the project is now entering Phase 4, which focuses on enhancing maintainability, performance, and user experience. Many tasks from previous phases have been collected in the [roadmap_later.md](roadmap_later.md) file, and some tasks from Phase 4 have been moved to [toroadmap_later.md](toroadmap_later.md) for future implementation. The project continues to be maintained and enhanced based on user feedback and emerging requirements.
+With the first four phases completed and archived, the project is now entering Phase 5, which focuses on enhancing documentation, testing infrastructure, and code quality, preparing the platform for wider adoption. Many tasks from previous phases have been collected in the [roadmap_later.md](roadmap_later.md) file for future implementation. The project continues to be maintained and enhanced based on user feedback and emerging requirements.
 
 For detailed information about specific roadmaps, refer to the archived roadmap files linked in the "Archived Roadmaps" section above. For information about future development directions, see the "Project Direction" section.

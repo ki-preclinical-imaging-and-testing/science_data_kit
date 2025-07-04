@@ -6,7 +6,68 @@ This document collects remaining tasks from completed roadmaps that have been mo
 
 These tasks are from the Phase 4 roadmap that have been designated for implementation in future phases:
 
-### 1. Feature Enhancements
+### 1. Code Organization and Structure
+
+#### 1.1 Reduce Duplication
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Extract common patterns into reusable components | Medium | To Do | Identify and refactor common patterns |
+
+#### 1.2 Legacy Code Migration
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Implement adapter pattern for backward compatibility | Low | To Do | Create adapters for legacy interfaces |
+
+### 2. Testing and Quality Assurance
+
+#### 2.1 Code Quality Tools
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Set up pre-commit hooks | Low | To Do | Configure pre-commit for linting and formatting |
+
+#### 2.2 Continuous Integration
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Create deployment pipeline | Low | To Do | Automate package building and publishing |
+
+### 3. Documentation
+
+#### 3.1 Technical Documentation
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Create developer guides | Low | To Do | Include setup, contribution, and best practices |
+
+#### 3.2 Internal Documentation
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Create troubleshooting guides | Medium | To Do | Document common issues and solutions |
+| Add code examples for common tasks | Medium | To Do | Provide reference implementations |
+| Document testing strategy | Low | To Do | Explain approach to testing different components |
+
+#### 3.3 User Documentation
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Add more examples and use cases | Medium | To Do | Include real-world scenarios |
+| Create video tutorials for complex workflows | Medium | To Do | Focus on most common user journeys |
+| Implement interactive documentation | Low | To Do | Add executable code examples |
+
+### 4. Performance Optimization
+
+#### 4.1 Memory Management
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Optimize data structures for large datasets | Medium | To Do | Review and optimize existing data structures |
+| Implement pagination consistently | Medium | To Do | Apply to all data retrieval operations |
+
+### 5. Architecture Enhancements
+
+#### 5.1 Implement Dependency Injection
+| Task | Priority | Status | Notes |
+|------|----------|--------|-------|
+| Create service locator or container | Medium | To Do | Manage dependencies centrally |
+| Refactor existing code to use DI | Medium | To Do | Start with most coupled components |
+
+### 6. Feature Enhancements
 
 #### 1.1 Prioritized Features from Roadmap Later
 | Task | Priority | Status | Notes |
