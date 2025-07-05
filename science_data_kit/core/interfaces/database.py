@@ -543,3 +543,126 @@ class MongoDBDatabaseInterface(DocumentDatabaseInterface):
             List of dictionaries containing index information.
         """
         pass
+
+
+class ElasticsearchDatabaseInterface(DocumentDatabaseInterface):
+    """
+    Interface for Elasticsearch database managers.
+
+    This interface extends the DocumentDatabaseInterface with methods specific to Elasticsearch.
+    """
+
+    @abstractmethod
+    def start_container(self, version: str = "latest", workload_type: Optional[str] = None) -> bool:
+        """
+        Start an Elasticsearch container.
+
+        Args:
+            version: Elasticsearch version to use.
+            workload_type: Optional workload type for configuration.
+
+        Returns:
+            True if container was started successfully, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def stop_container(self) -> bool:
+        """
+        Stop the Elasticsearch container.
+
+        Returns:
+            True if container was stopped successfully, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def get_container_status(self) -> Dict[str, Any]:
+        """
+        Get the status of the Elasticsearch container.
+
+        Returns:
+            Dictionary containing container status information.
+        """
+        pass
+
+    @abstractmethod
+    def search(self, index: str, query: Dict[str, Any], 
+              size: int = 10, from_: int = 0,
+              connection_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Execute a search query on an index.
+
+        Args:
+            index: Name of the index.
+            query: Elasticsearch query DSL.
+            size: Maximum number of documents to return.
+            from_: Starting offset for results.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            Dictionary containing the search results.
+        """
+        pass
+
+    @abstractmethod
+    def create_index(self, index: str, mappings: Dict[str, Any], 
+                    settings: Optional[Dict[str, Any]] = None,
+                    connection_name: Optional[str] = None) -> bool:
+        """
+        Create an index in Elasticsearch.
+
+        Args:
+            index: Name of the index.
+            mappings: Index mappings.
+            settings: Optional index settings.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            True if index was created successfully, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def get_indices(self, connection_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get information about indices.
+
+        Args:
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            List of dictionaries containing index information.
+        """
+        pass
+
+    @abstractmethod
+    def get_cluster_health(self, connection_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get Elasticsearch cluster health.
+
+        Args:
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            Dictionary containing cluster health information.
+        """
+        pass
+
+    @abstractmethod
+    def bulk_index(self, index: str, documents: List[Dict[str, Any]], 
+                  id_field: Optional[str] = None,
+                  connection_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Bulk index documents into Elasticsearch.
+
+        Args:
+            index: Name of the index.
+            documents: List of documents to index.
+            id_field: Optional field to use as document ID.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            Dictionary containing bulk indexing results.
+        """
+        pass

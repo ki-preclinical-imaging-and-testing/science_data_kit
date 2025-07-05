@@ -11,6 +11,7 @@ from .storage import DropboxProvider, GoogleSheetsProvider
 from .api import MSGraphProvider
 from .database.mongodb_provider import MongoDBProvider
 from .database.sparql_provider import SPARQLProvider
+from .database.elasticsearch_provider import ElasticsearchProvider
 
 # Register providers
 registry.register_provider(ProviderType.STORAGE, "dropbox", DropboxProvider)
@@ -18,8 +19,9 @@ registry.register_provider(ProviderType.SPREADSHEET, "google_sheets", GoogleShee
 registry.register_provider(ProviderType.API, "msgraph", MSGraphProvider)
 registry.register_provider(ProviderType.DATABASE, "mongodb", MongoDBProvider)
 registry.register_provider(ProviderType.DATABASE, "sparql", SPARQLProvider)
+registry.register_provider(ProviderType.DATABASE, "elasticsearch", ElasticsearchProvider)
 
 __all__ = ['ProviderRegistry', 'ProviderType', 'BaseProvider', 'registry',
            'StorageProvider', 'DatabaseProvider', 'APIProvider',
            'DropboxProvider', 'GoogleSheetsProvider', 'MSGraphProvider',
-           'MongoDBProvider', 'SPARQLProvider']
+           'MongoDBProvider', 'SPARQLProvider', 'ElasticsearchProvider']
