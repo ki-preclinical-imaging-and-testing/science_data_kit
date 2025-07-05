@@ -345,13 +345,40 @@ class DashboardPage(BasePage):
 
             # Add explanation about SDK vs NeoDash visualization capabilities
             st.info("""
-            **SDK Dashboard vs NeoDash**
+            **SDK Dashboard vs NeoDash: Visualization Strategy**
 
-            The Science Data Kit dashboard provides basic visualization capabilities for quick insights, 
-            while NeoDash offers more advanced, customizable dashboards for complex data exploration.
+            The Science Data Kit dashboard and NeoDash serve complementary purposes in our visualization strategy:
 
-            - **Use SDK Dashboard for**: System overview, basic charts, quick insights
-            - **Use NeoDash for**: Custom dashboards, complex visualizations, interactive exploration, sharing dashboards
+            **SDK Dashboard**
+            - **Purpose**: Quick insights, system monitoring, and basic data exploration
+            - **Visualization Types**: 
+              - Basic charts (bar, line, scatter, pie)
+              - Simple network graphs
+              - Schema visualizations
+              - Performance metrics
+            - **Best For**: 
+              - Daily monitoring of system health
+              - Quick data exploration during analysis
+              - Basic reporting needs
+              - Integrated workflow within the SDK
+
+            **NeoDash**
+            - **Purpose**: Advanced data exploration, custom dashboards, and shareable reports
+            - **Visualization Types**:
+              - Complex network graphs
+              - Interactive dashboards
+              - Custom visualizations
+              - Multi-panel layouts
+              - Parameterized queries
+            - **Best For**:
+              - In-depth data analysis
+              - Creating shareable dashboards
+              - Custom reporting solutions
+              - Presentations and stakeholder communication
+              - Persistent visualization workflows
+
+            Choose the SDK Dashboard when you need quick insights during your workflow, and use NeoDash 
+            when you need to create more sophisticated, persistent visualizations or shareable dashboards.
             """)
 
         def render_integration_tab():
