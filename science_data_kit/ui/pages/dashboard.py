@@ -21,6 +21,17 @@ from science_data_kit.ui.components.responsive_design import (
     create_responsive_container,
     create_responsive_tabs
 )
+from science_data_kit.ui.components.custom_visualization_templates import render_template_manager
+from science_data_kit.ui.components.dashboard_widgets import (
+    DashboardWidget,
+    MetricWidget,
+    ChartWidget,
+    TableWidget,
+    StatusWidget,
+    InfoWidget,
+    create_dashboard_layout,
+    example_dashboard
+)
 
 class DashboardPage(BasePage):
     """
@@ -312,12 +323,14 @@ class DashboardPage(BasePage):
 
             # Create a table of visualization components
             visualization_components = {
-                "Component": ["Schema Visualization", "Basic Data Charts", "Simple Network Graphs", "NeoDash Integration", "Advanced Dashboards"],
-                "Status": ["Available", "Available", "Available", "Available", "Available via NeoDash"],
+                "Component": ["Schema Visualization", "Basic Data Charts", "Simple Network Graphs", "Custom Visualization Templates", "Dashboard Widgets", "NeoDash Integration", "Advanced Dashboards"],
+                "Status": ["Available", "Available", "Available", "Available", "Available", "Available", "Available via NeoDash"],
                 "Description": [
                     "Visualize database schema as a network graph",
                     "Create basic bar, line, and scatter charts from query results",
                     "Visualize data as simple network graphs",
+                    "Create and apply custom visualization templates",
+                    "Create customizable dashboard widgets for monitoring and reporting",
                     "Integration with NeoDash for creating advanced dashboards",
                     "Create complex, interactive dashboards with NeoDash"
                 ]
@@ -325,43 +338,240 @@ class DashboardPage(BasePage):
 
             st.dataframe(pd.DataFrame(visualization_components), use_container_width=True)
 
-            # Add explanation about SDK vs NeoDash visualization capabilities
-            st.info("""
-            **SDK Dashboard vs NeoDash: Visualization Strategy**
+            # Create tabs for visualization features
+            viz_tab1, viz_tab2, viz_tab3 = st.tabs(["Visualization Strategy", "Custom Templates", "Dashboard Widgets"])
 
-            The Science Data Kit dashboard and NeoDash serve complementary purposes in our visualization strategy:
+            with viz_tab1:
+                # Add explanation about SDK vs NeoDash visualization capabilities
+                st.info("""
+                **SDK Dashboard vs NeoDash: Visualization Strategy**
 
-            **SDK Dashboard**
-            - **Purpose**: Quick insights, system monitoring, and basic data exploration
-            - **Visualization Types**: 
-              - Basic charts (bar, line, scatter, pie)
-              - Simple network graphs
-              - Schema visualizations
-              - Performance metrics
-            - **Best For**: 
-              - Daily monitoring of system health
-              - Quick data exploration during analysis
-              - Basic reporting needs
-              - Integrated workflow within the SDK
+                The Science Data Kit dashboard and NeoDash serve complementary purposes in our visualization strategy:
 
-            **NeoDash**
-            - **Purpose**: Advanced data exploration, custom dashboards, and shareable reports
-            - **Visualization Types**:
-              - Complex network graphs
-              - Interactive dashboards
-              - Custom visualizations
-              - Multi-panel layouts
-              - Parameterized queries
-            - **Best For**:
-              - In-depth data analysis
-              - Creating shareable dashboards
-              - Custom reporting solutions
-              - Presentations and stakeholder communication
-              - Persistent visualization workflows
+                **SDK Dashboard**
+                - **Purpose**: Quick insights, system monitoring, and basic data exploration
+                - **Visualization Types**: 
+                  - Basic charts (bar, line, scatter, pie)
+                  - Simple network graphs
+                  - Schema visualizations
+                  - Performance metrics
+                  - Custom visualization templates
+                - **Best For**: 
+                  - Daily monitoring of system health
+                  - Quick data exploration during analysis
+                  - Basic reporting needs
+                  - Integrated workflow within the SDK
 
-            Choose the SDK Dashboard when you need quick insights during your workflow, and use NeoDash 
-            when you need to create more sophisticated, persistent visualizations or shareable dashboards.
-            """)
+                **NeoDash**
+                - **Purpose**: Advanced data exploration, custom dashboards, and shareable reports
+                - **Visualization Types**:
+                  - Complex network graphs
+                  - Interactive dashboards
+                  - Custom visualizations
+                  - Multi-panel layouts
+                  - Parameterized queries
+                - **Best For**:
+                  - In-depth data analysis
+                  - Creating shareable dashboards
+                  - Custom reporting solutions
+                  - Presentations and stakeholder communication
+                  - Persistent visualization workflows
+
+                Choose the SDK Dashboard when you need quick insights during your workflow, and use NeoDash 
+                when you need to create more sophisticated, persistent visualizations or shareable dashboards.
+                """)
+
+            with viz_tab2:
+                # Render the custom visualization templates manager
+                render_template_manager()
+
+            with viz_tab3:
+                # Dashboard Widgets section
+                st.write("### Dashboard Widgets")
+                st.write("""
+                Dashboard widgets allow you to create customizable dashboards for monitoring and reporting.
+                You can create various types of widgets and arrange them in a flexible layout.
+                """)
+
+                # Create tabs for different widget types
+                widget_tabs = st.tabs(["Overview", "Example Dashboard", "Widget Types"])
+
+                with widget_tabs[0]:
+                    st.write("""
+                    ### Dashboard Widgets Overview
+
+                    Dashboard widgets provide a flexible way to create customizable dashboards for monitoring and reporting.
+                    Each widget is a self-contained component that can display different types of data and visualizations.
+
+                    **Key Features:**
+                    - Multiple widget types for different data visualization needs
+                    - Automatic refresh capabilities
+                    - Flexible layout options
+                    - Consistent styling and behavior
+
+                    **Available Widget Types:**
+                    - **Metric Widget**: Display a single metric with optional trend indicator
+                    - **Chart Widget**: Display various chart types using the visualization templates
+                    - **Table Widget**: Display tabular data with sorting and filtering
+                    - **Status Widget**: Display status information with colored indicators
+                    - **Info Widget**: Display informational content in various formats
+
+                    **Creating a Dashboard:**
+                    1. Create instances of the widget classes you need
+                    2. Define a layout for your widgets
+                    3. Use the `create_dashboard_layout` function to render the dashboard
+                    """)
+
+                with widget_tabs[1]:
+                    # Show the example dashboard
+                    st.write("### Example Dashboard")
+                    st.write("This is an example dashboard showing various widget types:")
+                    example_dashboard()
+
+                with widget_tabs[2]:
+                    st.write("### Widget Types")
+
+                    # Create expandable sections for each widget type
+                    with st.expander("Metric Widget", expanded=False):
+                        st.write("""
+                        **Metric Widget**
+
+                        Displays a single metric with an optional trend indicator.
+
+                        **Features:**
+                        - Display a single value with optional prefix and suffix
+                        - Show trend indicator (up/down) with percentage change
+                        - Color-coded trend (green for good, red for bad)
+
+                        **Example Usage:**
+                        ```python
+                        metric_widget = MetricWidget(
+                            title="Total Users",
+                            value_func=get_total_users,
+                            description="Number of registered users",
+                            trend_func=get_user_trend,
+                            trend_is_good_func=is_user_trend_good
+                        )
+                        ```
+                        """)
+
+                    with st.expander("Chart Widget", expanded=False):
+                        st.write("""
+                        **Chart Widget**
+
+                        Displays a chart visualization using the visualization templates.
+
+                        **Features:**
+                        - Support for all chart types in visualization templates
+                        - Automatic data refresh
+                        - Configurable chart parameters
+
+                        **Example Usage:**
+                        ```python
+                        chart_widget = ChartWidget(
+                            title="Sales Trend",
+                            data_func=get_sales_data,
+                            chart_type="line_chart",
+                            chart_params={
+                                "x_column": "Date",
+                                "y_columns": "Sales",
+                                "title": "Daily Sales",
+                                "show_markers": True
+                            },
+                            description="Daily sales over time"
+                        )
+                        ```
+                        """)
+
+                    with st.expander("Table Widget", expanded=False):
+                        st.write("""
+                        **Table Widget**
+
+                        Displays tabular data with sorting and filtering.
+
+                        **Features:**
+                        - Display data in a tabular format
+                        - Automatic data refresh
+                        - Configurable width and height
+
+                        **Example Usage:**
+                        ```python
+                        table_widget = TableWidget(
+                            title="Sales Data",
+                            data_func=get_sales_data,
+                            description="Raw sales data"
+                        )
+                        ```
+                        """)
+
+                    with st.expander("Status Widget", expanded=False):
+                        st.write("""
+                        **Status Widget**
+
+                        Displays status information with colored indicators.
+
+                        **Features:**
+                        - Color-coded status indicators (green, orange, red)
+                        - Display multiple status items
+                        - Show status messages
+
+                        **Example Usage:**
+                        ```python
+                        status_widget = StatusWidget(
+                            title="System Status",
+                            items_func=get_status_items,
+                            description="Current status of system components"
+                        )
+                        ```
+                        """)
+
+                    with st.expander("Info Widget", expanded=False):
+                        st.write("""
+                        **Info Widget**
+
+                        Displays informational content in various formats.
+
+                        **Features:**
+                        - Support for markdown, code, JSON, and plain text
+                        - Automatic content refresh
+
+                        **Example Usage:**
+                        ```python
+                        info_widget = InfoWidget(
+                            title="Dashboard Info",
+                            content_func=get_info_content,
+                            description="Information about this dashboard",
+                            content_type="markdown"
+                        )
+                        ```
+                        """)
+
+                    with st.expander("Dashboard Layout", expanded=False):
+                        st.write("""
+                        **Dashboard Layout**
+
+                        Create a flexible layout for your dashboard widgets.
+
+                        **Features:**
+                        - Arrange widgets in rows and columns
+                        - Control the width of each widget
+                        - Responsive layout
+
+                        **Example Usage:**
+                        ```python
+                        # Create a layout with 2 rows
+                        # First row: 2 widgets side by side
+                        # Second row: 3 widgets side by side
+                        layout = [[1, 1], [1, 1, 1]]
+
+                        # Render the dashboard
+                        create_dashboard_layout(widgets, layout)
+                        ```
+                        """)
+
+                    st.write("""
+                    For more details and advanced usage, refer to the dashboard_widgets.py module.
+                    """)
 
         def render_integration_tab():
             st.subheader("Integration Capabilities")
