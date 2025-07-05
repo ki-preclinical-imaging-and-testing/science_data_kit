@@ -35,9 +35,17 @@ jobs:
         # exit-zero treats all errors as warnings
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
 
-    - name: Test with pytest
+    - name: Test with pytest and generate coverage reports
       run: |
-        pytest --cov=science_data_kit
+        python run_coverage.py
+
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-reports
+        path: |
+          coverage_html/
+          coverage.xml
 
   integration-test:
     runs-on: ubuntu-latest

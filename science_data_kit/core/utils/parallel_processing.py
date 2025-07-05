@@ -4,16 +4,41 @@ Parallel Processing Utilities for Science Data Kit
 This module provides utilities for parallel processing of data operations,
 enabling improved performance for computationally intensive tasks.
 It also includes background processing capabilities for long-running tasks.
+
+The module offers several key components:
+- ParallelExecutor: For executing functions in parallel using threads or processes
+- ParallelDataProcessor: For processing data in parallel with chunking and progress tracking
+- BackgroundTaskManager: For running tasks in the background and tracking their status
+- Convenience functions: For common parallel processing operations
+
+Usage:
+    ```python
+    from science_data_kit.core.utils.parallel_processing import parallel_map, BackgroundTaskManager
+
+    # Example 1: Parallel map
+    results = parallel_map(lambda x: x * x, range(100))
+
+    # Example 2: Background processing
+    manager = BackgroundTaskManager()
+    task_id = manager.submit_task(long_running_function, arg1, arg2)
+
+    # Check status later
+    status = manager.get_task_status(task_id)
+
+    # Get result when ready
+    result = manager.get_task_result(task_id)
+    ```
 """
 
+# Standard library imports (alphabetical order)
 import concurrent.futures
-import multiprocessing
 import logging
+import multiprocessing
+import threading
 import time
 import uuid
-import threading
 from enum import Enum
-from typing import List, Callable, Any, Dict, Optional, Union, TypeVar, Generic, Iterable, Iterator, Tuple
+from typing import Any, Callable, Dict, Generic, Iterable, Iterator, List, Optional, Tuple, TypeVar, Union
 
 # Type variables for generic functions
 T = TypeVar('T')
@@ -583,19 +608,31 @@ def submit_background_task(task_func: Callable[..., R], *args, **kwargs) -> Tupl
     return task_id, manager
 
 
-def example_parallel_processing():
+def example_parallel_processing() -> Dict[str, Dict[str, float]]:
     """
     Example of using parallel processing utilities.
 
+    This function demonstrates how to use the parallel processing utilities
+    in this module to improve performance for computationally intensive tasks.
+    It compares sequential and parallel processing for two examples:
+    1. Applying a function to a list of items
+    2. Processing a pandas DataFrame
+
     Returns:
-        Dictionary with example results.
+        Dictionary with example results, including execution times and speedup factors.
+
+    Examples:
+        >>> results = example_parallel_processing()
+        >>> print(f"Speedup for list processing: {results['example1']['speedup']:.2f}x")
+        >>> print(f"Speedup for DataFrame processing: {results['example2']['speedup']:.2f}x")
     """
-    import time
+    # Third-party imports
     import numpy as np
     import pandas as pd
 
     # Example 1: Parallel map
-    def slow_square(x):
+    def slow_square(x: int) -> int:
+        """Square a number with a simulated delay."""
         time.sleep(0.1)  # Simulate a slow operation
         return x * x
 
@@ -612,7 +649,8 @@ def example_parallel_processing():
     parallel_time = time.time() - start_time
 
     # Example 2: Parallel DataFrame processing
-    def slow_process_df(df):
+    def slow_process_df(df: 'pd.DataFrame') -> 'pd.DataFrame':
+        """Process a DataFrame with a simulated delay."""
         time.sleep(0.1)  # Simulate a slow operation
         df['squared'] = df['value'] ** 2
         return df
@@ -644,18 +682,37 @@ def example_parallel_processing():
     }
 
 
-def example_background_processing():
+def example_background_processing() -> Dict[str, Any]:
     """
     Example of using background processing utilities.
 
-    Returns:
-        Dictionary with example results.
-    """
-    import time
+    This function demonstrates how to use the BackgroundTaskManager to run
+    tasks in the background, check their status, retrieve results, and cancel
+    tasks. It simulates long-running tasks and shows how to interact with them
+    asynchronously.
 
+    Returns:
+        Dictionary with example results, including task statuses at different
+        points in time, task results, and cancellation status.
+
+    Examples:
+        >>> results = example_background_processing()
+        >>> print(f"Initial status of task 1: {results['initial_status']['task1']}")
+        >>> print(f"Task 1 result: {results['task1_result']}")
+        >>> print(f"Was task 2 cancelled? {results['task2_cancelled']}")
+    """
     # Define a long-running task
-    def long_running_task(duration, return_value):
-        """Simulate a long-running task."""
+    def long_running_task(duration: float, return_value: str) -> str:
+        """
+        Simulate a long-running task.
+
+        Args:
+            duration: Time in seconds to sleep.
+            return_value: Value to return after sleeping.
+
+        Returns:
+            The return_value after sleeping for duration seconds.
+        """
         time.sleep(duration)
         return return_value
 

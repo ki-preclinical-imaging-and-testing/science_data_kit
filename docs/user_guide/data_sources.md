@@ -10,10 +10,11 @@ The Science Data Kit provides robust data source connectors, allowing you to acc
 2. [Office 365 Connector](#office-365-connector)
 3. [Dropbox Connector](#dropbox-connector)
 4. [Google Drive Connector](#google-drive-connector)
-5. [Local Storage Connector](#local-storage-connector)
-6. [Common Operations](#common-operations)
-7. [Best Practices](#best-practices)
-8. [Troubleshooting](#troubleshooting)
+5. [Google Sheets Connector](#google-sheets-connector)
+6. [Local Storage Connector](#local-storage-connector)
+7. [Common Operations](#common-operations)
+8. [Best Practices](#best-practices)
+9. [Troubleshooting](#troubleshooting)
 
 ## Introduction
 
@@ -314,6 +315,102 @@ print(f"Modified: {file_info['modified']}")
 ### Google Sheets
 
 The Google Drive connector provides special handling for Google Sheets files. When you download a Google Sheets file, it is automatically exported as an Excel file and parsed into a pandas DataFrame.
+
+## Google Sheets Connector
+
+The Google Sheets connector allows you to access and analyze data from Google Sheets spreadsheets directly, providing more advanced functionality than the basic Google Drive connector.
+
+### Configuration
+
+To use the Google Sheets connector, you need to set up a Google Cloud project and create OAuth 2.0 credentials:
+
+```python
+from science_data_kit.core.providers.spreadsheet import GoogleSheetsProvider
+
+# Create configuration
+config = {
+    "credentials_file": "/path/to/your/credentials.json",
+    "token_file": "google_sheets_token.json"
+}
+
+# Create provider
+provider = GoogleSheetsProvider(config)
+
+# Initialize provider
+await provider.initialize()
+```
+
+### Prerequisites
+
+Before using the Google Sheets connector, you need to:
+
+1. Create a Google Cloud project
+2. Enable the Google Sheets API and Google Drive API
+3. Create OAuth 2.0 credentials
+4. Install the required dependencies:
+
+```bash
+pip install science_data_kit[google_sheets]
+```
+
+Or install the dependencies directly:
+
+```bash
+pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+```
+
+### Spreadsheet Operations
+
+#### Listing Spreadsheets
+
+You can list available Google Sheets spreadsheets as follows:
+
+```python
+# List spreadsheets
+spreadsheets = await provider.list_spreadsheets()
+
+# Print spreadsheet names
+for spreadsheet in spreadsheets:
+    print(f"Spreadsheet: {spreadsheet['name']} ({spreadsheet['id']})")
+```
+
+#### Listing Sheets
+
+You can list sheets in a Google Sheets spreadsheet as follows:
+
+```python
+# List sheets
+spreadsheet_id = "your-spreadsheet-id"
+sheets = await provider.list_sheets(spreadsheet_id)
+
+# Print sheet names
+for sheet in sheets:
+    print(f"Sheet: {sheet['name']} ({sheet['rows']} rows, {sheet['columns']} columns)")
+```
+
+#### Getting Sheet Data
+
+You can get data from a sheet in a Google Sheets spreadsheet as follows:
+
+```python
+# Get sheet data
+spreadsheet_id = "your-spreadsheet-id"
+sheet_name = "your-sheet-name"
+data = await provider.get_sheet_data(spreadsheet_id, sheet_name)
+
+# Print data
+print(data.head())
+```
+
+### Authentication Process
+
+When you first connect to Google Sheets, you will need to authenticate with your Google account:
+
+1. A browser window will open (or you will be prompted to visit a URL and enter a code)
+2. Sign in to your Google account
+3. Review the permissions requested by the application
+4. Click **Allow** to grant the necessary permissions
+5. The SDK will store the authentication token for future use
 
 ## Local Storage Connector
 

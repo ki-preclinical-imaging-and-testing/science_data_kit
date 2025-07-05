@@ -127,7 +127,7 @@ class MyCustomPage(BasePage):
     def __init__(self, st, session_state):
         super().__init__(st, session_state)
         self.title = "My Custom Page"
-        
+
     def render(self):
         self.st.title(self.title)
         # Your page content here
@@ -161,15 +161,15 @@ class CustomPage(BasePage):
         super().__init__(st, session_state)
         self.title = "Custom Page"
         self.sidebar = Sidebar(st, session_state)
-        
+
     def render(self):
         # Render the sidebar
         self.sidebar.render()
-        
+
         # Render the main content
         self.st.title(self.title)
         self.st.write("This is a custom page using the new UI structure.")
-        
+
         # Access the database manager from session state
         db_manager = self.session_state.db_manager
         if db_manager and db_manager.is_connected():
@@ -199,6 +199,78 @@ result = db_manager.run_query(
 # Process the results
 for record in result:
     print(f"Name: {record['p.name']}, Age: {record['p.age']}")
+```
+
+### Example 3: Migrating from ISA Browser Integration
+
+```python
+# Old code
+from app.streamlit_isa_browser import display_isa_browser
+
+# Display the ISA browser
+display_isa_browser(st, db_manager)
+
+# New code
+from science_data_kit.ui.integrations.isa_browser import ISABrowser
+
+# Create and display the ISA browser
+isa_browser = ISABrowser(st, session_state)
+isa_browser.render()
+```
+
+### Example 4: Migrating from cBioPortal Browser Integration
+
+```python
+# Old code
+from app.streamlit_cbioportal_browser import display_cbioportal_browser
+
+# Display the cBioPortal browser
+display_cbioportal_browser(st, db_manager)
+
+# New code
+from science_data_kit.ui.integrations.cbioportal_browser import CBioPortalBrowser
+
+# Create and display the cBioPortal browser
+cbioportal_browser = CBioPortalBrowser(st, session_state)
+cbioportal_browser.render()
+```
+
+### Example 5: Migrating File Utilities
+
+```python
+# Old code
+from app.utils.file_utils import save_file, load_file
+
+# Save and load files
+save_file(data, "output.json")
+loaded_data = load_file("input.json")
+
+# New code
+from science_data_kit.core.utils.file_utils import FileManager
+
+# Create a file manager and use it to save and load files
+file_manager = FileManager()
+file_manager.save_file(data, "output.json")
+loaded_data = file_manager.load_file("input.json")
+```
+
+### Example 6: Migrating Graph Utilities
+
+```python
+# Old code
+from app.utils.graph_utils import create_graph, visualize_graph
+
+# Create and visualize a graph
+graph = create_graph(nodes, edges)
+visualize_graph(st, graph)
+
+# New code
+from science_data_kit.core.utils.graph_utils import GraphManager
+
+# Create a graph manager and use it to create and visualize a graph
+graph_manager = GraphManager()
+graph = graph_manager.create_graph(nodes, edges)
+graph_manager.visualize_graph(st, graph)
 ```
 
 ## Troubleshooting
