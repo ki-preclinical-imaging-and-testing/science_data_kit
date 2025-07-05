@@ -152,6 +152,18 @@ def initialize_session_state() -> None:
     if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []
 
+    # User preferences state
+    if "user_preferences" not in st.session_state:
+        st.session_state["user_preferences"] = {
+            "theme": "light",
+            "font_size": "medium",
+            "sidebar_collapsed": False,
+            "show_tooltips": True,
+            "data_table_rows": 10,
+            "auto_save": True,
+            "language": "en"
+        }
+
 def load_state_from_config(config_path: Path) -> None:
     """
     Load session state from a configuration file.

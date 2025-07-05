@@ -128,6 +128,10 @@ class ScienceDataKitApp:
             from science_data_kit.ui.pages.about import render_about_page
             self.page_adapter.register_page("About", render_about_page)
 
+            # Preferences page
+            from science_data_kit.ui.pages.preferences import render_preferences_page
+            self.page_adapter.register_page("Preferences", render_preferences_page)
+
         except ImportError as e:
             st.error(f"Error importing page modules: {e}")
             st.error("Please make sure all required modules are installed.")
@@ -156,6 +160,8 @@ class ScienceDataKitApp:
             pages.append(st.Page(self.page_adapter.pages["Files"], title="files", icon="📁"))
         if "About" in self.page_adapter.pages:
             pages.append(st.Page(self.page_adapter.pages["About"], title="learn", icon="📖"))
+        if "Preferences" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Preferences"], title="preferences", icon="⚙️"))
 
         # Check if there are any pages to display
         if not pages:
