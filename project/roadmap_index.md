@@ -6,17 +6,25 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 ## Active Roadmaps
 
-### Phase 5: SDK Completion and Documentation
+### Phase 6: SDK Outreach and Feature Expansion
 
-This roadmap focuses on completing the remaining high-priority tasks from Phase 4 and further enhancing the platform's documentation, testing infrastructure, and code quality. It outlines a comprehensive plan for finalizing the improvements started in Phase 4 and preparing the platform for wider adoption.
+This roadmap focuses on outreach, user adoption, and implementing high-priority features from the roadmap_later.md file. It prioritizes creating workshop materials for hands-on training, enhancing user experience, expanding data source connectors, and implementing machine learning capabilities. The goal is to make the SDK more accessible to researchers and data scientists while continuing to expand its functionality.
 
-**Latest Version**: [roadmap_phase5_05.md](roadmap_phase5_05.md)
+**Latest Version**: [roadmap_phase6_00.md](roadmap_phase6_00.md)
 
-**Status**: Complete - Implemented dependency injection system with container, providers, and decorators. Implemented interfaces for core components including database interfaces, API interfaces, and container interfaces. Added type checking with mypy, implemented code formatting with black, generated API documentation from docstrings, created end-to-end tests, added architecture diagrams, and enhanced the caching mechanism with TTL, LRU, and statistics tracking capabilities. Set up code coverage reporting with HTML and XML reports, applied module template to parallel_processing.py, enhanced migration guides with specific examples for legacy components, and updated user guides to match current functionality. All tasks in the Phase 5 roadmap have been completed, preparing the platform for wider adoption.
+**Status**: In Progress - Phase 6 is being initiated with a focus on workshop preparation for the MIT Koch Institute, where researchers will learn to use the Science Data Kit for their preclinical cancer research data. The roadmap includes tasks for creating installation guides, sample datasets, tutorial materials, user experience enhancements, data source expansion, machine learning integration, documentation improvements, and deployment options.
 
 ## Archived Roadmaps
 
 The following roadmap sets have been completed and archived. Any remaining tasks from these roadmaps have been added to the [roadmap_later.md](roadmap_later.md) file for future consideration.
+
+### Phase 5: SDK Completion and Documentation
+
+This roadmap focused on completing the remaining high-priority tasks from Phase 4 and further enhancing the platform's documentation, testing infrastructure, and code quality. It outlined a comprehensive plan for finalizing the improvements started in Phase 4 and preparing the platform for wider adoption.
+
+**Latest Version**: [archive/roadmap_phase5_05.md](archive/roadmap_phase5_05.md)
+
+**Status**: Complete - Implemented dependency injection system with container, providers, and decorators. Implemented interfaces for core components including database interfaces, API interfaces, and container interfaces. Added type checking with mypy, implemented code formatting with black, generated API documentation from docstrings, created end-to-end tests, added architecture diagrams, and enhanced the caching mechanism with TTL, LRU, and statistics tracking capabilities. Set up code coverage reporting with HTML and XML reports, applied module template to parallel_processing.py, enhanced migration guides with specific examples for legacy components, and updated user guides to match current functionality. All tasks in the Phase 5 roadmap have been completed, preparing the platform for wider adoption.
 
 ### Phase 4: SDK Enhancement and Optimization
 
@@ -108,7 +116,7 @@ This roadmap refactored the Science Data Kit application to improve its architec
 
 ## Project Direction
 
-The Science Data Kit has evolved into a comprehensive tool for data analysis and visualization. With the completion of the first four development phases, the platform has established robust capabilities. Phase 5 is now underway to further enhance the platform's documentation, testing infrastructure, and code quality, preparing it for wider adoption.
+The Science Data Kit has evolved into a comprehensive tool for data analysis and visualization. With the completion of the first five development phases, the platform has established robust capabilities with strong documentation, testing infrastructure, and code quality. Phase 6 is now underway to focus on outreach, user adoption, and implementing high-priority features from the roadmap_later.md file.
 
 ### Current Capabilities
 
@@ -116,22 +124,28 @@ The Science Data Kit has evolved into a comprehensive tool for data analysis and
 - **Integrations**: Support for Microsoft 365, Dropbox, Google Sheets, NC3Rs EDA tool, PubMed, and ISA Tools
 - **Analysis Tools**: Integration with pandas, scikit-learn, matplotlib, plotly, NumPy, SciPy, and D3.js
 - **Data Sources**: Support for Neo4j, SQL databases, and RESTful APIs
-- **Performance Features**: Query optimization, parallel processing, background task management, streaming data processing, and memory profiling
-- **Architecture**: Plugin architecture for integrations, abstract base classes for providers and database connectors, and centralized error handling
-- **Testing**: Comprehensive unit tests and integration tests for core functionality
-- **Documentation**: Sphinx documentation system, design decisions documentation, and user guides
+- **Performance Features**: Query optimization, parallel processing, background task management, streaming data processing, memory profiling, and enhanced caching mechanism with TTL, LRU, and statistics tracking
+- **Architecture**: Plugin architecture for integrations, abstract base classes for providers and database connectors, centralized error handling, dependency injection system with container, providers, and decorators, and interfaces for core components
+- **Testing**: Comprehensive unit tests, integration tests, end-to-end tests, and code coverage reporting
+- **Documentation**: Sphinx documentation system, design decisions documentation, user guides, API documentation from docstrings, architecture diagrams, and migration guides for legacy components
+- **Code Quality**: Type checking with mypy, code formatting with black, and standardized module structure
 
 ### Future Directions
 
-Future enhancements, as outlined in the [roadmap_later.md](roadmap_later.md) file, may include:
+Phase 6 focuses on several key areas, as outlined in the [roadmap_phase6_00.md](roadmap_phase6_00.md) file:
 
-- **User Interface Enhancements**: Customizable preferences, responsive design, and accessibility features
-- **Additional Data Sources**: Support for MongoDB, SPARQL endpoints, Kafka, and other data sources
-- **Machine Learning Integration**: Model training, evaluation, and serving capabilities
+- **Workshop Preparation**: Creating streamlined installation guides, sample datasets, tutorial materials, and support documentation for hands-on training sessions
+- **User Experience Enhancements**: Implementing responsive design for mobile, customizable user preferences, accessibility features, and theme customization
+- **Data Source Expansion**: Adding support for MongoDB, SPARQL endpoints, Elasticsearch, Cassandra, Kafka, RabbitMQ, WebSocket streaming, and MQTT
+- **Machine Learning Integration**: Implementing model training pipeline, evaluation framework, serialization, cross-validation support, and model serving capabilities
+- **Documentation Enhancements**: Creating developer guides, troubleshooting guides, code examples, and video tutorials
+- **Deployment and Distribution**: Creating Docker containers, optimizing package structure for PyPI, and implementing proper dependency management
+
+Additional future enhancements, as outlined in the [roadmap_later.md](roadmap_later.md) file, may include:
+
 - **Reporting Capabilities**: Integration with reporting engines and custom dashboard creation
-- **Advanced Documentation**: Interactive documentation, video tutorials, and more examples and use cases
 - **Performance Optimization**: Optimized data structures for large datasets and consistent pagination
-- **Architecture Enhancements**: Dependency injection system and service locator or container
+- **Advanced Collaboration**: Real-time collaboration features and shared workspaces
 
 ## Roadmap Management
 
@@ -148,8 +162,10 @@ Please refer to roadmap_memo.md for detailed instructions on working with roadma
 
 ## Conclusion
 
-The Science Data Kit project has successfully achieved its goal of becoming a comprehensive tool for scientific data analysis and visualization. Through the systematic implementation of ten major roadmaps across four development phases, the SDK has evolved into a robust platform with extensive capabilities.
+The Science Data Kit project has successfully achieved its goal of becoming a comprehensive tool for scientific data analysis and visualization. Through the systematic implementation of eleven major roadmaps across five development phases, the SDK has evolved into a robust platform with extensive capabilities.
 
-With the first four phases completed and archived, the project is now entering Phase 5, which focuses on enhancing documentation, testing infrastructure, and code quality, preparing the platform for wider adoption. Many tasks from previous phases have been collected in the [roadmap_later.md](roadmap_later.md) file for future implementation. The project continues to be maintained and enhanced based on user feedback and emerging requirements.
+With the first five phases completed and archived, the project is now entering Phase 6, which represents a significant shift from platform development to user adoption and outreach. This phase focuses on creating workshop materials, enhancing user experience, expanding data source connectors, implementing machine learning capabilities, improving documentation, and optimizing deployment options. Many tasks from previous phases have been collected in the [roadmap_later.md](roadmap_later.md) file for future implementation. The project continues to be maintained and enhanced based on user feedback and emerging requirements.
+
+The upcoming workshop at MIT Koch Institute will serve as a valuable opportunity to gather feedback from real users and refine the platform based on their needs. With the completion of Phase 6, the Science Data Kit will be well-positioned as a comprehensive tool for scientific data analysis, with strong documentation, user-friendly interfaces, extensive data source support, and advanced analytical capabilities.
 
 For detailed information about specific roadmaps, refer to the archived roadmap files linked in the "Archived Roadmaps" section above. For information about future development directions, see the "Project Direction" section.
