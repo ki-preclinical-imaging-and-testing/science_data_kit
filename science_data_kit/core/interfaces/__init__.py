@@ -13,6 +13,7 @@ from .database import (
     DatabaseInterface,
     GraphDatabaseInterface,
     Neo4jDatabaseInterface,
+    SPARQLDatabaseInterface,
 )
 
 # API interfaces
@@ -33,11 +34,12 @@ __all__ = [
     'DatabaseInterface',
     'GraphDatabaseInterface',
     'Neo4jDatabaseInterface',
-    
+    'SPARQLDatabaseInterface',
+
     # API interfaces
     'APIInterface',
     'MSGraphAPIInterface',
-    
+
     # Container interfaces
     'ContainerInterface',
     'JupyterContainerInterface',

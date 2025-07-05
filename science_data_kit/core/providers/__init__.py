@@ -9,12 +9,17 @@ from .registry import ProviderRegistry, ProviderType, BaseProvider, registry
 from .abstract_providers import StorageProvider, DatabaseProvider, APIProvider
 from .storage import DropboxProvider, GoogleSheetsProvider
 from .api import MSGraphProvider
+from .database.mongodb_provider import MongoDBProvider
+from .database.sparql_provider import SPARQLProvider
 
 # Register providers
 registry.register_provider(ProviderType.STORAGE, "dropbox", DropboxProvider)
 registry.register_provider(ProviderType.SPREADSHEET, "google_sheets", GoogleSheetsProvider)
 registry.register_provider(ProviderType.API, "msgraph", MSGraphProvider)
+registry.register_provider(ProviderType.DATABASE, "mongodb", MongoDBProvider)
+registry.register_provider(ProviderType.DATABASE, "sparql", SPARQLProvider)
 
 __all__ = ['ProviderRegistry', 'ProviderType', 'BaseProvider', 'registry',
            'StorageProvider', 'DatabaseProvider', 'APIProvider',
-           'DropboxProvider', 'GoogleSheetsProvider', 'MSGraphProvider']
+           'DropboxProvider', 'GoogleSheetsProvider', 'MSGraphProvider',
+           'MongoDBProvider', 'SPARQLProvider']

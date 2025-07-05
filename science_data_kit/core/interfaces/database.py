@@ -256,6 +256,118 @@ class Neo4jDatabaseInterface(GraphDatabaseInterface):
         pass
 
 
+class SPARQLDatabaseInterface(GraphDatabaseInterface):
+    """
+    Interface for SPARQL endpoint managers.
+
+    This interface extends the GraphDatabaseInterface with methods specific to SPARQL endpoints.
+    """
+
+    @abstractmethod
+    def execute_sparql_query(self, query: str, parameters: Optional[Dict[str, Any]] = None,
+                           connection_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Execute a SPARQL query on the endpoint.
+
+        Args:
+            query: The SPARQL query string to execute.
+            parameters: Optional parameters for the query.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            List of dictionaries containing the query results.
+        """
+        pass
+
+    @abstractmethod
+    def sparql_query_to_dataframe(self, query: str, parameters: Optional[Dict[str, Any]] = None,
+                                connection_name: Optional[str] = None) -> pd.DataFrame:
+        """
+        Execute a SPARQL query and return the results as a pandas DataFrame.
+
+        Args:
+            query: The SPARQL query string to execute.
+            parameters: Optional parameters for the query.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            A pandas DataFrame containing the query results.
+        """
+        pass
+
+    @abstractmethod
+    def get_endpoint_info(self, connection_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get information about the SPARQL endpoint.
+
+        Args:
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            Dictionary containing endpoint information.
+        """
+        pass
+
+    @abstractmethod
+    def list_graphs(self, connection_name: Optional[str] = None) -> List[str]:
+        """
+        List all named graphs in the SPARQL endpoint.
+
+        Args:
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            List of graph URIs.
+        """
+        pass
+
+    @abstractmethod
+    def count_triples(self, graph_uri: Optional[str] = None, 
+                     connection_name: Optional[str] = None) -> int:
+        """
+        Count triples in the SPARQL endpoint.
+
+        Args:
+            graph_uri: Optional URI of the named graph to count triples in.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            Number of triples.
+        """
+        pass
+
+    @abstractmethod
+    def list_classes(self, graph_uri: Optional[str] = None,
+                    connection_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        List all classes in the SPARQL endpoint.
+
+        Args:
+            graph_uri: Optional URI of the named graph to list classes from.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            List of dictionaries containing class information.
+        """
+        pass
+
+    @abstractmethod
+    def list_properties(self, class_uri: Optional[str] = None, graph_uri: Optional[str] = None,
+                       connection_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        List all properties in the SPARQL endpoint.
+
+        Args:
+            class_uri: Optional URI of the class to list properties for.
+            graph_uri: Optional URI of the named graph to list properties from.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            List of dictionaries containing property information.
+        """
+        pass
+
+
 class DocumentDatabaseInterface(DatabaseInterface):
     """
     Interface for document database managers.
