@@ -1,0 +1,11 @@
+[server]
+maxMessageSize = 500
+
+[theme]
+primaryColor = "#1E88E5"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+
+[ui]
+hideTopBar = true
