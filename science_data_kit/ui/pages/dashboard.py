@@ -330,18 +330,29 @@ class DashboardPage(BasePage):
 
             # Create a table of visualization components
             visualization_components = {
-                "Component": ["Schema Visualization", "Data Charts", "Network Graphs", "NeoDash Integration", "Custom Dashboards"],
-                "Status": ["Available", "Available", "Available", "Available", "In Progress"],
+                "Component": ["Schema Visualization", "Basic Data Charts", "Simple Network Graphs", "NeoDash Integration", "Advanced Dashboards"],
+                "Status": ["Available", "Available", "Available", "Available", "Available via NeoDash"],
                 "Description": [
                     "Visualize database schema as a network graph",
-                    "Create bar, line, and scatter charts from query results",
-                    "Visualize data as network graphs",
-                    "Integration with NeoDash for creating dashboards",
-                    "Create custom dashboards for specific use cases"
+                    "Create basic bar, line, and scatter charts from query results",
+                    "Visualize data as simple network graphs",
+                    "Integration with NeoDash for creating advanced dashboards",
+                    "Create complex, interactive dashboards with NeoDash"
                 ]
             }
 
             st.dataframe(pd.DataFrame(visualization_components), use_container_width=True)
+
+            # Add explanation about SDK vs NeoDash visualization capabilities
+            st.info("""
+            **SDK Dashboard vs NeoDash**
+
+            The Science Data Kit dashboard provides basic visualization capabilities for quick insights, 
+            while NeoDash offers more advanced, customizable dashboards for complex data exploration.
+
+            - **Use SDK Dashboard for**: System overview, basic charts, quick insights
+            - **Use NeoDash for**: Custom dashboards, complex visualizations, interactive exploration, sharing dashboards
+            """)
 
         def render_integration_tab():
             st.subheader("Integration Capabilities")
