@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: science-data-kit
+  labels:
+    name: science-data-kit
+    app: science-data-kit

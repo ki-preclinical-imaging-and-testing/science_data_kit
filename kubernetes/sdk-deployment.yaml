@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: science-data-kit
+  namespace: science-data-kit
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: science-data-kit
+  template:
+    metadata:
+      labels:
+        app: science-data-kit
+    spec:
+      containers:
+      - name: science-data-kit
+        image: science-data-kit:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8501
+          name: streamlit
+        - containerPort: 8888
+          name: jupyter
+        env:
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sdk-secrets
+              key: NEO4J_PASSWORD
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sdk-secrets
+              key: REDIS_PASSWORD
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: sdk-secrets
+              key: JWT_SECRET
+        envFrom:
+        - configMapRef:
+            name: sdk-config
+        volumeMounts:
+        - name: sdk-data
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "0.2"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8501
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: sdk-data
+        persistentVolumeClaim:
+          claimName: sdk-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sdk-service
+  namespace: science-data-kit
+spec:
+  selector:
+    app: science-data-kit
+  ports:
+  - port: 8501
+    targetPort: 8501
+    name: streamlit
+  - port: 8888
+    targetPort: 8888
+    name: jupyter
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sdk-data-pvc
+  namespace: science-data-kit
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sdk-ingress
+  namespace: science-data-kit
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - host: sdk.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sdk-service
+            port:
+              name: streamlit
+      - path: /jupyter
+        pathType: Prefix
+        backend:
+          service:
+            name: sdk-service
+            port:
+              name: jupyter
