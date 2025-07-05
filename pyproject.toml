@@ -1,3 +1,98 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "science_data_kit"
+version = "0.1.0"
+description = "A comprehensive toolkit for indexing, curating, and integrating multimodal research data using knowledge graph capabilities"
+readme = "README.md"
+authors = [
+    {name = "Science Data Kit Team", email = "example@example.com"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Operating System :: OS Independent",
+    "Environment :: Web Environment",
+    "Framework :: Streamlit",
+]
+keywords = ["science", "data", "knowledge graph", "neo4j", "research", "bioinformatics"]
+requires-python = ">=3.12"
+dependencies = [
+    "altair>=5.5.0",
+    "docker>=7.1.0",
+    "neo4j>=5.28.0",
+    "neomodel>=5.4.0",
+    "networkx>=3.4.0",
+    "numpy>=2.2.0",
+    "pandas>=2.2.0",
+    "pyvis>=0.3.0",
+    "rdflib>=7.0.0",
+    "requests>=2.32.0",
+    "streamlit>=1.44.0",
+    "PyYAML>=6.0.0",
+    "jsonschema>=4.23.0",
+    "openpyxl>=3.1.0",
+    "XlsxWriter>=3.2.0",
+]
+
+[project.optional-dependencies]
+msgraph = [
+    "msgraph-sdk-python>=1.0.0",
+    "azure-identity>=1.12.0",
+]
+dropbox = [
+    "dropbox>=11.36.0",
+]
+google = [
+    "google-api-python-client>=2.86.0",
+    "google-auth-httplib2>=0.1.0",
+    "google-auth-oauthlib>=1.0.0",
+]
+jupyter = [
+    "ipython>=9.0.0",
+    "jupyter>=1.0.0",
+]
+viz = [
+    "matplotlib>=3.7.0",
+    "pillow>=11.0.0",
+]
+dev = [
+    "mypy>=1.10.0",
+    "black>=24.4.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "sphinx>=7.3.0",
+    "sphinx-rtd-theme>=2.0.0",
+    "sphinx-autoapi>=3.0.0",
+]
+all = [
+    "science_data_kit[msgraph,dropbox,google,jupyter,viz,dev]",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/your-username/science_data_kit"
+"Bug Tracker" = "https://github.com/your-username/science_data_kit/issues"
+"Documentation" = "https://science-data-kit.readthedocs.io/"
+
+[project.scripts]
+science_data_kit = "run_app:main"
+
+[tool.setuptools]
+packages = ["science_data_kit", "app"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"app" = [".streamlit/*", "utils/*"]
+
 [tool.black]
 line-length = 100
 target-version = ['py312']

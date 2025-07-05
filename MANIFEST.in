@@ -1,4 +1,5 @@
-# Include all Python files
+# Include Python files
+recursive-include science_data_kit *.py
 recursive-include app *.py
 
 # Include Streamlit configuration files
@@ -7,18 +8,28 @@ recursive-include app/.streamlit *
 # Include documentation
 include README.md
 include LICENSE
-include requirements.txt
-include environment.yml
+include INSTALL.md
+include CONTRIBUTING.md
+include docs/*.md
 
-# Include installation scripts
-include install.sh
-include install_isatools.py
-include install_isatools_py312.py
-include run_app.py
-include test_installation.py
-
-# Include template files
+# Include configuration files
+include pyproject.toml
 include db_config.template.yaml
+
+# Include scripts
+include run_app.py
+include verify.py
+
+# Include templates
+recursive-include science_data_kit/core/templates *
+
+# Include tests
+recursive-include tests *.py
+
+# Include tutorials
+recursive-include tutorials *.md
+recursive-include tutorials *.py
+recursive-include tutorials *.ipynb
 
 # Exclude unnecessary files
 global-exclude *.pyc
@@ -26,3 +37,10 @@ global-exclude __pycache__
 global-exclude .git
 global-exclude .gitignore
 global-exclude .ipynb_checkpoints
+global-exclude *.egg-info
+global-exclude *.egg
+global-exclude .DS_Store
+global-exclude .mypy_cache
+global-exclude .pytest_cache
+global-exclude .coverage
+global-exclude htmlcov

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "science_data_kit_viz"
+version = "0.1.0"
+description = "Enhanced visualization extension for Science Data Kit"
+readme = "README.md"
+authors = [
+    {name = "Science Data Kit Team", email = "example@example.com"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+keywords = ["science", "data", "visualization", "plotting", "charts", "graphs"]
+requires-python = ">=3.12"
+dependencies = [
+    "science_data_kit>=0.1.0",
+    "matplotlib>=3.7.0",
+    "pillow>=11.0.0",
+    "plotly>=5.0.0",
+    "seaborn>=0.12.0",
+    "bokeh>=3.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/your-username/science_data_kit"
+"Bug Tracker" = "https://github.com/your-username/science_data_kit/issues"
+"Documentation" = "https://science-data-kit.readthedocs.io/"
+
+[tool.setuptools]
+packages = ["science_data_kit_viz"]
