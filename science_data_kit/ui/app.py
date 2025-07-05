@@ -17,6 +17,7 @@ from science_data_kit.ui.config import configure_page, DEFAULT_PAGE_CONFIG
 from science_data_kit.ui.state import initialize_session_state
 from science_data_kit.ui.adapters.page_adapter import PageAdapter
 from science_data_kit.core.db.db_manager import load_db_config
+from science_data_kit.ui.components.responsive_design import apply_responsive_styles
 
 class ScienceDataKitApp:
     """
@@ -39,6 +40,9 @@ class ScienceDataKitApp:
 
         # Initialize session state
         initialize_session_state()
+
+        # Apply responsive styles for mobile devices
+        apply_responsive_styles()
 
         # Load database configuration
         self._load_db_config()
