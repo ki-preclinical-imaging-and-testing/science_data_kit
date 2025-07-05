@@ -545,6 +545,112 @@ class MongoDBDatabaseInterface(DocumentDatabaseInterface):
         pass
 
 
+class CassandraDatabaseInterface(DocumentDatabaseInterface):
+    """
+    Interface for Cassandra database managers.
+
+    This interface extends the DocumentDatabaseInterface with methods specific to Cassandra.
+    """
+
+    @abstractmethod
+    def start_container(self, version: str = "latest", workload_type: Optional[str] = None) -> bool:
+        """
+        Start a Cassandra container.
+
+        Args:
+            version: Cassandra version to use.
+            workload_type: Optional workload type for configuration.
+
+        Returns:
+            True if container was started successfully, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def stop_container(self) -> bool:
+        """
+        Stop the Cassandra container.
+
+        Returns:
+            True if container was stopped successfully, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def get_container_status(self) -> Dict[str, Any]:
+        """
+        Get the status of the Cassandra container.
+
+        Returns:
+            Dictionary containing container status information.
+        """
+        pass
+
+    @abstractmethod
+    def list_keyspaces(self, connection_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        List all keyspaces in the Cassandra cluster.
+
+        Args:
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            List of dictionaries containing keyspace information.
+        """
+        pass
+
+    @abstractmethod
+    def create_keyspace(self, keyspace_name: str, replication_strategy: str = 'SimpleStrategy',
+                       replication_factor: int = 1, connection_name: Optional[str] = None) -> bool:
+        """
+        Create a new keyspace.
+
+        Args:
+            keyspace_name: Name of the keyspace to create.
+            replication_strategy: Replication strategy to use.
+            replication_factor: Replication factor for the keyspace.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            True if keyspace was created successfully, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def create_table(self, table_name: str, columns: Dict[str, str], primary_key: List[str],
+                    keyspace: Optional[str] = None, connection_name: Optional[str] = None) -> bool:
+        """
+        Create a new table in a keyspace.
+
+        Args:
+            table_name: Name of the table to create.
+            columns: Dictionary mapping column names to CQL types.
+            primary_key: List of column names to use as primary key.
+            keyspace: Optional keyspace name (uses current keyspace if not provided).
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            True if table was created successfully, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def batch_operation(self, statements: List[str], parameters: List[Dict[str, Any]] = None,
+                       connection_name: Optional[str] = None) -> bool:
+        """
+        Execute a batch of CQL statements.
+
+        Args:
+            statements: List of CQL statements to execute.
+            parameters: Optional list of parameter dictionaries for each statement.
+            connection_name: Optional name of the connection to use.
+
+        Returns:
+            True if batch operation was successful, False otherwise.
+        """
+        pass
+
+
 class ElasticsearchDatabaseInterface(DocumentDatabaseInterface):
     """
     Interface for Elasticsearch database managers.
