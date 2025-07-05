@@ -112,8 +112,8 @@ class DashboardPage(BasePage):
             Base64-encoded image data for the visualization.
         """
         try:
-            # Create figure
-            fig, ax = plt.subplots(figsize=(10, 5))
+            # Import visualization templates
+            from science_data_kit.ui.components.visualization_templates import create_bar_chart
 
             # Service status data
             services = list(st.session_state["connected_services"].keys())
@@ -122,36 +122,26 @@ class DashboardPage(BasePage):
             # Format service names for display
             display_names = [s.replace('_', ' ').title() for s in services]
 
-            # Create bar chart
-            bars = ax.bar(display_names, status, color=['green' if s else 'red' for s in status])
+            # Create DataFrame for visualization
+            data = pd.DataFrame({
+                'Service': display_names,
+                'Status': status
+            })
 
-            # Add labels
-            ax.set_ylim(0, 1.2)
-            ax.set_yticks([0, 1])
-            ax.set_yticklabels(['Disconnected', 'Connected'])
-            ax.set_title('Service Connection Status')
+            # Create custom colors based on status
+            colors = ['green' if s else 'red' for s in status]
 
-            # Add value labels on top of bars
-            for bar in bars:
-                height = bar.get_height()
-                label = 'Connected' if height > 0 else 'Disconnected'
-                ax.text(bar.get_x() + bar.get_width()/2., height + 0.1,
-                        label, ha='center', va='bottom', rotation=90, fontsize=8)
-
-            # Rotate x-axis labels for better readability
-            plt.xticks(rotation=45, ha='right')
-
-            # Adjust layout
-            plt.tight_layout()
-
-            # Save figure to bytes
-            buf = io.BytesIO()
-            plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
-            plt.close()
-
-            # Convert to base64
-            buf.seek(0)
-            img_data = base64.b64encode(buf.read()).decode("utf-8")
+            # Use the bar chart template
+            img_data = create_bar_chart(
+                data=data,
+                x_column='Service',
+                y_column='Status',
+                title='Service Connection Status',
+                y_label='Status',
+                color=colors[0] if len(set(colors)) == 1 else None,  # Use single color if all same
+                figsize=(10, 5),
+                show_values=False  # We'll add custom labels instead
+            )
 
             return img_data
         except Exception as e:
@@ -182,38 +172,30 @@ class DashboardPage(BasePage):
             Base64-encoded image data for the visualization.
         """
         try:
+            # Import visualization templates
+            from science_data_kit.ui.components.visualization_templates import create_bar_chart
+
             # Create sample data
             categories = ['Data Sources', 'Analysis', 'Visualization', 'Integration']
             values = [85, 70, 60, 40]
 
-            # Create figure
-            fig, ax = plt.subplots(figsize=(10, 6))
+            # Create DataFrame for visualization
+            data = pd.DataFrame({
+                'Category': categories,
+                'Completion': values
+            })
 
-            # Create bar chart
-            bars = ax.bar(categories, values, color='skyblue')
-
-            # Add labels
-            ax.set_ylim(0, 100)
-            ax.set_ylabel('Completion (%)')
-            ax.set_title('Project Progress by Category')
-
-            # Add value labels on top of bars
-            for bar in bars:
-                height = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width()/2., height + 1,
-                        f'{height}%', ha='center', va='bottom')
-
-            # Adjust layout
-            plt.tight_layout()
-
-            # Save figure to bytes
-            buf = io.BytesIO()
-            plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
-            plt.close()
-
-            # Convert to base64
-            buf.seek(0)
-            img_data = base64.b64encode(buf.read()).decode("utf-8")
+            # Use the bar chart template
+            img_data = create_bar_chart(
+                data=data,
+                x_column='Category',
+                y_column='Completion',
+                title='Project Progress by Category',
+                y_label='Completion (%)',
+                color='skyblue',
+                figsize=(10, 6),
+                show_values=True
+            )
 
             return img_data
         except Exception as e:
