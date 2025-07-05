@@ -6,12 +6,14 @@ to interact with various data sources like Dropbox, Google Sheets, and Microsoft
 """
 
 from .registry import ProviderRegistry, ProviderType, BaseProvider, registry
-from .abstract_providers import StorageProvider, DatabaseProvider, APIProvider
+from .abstract_providers import StorageProvider, DatabaseProvider, APIProvider, MessagingProvider
 from .storage import DropboxProvider, GoogleSheetsProvider
 from .api import MSGraphProvider
 from .database.mongodb_provider import MongoDBProvider
 from .database.sparql_provider import SPARQLProvider
 from .database.elasticsearch_provider import ElasticsearchProvider
+from .messaging.kafka_provider import KafkaProvider
+from .messaging.rabbitmq_provider import RabbitMQProvider
 
 # Register providers
 registry.register_provider(ProviderType.STORAGE, "dropbox", DropboxProvider)
@@ -20,8 +22,11 @@ registry.register_provider(ProviderType.API, "msgraph", MSGraphProvider)
 registry.register_provider(ProviderType.DATABASE, "mongodb", MongoDBProvider)
 registry.register_provider(ProviderType.DATABASE, "sparql", SPARQLProvider)
 registry.register_provider(ProviderType.DATABASE, "elasticsearch", ElasticsearchProvider)
+registry.register_provider(ProviderType.MESSAGING, "kafka", KafkaProvider)
+registry.register_provider(ProviderType.MESSAGING, "rabbitmq", RabbitMQProvider)
 
 __all__ = ['ProviderRegistry', 'ProviderType', 'BaseProvider', 'registry',
-           'StorageProvider', 'DatabaseProvider', 'APIProvider',
+           'StorageProvider', 'DatabaseProvider', 'APIProvider', 'MessagingProvider',
            'DropboxProvider', 'GoogleSheetsProvider', 'MSGraphProvider',
-           'MongoDBProvider', 'SPARQLProvider', 'ElasticsearchProvider']
+           'MongoDBProvider', 'SPARQLProvider', 'ElasticsearchProvider', 
+           'KafkaProvider', 'RabbitMQProvider']
