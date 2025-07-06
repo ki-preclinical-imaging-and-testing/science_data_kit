@@ -37,13 +37,28 @@ roadmap_{component}_{mm}.md
 ```
 
 Where:
-- `{component}` is a descriptive name for the roadmap set (e.g., `MSGraphAPI`, `CodebaseOrganization`, `refactor_app`)
+- `{component}` is a descriptive name for the roadmap set (e.g., `MSGraphAPI`, `CodebaseOrganization`, `refactor_app`, `kg`)
 - `{mm}` is a sequential number (e.g., `00`, `01`, `02`, ...) that indicates the version or progression of the roadmap
 
 For example:
 - `roadmap_MSGraphAPI_00.md`, `roadmap_MSGraphAPI_01.md`, `roadmap_MSGraphAPI_02.md`, ...
 - `roadmap_CodebaseOrganization_00.md`, `roadmap_CodebaseOrganization_01.md`, ...
 - `roadmap_refactor_app_01.md`, `roadmap_refactor_app_02.md`, ...
+
+For component-specific roadmaps that have their own internal phases, the phase-specific files follow this naming convention:
+
+```
+roadmap_{component}Phase{n}_{mm}.md
+```
+
+Where:
+- `{component}` is the descriptive name for the roadmap set (e.g., `kg` for Knowledge Graph)
+- `{n}` is the phase number within the component roadmap (e.g., `1`, `2`, `3`, ...)
+- `{mm}` is a sequential number (e.g., `00`, `01`, `02`, ...) that indicates the version or progression of the phase roadmap
+
+For example:
+- `roadmap_kgPhase1_00.md`, `roadmap_kgPhase1_01.md`, ...
+- `roadmap_kgPhase2_00.md`, `roadmap_kgPhase2_01.md`, ...
 
 ## Working with Roadmaps
 

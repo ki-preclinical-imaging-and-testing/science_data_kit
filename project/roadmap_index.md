@@ -6,7 +6,36 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 ## Active Roadmaps
 
-There are currently no active roadmaps. The Science Data Kit has completed six major development phases, resulting in a comprehensive platform with extensive capabilities for scientific data analysis. Any future development will be guided by new roadmaps as they are created.
+### Repository Reorganization
+
+This roadmap outlines the plan for reorganizing the Science Data Kit repository structure, with a particular focus on improving the organization of roadmap files and documentation. The reorganization will prepare the repository for the implementation of the Knowledge Graph Documentation System by creating a more logical and maintainable structure for project documentation.
+
+**Latest Version**: [roadmap_RepoReorg_00.md](roadmap_RepoReorg_00.md)
+
+**Status**: Planning - The Repository Reorganization roadmap has been defined and is divided into two phases:
+
+1. **Phase 1: Documentation Reorganization** - Creating a new directory structure for roadmap files and documentation, moving files to appropriate locations, and updating references.
+2. **Phase 2: Repository Structure Improvements** - Cleaning up the root directory, organizing Docker files, and improving test organization.
+
+### Knowledge Graph Documentation System
+
+This roadmap outlines the plan for implementing a Knowledge Graph Documentation System that transforms the Science Data Kit into an AI-navigable scientific software platform. The system enables documentation to live naturally in the codebase while providing structured markup and linking for automatic knowledge graph generation. AI agents can query this graph to understand codebase structure and patterns, with the graph automatically rebuilding from source documentation when files change.
+
+**Latest Version**: [roadmap_kg_00.md](roadmap_kg_00.md)
+
+**Status**: Planning - The Knowledge Graph Documentation System roadmap has been defined and is divided into six phases:
+
+1. **Phase 1: Foundation** - Establishing the core infrastructure for the knowledge graph system without disrupting existing workflows. See [roadmap_kgPhase1_00.md](roadmap_kgPhase1_00.md) for details.
+2. **Phase 2: Core Integration** - Integrating the knowledge graph system with existing documentation systems and tools. See [roadmap_kgPhase2_00.md](roadmap_kgPhase2_00.md) for details.
+3. **Phase 3: AI Navigation** - Enabling AI agents to navigate and understand the codebase through the knowledge graph. See [roadmap_kgPhase3_00.md](roadmap_kgPhase3_00.md) for details.
+4. **Phase 4: User Interfaces** - Creating tools for human interaction with the knowledge graph. See [roadmap_kgPhase4_00.md](roadmap_kgPhase4_00.md) for details.
+5. **Phase 5: Advanced Features** - Adding advanced capabilities to the knowledge graph system. See [roadmap_kgPhase5_00.md](roadmap_kgPhase5_00.md) for details.
+6. **Phase 6: Ecosystem** - Platform maturation and broader adoption. See [roadmap_kgPhase6_00.md](roadmap_kgPhase6_00.md) for details.
+
+**Supporting Documentation**:
+- [Knowledge Graph Vision](knowledge_graph_vision.md) - Detailed vision document explaining the "AI-native software architecture" concept
+- [Knowledge Graph Technical Specification](knowledge_graph_technical_spec.md) - Technical specification covering documentation markup standards, schema design, and integration requirements
+- [Knowledge Graph Examples](knowledge_graph_examples.md) - Concrete examples showing before/after documentation examples, sample AI queries, and tagging examples
 
 ## Archived Roadmaps
 
@@ -129,7 +158,7 @@ This roadmap refactored the Science Data Kit application to improve its architec
 
 ## Project Direction
 
-The Science Data Kit has evolved into a comprehensive tool for data analysis and visualization. With the completion of all six development phases, the platform has established robust capabilities with strong documentation, testing infrastructure, code quality, and user-focused features.
+The Science Data Kit has evolved into a comprehensive tool for data analysis and visualization. With the completion of all six development phases, the platform has established robust capabilities with strong documentation, testing infrastructure, code quality, and user-focused features. The new Knowledge Graph Documentation System roadmap represents the next evolution in scientific software architecture, transforming the SDK into an AI-navigable platform.
 
 ### Current Capabilities
 
@@ -175,7 +204,15 @@ Please refer to roadmap_memo.md for detailed instructions on working with roadma
 
 The Science Data Kit project has successfully achieved its goal of becoming a comprehensive tool for scientific data analysis and visualization. Through the systematic implementation of twelve major roadmaps across six development phases, the SDK has evolved into a robust platform with extensive capabilities.
 
-With all six phases now completed and archived, the project has undergone a complete development cycle from initial platform development to user adoption and outreach. Phase 6 represented a significant shift in focus, with an emphasis on creating workshop materials, enhancing user experience, expanding data source connectors, implementing machine learning capabilities, improving documentation, and optimizing deployment options. Many tasks from previous phases have been collected in the [roadmap_later.md](roadmap_later.md) file for future implementation. The project continues to be maintained and enhanced based on user feedback and emerging requirements.
+With all six initial phases now completed and archived, the project has undergone a complete development cycle from initial platform development to user adoption and outreach. Phase 6 represented a significant shift in focus, with an emphasis on creating workshop materials, enhancing user experience, expanding data source connectors, implementing machine learning capabilities, improving documentation, and optimizing deployment options. Many tasks from previous phases have been collected in the [roadmap_later.md](roadmap_later.md) file for future implementation.
+
+The project is now entering a new phase with two active roadmaps:
+
+1. The **Repository Reorganization** roadmap, which will improve the organization of roadmap files and documentation, preparing the repository for the Knowledge Graph Documentation System.
+
+2. The **Knowledge Graph Documentation System** roadmap, which represents a fundamental shift toward "AI-native software architecture" where the codebase actively communicates its structure and patterns to both human developers and AI agents.
+
+These roadmaps will guide the transformation of the Science Data Kit into an AI-navigable scientific software platform with a well-organized repository structure.
 
 The workshop at MIT Koch Institute has provided valuable feedback from real users, allowing the platform to be refined based on their needs. With the completion of all planned development phases, the Science Data Kit is now well-positioned as a comprehensive tool for scientific data analysis, with strong documentation, user-friendly interfaces, extensive data source support, and advanced analytical capabilities.
 
