@@ -1,3 +1,21 @@
+# REDIRECT NOTICE
+
+**This file has been moved to a new location.**
+
+**New Location**: [docs/roadmaps/active/knowledge_graph_examples.md](../docs/roadmaps/active/knowledge_graph_examples.md)
+
+**Redirect Created**: July 6, 2024
+
+**Original File Removal Date**: August 6, 2024 (after 1-month transition period)
+
+---
+
+Please update your bookmarks and references to point to the new location. This redirect will be removed after the transition period.
+
+The Science Data Kit repository structure has been reorganized to improve discoverability, maintainability, and integration with documentation systems. All roadmap files have been moved to the `docs/roadmaps/` directory, with active roadmaps in `docs/roadmaps/active/`, archived roadmaps in `docs/roadmaps/archive/`, and templates in `docs/roadmaps/templates/`.
+
+---
+
 # Knowledge Graph Documentation System - Examples
 
 ## Before/After Documentation Examples
@@ -8,20 +26,20 @@
 class Neo4jManager:
     """
     Manages Neo4j database connections and operations for SciDK.
-    
+
     The Neo4jManager provides a high-level interface for graph database
     operations, including connection management, query execution, and
     transaction handling.
-    
+
     Args:
         uri (str): The URI of the Neo4j database
         username (str): The username for authentication
         password (str): The password for authentication
-        
+
     Attributes:
         driver (neo4j.Driver): The Neo4j driver instance
         session_config (dict): Configuration for Neo4j sessions
-        
+
     Methods:
         execute_query: Executes a Cypher query and returns the results
         begin_transaction: Begins a new transaction
@@ -36,34 +54,34 @@ class Neo4jManager:
 class Neo4jManager:
     """
     Manages Neo4j database connections and operations for SciDK.
-    
+
     <!-- concept: graph_database, data_storage, connection_management -->
     <!-- pattern: database_manager, singleton_pattern, connection_pooling -->
-    
+
     The Neo4jManager provides a high-level interface for graph database
     operations, including connection management, query execution, and
     transaction handling.
-    
+
     Args:
         uri (str): The URI of the Neo4j database
         username (str): The username for authentication
         password (str): The password for authentication
-        
+
     Attributes:
         driver (neo4j.Driver): The Neo4j driver instance
         session_config (dict): Configuration for Neo4j sessions
-        
+
     Methods:
         execute_query: Executes a Cypher query and returns the results
         begin_transaction: Begins a new transaction
         commit_transaction: Commits an active transaction
         rollback_transaction: Rolls back an active transaction
-        
+
     ## Related Components
     - {class}`science_data_kit.core.data.DataPipeline` - Uses this manager for data storage
     - {class}`science_data_kit.core.query.QueryBuilder` - Builds queries executed by this manager
     - {class}`science_data_kit.core.config.DatabaseConfig` - Provides connection configuration
-    
+
     ## Extension Patterns
     ### Custom Query Methods
     <!-- pattern: domain_specific_extension, query_customization -->
@@ -73,7 +91,7 @@ class Neo4jManager:
         def find_gene_pathways(self, gene_id: str) -> List[Pathway]:
             # Custom genomics query logic
     ```
-    
+
     ### Performance Optimization  
     <!-- pattern: performance_optimization, caching_strategy -->
     Override query execution for specialized performance requirements:
@@ -81,7 +99,7 @@ class Neo4jManager:
     def execute_query(self, query: str) -> Result:
         # Add caching, connection pooling, etc.
     ```
-    
+
     ## Implementation Examples
     - {class}`science_data_kit.specialized.GenomicsNeo4jManager` - Domain-specific extension
     - {class}`science_data_kit.core.testing.MockNeo4jManager` - Testing implementation
@@ -285,19 +303,19 @@ from science_data_kit.core.di import connector
 class ProteomicsConnector(DataConnectorInterface):
     """
     Connector for proteomics data sources.
-    
+
     <!-- concept: data_integration, proteomics, mass_spectrometry -->
     <!-- pattern: domain_specific_connector, data_source_integration -->
     """
-    
+
     def __init__(self, config):
         super().__init__(config)
         # Initialize proteomics-specific configuration
-        
+
     def connect(self):
         # Implement connection to proteomics data source
         pass
-        
+
     def get_data(self, query):
         # Implement data retrieval for proteomics
         pass
@@ -412,11 +430,11 @@ from science_data_kit.core.di import container
 def analyze_proteomics_data():
     # Get the proteomics connector
     proteomics = container.get('connector', 'proteomics')
-    
+
     # Use the connector
     proteomics.connect()
     data = proteomics.get_data(query)
-    
+
     # Process data
     return processed_data
 ```
@@ -431,15 +449,15 @@ This pattern ensures loose coupling between components and allows for easy subst
 class DataPipeline:
     """
     Orchestrates data processing through multiple stages.
-    
+
     <!-- concept: data_pipeline, workflow_orchestration -->
     <!-- pattern: pipeline_pattern, composite_pattern -->
-    
+
     ## Related Components
     - {class}`science_data_kit.core.data.PipelineStage` - Individual processing stages
     - {class}`science_data_kit.core.data.DataSource` - Input data sources
     - {class}`science_data_kit.core.data.DataSink` - Output destinations
-    
+
     ## Used By
     - {class}`science_data_kit.analysis.GenomicsWorkflow` - Genomics analysis pipeline
     - {class}`science_data_kit.analysis.ProteomicsWorkflow` - Proteomics analysis pipeline
@@ -502,12 +520,12 @@ class ConnectorInterface(ABC):
     def connect(self):
         """Establish connection to the data source"""
         pass
-        
+
     @abstractmethod
     def get_data(self, query):
         """Retrieve data from the source"""
         pass
-        
+
     @abstractmethod
     def close(self):
         """Close the connection"""
@@ -541,21 +559,21 @@ from science_data_kit.knowledge_graph.query import KnowledgeGraphQuery
 def provide_knowledge_graph():
     """
     Provides a KnowledgeGraphQuery instance.
-    
+
     <!-- concept: dependency_injection, knowledge_graph -->
     <!-- pattern: provider_pattern, factory_pattern -->
     """
     neo4j_uri = container.get('config').get('neo4j_uri')
     neo4j_user = container.get('config').get('neo4j_user')
     neo4j_password = container.get('config').get('neo4j_password')
-    
+
     return KnowledgeGraphQuery(neo4j_uri, neo4j_user, neo4j_password)
 
 # Usage in other components
 def get_component_documentation(component_name):
     """
     Get documentation for a component from the knowledge graph.
-    
+
     <!-- concept: documentation_retrieval, knowledge_graph -->
     <!-- pattern: service_usage, dependency_injection -->
     """
@@ -624,19 +642,19 @@ from science_data_kit.core.di import connector
 class CustomConnector(DataConnectorInterface):
     """
     Custom connector for specialized data source.
-    
+
     <!-- concept: data_integration, custom_data_source -->
     <!-- pattern: connector_implementation, data_source_integration -->
     """
-    
+
     def __init__(self, config):
         super().__init__(config)
         # Initialize custom configuration
-        
+
     def connect(self):
         # Implement connection logic
         pass
-        
+
     def get_data(self, query):
         # Implement data retrieval
         pass

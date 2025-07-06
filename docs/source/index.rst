@@ -12,6 +12,7 @@ Welcome to Science Data Toolkit's documentation!
    usage
    api
    modules
+   roadmaps
 
 Introduction
 ===========

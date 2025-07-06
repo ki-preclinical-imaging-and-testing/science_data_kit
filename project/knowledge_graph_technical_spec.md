@@ -1,3 +1,21 @@
+# REDIRECT NOTICE
+
+**This file has been moved to a new location.**
+
+**New Location**: [docs/roadmaps/active/knowledge_graph_technical_spec.md](../docs/roadmaps/active/knowledge_graph_technical_spec.md)
+
+**Redirect Created**: July 6, 2024
+
+**Original File Removal Date**: August 6, 2024 (after 1-month transition period)
+
+---
+
+Please update your bookmarks and references to point to the new location. This redirect will be removed after the transition period.
+
+The Science Data Kit repository structure has been reorganized to improve discoverability, maintainability, and integration with documentation systems. All roadmap files have been moved to the `docs/roadmaps/` directory, with active roadmaps in `docs/roadmaps/active/`, archived roadmaps in `docs/roadmaps/archive/`, and templates in `docs/roadmaps/templates/`.
+
+---
+
 # Knowledge Graph Documentation System - Technical Specification
 
 ## Documentation Markup Standards
@@ -85,7 +103,7 @@ class BaseDocumentationNode:
         self.name = name
         self.node_type = node_type
         self.properties = kwargs
-    
+
     @classmethod
     def create_domain_subtype(cls, domain: str, **domain_properties):
         """Create domain-specific node subtypes at runtime"""
@@ -193,21 +211,21 @@ class DocumentationParser:
     def __init__(self):
         self.parsers = {}
         self.register_default_parsers()
-    
+
     def register_parser(self, file_extension, parser):
         self.parsers[file_extension] = parser
-    
+
     def register_default_parsers(self):
         self.register_parser('.py', PythonFileParser())
         self.register_parser('.md', MarkdownFileParser())
         self.register_parser('.rst', ReStructuredTextParser())
-    
+
     def parse_file(self, file_path):
         ext = os.path.splitext(file_path)[1]
         if ext in self.parsers:
             return self.parsers[ext].parse(file_path)
         return None
-    
+
     def parse_directory(self, directory_path, recursive=True):
         results = []
         for root, dirs, files in os.walk(directory_path):
@@ -229,7 +247,7 @@ class FileParser:
     def parse(self, file_path):
         """Parse a file and return extracted nodes and relationships"""
         raise NotImplementedError()
-    
+
     def extract_concepts(self, content):
         """Extract concept tags from content"""
         import re
@@ -238,7 +256,7 @@ class FileParser:
         for match in concept_matches:
             concepts.extend([tag.strip() for tag in match.split(',')])
         return concepts
-    
+
     def extract_patterns(self, content):
         """Extract pattern tags from content"""
         import re
@@ -247,7 +265,7 @@ class FileParser:
         for match in pattern_matches:
             patterns.extend([tag.strip() for tag in match.split(',')])
         return patterns
-    
+
     def extract_cross_references(self, content):
         """Extract cross-references from content"""
         import re
@@ -267,11 +285,11 @@ class PythonFileParser(FileParser):
         import ast
         with open(file_path, 'r') as f:
             content = f.read()
-        
+
         tree = ast.parse(content)
         nodes = []
         relationships = []
-        
+
         # Parse module
         module_node = ComponentNode(
             name=os.path.basename(file_path),
@@ -279,7 +297,7 @@ class PythonFileParser(FileParser):
             file_path=file_path
         )
         nodes.append(module_node)
-        
+
         # Parse classes and functions
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
@@ -290,13 +308,13 @@ class PythonFileParser(FileParser):
                 func_node = self.parse_function(node, file_path)
                 nodes.append(func_node)
                 relationships.append(('CONTAINS', module_node, func_node))
-        
+
         return {'nodes': nodes, 'relationships': relationships}
-    
+
     def parse_class(self, class_def, file_path):
         # Implementation details
         pass
-    
+
     def parse_function(self, func_def, file_path):
         # Implementation details
         pass
@@ -310,10 +328,10 @@ class MarkdownFileParser(FileParser):
     def parse(self, file_path):
         with open(file_path, 'r') as f:
             content = f.read()
-        
+
         nodes = []
         relationships = []
-        
+
         # Create document node
         doc_node = DocumentNode(
             name=os.path.basename(file_path),
@@ -321,21 +339,21 @@ class MarkdownFileParser(FileParser):
             content=content
         )
         nodes.append(doc_node)
-        
+
         # Extract concepts
         concepts = self.extract_concepts(content)
         for concept in concepts:
             concept_node = ConceptNode(name=concept)
             nodes.append(concept_node)
             relationships.append(('ADDRESSES', doc_node, concept_node))
-        
+
         # Extract patterns
         patterns = self.extract_patterns(content)
         for pattern in patterns:
             pattern_node = PatternNode(name=pattern)
             nodes.append(pattern_node)
             relationships.append(('IMPLEMENTS', doc_node, pattern_node))
-        
+
         # Extract sections
         sections = self.extract_sections(content)
         for section in sections:
@@ -347,9 +365,9 @@ class MarkdownFileParser(FileParser):
             )
             nodes.append(section_node)
             relationships.append(('CONTAINS', doc_node, section_node))
-        
+
         return {'nodes': nodes, 'relationships': relationships}
-    
+
     def extract_sections(self, content):
         # Implementation details
         pass
@@ -365,26 +383,26 @@ class KnowledgeGraphBuilder:
     def __init__(self, neo4j_uri, neo4j_user, neo4j_password):
         self.graph = Neo4jGraph(neo4j_uri, neo4j_user, neo4j_password)
         self.parser = DocumentationParser()
-    
+
     def build_graph(self, directory_path, recursive=True):
         """Build the knowledge graph from a directory of files"""
         parse_results = self.parser.parse_directory(directory_path, recursive)
         self.create_nodes(parse_results)
         self.create_relationships(parse_results)
         self.infer_additional_relationships()
-    
+
     def create_nodes(self, parse_results):
         """Create nodes in the graph database"""
         for result in parse_results:
             for node in result['nodes']:
                 self.graph.create_node(node)
-    
+
     def create_relationships(self, parse_results):
         """Create relationships in the graph database"""
         for result in parse_results:
             for rel_type, source, target in result['relationships']:
                 self.graph.create_relationship(source, target, rel_type)
-    
+
     def infer_additional_relationships(self):
         """Infer additional relationships based on existing data"""
         # Infer concept hierarchy relationships
@@ -393,7 +411,7 @@ class KnowledgeGraphBuilder:
         WHERE c1.name CONTAINS '.' AND c2.name = split(c1.name, '.')[0]
         MERGE (c1)-[:CHILD_OF]->(c2)
         """)
-        
+
         # Infer related concepts from co-occurrence
         self.graph.execute_query("""
         MATCH (n)-[:ADDRESSES]->(c1:ConceptNode)
@@ -414,7 +432,7 @@ Interface for querying the knowledge graph:
 class KnowledgeGraphQuery:
     def __init__(self, neo4j_uri, neo4j_user, neo4j_password):
         self.graph = Neo4jGraph(neo4j_uri, neo4j_user, neo4j_password)
-    
+
     def find_component(self, name, component_type=None):
         """Find a component by name and type"""
         query = "MATCH (c:ComponentNode {name: $name})"
@@ -422,17 +440,17 @@ class KnowledgeGraphQuery:
             query += " WHERE c.component_type = $component_type"
         query += " RETURN c"
         return self.graph.execute_query(query, {"name": name, "component_type": component_type})
-    
+
     def find_concept(self, name):
         """Find a concept by name"""
         query = "MATCH (c:ConceptNode {name: $name}) RETURN c"
         return self.graph.execute_query(query, {"name": name})
-    
+
     def find_pattern(self, name):
         """Find a pattern by name"""
         query = "MATCH (p:PatternNode {name: $name}) RETURN p"
         return self.graph.execute_query(query, {"name": name})
-    
+
     def find_components_by_concept(self, concept_name):
         """Find components that address a concept"""
         query = """
@@ -440,7 +458,7 @@ class KnowledgeGraphQuery:
         RETURN c
         """
         return self.graph.execute_query(query, {"concept_name": concept_name})
-    
+
     def find_components_by_pattern(self, pattern_name):
         """Find components that implement a pattern"""
         query = """
@@ -448,7 +466,7 @@ class KnowledgeGraphQuery:
         RETURN c
         """
         return self.graph.execute_query(query, {"pattern_name": pattern_name})
-    
+
     def find_related_components(self, component_name):
         """Find components related to a given component"""
         query = """
@@ -456,7 +474,7 @@ class KnowledgeGraphQuery:
         RETURN type(r) as relationship_type, related
         """
         return self.graph.execute_query(query, {"component_name": component_name})
-    
+
     def find_extension_point(self, query_string):
         """Find extension points based on a query string"""
         # Parse query string for concepts and patterns
@@ -477,7 +495,7 @@ class KnowledgeGraphQuery:
                     pattern_result = self.find_pattern(term)
                     if pattern_result:
                         patterns.append(term)
-        
+
         # Build query based on concepts and patterns
         query_parts = []
         if concepts:
@@ -486,17 +504,17 @@ class KnowledgeGraphQuery:
             WHERE concept.name IN $concepts
             """
             query_parts.append(concept_query)
-        
+
         if patterns:
             pattern_query = """
             MATCH (c:ComponentNode)-[:IMPLEMENTS]->(pattern:PatternNode)
             WHERE pattern.name IN $patterns
             """
             query_parts.append(pattern_query)
-        
+
         if not query_parts:
             return []
-        
+
         query = " WITH c ".join(query_parts) + " RETURN c"
         return self.graph.execute_query(query, {"concepts": concepts, "patterns": patterns})
 ```
@@ -527,22 +545,22 @@ class NLQueryParser:
             r'module (\w+)',
             r'component (\w+)'
         ]
-    
+
     def parse(self, query_string):
         """Parse a natural language query into a structured query"""
         concepts = self.extract_concepts(query_string)
         patterns = self.extract_patterns(query_string)
         components = self.extract_components(query_string)
-        
+
         structured_query = {
             'concepts': concepts,
             'patterns': patterns,
             'components': components,
             'original_query': query_string
         }
-        
+
         return structured_query
-    
+
     def extract_concepts(self, query_string):
         """Extract concepts from a query string"""
         concepts = []
@@ -551,7 +569,7 @@ class NLQueryParser:
             matches = re.findall(pattern, query_string)
             concepts.extend(matches)
         return concepts
-    
+
     def extract_patterns(self, query_string):
         """Extract patterns from a query string"""
         patterns = []
@@ -560,7 +578,7 @@ class NLQueryParser:
             matches = re.findall(pattern, query_string)
             patterns.extend(matches)
         return patterns
-    
+
     def extract_components(self, query_string):
         """Extract components from a query string"""
         components = []
@@ -586,7 +604,7 @@ def setup(app):
     app.add_role('pattern', pattern_role)
     app.connect('builder-inited', initialize_knowledge_graph)
     app.connect('build-finished', build_knowledge_graph)
-    
+
     return {
         'version': '0.1',
         'parallel_read_safe': True,

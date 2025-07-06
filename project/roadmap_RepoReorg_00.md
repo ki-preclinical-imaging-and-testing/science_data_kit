@@ -1,3 +1,21 @@
+# REDIRECT NOTICE
+
+**This file has been moved to a new location.**
+
+**New Location**: [docs/roadmaps/active/roadmap_RepoReorg_00.md](../docs/roadmaps/active/roadmap_RepoReorg_00.md)
+
+**Redirect Created**: July 6, 2024
+
+**Original File Removal Date**: August 6, 2024 (after 1-month transition period)
+
+---
+
+Please update your bookmarks and references to point to the new location. This redirect will be removed after the transition period.
+
+The Science Data Kit repository structure has been reorganized to improve discoverability, maintainability, and integration with documentation systems. All roadmap files have been moved to the `docs/roadmaps/` directory, with active roadmaps in `docs/roadmaps/active/`, archived roadmaps in `docs/roadmaps/archive/`, and templates in `docs/roadmaps/templates/`.
+
+---
+
 # Science Data Kit (SDK) Repository Reorganization Roadmap - Version 00
 
 ## Overview
@@ -105,6 +123,8 @@ The current repository structure has several areas that could be improved:
    - Move comprehensive index to `docs/roadmaps/archive/index_complete.md`
    - Update references to roadmap files
    - Add redirects from old locations
+   - Create a mapping document that tracks old file locations to new locations
+   - Update any external documentation that references the roadmap files
 
 4. Documentation Integration
    - Update Sphinx configuration
@@ -116,9 +136,15 @@ The current repository structure has several areas that could be improved:
 5. Finalize Transition
    - Verify all roadmap files are correctly moved and accessible in their new locations
    - Update any remaining references to the old locations
-   - Add a note to the original roadmap_RepoReorg_00.md indicating it has been moved
-   - Keep the original file in place for a transition period (e.g., 1 month) with a clear redirect to the new location
-   - After the transition period, remove the original file from the project/ directory
+   - Add a note to the original roadmap_RepoReorg_00.md indicating it has been moved, with a clear link to the new location
+   - Create a standardized redirect format for all moved files that includes:
+     * A prominent notice at the top of the file
+     * The exact path to the new location
+     * The date when the redirect was created
+     * The expected date when the original file will be removed
+   - Keep the original files in place for a transition period (e.g., 1 month) with these clear redirects
+   - Set up monitoring to track access to old file locations during the transition period
+   - After the transition period, remove the original files from the project/ directory only after confirming no active references remain
 
 ### Phase 2: Repository Structure Improvements (Weeks 3-4)
 
@@ -164,10 +190,14 @@ The reorganization will support the upcoming Knowledge Graph Documentation Syste
 
 6. **Self-Preservation Success**: The roadmap itself remains accessible throughout the reorganization process, and the transition to the new location is completed without loss of information or accessibility.
 
+7. **Transition Effectiveness**: Redirects successfully guide users to new file locations, with minimal disruption during the transition period.
+
+8. **Reference Integrity**: All references to roadmap files (both internal and external) are successfully updated to point to the new locations.
+
 ## Conclusion
 
 This repository reorganization represents an important step in preparing the Science Data Kit for the implementation of the Knowledge Graph Documentation System. By creating a more logical and maintainable structure for project documentation, we will improve discoverability, maintainability, and integration with documentation systems.
 
-The self-preserving approach to this reorganization ensures that the roadmap itself remains accessible throughout the process, avoiding the paradox of a plan that deletes itself before completion. This careful transition strategy demonstrates the thoughtful planning that will be essential for the Knowledge Graph Documentation System implementation.
+The self-preserving approach to this reorganization ensures that the roadmap itself remains accessible throughout the process, avoiding the paradox of a plan that deletes itself before completion. The comprehensive transition strategy with standardized redirects, monitoring, and verification steps will ensure continuity of access for all users and systems that rely on these documents. This careful approach demonstrates the thoughtful planning that will be essential for the Knowledge Graph Documentation System implementation and sets a standard for future organizational changes.
 
 The reorganization will be the final roadmap created using the current approach before transitioning to the new organization system that will be used for the Knowledge Graph Documentation System. Upon completion, the repository will be well-structured for the next phase of development.

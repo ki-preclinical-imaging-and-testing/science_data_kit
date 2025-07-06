@@ -1,3 +1,21 @@
+# REDIRECT NOTICE
+
+**This file has been moved to a new location.**
+
+**New Location**: [docs/roadmaps/active/roadmap_memo.md](../docs/roadmaps/active/roadmap_memo.md)
+
+**Redirect Created**: July 6, 2024
+
+**Original File Removal Date**: August 6, 2024 (after 1-month transition period)
+
+---
+
+Please update your bookmarks and references to point to the new location. This redirect will be removed after the transition period.
+
+The Science Data Kit repository structure has been reorganized to improve discoverability, maintainability, and integration with documentation systems. All roadmap files have been moved to the `docs/roadmaps/` directory, with active roadmaps in `docs/roadmaps/active/`, archived roadmaps in `docs/roadmaps/archive/`, and templates in `docs/roadmaps/templates/`.
+
+---
+
 # Science Data Kit (SDK) Project Directory Guidelines
 
 This document provides guidelines for working with the Science Data Kit project directory, particularly focusing on roadmap files and their organization.
