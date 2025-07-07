@@ -18,11 +18,16 @@ This roadmap outlines a comprehensive plan for the Design/UX phase of the Scienc
 3. **Phase 3: User Experience Optimization** - Improving interface consistency, navigation flow, error handling, accessibility, and mobile responsiveness.
 4. **Phase 4: Workshop Readiness** - Preparing documentation, training materials, feedback collection mechanisms, and demo scenarios.
 
+
+## Future Roadmaps
+
+The following roadmaps represent important strategic directions for the Science Data Kit but have been temporarily deprioritized to focus on fundamental frontend/backend integration work and user experience optimization. These roadmaps have been moved to the `future/` directory and will be revisited after the completion of the Design/UX phase and Repository Reorganization roadmap.
+
 ### Conversational Pipeline Builder
 
 This roadmap outlines a plan for implementing a conversational interface for scientific pipeline creation that integrates with the existing SciDK platform. Users would interact through natural language to build, modify, and visualize scientific data analysis pipelines, with the system leveraging the knowledge graph and component architecture to translate conversations into working pipelines.
 
-**Latest Version**: [Conversational Pipeline Builder Roadmap](../active/roadmap_CPB_00.md)
+**Latest Version**: [Conversational Pipeline Builder Roadmap](../future/roadmap_CPB_00.md)
 
 **Status**: Planning - The Conversational Pipeline Builder roadmap has been defined but not started yet. It is being added to the system for future consideration. The roadmap is divided into four phases:
 
@@ -30,10 +35,6 @@ This roadmap outlines a plan for implementing a conversational interface for sci
 2. **Phase 2: Visual Representation** - Visual pipeline editing and cross-UI integration.
 3. **Phase 3: Advanced Natural Language** - Sophisticated domain understanding and complex pipeline support.
 4. **Phase 4: Ecosystem Integration** - Full integration with SciDK ecosystem and external tools.
-
-## Future Roadmaps
-
-The following roadmaps represent important strategic directions for the Science Data Kit but have been temporarily deprioritized to focus on fundamental frontend/backend integration work and user experience optimization. These roadmaps have been moved to the `future/` directory and will be revisited after the completion of the Design/UX phase and Repository Reorganization roadmap.
 
 ### Knowledge Graph Documentation System
 

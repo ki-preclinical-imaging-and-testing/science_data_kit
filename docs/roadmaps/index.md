@@ -18,11 +18,18 @@ This roadmap outlines a comprehensive plan for the Design/UX phase of the Scienc
 3. **Phase 3: User Experience Optimization** - Improving interface consistency, navigation flow, error handling, accessibility, and mobile responsiveness.
 4. **Phase 4: Workshop Readiness** - Preparing documentation, training materials, feedback collection mechanisms, and demo scenarios.
 
+
+## Future Roadmaps
+
+The following roadmaps represent important strategic directions for the Science Data Kit but have been temporarily deprioritized to focus on fundamental frontend/backend integration work and user experience optimization. These roadmaps have been moved to the `future/` directory and will be revisited after the completion of the Design/UX phase and Repository Reorganization roadmap.
+
+For more information about future roadmaps, see the [Future Roadmaps README](future/README.md).
+
 ### Conversational Pipeline Builder
 
 This roadmap outlines a plan for implementing a conversational interface for scientific pipeline creation that integrates with the existing SciDK platform. Users would interact through natural language to build, modify, and visualize scientific data analysis pipelines, with the system leveraging the knowledge graph and component architecture to translate conversations into working pipelines.
 
-**Latest Version**: [Conversational Pipeline Builder Roadmap](active/roadmap_CPB_00.md)
+**Latest Version**: [Conversational Pipeline Builder Roadmap](future/roadmap_CPB_00.md)
 
 **Status**: Planning - The Conversational Pipeline Builder roadmap has been defined but not started yet. It is being added to the system for future consideration. The roadmap is divided into four phases:
 
@@ -30,12 +37,6 @@ This roadmap outlines a plan for implementing a conversational interface for sci
 2. **Phase 2: Visual Representation** - Visual pipeline editing and cross-UI integration.
 3. **Phase 3: Advanced Natural Language** - Sophisticated domain understanding and complex pipeline support.
 4. **Phase 4: Ecosystem Integration** - Full integration with SciDK ecosystem and external tools.
-
-## Future Roadmaps
-
-The following roadmaps represent important strategic directions for the Science Data Kit but have been temporarily deprioritized to focus on fundamental frontend/backend integration work and user experience optimization. These roadmaps have been moved to the `future/` directory and will be revisited after the completion of the Design/UX phase and Repository Reorganization roadmap.
-
-For more information about future roadmaps, see the [Future Roadmaps README](future/README.md).
 
 ### Knowledge Graph Documentation System
 
@@ -78,14 +79,14 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 **Recommended Testing**: Use prompts #22 for workshop feature testing, #19 for quality assessment, #23 for performance validation
 **Quality Gates**: Core Component Validation before Integration Testing, Integration Testing before User Experience Optimization
 
-### Conversational Pipeline Builder
-**Implementation Status**: Planning - Not started yet
-**Testing Status**: Not yet applicable - planning phase
-**Next Testing Steps**: Not applicable at this stage
-**Recommended Testing**: Will be determined when implementation begins
-**Quality Gates**: Design/UX Phase completion before starting
-
 ### Future Roadmaps
+
+#### Conversational Pipeline Builder
+**Implementation Status**: Planning - Moved to future roadmaps
+**Testing Status**: On hold until return to active development
+**Next Testing Steps**: Not applicable at this stage
+**Recommended Testing**: Will be determined when reactivated
+**Quality Gates**: Design/UX Phase completion before starting
 
 #### Knowledge Graph Documentation System  
 **Implementation Status**: Planning - Moved to future roadmaps
@@ -143,9 +144,9 @@ The project has undergone a strategic reorganization to focus on fundamental fro
 1. **Active Roadmaps**: Focusing on core platform stability and user experience
    - The **Repository Reorganization** roadmap, which has made significant progress with most tasks now completed
    - The new **Design/UX Phase** roadmap, which focuses on frontend component validation, user experience optimization, backend validation through the user interface, and workshop preparation
-   - The **Conversational Pipeline Builder** roadmap, which outlines a future vision for a natural language interface (planning phase only)
 
 2. **Future Roadmaps**: Advanced features temporarily deprioritized
+   - The **Conversational Pipeline Builder** roadmap, which outlines a future vision for a natural language interface (planning phase only)
    - The **Knowledge Graph Documentation System** roadmap, which represents a fundamental shift toward "AI-native software architecture"
    - The **Strategic Enhancements** roadmap, which focuses on platform maturation, community adoption, and long-term sustainability
 
