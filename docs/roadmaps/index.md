@@ -9,9 +9,9 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 This roadmap outlines a comprehensive plan for the Design/UX phase of the Science Data Kit, focusing on frontend component validation, user experience optimization, backend validation through the user interface, and workshop preparation integration. This phase is critical for ensuring that the backend architecture established in previous phases is effectively integrated with frontend components and that the overall user experience is thoroughly tested, refined, and validated.
 
-**Latest Version**: [Design/UX Phase Roadmap](active/roadmap_DesignUX_10.md)
+**Latest Version**: [Design/UX Phase Roadmap](active/roadmap_DesignUX_11.md)
 
-**Status**: In Progress - The Design/UX phase roadmap has made significant progress in Phase 1: Core Component Validation, Phase 2: Integration Testing, Phase 3: User Experience Optimization, and has begun Phase 4: Workshop Readiness. Thirty-eight high-priority tasks have been completed:
+**Status**: In Progress - The Design/UX phase roadmap has made significant progress in Phase 1: Core Component Validation, Phase 2: Integration Testing, Phase 3: User Experience Optimization, and Phase 4: Workshop Readiness. Forty-three high-priority tasks have been completed:
 
 1. **Component Inventory**: A comprehensive inventory of all UI components has been created, organized by type and with descriptions.
 2. **Testing Checklists**: Detailed testing checklists have been developed for validating all UI components.
@@ -51,6 +51,11 @@ This roadmap outlines a comprehensive plan for the Design/UX phase of the Scienc
 36. **Error Documentation**: Comprehensive error documentation has been created, documenting common errors and their solutions.
 37. **User Guide**: A comprehensive user guide has been created for end users.
 38. **Component API Documentation**: Detailed API documentation has been created for developers.
+39. **Workshop Slides**: Comprehensive workshop slides have been created for training users on the Science Data Kit.
+40. **Hands-On Exercises**: Detailed hands-on exercises have been developed for workshop participants.
+41. **Feedback Form**: A feedback form component has been implemented for collecting user feedback.
+42. **Demo Datasets**: Realistic demo datasets have been created for demonstrations and workshops.
+43. **Demo Scripts**: Demo scripts have been developed to showcase the capabilities of the Science Data Kit.
 
 The roadmap is divided into four phases:
 
