@@ -6,6 +6,11 @@ This script runs all the test suites for the Science Data Kit UI components:
 - Visualization Component Tests
 - Input Form Tests
 - Database Connectivity Tests
+- Data Import/Export Tests
+- Analysis Engine Tests
+- Plugin System Tests
+- Error Handling Tests
+- State Management Tests
 
 It collects the results from each test suite and generates a combined report.
 """
@@ -23,37 +28,57 @@ from streamlit_page_tests import run_all_tests as run_page_tests
 from visualization_component_tests import run_all_tests as run_visualization_tests
 from input_form_tests import run_all_tests as run_input_form_tests
 from database_connectivity_tests import run_all_tests as run_database_tests
+from data_import_export_tests import run_all_tests as run_data_import_export_tests
+from analysis_engine_tests import run_all_tests as run_analysis_engine_tests
+from plugin_system_tests import run_all_tests as run_plugin_system_tests
+from error_handling_tests import run_all_tests as run_error_handling_tests
+from state_management_tests import run_all_tests as run_state_management_tests
 
 def main():
     """Run all test suites and generate combined reports."""
     print("\n=== Running All Science Data Kit UI Tests ===\n")
-    
+
     # Create results directory if it doesn't exist
     os.makedirs("science_data_kit/ui/tests/results", exist_ok=True)
-    
+
     # Record start time
     start_time = datetime.now()
-    
+
     # Run each test suite
     print("\n--- Running Streamlit Page Tests ---\n")
     page_tester = run_page_tests()
-    
+
     print("\n--- Running Visualization Component Tests ---\n")
     visualization_tester = run_visualization_tests()
-    
+
     print("\n--- Running Input Form Tests ---\n")
     input_form_tester = run_input_form_tests()
-    
+
     print("\n--- Running Database Connectivity Tests ---\n")
     database_tester = run_database_tests()
-    
+
+    print("\n--- Running Data Import/Export Tests ---\n")
+    data_import_export_tester = run_data_import_export_tests()
+
+    print("\n--- Running Analysis Engine Tests ---\n")
+    analysis_engine_tester = run_analysis_engine_tests()
+
+    print("\n--- Running Plugin System Tests ---\n")
+    plugin_system_tester = run_plugin_system_tests()
+
+    print("\n--- Running Error Handling Tests ---\n")
+    error_handling_tester = run_error_handling_tests()
+
+    print("\n--- Running State Management Tests ---\n")
+    state_management_tester = run_state_management_tests()
+
     # Record end time
     end_time = datetime.now()
     test_duration = (end_time - start_time).total_seconds()
-    
+
     # Generate combined results report
     combined_results = []
-    
+
     # Add page test results
     for page_name, page_data in page_tester.results["page_results"].items():
         for category, tests in page_data.items():
@@ -67,7 +92,7 @@ def main():
                         "Status": test_data["status"],
                         "Notes": test_data["notes"]
                     })
-    
+
     # Add visualization test results
     for component_name, component_data in visualization_tester.results["component_results"].items():
         for category, tests in component_data.items():
@@ -81,7 +106,7 @@ def main():
                         "Status": test_data["status"],
                         "Notes": test_data["notes"]
                     })
-    
+
     # Add input form test results
     for component_name, component_data in input_form_tester.results["component_results"].items():
         for category, tests in component_data.items():
@@ -95,7 +120,7 @@ def main():
                         "Status": test_data["status"],
                         "Notes": test_data["notes"]
                     })
-    
+
     # Add database connectivity test results
     for component_name, component_data in database_tester.results["component_results"].items():
         for category, tests in component_data.items():
@@ -109,16 +134,71 @@ def main():
                         "Status": test_data["status"],
                         "Notes": test_data["notes"]
                     })
-    
+
+    # Add data import/export test results
+    for result in data_import_export_tester[0].to_dict('records'):
+        combined_results.append({
+            "Test Suite": "Data Import/Export",
+            "Component": result["Component"],
+            "Category": result["Category"],
+            "Test": result["Test Name"],
+            "Status": result["Status"],
+            "Notes": result["Notes"]
+        })
+
+    # Add analysis engine test results
+    for result in analysis_engine_tester[0].to_dict('records'):
+        combined_results.append({
+            "Test Suite": "Analysis Engine",
+            "Component": result["Component"],
+            "Category": result["Category"],
+            "Test": result["Test Name"],
+            "Status": result["Status"],
+            "Notes": result["Notes"]
+        })
+
+    # Add plugin system test results
+    for result in plugin_system_tester[0].to_dict('records'):
+        combined_results.append({
+            "Test Suite": "Plugin System",
+            "Component": result["Component"],
+            "Category": result["Category"],
+            "Test": result["Test Name"],
+            "Status": result["Status"],
+            "Notes": result["Notes"]
+        })
+
+    # Add error handling test results
+    for result in error_handling_tester[0].to_dict('records'):
+        combined_results.append({
+            "Test Suite": "Error Handling",
+            "Component": result["Component"],
+            "Category": result["Category"],
+            "Test": result["Test Name"],
+            "Status": result["Status"],
+            "Notes": result["Notes"]
+        })
+
+    # Add state management test results
+    for result in state_management_tester[0].to_dict('records'):
+        combined_results.append({
+            "Test Suite": "State Management",
+            "Component": result["Component"],
+            "Category": result["Category"],
+            "Test": result["Test Name"],
+            "Status": result["Status"],
+            "Notes": result["Notes"]
+        })
+
     # Create DataFrame from combined results
     combined_df = pd.DataFrame(combined_results)
-    
+
     # Save combined results to CSV
     combined_df.to_csv("science_data_kit/ui/tests/results/combined_test_results.csv", index=False)
-    
+
     # Generate combined issues report
     combined_issues = []
-    
+
     # Add page test issues
     for page_name, page_data in page_tester.results["page_results"].items():
         for issue in page_data["issues"]:
@@ -130,7 +210,7 @@ def main():
                 "Description": issue["notes"],
                 "Severity": issue["severity"]
             })
-    
+
     # Add visualization test issues
     for component_name, component_data in visualization_tester.results["component_results"].items():
         for issue in component_data["issues"]:
@@ -142,7 +222,7 @@ def main():
                 "Description": issue["notes"],
                 "Severity": issue["severity"]
             })
-    
+
     # Add input form test issues
     for component_name, component_data in input_form_tester.results["component_results"].items():
         for issue in component_data["issues"]:
@@ -154,7 +234,7 @@ def main():
                 "Description": issue["notes"],
                 "Severity": issue["severity"]
             })
-    
+
     # Add database connectivity test issues
     for component_name, component_data in database_tester.results["component_results"].items():
         for issue in component_data["issues"]:
@@ -166,13 +246,68 @@ def main():
                 "Description": issue["notes"],
                 "Severity": issue["severity"]
             })
-    
+
+    # Add data import/export test issues
+    for issue in data_import_export_tester[1].to_dict('records'):
+        combined_issues.append({
+            "Test Suite": "Data Import/Export",
+            "Component": issue["Component"],
+            "Category": issue["Category"],
+            "Test": issue["Test Name"],
+            "Description": issue["Description"],
+            "Severity": issue["Severity"]
+        })
+
+    # Add analysis engine test issues
+    for issue in analysis_engine_tester[1].to_dict('records'):
+        combined_issues.append({
+            "Test Suite": "Analysis Engine",
+            "Component": issue["Component"],
+            "Category": issue["Category"],
+            "Test": issue["Test Name"],
+            "Description": issue["Description"],
+            "Severity": issue["Severity"]
+        })
+
+    # Add plugin system test issues
+    for issue in plugin_system_tester[1].to_dict('records'):
+        combined_issues.append({
+            "Test Suite": "Plugin System",
+            "Component": issue["Component"],
+            "Category": issue["Category"],
+            "Test": issue["Test Name"],
+            "Description": issue["Description"],
+            "Severity": issue["Severity"]
+        })
+
+    # Add error handling test issues
+    for issue in error_handling_tester[1].to_dict('records'):
+        combined_issues.append({
+            "Test Suite": "Error Handling",
+            "Component": issue["Component"],
+            "Category": issue["Category"],
+            "Test": issue["Test Name"],
+            "Description": issue["Description"],
+            "Severity": issue["Severity"]
+        })
+
+    # Add state management test issues
+    for issue in state_management_tester[1].to_dict('records'):
+        combined_issues.append({
+            "Test Suite": "State Management",
+            "Component": issue["Component"],
+            "Category": issue["Category"],
+            "Test": issue["Test Name"],
+            "Description": issue["Description"],
+            "Severity": issue["Severity"]
+        })
+
     # Create DataFrame from combined issues
     combined_issues_df = pd.DataFrame(combined_issues)
-    
+
     # Save combined issues to CSV
     combined_issues_df.to_csv("science_data_kit/ui/tests/results/combined_test_issues.csv", index=False)
-    
+
     # Print summary
     print("\n=== All Test Suites Completed ===")
     print(f"Total Test Duration: {test_duration:.2f} seconds")
@@ -180,7 +315,7 @@ def main():
     print(f"Total Issues Found: {len(combined_issues_df)}")
     print(f"Results saved to science_data_kit/ui/tests/results/combined_test_results.csv")
     print(f"Issues saved to science_data_kit/ui/tests/results/combined_test_issues.csv")
-    
+
     # Return summary statistics
     return {
         "total_tests": len(combined_df),
