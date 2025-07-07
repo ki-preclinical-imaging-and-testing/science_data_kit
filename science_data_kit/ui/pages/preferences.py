@@ -19,6 +19,23 @@ from science_data_kit.ui.components.responsive_design import (
 )
 from science_data_kit.ui.state import save_state_to_config, load_state_from_config
 
+
+class PreferencesPage:
+    """
+    Preferences page for the Science Data Kit application.
+
+    This class provides a wrapper around the preferences page functionality
+    to maintain compatibility with the test suite.
+    """
+
+    def __init__(self):
+        """Initialize the PreferencesPage."""
+        pass
+
+    def render(self):
+        """Render the preferences page."""
+        render_preferences_page()
+
 def get_preferences_path() -> Path:
     """
     Get the path to the user preferences file.
@@ -743,4 +760,3 @@ if __name__ == "__main__":
         }
 
     render_preferences_page()
-"""

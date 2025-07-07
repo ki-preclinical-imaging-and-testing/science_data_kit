@@ -64,20 +64,20 @@ def create_bar_chart(
     try:
         # Create a copy of the data to avoid modifying the original
         plot_data = data.copy()
-        
+
         # Sort data if requested
         if sort_values:
             plot_data = plot_data.sort_values(by=y_column, ascending=sort_ascending)
-        
+
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         # Set default labels if not provided
         if x_label is None:
             x_label = x_column
         if y_label is None:
             y_label = y_column
-        
+
         # Create bar chart
         if orientation == "vertical":
             bars = ax.bar(plot_data[x_column], plot_data[y_column], color=color)
@@ -86,7 +86,7 @@ def create_bar_chart(
             # Rotate x-axis labels for better readability if there are many categories
             if len(plot_data) > 5:
                 plt.xticks(rotation=45, ha='right')
-            
+
             # Add value labels on top of bars
             if show_values:
                 for bar in bars:
@@ -97,29 +97,29 @@ def create_bar_chart(
             bars = ax.barh(plot_data[x_column], plot_data[y_column], color=color)
             ax.set_xlabel(y_label)
             ax.set_ylabel(x_label)
-            
+
             # Add value labels to the right of bars
             if show_values:
                 for bar in bars:
                     width = bar.get_width()
                     ax.text(width + (max(plot_data[y_column]) * 0.01), bar.get_y() + bar.get_height()/2.,
                             f'{width:.1f}', ha='left', va='center')
-        
+
         # Set title
         ax.set_title(title)
-        
+
         # Adjust layout
         plt.tight_layout()
-        
+
         # Save figure to bytes
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
         plt.close()
-        
+
         # Convert to base64
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode("utf-8")
-        
+
         return img_data
     except Exception as e:
         st.error(f"Error creating bar chart: {e}")
@@ -160,56 +160,56 @@ def create_line_chart(
     try:
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         # Set default labels if not provided
         if x_label is None:
             x_label = x_column
-        
+
         # Convert y_columns to list if it's a string
         if isinstance(y_columns, str):
             y_columns = [y_columns]
             if y_label is None:
                 y_label = y_columns[0]
-        
+
         # Set default y_label if not provided and y_columns is a list
         if y_label is None:
             y_label = "Values"
-        
+
         # Set default colors if not provided
         if colors is None:
             colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-        
+
         # Create line chart
         for i, y_column in enumerate(y_columns):
             color = colors[i % len(colors)]
             marker = 'o' if show_markers else None
             ax.plot(data[x_column], data[y_column], label=y_column, color=color, marker=marker)
-        
+
         # Set labels and title
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
         ax.set_title(title)
-        
+
         # Show legend if requested
         if show_legend and len(y_columns) > 1:
             ax.legend()
-        
+
         # Show grid if requested
         if grid:
             ax.grid(True, linestyle='--', alpha=0.7)
-        
+
         # Adjust layout
         plt.tight_layout()
-        
+
         # Save figure to bytes
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
         plt.close()
-        
+
         # Convert to base64
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode("utf-8")
-        
+
         return img_data
     except Exception as e:
         st.error(f"Error creating line chart: {e}")
@@ -227,7 +227,8 @@ def create_scatter_plot(
     figsize: Tuple[int, int] = (10, 6),
     alpha: float = 0.7,
     show_trend_line: bool = False,
-    grid: bool = True
+    grid: bool = True,
+    show_legend: bool = False
 ) -> str:
     """
     Create a scatter plot visualization.
@@ -245,6 +246,7 @@ def create_scatter_plot(
         alpha: Transparency of the points (0-1).
         show_trend_line: Whether to show a trend line.
         grid: Whether to show grid lines.
+        show_legend: Whether to show a legend (useful when color_column is provided).
 
     Returns:
         Base64-encoded image data for the visualization.
@@ -252,63 +254,83 @@ def create_scatter_plot(
     try:
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         # Set default labels if not provided
         if x_label is None:
             x_label = x_column
         if y_label is None:
             y_label = y_column
-        
+
         # Prepare scatter plot parameters
         scatter_params = {
             'alpha': alpha,
             'edgecolors': 'w',
             'linewidth': 0.5
         }
-        
+
         # Add color parameter if color_column is provided
         if color_column is not None:
-            scatter_params['c'] = data[color_column]
-            scatter = ax.scatter(data[x_column], data[y_column], **scatter_params)
-            # Add colorbar
-            cbar = plt.colorbar(scatter, ax=ax)
-            cbar.set_label(color_column)
+            # If the color column has categorical data, create a categorical scatter plot with a legend
+            if data[color_column].dtype == 'object' or data[color_column].dtype.name == 'category':
+                # Get unique categories
+                categories = data[color_column].unique()
+
+                # Create a scatter plot for each category
+                for category in categories:
+                    category_data = data[data[color_column] == category]
+                    ax.scatter(
+                        category_data[x_column], 
+                        category_data[y_column], 
+                        label=category,
+                        **scatter_params
+                    )
+
+                # Show legend if requested
+                if show_legend:
+                    ax.legend()
+            else:
+                # For continuous color values, use a colorbar
+                scatter_params['c'] = data[color_column]
+                scatter = ax.scatter(data[x_column], data[y_column], **scatter_params)
+                # Add colorbar
+                cbar = plt.colorbar(scatter, ax=ax)
+                cbar.set_label(color_column)
         else:
             # Add size parameter if size_column is provided
             if size_column is not None:
                 # Scale sizes to be between 20 and 200
                 sizes = 20 + (data[size_column] - data[size_column].min()) / (data[size_column].max() - data[size_column].min()) * 180
                 scatter_params['s'] = sizes
-            
+
             ax.scatter(data[x_column], data[y_column], **scatter_params)
-        
+
         # Add trend line if requested
         if show_trend_line:
             z = np.polyfit(data[x_column], data[y_column], 1)
             p = np.poly1d(z)
             ax.plot(data[x_column], p(data[x_column]), "r--", alpha=0.8)
-        
+
         # Set labels and title
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
         ax.set_title(title)
-        
+
         # Show grid if requested
         if grid:
             ax.grid(True, linestyle='--', alpha=0.7)
-        
+
         # Adjust layout
         plt.tight_layout()
-        
+
         # Save figure to bytes
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
         plt.close()
-        
+
         # Convert to base64
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode("utf-8")
-        
+
         return img_data
     except Exception as e:
         st.error(f"Error creating scatter plot: {e}")
@@ -323,6 +345,8 @@ def create_pie_chart(
     figsize: Tuple[int, int] = (10, 6),
     show_percentages: bool = True,
     show_labels: bool = True,
+    show_values: bool = False,
+    show_legend: bool = False,
     explode: Optional[List[float]] = None,
     start_angle: float = 90
 ) -> str:
@@ -338,6 +362,8 @@ def create_pie_chart(
         figsize: Figure size as (width, height) in inches.
         show_percentages: Whether to show percentages on the slices.
         show_labels: Whether to show labels on the slices.
+        show_values: Whether to show absolute values on the slices.
+        show_legend: Whether to show a legend instead of labels on the slices.
         explode: List of values to "explode" slices (pull them out from the pie).
         start_angle: Starting angle for the pie chart in degrees.
 
@@ -347,47 +373,77 @@ def create_pie_chart(
     try:
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         # Prepare data
         labels = data[label_column].tolist()
         values = data[value_column].tolist()
-        
+
         # Set default explode if not provided
         if explode is None:
             explode = [0] * len(labels)
-        
+
         # Set autopct format based on show_percentages
         autopct = '%1.1f%%' if show_percentages else None
-        
+
+        # Determine what to show on the pie chart
+        # If show_legend is True, we'll show a legend instead of labels on the pie
+        pie_labels = None if show_legend else (labels if show_labels else None)
+
+        # Format for values on the pie
+        if show_percentages and show_values:
+            # Show both percentage and value
+            def autopct_format(pct):
+                total = sum(values)
+                val = int(round(pct*total/100.0))
+                return f'{pct:.1f}%\n({val:d})'
+            autopct_func = autopct_format
+        elif show_percentages:
+            # Show only percentage
+            autopct_func = '%1.1f%%'
+        elif show_values:
+            # Show only value
+            def autopct_format(pct):
+                total = sum(values)
+                val = int(round(pct*total/100.0))
+                return f'{val:d}'
+            autopct_func = autopct_format
+        else:
+            # Show neither
+            autopct_func = None
+
         # Create pie chart
-        ax.pie(
+        wedges, texts, autotexts = ax.pie(
             values,
             explode=explode,
-            labels=labels if show_labels else None,
-            autopct=autopct,
+            labels=pie_labels,
+            autopct=autopct_func,
             shadow=True,
             startangle=start_angle,
             colors=colors
         )
-        
+
+        # Add legend if requested
+        if show_legend:
+            ax.legend(wedges, labels, title=label_column, loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+
         # Equal aspect ratio ensures that pie is drawn as a circle
         ax.axis('equal')
-        
+
         # Set title
         ax.set_title(title)
-        
+
         # Adjust layout
         plt.tight_layout()
-        
+
         # Save figure to bytes
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
         plt.close()
-        
+
         # Convert to base64
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode("utf-8")
-        
+
         return img_data
     except Exception as e:
         st.error(f"Error creating pie chart: {e}")
@@ -432,41 +488,41 @@ def create_network_graph(
     try:
         # Create a NetworkX graph
         G = nx.Graph()
-        
+
         # Add nodes
         for _, row in nodes.iterrows():
             node_id = row.name
             node_attrs = {}
-            
+
             # Add node label if provided
             if node_label_column is not None:
                 node_attrs['label'] = row[node_label_column]
-            
+
             # Add node size if provided
             if node_size_column is not None:
                 node_attrs['size'] = row[node_size_column]
-            
+
             # Add node color if provided
             if node_color_column is not None:
                 node_attrs['color'] = row[node_color_column]
-            
+
             G.add_node(node_id, **node_attrs)
-        
+
         # Add edges
         for _, row in edges.iterrows():
             source = row[source_column]
             target = row[target_column]
             edge_attrs = {}
-            
+
             # Add edge weight if provided
             if edge_weight_column is not None:
                 edge_attrs['weight'] = row[edge_weight_column]
-            
+
             G.add_edge(source, target, **edge_attrs)
-        
+
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         # Choose layout
         if layout == 'spring':
             pos = nx.spring_layout(G)
@@ -480,25 +536,25 @@ def create_network_graph(
             pos = nx.kamada_kawai_layout(G)
         else:
             pos = nx.spring_layout(G)
-        
+
         # Prepare node sizes
         if node_size_column is not None:
             node_sizes = [G.nodes[n].get('size', node_size_default) for n in G.nodes()]
         else:
             node_sizes = node_size_default
-        
+
         # Prepare node colors
         if node_color_column is not None:
             node_colors = [G.nodes[n].get('color', 'skyblue') for n in G.nodes()]
         else:
             node_colors = 'skyblue'
-        
+
         # Prepare edge widths
         if edge_weight_column is not None:
             edge_widths = [G.edges[e].get('weight', edge_width_default) for e in G.edges()]
         else:
             edge_widths = edge_width_default
-        
+
         # Draw the graph
         nx.draw_networkx(
             G,
@@ -513,25 +569,25 @@ def create_network_graph(
             font_weight='bold',
             ax=ax
         )
-        
+
         # Set title
         ax.set_title(title)
-        
+
         # Remove axis
         ax.axis('off')
-        
+
         # Adjust layout
         plt.tight_layout()
-        
+
         # Save figure to bytes
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
         plt.close()
-        
+
         # Convert to base64
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode("utf-8")
-        
+
         return img_data
     except Exception as e:
         st.error(f"Error creating network graph: {e}")
@@ -576,7 +632,7 @@ def create_heatmap(
     try:
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         # Prepare data for heatmap
         if x_column is not None and y_column is not None and value_column is not None:
             # Pivot the data
@@ -584,13 +640,13 @@ def create_heatmap(
         else:
             # Use the data as is (assuming it's already in the right format)
             pivot_data = data
-        
+
         # Set default labels if not provided
         if x_label is None and x_column is not None:
             x_label = x_column
         if y_label is None and y_column is not None:
             y_label = y_column
-        
+
         # Create heatmap
         sns.heatmap(
             pivot_data,
@@ -601,26 +657,26 @@ def create_heatmap(
             ax=ax,
             cbar_kws={'shrink': 0.8}
         )
-        
+
         # Set labels and title
         if x_label is not None:
             ax.set_xlabel(x_label)
         if y_label is not None:
             ax.set_ylabel(y_label)
         ax.set_title(title)
-        
+
         # Adjust layout
         plt.tight_layout()
-        
+
         # Save figure to bytes
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
         plt.close()
-        
+
         # Convert to base64
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode("utf-8")
-        
+
         return img_data
     except Exception as e:
         st.error(f"Error creating heatmap: {e}")
@@ -661,20 +717,20 @@ def create_box_plot(
     try:
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         # Set default labels if not provided
         if x_column is not None and x_label is None:
             x_label = x_column
         if y_label is None:
             y_label = y_column
-        
+
         # Create box plot
         if orientation == "vertical":
             if x_column is not None:
                 sns.boxplot(x=x_column, y=y_column, data=data, notch=notch, color=color, ax=ax)
             else:
                 sns.boxplot(y=y_column, data=data, notch=notch, color=color, ax=ax)
-            
+
             # Set labels
             if x_column is not None and x_label is not None:
                 ax.set_xlabel(x_label)
@@ -684,31 +740,31 @@ def create_box_plot(
                 sns.boxplot(y=x_column, x=y_column, data=data, notch=notch, color=color, ax=ax)
             else:
                 sns.boxplot(x=y_column, data=data, notch=notch, color=color, ax=ax)
-            
+
             # Set labels
             if x_column is not None and x_label is not None:
                 ax.set_ylabel(x_label)
             ax.set_xlabel(y_label)
-        
+
         # Set title
         ax.set_title(title)
-        
+
         # Show grid if requested
         if grid:
             ax.grid(True, linestyle='--', alpha=0.7)
-        
+
         # Adjust layout
         plt.tight_layout()
-        
+
         # Save figure to bytes
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
         plt.close()
-        
+
         # Convert to base64
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode("utf-8")
-        
+
         return img_data
     except Exception as e:
         st.error(f"Error creating box plot: {e}")
@@ -749,46 +805,46 @@ def create_histogram(
     try:
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         # Set default x_label if not provided
         if x_label is None:
             x_label = column
-        
+
         # Create histogram
         sns.histplot(data[column], bins=bins, kde=kde, color=color, ax=ax)
-        
+
         # Set labels and title
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
         ax.set_title(title)
-        
+
         # Show grid if requested
         if grid:
             ax.grid(True, linestyle='--', alpha=0.7)
-        
+
         # Add statistics if requested
         if show_stats:
             mean = data[column].mean()
             median = data[column].median()
             std = data[column].std()
-            
+
             stats_text = f"Mean: {mean:.2f}\nMedian: {median:.2f}\nStd Dev: {std:.2f}"
             ax.text(0.95, 0.95, stats_text, transform=ax.transAxes, fontsize=10,
                     verticalalignment='top', horizontalalignment='right',
                     bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-        
+
         # Adjust layout
         plt.tight_layout()
-        
+
         # Save figure to bytes
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
         plt.close()
-        
+
         # Convert to base64
         buf.seek(0)
         img_data = base64.b64encode(buf.read()).decode("utf-8")
-        
+
         return img_data
     except Exception as e:
         st.error(f"Error creating histogram: {e}")
