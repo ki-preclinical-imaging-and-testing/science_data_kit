@@ -1,0 +1,23 @@
+services:
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j-instance
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+    environment:
+      - NEO4J_AUTH=neo4j/password
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: dsk-ollama-instance
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  neo4j-data:
+  ollama-data:
