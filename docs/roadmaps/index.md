@@ -9,12 +9,12 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 This roadmap outlines the plan for reorganizing the Science Data Kit repository structure, with a particular focus on improving the organization of roadmap files and documentation. The reorganization will prepare the repository for the implementation of the Knowledge Graph Documentation System by creating a more logical and maintainable structure for project documentation.
 
-**Latest Version**: [Repository Reorganization Roadmap](active/roadmap_RepoReorg_02.md)
+**Latest Version**: [Repository Reorganization Roadmap](active/roadmap_RepoReorg_03.md)
 
-**Status**: Implementation in Progress - The Repository Reorganization roadmap has made significant progress, with all high-priority tasks now completed:
+**Status**: Implementation in Progress - The Repository Reorganization roadmap has made significant progress, with most tasks now completed:
 
 1. **Phase 1: Documentation Reorganization** - Completed. New directory structure has been created, roadmap files have been moved to their new locations, redirect notices have been added to original files, and documentation integration has been completed.
-2. **Phase 2: Repository Structure Improvements** - In Progress. The tools directory has been created and development scripts have been moved to it. Remaining tasks include creating a config directory, organizing Docker files, and improving test organization.
+2. **Phase 2: Repository Structure Improvements** - In Progress. The tools directory has been created and development scripts have been moved to it. The config directory has been created and configuration files have been moved to it. The docker directory has been created and Docker-related files have been moved to it. Remaining tasks include updating Docker documentation and improving test organization.
 
 ### Knowledge Graph Documentation System
 
@@ -64,10 +64,10 @@ This roadmap outlines a plan for implementing a conversational interface for sci
 ## Testing and Quality Status
 
 ### Repository Reorganization
-**Implementation Status**: In Progress - Phase 1 completed, Phase 2 started
+**Implementation Status**: In Progress - Phase 1 completed, Phase 2 mostly completed
 **Testing Status**: Phase 1 ready for final validation, Phase 2 in progress
-**Next Testing Steps**: Use prompt #21 from prompts.md to validate Phase 1 implementation and tools directory
-**Quality Gates**: Phase 1 final validation, tools directory validation before continuing Phase 2
+**Next Testing Steps**: Use prompt #21 from prompts.md to validate Phase 1 implementation and repository structure improvements
+**Quality Gates**: Phase 1 final validation, repository structure validation before completing Phase 2
 
 ### Knowledge Graph Documentation System  
 **Implementation Status**: Planning - Foundation phase components ready for validation
@@ -115,7 +115,7 @@ The Science Data Kit project has successfully achieved its goal of becoming a co
 
 The project is now entering a new phase with four active roadmaps:
 
-1. The **Repository Reorganization** roadmap, which has made significant progress with all high-priority tasks now completed. Phase 1 (Documentation Reorganization) is complete, with the new directory structure in place, roadmap files moved to their appropriate locations, and documentation integration completed. Phase 2 (Repository Structure Improvements) is now in progress, with the tools directory created and development scripts moved. This reorganization is preparing the repository for the Knowledge Graph Documentation System.
+1. The **Repository Reorganization** roadmap, which has made significant progress with most tasks now completed. Phase 1 (Documentation Reorganization) is complete, with the new directory structure in place, roadmap files moved to their appropriate locations, and documentation integration completed. Phase 2 (Repository Structure Improvements) is now in progress, with the tools directory created and development scripts moved, the config directory created and configuration files moved, and the docker directory created and Docker-related files moved. Remaining tasks include updating Docker documentation and improving test organization. This reorganization is preparing the repository for the Knowledge Graph Documentation System.
 
 2. The **Knowledge Graph Documentation System** roadmap, which represents a fundamental shift toward "AI-native software architecture" where the codebase actively communicates its structure and patterns to both human developers and AI agents.
 
