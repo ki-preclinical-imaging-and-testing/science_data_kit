@@ -4,7 +4,7 @@ This document outlines the coding standards and best practices for creating and 
 
 ## Module Template
 
-A standardized module template is available at `project/templates/module_template.py`. This template should be used as a starting point for creating new modules. It includes examples of proper docstring formatting, import organization, class and function structure, type hints, and error handling patterns.
+A standardized module template is available at `science_data_kit/core/templates/module_template.py`. This template should be used as a starting point for creating new modules. It includes examples of proper docstring formatting, import organization, class and function structure, type hints, and error handling patterns.
 
 To use the template:
 1. Copy the template to create a new module
@@ -61,7 +61,7 @@ Include any important information about the module's behavior.
 Examples:
     ```python
     from science_data_kit.core.utils import module_name
-    
+
     # Use the module
     result = module_name.example_function("example input")
     ```
@@ -74,10 +74,10 @@ Examples:
 class ExampleClass:
     """
     Brief description of the class.
-    
+
     Detailed description of the class's purpose, functionality, and usage.
     Include any important information about the class's behavior.
-    
+
     Attributes:
         attribute_name (type): Description of the attribute.
         another_attribute (type): Description of another attribute.
@@ -90,23 +90,23 @@ class ExampleClass:
 def example_function(param1: str, param2: Optional[int] = None) -> Dict[str, Any]:
     """
     Brief description of the function.
-    
+
     Detailed description of the function's purpose, functionality, and usage.
     Include any important information about the function's behavior.
-    
+
     Args:
         param1: Description of the first parameter.
         param2: Description of the second parameter. Defaults to None.
                 Additional details about the parameter can be included
                 in indented continuation lines.
-    
+
     Returns:
         Description of the return value.
-    
+
     Raises:
         ExceptionType: Description of when this exception is raised.
         AnotherExceptionType: Description of when this exception is raised.
-    
+
     Examples:
         >>> example_function("test")
         {'result': 'test'}
