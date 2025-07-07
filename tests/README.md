@@ -10,6 +10,14 @@ This directory contains tests for the Science Data Kit application. The tests ar
 - **[integration/](integration/README.md)** - Integration tests for component interactions
 - **[end_to_end/](end_to_end/README.md)** - End-to-end tests for complete workflows
 
+### Additional Test Locations
+
+Some tests are also located within the package structure:
+
+- **science_data_kit/tests/** - Package-specific tests
+  - **science_data_kit/tests/core/** - Tests for core package functionality
+  - **science_data_kit/tests/test_msgraph_*.py** - Tests for Microsoft Graph API integration
+
 ## Running Tests
 
 To run all tests:
@@ -34,6 +42,18 @@ To run only end-to-end tests:
 
 ```bash
 pytest tests/end_to_end
+```
+
+To run package-specific tests:
+
+```bash
+pytest science_data_kit/tests
+```
+
+To run Microsoft Graph API tests specifically:
+
+```bash
+pytest science_data_kit/tests/test_msgraph_*.py
 ```
 
 To run tests with coverage:

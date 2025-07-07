@@ -36,7 +36,7 @@ Using Docker is the recommended method for installing the Science Data Kit as it
 
 2. Build and start the Docker containers:
    ```bash
-   docker-compose up -d
+   docker-compose -f docker/docker-compose.yml up -d
    ```
 
 3. Access the Science Data Kit web interface:
@@ -56,7 +56,7 @@ For workshop participants, we provide a simplified Docker setup:
 
 2. Build and start the workshop containers:
    ```bash
-   docker-compose -f docker-compose-workshop.yml up -d
+   docker-compose -f docker/docker-compose-workshop.yml up -d
    ```
 
 3. Access the Science Data Kit web interface:

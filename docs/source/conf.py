@@ -38,6 +38,7 @@ html_static_path = ['_static']
 # -- AutoAPI configuration --------------------------------------------------
 autoapi_type = 'python'
 autoapi_dirs = ['../../science_data_kit', '../../tools']
+autoapi_root = 'autoapi'
 autoapi_options = [
     'members',
     'undoc-members',
@@ -46,3 +47,6 @@ autoapi_options = [
     'show-module-summary',
     'special-members',
 ]
+autoapi_add_toctree_entry = True
+autoapi_python_class_content = 'both'
+autoapi_keep_files = True  # For debugging purposes
