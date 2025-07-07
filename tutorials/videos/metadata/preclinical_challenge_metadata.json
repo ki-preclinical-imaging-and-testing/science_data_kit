@@ -1,0 +1,69 @@
+{
+  "title": "Preclinical Challenge Tutorial",
+  "description": "This tutorial guides users through analyzing a realistic preclinical cancer research dataset using the Science Data Kit, covering data loading, experimental design analysis, tumor growth visualization, and statistical analysis.",
+  "duration": "18:45",
+  "level": "Intermediate",
+  "prerequisites": [
+    "Basic understanding of preclinical research",
+    "Familiarity with Python",
+    "Science Data Kit installation"
+  ],
+  "topics": [
+    "Preclinical data analysis",
+    "Experimental design",
+    "Tumor growth analysis",
+    "Survival analysis",
+    "Statistical testing"
+  ],
+  "learning_objectives": [
+    "Load and explore a preclinical cancer research dataset",
+    "Analyze experimental design and animal groups",
+    "Visualize tumor growth data",
+    "Perform statistical analysis on survival outcomes",
+    "Answer research questions using data-driven approaches"
+  ],
+  "timestamps": {
+    "introduction": "0:00",
+    "setting_up_environment": "1:30",
+    "loading_data": "3:00",
+    "exploring_dataset": "5:15",
+    "analyzing_experimental_design": "7:30",
+    "visualizing_tumor_growth": "10:00",
+    "statistical_analysis": "13:45",
+    "answering_research_questions": "16:00",
+    "conclusion": "18:00"
+  },
+  "resources": {
+    "script": "scripts/preclinical_challenge_tutorial_script.md",
+    "notebook": "tutorials/preclinical_challenge_tutorial.ipynb",
+    "sample_data": "resources/sample_data/preclinical_sample_data.csv",
+    "screenshots": [
+      "resources/screenshots/tumor_growth_plot.png",
+      "resources/screenshots/survival_curve.png",
+      "resources/screenshots/statistical_results.png"
+    ],
+    "diagrams": [
+      "resources/diagrams/experimental_design.png"
+    ]
+  },
+  "keywords": [
+    "preclinical",
+    "cancer research",
+    "tumor growth",
+    "survival analysis",
+    "experimental design",
+    "statistical analysis",
+    "Science Data Kit"
+  ],
+  "related_tutorials": [
+    "Database Operations Tutorial",
+    "Data Transformation Tutorial",
+    "Data Visualization Tutorial"
+  ],
+  "author": {
+    "name": "Science Data Kit Team",
+    "email": "support@sciencedatakit.org"
+  },
+  "version": "1.0",
+  "last_updated": "2024-07-19"
+}

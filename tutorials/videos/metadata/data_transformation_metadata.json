@@ -1,0 +1,72 @@
+{
+  "title": "Data Transformation Tutorial",
+  "description": "This tutorial demonstrates how to transform data between different formats using the Science Data Kit, covering tabular data mapping, file tree processing, data validation, and pipeline configuration.",
+  "duration": "16:15",
+  "level": "Intermediate",
+  "prerequisites": [
+    "Basic understanding of data structures",
+    "Familiarity with Python",
+    "Science Data Kit installation"
+  ],
+  "topics": [
+    "Tabular data mapping",
+    "Graph structure transformation",
+    "File tree processing",
+    "Data validation",
+    "Pipeline configuration"
+  ],
+  "learning_objectives": [
+    "Map tabular data to graph structures",
+    "Process directory structures into data representations",
+    "Validate data against rule sets",
+    "Configure complex transformation pipelines",
+    "Apply transformations to scientific datasets"
+  ],
+  "timestamps": {
+    "introduction": "0:00",
+    "setting_up_environment": "1:15",
+    "tabular_data_mapping": "2:45",
+    "graph_structure_transformation": "5:30",
+    "file_tree_processing": "8:15",
+    "data_validation": "11:00",
+    "pipeline_configuration": "13:30",
+    "conclusion": "15:30"
+  },
+  "resources": {
+    "script": "scripts/data_transformation_tutorial_script.md",
+    "notebook": "tutorials/data_transformation_tutorial.ipynb",
+    "sample_data": [
+      "resources/sample_data/tabular_sample.csv",
+      "resources/sample_data/directory_structure.zip"
+    ],
+    "screenshots": [
+      "resources/screenshots/transformation_pipeline.png",
+      "resources/screenshots/validation_results.png",
+      "resources/screenshots/graph_structure.png"
+    ],
+    "diagrams": [
+      "resources/diagrams/transformation_workflow.png",
+      "resources/diagrams/data_mapping.png"
+    ]
+  },
+  "keywords": [
+    "data transformation",
+    "tabular data",
+    "graph structure",
+    "file processing",
+    "data validation",
+    "pipeline configuration",
+    "Science Data Kit"
+  ],
+  "related_tutorials": [
+    "Database Operations Tutorial",
+    "Preclinical Challenge Tutorial",
+    "Data Visualization Tutorial"
+  ],
+  "author": {
+    "name": "Science Data Kit Team",
+    "email": "support@sciencedatakit.org"
+  },
+  "version": "1.0",
+  "last_updated": "2024-07-19"
+}

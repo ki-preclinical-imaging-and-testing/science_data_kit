@@ -1,0 +1,67 @@
+{
+  "title": "Database Operations Tutorial",
+  "description": "This tutorial demonstrates how to use the database operations functionality in the Science Data Kit, including basic operations, query caching, parameterized query templates, query metrics, and pagination.",
+  "duration": "15:30",
+  "level": "Intermediate",
+  "prerequisites": [
+    "Basic understanding of databases",
+    "Familiarity with Python",
+    "Science Data Kit installation"
+  ],
+  "topics": [
+    "Neo4j database operations",
+    "Query caching",
+    "Parameterized query templates",
+    "Query metrics",
+    "Pagination"
+  ],
+  "learning_objectives": [
+    "Connect to a Neo4j database using the Science Data Kit",
+    "Perform basic database operations",
+    "Implement query caching for performance optimization",
+    "Create and use parameterized query templates",
+    "Monitor query performance with metrics",
+    "Implement pagination for large result sets"
+  ],
+  "timestamps": {
+    "introduction": "0:00",
+    "setting_up_environment": "1:15",
+    "basic_operations": "2:30",
+    "query_caching": "5:00",
+    "parameterized_query_templates": "7:45",
+    "query_metrics": "10:30",
+    "pagination": "12:45",
+    "conclusion": "14:30"
+  },
+  "resources": {
+    "script": "scripts/database_operations_tutorial_script.md",
+    "notebook": "tutorials/database_operations_tutorial.ipynb",
+    "sample_data": "resources/sample_data/neo4j_sample_data.json",
+    "screenshots": [
+      "resources/screenshots/neo4j_connection.png",
+      "resources/screenshots/query_results.png",
+      "resources/screenshots/performance_metrics.png"
+    ]
+  },
+  "keywords": [
+    "database",
+    "Neo4j",
+    "query",
+    "caching",
+    "templates",
+    "metrics",
+    "pagination",
+    "Science Data Kit"
+  ],
+  "related_tutorials": [
+    "Data Transformation Tutorial",
+    "Preclinical Challenge Tutorial",
+    "Data Visualization Tutorial"
+  ],
+  "author": {
+    "name": "Science Data Kit Team",
+    "email": "support@sciencedatakit.org"
+  },
+  "version": "1.0",
+  "last_updated": "2024-07-19"
+}
