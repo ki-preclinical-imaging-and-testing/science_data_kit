@@ -9,4 +9,4 @@ This section contains the roadmaps for the Science Data Kit project.
    :maxdepth: 2
    :caption: Roadmaps:
 
-   ../roadmaps/index
+   roadmaps/index.md
