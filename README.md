@@ -6,6 +6,16 @@ A comprehensive toolkit for indexing, curating, and integrating multimodal resea
 
 The Science Data Kit (SDK) helps researchers manage and make sense of complex, multimodal scientific data. It follows the FAIR+ data principles to ensure your data is Findable, Accessible, Interoperable, Reusable, and Computable.
 
+## Current Development Status
+
+The Science Data Kit is currently undergoing significant architectural improvements and reorganization. The project is focused on three active roadmaps:
+
+1. **Repository Reorganization** - Improving the organization of documentation and repository structure
+2. **Knowledge Graph Documentation System** - Implementing an AI-navigable documentation system
+3. **Strategic Enhancements** - Platform maturation and community adoption features
+
+For more details on the current development plans and roadmaps, see the [Roadmaps Index](docs/roadmaps/index.md).
+
 ## Features
 
 - **Connect** to data sources and spin up necessary infrastructure
@@ -96,9 +106,9 @@ The project includes a comprehensive testing framework:
 - **[science_data_kit/](science_data_kit/README.md)** - Main package directory
   - **[core/](science_data_kit/core/README.md)** - Core functionality
   - **[ui/](science_data_kit/ui/README.md)** - UI components and pages
-- **[app/](app/README.md)** - Legacy Streamlit application code (being phased out)
 - **[ipynb/](ipynb/README.md)** - Jupyter notebooks for tutorials and examples
 - **[docs/](docs/README.md)** - Documentation files
+  - **[roadmaps/](docs/roadmaps/index.md)** - Project roadmaps and development plans
 - **[tests/](tests/README.md)** - Test files
   - **[unit/](tests/unit/README.md)** - Unit tests
   - **[integration/](tests/integration/README.md)** - Integration tests
@@ -117,7 +127,7 @@ The Science Data Kit is designed around the FAIR+ data principles:
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.12+
 - Docker (for Neo4j and Jupyter containers)
 - Neo4j Graph Database
 
@@ -287,20 +297,12 @@ The application uses Streamlit's configuration system to handle various settings
 - **Message Size Limits**: For large datasets, the default message size limit (200 MB) may be exceeded. The configuration has been adjusted to handle larger datasets.
 - **Theme Settings**: Visual appearance settings are configured for better user experience.
 
-Configuration files are located in the `app/.streamlit` directory:
-
-```
-app/.streamlit/
-├── config.toml    # Main configuration file
-└── README.md      # Documentation for configuration options
-```
+Configuration files are located in the `.streamlit` directory within the application package.
 
 To adjust configuration settings (e.g., if you encounter "MessageSizeError"):
 
-1. Edit `app/.streamlit/config.toml`
+1. Edit the appropriate configuration file
 2. Restart the Streamlit application
-
-For more details, see the [configuration documentation](app/.streamlit/README.md).
 
 ## Contributing
 

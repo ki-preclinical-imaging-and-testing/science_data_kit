@@ -1,13 +1,14 @@
-# Science Data Kit (SDK) Repository Reorganization Roadmap - Version 01
+# Science Data Kit (SDK) Repository Reorganization Roadmap - Version 02
 
 ## Overview
-This roadmap outlines the current state of the Science Data Kit repository reorganization, with a particular focus on the organization of roadmap files and documentation. This document is an update to roadmap_RepoReorg_00.md, reflecting the progress made in implementing the reorganization plan.
+This roadmap outlines the current state of the Science Data Kit repository reorganization, with a particular focus on the organization of roadmap files and documentation. This document is an update to roadmap_RepoReorg_01.md, reflecting the progress made in implementing the reorganization plan.
 
 ## Version History
 | Version | Date | Changes |
 |---------|------|---------|
 | 00 | 2024-08-10 | Initial version of Repository Reorganization roadmap |
 | 01 | 2024-07-06 | Update reflecting the current state of reorganization |
+| 02 | 2024-07-07 | Update reflecting completion of documentation integration and tools directory |
 
 ## Background
 The Science Data Kit repository has evolved over time, with roadmap files and documentation stored in various locations. As the project moves toward implementing the Knowledge Graph Documentation System, there was a need to reorganize the repository structure to improve discoverability, maintainability, and integration with documentation systems.
@@ -22,7 +23,7 @@ This reorganization represents the final roadmap created using the current appro
 5. Streamline the roadmap index to focus on active development
 
 ## Current Status
-The repository reorganization is well underway, with significant progress made in the following areas:
+The repository reorganization has made significant progress, with most high-priority tasks now completed:
 
 1. New directory structure has been created:
    - `docs/roadmaps/` directory has been created as the central location for all roadmap files
@@ -38,6 +39,15 @@ The repository reorganization is well underway, with significant progress made i
    - Each file contains a standardized redirect notice at the top
    - The notice includes the new location, creation date, and removal date
    - Original files will be kept for a 1-month transition period (until August 6, 2024)
+
+4. Documentation integration has been completed:
+   - Sphinx configuration has been updated to include roadmaps and tools directory
+   - Build scripts have been updated to work from the tools directory
+   - Comprehensive index has been moved to archive
+
+5. Repository structure improvements have begun:
+   - Tools directory has been created for development-related scripts
+   - Development scripts have been moved to the tools directory
 
 ## Roadmap Components
 
@@ -93,13 +103,36 @@ The repository reorganization is well underway, with significant progress made i
 | Review test directory structure | Low | To Do | Ensure it mirrors package structure |
 | Update test documentation | Low | To Do | Reflect any changes |
 
+## Implementation Details
+
+### Documentation Integration
+The documentation integration has been completed with the following changes:
+
+1. **Sphinx Configuration Update**:
+   - Updated conf.py to remove references to the removed app directory
+   - Added tools directory to autoapi_dirs to include development scripts in the documentation
+   - Kept myst_parser extension for parsing Markdown files
+
+2. **Build Scripts Update**:
+   - Moved build_docs.py to the tools directory
+   - Updated the script to determine its location and adjust paths accordingly
+   - Added logic to handle running the script from different directories
+   - Created symbolic links in the root directory for backward compatibility
+
+3. **Tools Directory Creation**:
+   - Created tools directory for development-related scripts
+   - Moved run_black.py, run_mypy.py, run_coverage.py, and build_docs.py to tools directory
+   - Created symbolic links in the root directory for backward compatibility
+   - Tested scripts to ensure they work correctly from their new location
+
 ## Remaining Tasks
 
 1. **Complete Documentation Integration**:
    - Test documentation build with myst_parser package installed
 
 2. **Repository Structure Improvements**:
-   - Implement all tasks in sections 2.1, 2.2, and 2.3
+   - Implement all tasks in sections 2.2 and 2.3
+   - Complete the lower-priority tasks in section 2.1
    - These tasks are lower priority and can be completed in a future phase
 
 3. **Finalize Transition**:
@@ -138,10 +171,27 @@ The reorganization supports the upcoming Knowledge Graph Documentation System in
 
 8. **Reference Integrity**: All references to roadmap files (both internal and external) are successfully updated to point to the new locations. (In Progress)
 
+## Next Steps
+
+1. **Test Documentation Build**:
+   - Install myst_parser package in the development environment
+   - Run the documentation build to ensure roadmaps are properly included
+   - Fix any issues with the documentation build
+
+2. **Complete Repository Structure Improvements**:
+   - Prioritize the remaining tasks in section 2.1
+   - Plan for implementing tasks in sections 2.2 and 2.3
+   - Create a timeline for completing these lower-priority tasks
+
+3. **Prepare for Knowledge Graph Documentation System**:
+   - Ensure all roadmap files are properly formatted for the Knowledge Graph system
+   - Document the new organization structure for the Knowledge Graph team
+   - Identify any remaining issues that need to be addressed before implementing the Knowledge Graph system
+
 ## Conclusion
 
-The repository reorganization has made significant progress, with all roadmap files successfully moved to their new locations and redirect notices added to the original files. The new structure provides a more logical and maintainable organization for project documentation, improving discoverability and preparing the repository for the implementation of the Knowledge Graph Documentation System.
+The repository reorganization has made significant progress, with all high-priority tasks now completed. The new structure provides a more logical and maintainable organization for project documentation, improving discoverability and preparing the repository for the implementation of the Knowledge Graph Documentation System.
 
-The remaining tasks focus on completing the documentation integration and implementing the lower-priority repository structure improvements. The transition period will continue until August 6, 2024, after which the original files will be removed from the project directory.
+The remaining tasks focus on testing the documentation build and implementing the lower-priority repository structure improvements. The transition period will continue until August 6, 2024, after which the original files will be removed from the project directory.
 
 This reorganization represents an important milestone in the evolution of the Science Data Kit, setting the stage for the next phase of development with the Knowledge Graph Documentation System.
