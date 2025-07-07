@@ -6,13 +6,13 @@ This document provides guidelines for working with the Science Data Kit project 
 
 The project directory is organized as follows:
 
-- **project/**: Main directory for project planning and roadmap files
+- **docs/roadmaps/**: Main directory for project planning and roadmap files
+  - **active/**: Contains active roadmap files that are currently being worked on
   - **archive/**: Contains completed roadmap sets that are no longer actively being worked on
   - **templates/**: Contains templates for creating new roadmap files
-  - **roadmap_phase?_??.md**: Active roadmap files that are currently being worked on, organized by phase
-  - **roadmap_index.md**: Master index of all roadmaps, providing an overview of the project's direction
-  - **roadmap_later.md**: Collection of tasks from completed roadmaps that are planned for future implementation
-  - **roadmap_memo.md**: This file, providing guidelines for working with the project directory
+  - **index.md**: Master index of all roadmaps, providing an overview of the project's direction
+  - **organization.md**: This file, providing guidelines for roadmap organization
+  - **prompts.md**: Collection of prompt templates for working with roadmaps
 
 ## Roadmap Organization
 
@@ -68,7 +68,9 @@ For example:
 2. If creating a new phase, start with `roadmap_phase{n}_00.md`
 3. If extending an existing phase, use the next sequential number in the series
 4. If creating a new component-specific roadmap, choose a descriptive name for the `{component}` part of the filename
-5. Use the template in `project/templates/roadmap_template.md` as a starting point
+5. Use the appropriate template from the `docs/roadmaps/templates/` directory as a starting point:
+   - For roadmaps, use `docs/roadmaps/templates/roadmap_template.md`
+   - For testing status reports, use `docs/roadmaps/templates/testing_status_template.md`
 6. Update the roadmap_index.md file to include the new roadmap
 
 ### Updating an Existing Roadmap

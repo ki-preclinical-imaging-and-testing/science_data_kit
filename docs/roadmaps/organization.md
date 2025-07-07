@@ -28,7 +28,8 @@ docs/roadmaps/
 │   ├── roadmap_CodebaseOrganization_01.md
 │   └── ...
 ├── templates/         # Roadmap templates
-│   └── roadmap_template.md
+│   ├── roadmap_template.md
+│   └── testing_status_template.md
 └── index.md           # Main roadmap index
 ```
 
@@ -52,6 +53,42 @@ Roadmaps follow a specific lifecycle:
 1. **Creation**: New roadmaps are created in the `active` directory using the appropriate template from the `templates` directory.
 2. **Updates**: As work progresses, roadmaps are updated to reflect the current status of tasks and any changes to the plan.
 3. **Archiving**: When a roadmap is completed, it is moved to the `archive` directory, and any remaining tasks are added to the appropriate roadmap or to the `roadmap_later.md` file for future consideration.
+
+## Testing Integration
+
+### When to Use Testing Prompts
+Testing should be integrated into the roadmap lifecycle at strategic points:
+
+- **During Active Development**: After completing 3-5 implementation tasks in a roadmap
+- **Phase Transitions**: Before moving from one phase to another within a roadmap
+- **Pre-Workshop**: When preparing features for user testing or feedback collection
+- **Architecture Validation**: When implementing core architectural components or patterns
+- **Quality Gates**: Before considering major components "complete"
+
+### Testing Prompt Workflow
+1. **Assessment**: Use prompt #21 (Pre-Review Code Analysis) to analyze current state
+2. **Selection**: Based on assessment, select appropriate validation prompts (#17-24)
+3. **Execution**: Run selected testing workflows
+4. **Documentation**: Update roadmap files with testing results and findings
+5. **Integration**: Address any issues before continuing development
+
+### Testing Status Tracking
+Testing status should be tracked in both individual roadmaps and the main index:
+
+- **Individual Roadmaps**: Include testing results in "Current Status" sections
+- **Main Index**: Update "Testing and Quality Status" section with progress
+- **Documentation**: Record testing outcomes and any identified issues
+- **Testing Status Reports**: Create dedicated testing status reports using the `templates/testing_status_template.md` template for comprehensive testing documentation
+
+### Testing Prompt Reference
+Quick reference for common testing scenarios:
+
+- **Code Quality Review**: Prompt #19 - Comprehensive quality assessment
+- **Manual Testing Prep**: Prompt #17 - Create testing checklists for human validation
+- **Workshop Preparation**: Prompt #22 - Prepare features for user testing
+- **Performance Validation**: Prompt #23 - Test scalability and performance
+- **Real Data Testing**: Prompt #24 - Validate with scientific datasets
+- **Pre-Review Analysis**: Prompt #21 - Prepare for human code review
 
 ## Roadmap Index
 

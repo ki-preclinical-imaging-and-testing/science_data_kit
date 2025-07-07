@@ -36,6 +36,49 @@ This roadmap outlines the plan for implementing a Knowledge Graph Documentation 
 - [Knowledge Graph Technical Specification](active/knowledge_graph_technical_spec.md) - Technical specification covering documentation markup standards, schema design, and integration requirements
 - [Knowledge Graph Examples](active/knowledge_graph_examples.md) - Concrete examples showing before/after documentation examples, sample AI queries, and tagging examples
 
+### Strategic Enhancements
+
+This roadmap outlines a comprehensive plan for strategic enhancements to the Science Data Kit platform, focusing on key areas for platform maturation, community adoption, and long-term sustainability. These enhancements build upon the existing Knowledge Graph and Repository Reorganization roadmaps while addressing higher-level platform capabilities that will accelerate adoption in the scientific community.
+
+**Latest Version**: [Strategic Enhancements Roadmap](active/roadmap_StrategicEnhancements_00.md)
+
+**Status**: Planning - The Strategic Enhancements roadmap has been defined and is divided into three phases:
+
+1. **Phase 1: Foundation Enhancements** - Establishing core capabilities for documentation automation, workshop feedback integration, and domain branch templates.
+2. **Phase 2: Community and Performance** - Implementing performance monitoring, AI assistant training, and community contribution frameworks.
+3. **Phase 3: Platform Expansion** - Completing domain branch templates and adding cross-platform deployment and scientific workflow integration.
+
+## Testing and Quality Status
+
+### Repository Reorganization
+**Implementation Status**: Planning
+**Testing Status**: Not yet applicable - planning phase
+**Next Testing Steps**: Use prompt #21 from prompts.md once implementation begins
+**Quality Gates**: Foundation validation before Phase 2
+
+### Knowledge Graph Documentation System  
+**Implementation Status**: Planning - Foundation phase components ready for validation
+**Testing Status**: Ready for validation preparation
+**Recommended Testing**: Use prompts #21, #19, #24 for foundation validation
+**Workshop Readiness**: Use prompt #22 for user testing preparation
+**Quality Gates**: Phase 1 validation before Phase 2, Workshop preparation before user testing
+
+### Strategic Enhancements
+**Implementation Status**: Planning - Initial definition phase
+**Testing Status**: Not yet applicable - planning phase
+**Next Testing Steps**: Use prompt #21 from prompts.md once implementation begins
+**Recommended Testing**: Use prompts #19, #22, #24 for high-priority enhancements
+**Quality Gates**: Foundation Enhancements validation before Community and Performance phase
+
+### Testing Workflow Integration
+Use the testing prompts in `docs/roadmaps/prompts.md` (#17-24) at these natural checkpoints:
+- **After completing 3-5 implementation tasks** in any roadmap
+- **Before transitioning between roadmap phases**
+- **When preparing for workshops or user feedback**
+- **When implementing core architectural components**
+
+For guidance on selecting appropriate testing prompts, start with prompt #21 (Pre-Review Code Analysis) to assess current state and get recommendations for additional validation.
+
 ## Archived Roadmaps
 
 The Science Data Kit has completed six major development phases, resulting in a comprehensive platform with extensive capabilities for scientific data analysis. All completed roadmaps have been archived and can be accessed through the [Complete Roadmap Index](archive/index_complete.md).
@@ -50,10 +93,12 @@ The detailed processes for updating roadmaps and archiving completed roadmaps ar
 
 The Science Data Kit project has successfully achieved its goal of becoming a comprehensive tool for scientific data analysis and visualization. Through the systematic implementation of twelve major roadmaps across six development phases, the SDK has evolved into a robust platform with extensive capabilities.
 
-The project is now entering a new phase with two active roadmaps:
+The project is now entering a new phase with three active roadmaps:
 
 1. The **Repository Reorganization** roadmap, which will improve the organization of roadmap files and documentation, preparing the repository for the Knowledge Graph Documentation System.
 
 2. The **Knowledge Graph Documentation System** roadmap, which represents a fundamental shift toward "AI-native software architecture" where the codebase actively communicates its structure and patterns to both human developers and AI agents.
 
-These roadmaps will guide the transformation of the Science Data Kit into an AI-navigable scientific software platform with a well-organized repository structure.
+3. The **Strategic Enhancements** roadmap, which focuses on platform maturation, community adoption, and long-term sustainability through documentation automation, workshop feedback integration, domain customization, and other strategic capabilities.
+
+Together, these roadmaps will guide the transformation of the Science Data Kit into an AI-navigable, community-adoptable scientific software platform with a well-organized repository structure and strategic capabilities for long-term growth and sustainability.
