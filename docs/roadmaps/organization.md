@@ -10,8 +10,17 @@ The roadmaps are organized into the following directory structure:
 
 ```
 docs/roadmaps/
-├── active/            # Currently active roadmaps
+├── active/            # Currently active roadmaps (current priorities)
 │   ├── roadmap_RepoReorg_00.md
+│   ├── roadmap_RepoReorg_01.md
+│   ├── roadmap_RepoReorg_02.md
+│   ├── roadmap_RepoReorg_03.md
+│   ├── roadmap_DesignUX_00.md
+│   ├── roadmap_CPB_00.md
+│   ├── roadmap_memo.md
+│   └── testing_status_template.md
+├── future/            # Future roadmaps (planned but not currently active)
+│   ├── README.md      # Overview of future roadmaps
 │   ├── roadmap_kg_00.md
 │   ├── roadmap_kgPhase1_00.md
 │   ├── roadmap_kgPhase2_00.md
@@ -19,6 +28,7 @@ docs/roadmaps/
 │   ├── roadmap_kgPhase4_00.md
 │   ├── roadmap_kgPhase5_00.md
 │   ├── roadmap_kgPhase6_00.md
+│   ├── roadmap_StrategicEnhancements_00.md
 │   ├── knowledge_graph_vision.md
 │   ├── knowledge_graph_technical_spec.md
 │   └── knowledge_graph_examples.md
@@ -52,7 +62,29 @@ Roadmaps follow a specific lifecycle:
 
 1. **Creation**: New roadmaps are created in the `active` directory using the appropriate template from the `templates` directory.
 2. **Updates**: As work progresses, roadmaps are updated to reflect the current status of tasks and any changes to the plan.
-3. **Archiving**: When a roadmap is completed, it is moved to the `archive` directory, and any remaining tasks are added to the appropriate roadmap or to the `roadmap_later.md` file for future consideration.
+3. **Prioritization**: Roadmaps may be moved between the `active` and `future` directories based on current project priorities:
+   - **Active Roadmaps**: Represent current development priorities that are actively being worked on
+   - **Future Roadmaps**: Represent important strategic directions that have been temporarily deprioritized to focus on more fundamental work
+4. **Archiving**: When a roadmap is completed, it is moved to the `archive` directory, and any remaining tasks are added to the appropriate roadmap or to the `roadmap_later.md` file for future consideration.
+
+### Active vs. Future Roadmaps
+
+The distinction between active and future roadmaps helps maintain focus on current priorities while preserving the planning work done for advanced features:
+
+- **Active Roadmaps** (`active/` directory):
+  - Currently being implemented or in active planning for immediate implementation
+  - Represent the current focus of development efforts
+  - Typically address fundamental platform capabilities and immediate priorities
+  - Regularly updated with progress and status changes
+
+- **Future Roadmaps** (`future/` directory):
+  - Planned for future implementation but not currently active
+  - Represent important strategic directions for the project
+  - Typically address advanced features that build upon fundamental platform capabilities
+  - Include timeline estimates for when they might return to active development
+  - Preserved in their current state until they are reactivated
+
+The `future/` directory includes a README.md file that provides an overview of all future roadmaps, their current status, and estimated timelines for when they might return to active development.
 
 ## Testing Integration
 
