@@ -159,6 +159,23 @@ class Neo4jManager:
             cls._instance._initialized = False
         return cls._instance
 
+    def query(self, query: str, parameters: Optional[Dict[str, Any]] = None, connection_name: Optional[str] = None, enable_cache: bool = True):
+        """
+        Execute a Cypher query and return the results.
+
+        This is an alias for execute_query for backward compatibility.
+
+        Args:
+            query: The Cypher query to execute
+            parameters: Optional parameters for the query
+            connection_name: Optional name of the connection to use
+            enable_cache: Whether to use query caching
+
+        Returns:
+            List of dictionaries containing the query results
+        """
+        return self.execute_query(query, parameters, connection_name, enable_cache)
+
     def __init__(self, config: Optional[Dict[str, Any]] = None, 
                 config_file: Optional[str] = None,
                 use_session_state: bool = False,
