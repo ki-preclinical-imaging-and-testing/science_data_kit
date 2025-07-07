@@ -5,17 +5,6 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 ## Active Roadmaps
 
-### Repository Reorganization
-
-This roadmap outlines the plan for reorganizing the Science Data Kit repository structure, with a particular focus on improving the organization of roadmap files and documentation. The reorganization will prepare the repository for the implementation of the Knowledge Graph Documentation System by creating a more logical and maintainable structure for project documentation.
-
-**Latest Version**: [Repository Reorganization Roadmap](active/roadmap_RepoReorg_03.md)
-
-**Status**: Implementation in Progress - The Repository Reorganization roadmap has made significant progress, with most tasks now completed:
-
-1. **Phase 1: Documentation Reorganization** - Completed. New directory structure has been created, roadmap files have been moved to their new locations, redirect notices have been added to original files, and documentation integration has been completed.
-2. **Phase 2: Repository Structure Improvements** - In Progress. The tools directory has been created and development scripts have been moved to it. The config directory has been created and configuration files have been moved to it. The docker directory has been created and Docker-related files have been moved to it. Remaining tasks include updating Docker documentation and improving test organization.
-
 ### Design/UX Phase
 
 This roadmap outlines a comprehensive plan for the Design/UX phase of the Science Data Kit, focusing on frontend component validation, user experience optimization, backend validation through the user interface, and workshop preparation integration. This phase is critical for ensuring that the backend architecture established in previous phases is effectively integrated with frontend components and that the overall user experience is thoroughly tested, refined, and validated.
@@ -82,12 +71,6 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 
 ## Testing and Quality Status
 
-### Repository Reorganization
-**Implementation Status**: In Progress - Phase 1 completed, Phase 2 mostly completed
-**Testing Status**: Phase 1 ready for final validation, Phase 2 in progress
-**Next Testing Steps**: Use prompt #21 from prompts.md to validate Phase 1 implementation and repository structure improvements
-**Quality Gates**: Phase 1 final validation, repository structure validation before completing Phase 2
-
 ### Design/UX Phase
 **Implementation Status**: Planning - Initial definition phase
 **Testing Status**: Not yet applicable - planning phase
@@ -127,6 +110,19 @@ Use the testing prompts in `docs/roadmaps/prompts.md` (#17-24) at these natural 
 For guidance on selecting appropriate testing prompts, start with prompt #21 (Pre-Review Code Analysis) to assess current state and get recommendations for additional validation.
 
 ## Archived Roadmaps
+
+### Repository Reorganization
+
+This roadmap outlined the plan for reorganizing the Science Data Kit repository structure, with a particular focus on improving the organization of roadmap files and documentation. The reorganization prepared the repository for the implementation of the Knowledge Graph Documentation System by creating a more logical and maintainable structure for project documentation.
+
+**Latest Version**: [Repository Reorganization Roadmap](archive/roadmap_RepoReorg_04.md)
+
+**Status**: Completed - The Repository Reorganization roadmap has been fully implemented:
+
+1. **Phase 1: Documentation Reorganization** - Completed. New directory structure has been created, roadmap files have been moved to their new locations, redirect notices have been added to original files, and documentation integration has been completed.
+2. **Phase 2: Repository Structure Improvements** - Completed. The tools directory has been created and development scripts have been moved to it. The config directory has been created and configuration files have been moved to it. The docker directory has been created and Docker-related files have been moved to it. Docker documentation has been updated and test organization has been improved.
+
+### Previous Development Phases
 
 The Science Data Kit has completed six major development phases, resulting in a comprehensive platform with extensive capabilities for scientific data analysis. All completed roadmaps have been archived and can be accessed through the [Complete Roadmap Index](archive/index_complete.md).
 

@@ -11,13 +11,11 @@ The roadmaps are organized into the following directory structure:
 ```
 docs/roadmaps/
 ├── active/            # Currently active roadmaps (current priorities)
-│   ├── roadmap_RepoReorg_00.md
-│   ├── roadmap_RepoReorg_01.md
-│   ├── roadmap_RepoReorg_02.md
-│   ├── roadmap_RepoReorg_03.md
 │   ├── roadmap_DesignUX_00.md
+│   ├── roadmap_DesignUX_01.md
 │   ├── roadmap_CPB_00.md
 │   ├── roadmap_memo.md
+│   ├── roadmap_later.md
 │   └── testing_status_template.md
 ├── future/            # Future roadmaps (planned but not currently active)
 │   ├── README.md      # Overview of future roadmaps
@@ -34,6 +32,11 @@ docs/roadmaps/
 │   └── knowledge_graph_examples.md
 ├── archive/           # Completed roadmaps
 │   ├── index_complete.md  # Comprehensive index of all roadmaps
+│   ├── roadmap_RepoReorg_00.md
+│   ├── roadmap_RepoReorg_01.md
+│   ├── roadmap_RepoReorg_02.md
+│   ├── roadmap_RepoReorg_03.md
+│   ├── roadmap_RepoReorg_04.md
 │   ├── roadmap_CodebaseOrganization_00.md
 │   ├── roadmap_CodebaseOrganization_01.md
 │   └── ...

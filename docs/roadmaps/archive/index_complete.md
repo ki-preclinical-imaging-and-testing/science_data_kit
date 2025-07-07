@@ -5,40 +5,82 @@ This document serves as a comprehensive index for all roadmaps in the Science Da
 
 ## Active Roadmaps
 
-### Repository Reorganization
+### Design/UX Phase
 
-This roadmap outlines the plan for reorganizing the Science Data Kit repository structure, with a particular focus on improving the organization of roadmap files and documentation. The reorganization will prepare the repository for the implementation of the Knowledge Graph Documentation System by creating a more logical and maintainable structure for project documentation.
+This roadmap outlines a comprehensive plan for the Design/UX phase of the Science Data Kit, focusing on frontend component validation, user experience optimization, backend validation through the user interface, and workshop preparation integration. This phase is critical for ensuring that the backend architecture established in previous phases is effectively integrated with frontend components and that the overall user experience is thoroughly tested, refined, and validated.
 
-**Latest Version**: [Repository Reorganization Roadmap](../active/roadmap_RepoReorg_00.md)
+**Latest Version**: [Design/UX Phase Roadmap](../active/roadmap_DesignUX_00.md)
 
-**Status**: Planning - The Repository Reorganization roadmap has been defined and is divided into two phases:
+**Status**: Planning - The Design/UX phase roadmap has been defined and is divided into four phases:
 
-1. **Phase 1: Documentation Reorganization** - Creating a new directory structure for roadmap files and documentation, moving files to appropriate locations, and updating references.
-2. **Phase 2: Repository Structure Improvements** - Cleaning up the root directory, organizing Docker files, and improving test organization.
+1. **Phase 1: Core Component Validation** - Systematically testing all frontend components and their integration with backend systems.
+2. **Phase 2: Integration Testing** - Validating user workflows, cross-component integration, and performance.
+3. **Phase 3: User Experience Optimization** - Improving interface consistency, navigation flow, error handling, accessibility, and mobile responsiveness.
+4. **Phase 4: Workshop Readiness** - Preparing documentation, training materials, feedback collection mechanisms, and demo scenarios.
+
+### Conversational Pipeline Builder
+
+This roadmap outlines a plan for implementing a conversational interface for scientific pipeline creation that integrates with the existing SciDK platform. Users would interact through natural language to build, modify, and visualize scientific data analysis pipelines, with the system leveraging the knowledge graph and component architecture to translate conversations into working pipelines.
+
+**Latest Version**: [Conversational Pipeline Builder Roadmap](../active/roadmap_CPB_00.md)
+
+**Status**: Planning - The Conversational Pipeline Builder roadmap has been defined but not started yet. It is being added to the system for future consideration. The roadmap is divided into four phases:
+
+1. **Phase 1: Foundation** - Basic conversational interface and component integration.
+2. **Phase 2: Visual Representation** - Visual pipeline editing and cross-UI integration.
+3. **Phase 3: Advanced Natural Language** - Sophisticated domain understanding and complex pipeline support.
+4. **Phase 4: Ecosystem Integration** - Full integration with SciDK ecosystem and external tools.
+
+## Future Roadmaps
+
+The following roadmaps represent important strategic directions for the Science Data Kit but have been temporarily deprioritized to focus on fundamental frontend/backend integration work and user experience optimization. These roadmaps have been moved to the `future/` directory and will be revisited after the completion of the Design/UX phase and Repository Reorganization roadmap.
 
 ### Knowledge Graph Documentation System
 
 This roadmap outlines the plan for implementing a Knowledge Graph Documentation System that transforms the Science Data Kit into an AI-navigable scientific software platform. The system enables documentation to live naturally in the codebase while providing structured markup and linking for automatic knowledge graph generation. AI agents can query this graph to understand codebase structure and patterns, with the graph automatically rebuilding from source documentation when files change.
 
-**Latest Version**: [Knowledge Graph Documentation System Roadmap](../active/roadmap_kg_00.md)
+**Latest Version**: [Knowledge Graph Documentation System Roadmap](../future/roadmap_kg_00.md)
 
 **Status**: Planning - The Knowledge Graph Documentation System roadmap has been defined and is divided into six phases:
 
-1. **Phase 1: Foundation** - Establishing the core infrastructure for the knowledge graph system without disrupting existing workflows. See [Phase 1 Roadmap](../active/roadmap_kgPhase1_00.md) for details.
-2. **Phase 2: Core Integration** - Integrating the knowledge graph system with existing documentation systems and tools. See [Phase 2 Roadmap](../active/roadmap_kgPhase2_00.md) for details.
-3. **Phase 3: AI Navigation** - Enabling AI agents to navigate and understand the codebase through the knowledge graph. See [Phase 3 Roadmap](../active/roadmap_kgPhase3_00.md) for details.
-4. **Phase 4: User Interfaces** - Creating tools for human interaction with the knowledge graph. See [Phase 4 Roadmap](../active/roadmap_kgPhase4_00.md) for details.
-5. **Phase 5: Advanced Features** - Adding advanced capabilities to the knowledge graph system. See [Phase 5 Roadmap](../active/roadmap_kgPhase5_00.md) for details.
-6. **Phase 6: Ecosystem** - Platform maturation and broader adoption. See [Phase 6 Roadmap](../active/roadmap_kgPhase6_00.md) for details.
+1. **Phase 1: Foundation** - Establishing the core infrastructure for the knowledge graph system without disrupting existing workflows. See [Phase 1 Roadmap](../future/roadmap_kgPhase1_00.md) for details.
+2. **Phase 2: Core Integration** - Integrating the knowledge graph system with existing documentation systems and tools. See [Phase 2 Roadmap](../future/roadmap_kgPhase2_00.md) for details.
+3. **Phase 3: AI Navigation** - Enabling AI agents to navigate and understand the codebase through the knowledge graph. See [Phase 3 Roadmap](../future/roadmap_kgPhase3_00.md) for details.
+4. **Phase 4: User Interfaces** - Creating tools for human interaction with the knowledge graph. See [Phase 4 Roadmap](../future/roadmap_kgPhase4_00.md) for details.
+5. **Phase 5: Advanced Features** - Adding advanced capabilities to the knowledge graph system. See [Phase 5 Roadmap](../future/roadmap_kgPhase5_00.md) for details.
+6. **Phase 6: Ecosystem** - Platform maturation and broader adoption. See [Phase 6 Roadmap](../future/roadmap_kgPhase6_00.md) for details.
 
 **Supporting Documentation**:
-- [Knowledge Graph Vision](../active/knowledge_graph_vision.md) - Detailed vision document explaining the "AI-native software architecture" concept
-- [Knowledge Graph Technical Specification](../active/knowledge_graph_technical_spec.md) - Technical specification covering documentation markup standards, schema design, and integration requirements
-- [Knowledge Graph Examples](../active/knowledge_graph_examples.md) - Concrete examples showing before/after documentation examples, sample AI queries, and tagging examples
+- [Knowledge Graph Vision](../future/knowledge_graph_vision.md) - Detailed vision document explaining the "AI-native software architecture" concept
+- [Knowledge Graph Technical Specification](../future/knowledge_graph_technical_spec.md) - Technical specification covering documentation markup standards, schema design, and integration requirements
+- [Knowledge Graph Examples](../future/knowledge_graph_examples.md) - Concrete examples showing before/after documentation examples, sample AI queries, and tagging examples
+
+### Strategic Enhancements
+
+This roadmap outlines a comprehensive plan for strategic enhancements to the Science Data Kit platform, focusing on key areas for platform maturation, community adoption, and long-term sustainability. These enhancements build upon the existing Knowledge Graph and Repository Reorganization roadmaps while addressing higher-level platform capabilities that will accelerate adoption in the scientific community.
+
+**Latest Version**: [Strategic Enhancements Roadmap](../future/roadmap_StrategicEnhancements_00.md)
+
+**Status**: Planning - The Strategic Enhancements roadmap has been defined and is divided into three phases:
+
+1. **Phase 1: Foundation Enhancements** - Establishing core capabilities for documentation automation, workshop feedback integration, and domain branch templates.
+2. **Phase 2: Community and Performance** - Implementing performance monitoring, AI assistant training, and community contribution frameworks.
+3. **Phase 3: Platform Expansion** - Completing domain branch templates and adding cross-platform deployment and scientific workflow integration.
 
 ## Archived Roadmaps
 
 The following roadmap sets have been completed and archived. Any remaining tasks from these roadmaps have been added to the [roadmap_later.md](../active/roadmap_later.md) file for future consideration.
+
+### Repository Reorganization
+
+This roadmap outlined the plan for reorganizing the Science Data Kit repository structure, with a particular focus on improving the organization of roadmap files and documentation. The reorganization prepared the repository for the implementation of the Knowledge Graph Documentation System by creating a more logical and maintainable structure for project documentation.
+
+**Latest Version**: [Repository Reorganization Roadmap](roadmap_RepoReorg_04.md)
+
+**Status**: Completed - The Repository Reorganization roadmap has been fully implemented:
+
+1. **Phase 1: Documentation Reorganization** - Completed. New directory structure has been created, roadmap files have been moved to their new locations, redirect notices have been added to original files, and documentation integration has been completed.
+2. **Phase 2: Repository Structure Improvements** - Completed. The tools directory has been created and development scripts have been moved to it. The config directory has been created and configuration files have been moved to it. The docker directory has been created and Docker-related files have been moved to it. Docker documentation has been updated and test organization has been improved.
 
 ### Phase 6: SDK Outreach and Feature Expansion
 
@@ -207,11 +249,17 @@ With all six initial phases now completed and archived, the project has undergon
 
 The project is now entering a new phase with two active roadmaps:
 
-1. The **Repository Reorganization** roadmap, which will improve the organization of roadmap files and documentation, preparing the repository for the Knowledge Graph Documentation System.
+1. The **Design/UX Phase** roadmap, which focuses on frontend component validation, user experience optimization, backend validation through the user interface, and workshop preparation integration. This phase is critical for ensuring that the backend architecture established in previous phases is effectively integrated with frontend components and that the overall user experience is thoroughly tested, refined, and validated.
 
-2. The **Knowledge Graph Documentation System** roadmap, which represents a fundamental shift toward "AI-native software architecture" where the codebase actively communicates its structure and patterns to both human developers and AI agents.
+2. The **Conversational Pipeline Builder** roadmap, which outlines a future vision for a natural language interface that enables researchers to create sophisticated data analysis pipelines through conversation. This roadmap has been defined but not started yet, and is planned to begin after the completion of the Design/UX phase.
 
-These roadmaps will guide the transformation of the Science Data Kit into an AI-navigable scientific software platform with a well-organized repository structure.
+Additionally, two important strategic roadmaps have been temporarily deprioritized to focus on fundamental frontend/backend integration work and user experience optimization:
+
+1. The **Knowledge Graph Documentation System** roadmap, which represents a fundamental shift toward "AI-native software architecture" where the codebase actively communicates its structure and patterns to both human developers and AI agents.
+
+2. The **Strategic Enhancements** roadmap, which focuses on platform maturation, community adoption, and long-term sustainability through documentation automation, workshop feedback integration, domain customization, and other strategic capabilities.
+
+These roadmaps will guide the transformation of the Science Data Kit into a user-friendly, well-tested scientific software platform with a well-organized repository structure and a clear path to advanced capabilities for long-term growth and sustainability.
 
 The workshop at MIT Koch Institute has provided valuable feedback from real users, allowing the platform to be refined based on their needs. With the completion of all planned development phases, the Science Data Kit is now well-positioned as a comprehensive tool for scientific data analysis, with strong documentation, user-friendly interfaces, extensive data source support, and advanced analytical capabilities.
 
