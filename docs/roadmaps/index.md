@@ -48,6 +48,19 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 2. **Phase 2: Community and Performance** - Implementing performance monitoring, AI assistant training, and community contribution frameworks.
 3. **Phase 3: Platform Expansion** - Completing domain branch templates and adding cross-platform deployment and scientific workflow integration.
 
+### Conversational Pipeline Builder
+
+This roadmap outlines a plan for implementing a conversational interface for scientific pipeline creation that integrates with the existing SciDK platform. Users would interact through natural language to build, modify, and visualize scientific data analysis pipelines, with the system leveraging the knowledge graph and component architecture to translate conversations into working pipelines.
+
+**Latest Version**: [Conversational Pipeline Builder Roadmap](active/roadmap_CPB_00.md)
+
+**Status**: Planning - The Conversational Pipeline Builder roadmap has been defined but not started yet. It is being added to the system for future consideration. The roadmap is divided into four phases:
+
+1. **Phase 1: Foundation** - Basic conversational interface and component integration.
+2. **Phase 2: Visual Representation** - Visual pipeline editing and cross-UI integration.
+3. **Phase 3: Advanced Natural Language** - Sophisticated domain understanding and complex pipeline support.
+4. **Phase 4: Ecosystem Integration** - Full integration with SciDK ecosystem and external tools.
+
 ## Testing and Quality Status
 
 ### Repository Reorganization
@@ -69,6 +82,13 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 **Next Testing Steps**: Use prompt #21 from prompts.md once implementation begins
 **Recommended Testing**: Use prompts #19, #22, #24 for high-priority enhancements
 **Quality Gates**: Foundation Enhancements validation before Community and Performance phase
+
+### Conversational Pipeline Builder
+**Implementation Status**: Planning - Not started yet
+**Testing Status**: Not yet applicable - planning phase
+**Next Testing Steps**: Not applicable at this stage
+**Recommended Testing**: Will be determined when implementation begins
+**Quality Gates**: Knowledge Graph Documentation System Phase 1-2 completion before starting
 
 ### Testing Workflow Integration
 Use the testing prompts in `docs/roadmaps/prompts.md` (#17-24) at these natural checkpoints:
@@ -93,12 +113,14 @@ The detailed processes for updating roadmaps and archiving completed roadmaps ar
 
 The Science Data Kit project has successfully achieved its goal of becoming a comprehensive tool for scientific data analysis and visualization. Through the systematic implementation of twelve major roadmaps across six development phases, the SDK has evolved into a robust platform with extensive capabilities.
 
-The project is now entering a new phase with three active roadmaps:
+The project is now entering a new phase with four active roadmaps:
 
 1. The **Repository Reorganization** roadmap, which has made significant progress with all high-priority tasks now completed. Phase 1 (Documentation Reorganization) is complete, with the new directory structure in place, roadmap files moved to their appropriate locations, and documentation integration completed. Phase 2 (Repository Structure Improvements) is now in progress, with the tools directory created and development scripts moved. This reorganization is preparing the repository for the Knowledge Graph Documentation System.
 
 2. The **Knowledge Graph Documentation System** roadmap, which represents a fundamental shift toward "AI-native software architecture" where the codebase actively communicates its structure and patterns to both human developers and AI agents.
 
 3. The **Strategic Enhancements** roadmap, which focuses on platform maturation, community adoption, and long-term sustainability through documentation automation, workshop feedback integration, domain customization, and other strategic capabilities.
+
+4. The **Conversational Pipeline Builder** roadmap, which outlines a future vision for a natural language interface that enables researchers to create sophisticated data analysis pipelines through conversation. This roadmap has been defined but not started yet, and is planned to begin after the completion of Knowledge Graph Documentation System Phase 1-2.
 
 Together, these roadmaps will guide the transformation of the Science Data Kit into an AI-navigable, community-adoptable scientific software platform with a well-organized repository structure and strategic capabilities for long-term growth and sustainability.
