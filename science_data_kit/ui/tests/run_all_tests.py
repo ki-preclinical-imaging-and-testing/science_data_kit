@@ -33,6 +33,9 @@ from analysis_engine_tests import run_all_tests as run_analysis_engine_tests
 from plugin_system_tests import run_all_tests as run_plugin_system_tests
 from error_handling_tests import run_all_tests as run_error_handling_tests
 from state_management_tests import run_all_tests as run_state_management_tests
+from visualization_workflow_tests import run_all_tests as run_visualization_workflow_tests
+from cross_component_workflow_tests import run_all_tests as run_cross_component_workflow_tests
+from performance_bottleneck_tests import run_all_tests as run_performance_bottleneck_tests
 
 def main():
     """Run all test suites and generate combined reports."""
@@ -71,6 +74,15 @@ def main():
 
     print("\n--- Running State Management Tests ---\n")
     state_management_tester = run_state_management_tests()
+
+    print("\n--- Running Visualization Workflow Tests ---\n")
+    visualization_workflow_tester = run_visualization_workflow_tests()
+
+    print("\n--- Running Cross-Component Workflow Tests ---\n")
+    cross_component_workflow_tester = run_cross_component_workflow_tests()
+
+    print("\n--- Running Performance Bottleneck Tests ---\n")
+    performance_bottleneck_tester = run_performance_bottleneck_tests()
 
     # Record end time
     end_time = datetime.now()
@@ -190,6 +202,41 @@ def main():
             "Notes": result["Notes"]
         })
 
+    # Add visualization workflow test results
+    for workflow in visualization_workflow_tester.results["workflow_results"]:
+        for step in workflow["steps"]:
+            combined_results.append({
+                "Test Suite": "Visualization Workflows",
+                "Component": workflow["workflow_name"],
+                "Category": "Workflow Steps",
+                "Test": step["step_name"],
+                "Status": "Pass" if step["status"] else "Fail",
+                "Notes": step["notes"]
+            })
+
+    # Add cross-component workflow test results
+    for workflow in cross_component_workflow_tester.results["workflow_results"]:
+        for step in workflow["steps"]:
+            combined_results.append({
+                "Test Suite": "Cross-Component Workflows",
+                "Component": workflow["workflow_name"],
+                "Category": "Workflow Steps",
+                "Test": step["step_name"],
+                "Status": "Pass" if step["status"] else "Fail",
+                "Notes": step["notes"]
+            })
+
+    # Add performance bottleneck test results
+    for test in performance_bottleneck_tester.results["performance_tests"]:
+        combined_results.append({
+            "Test Suite": "Performance Bottlenecks",
+            "Component": test["test_name"],
+            "Category": "Performance",
+            "Test": "Performance Test",
+            "Status": "Pass" if test["avg_duration"] <= test.get("threshold", float("inf")) else "Fail",
+            "Notes": test["notes"]
+        })
+
     # Create DataFrame from combined results
     combined_df = pd.DataFrame(combined_results)
 
@@ -302,27 +349,71 @@ def main():
             "Severity": issue["Severity"]
         })
 
+    # Add visualization workflow test issues
+    for issue in visualization_workflow_tester.results["issues"]:
+        combined_issues.append({
+            "Test Suite": "Visualization Workflows",
+            "Component": issue["workflow_name"],
+            "Category": "Workflow",
+            "Test": issue["step_name"],
+            "Description": issue["description"],
+            "Severity": issue["severity"]
+        })
+
+    # Add cross-component workflow test issues
+    for issue in cross_component_workflow_tester.results["issues"]:
+        combined_issues.append({
+            "Test Suite": "Cross-Component Workflows",
+            "Component": issue["workflow_name"],
+            "Category": "Workflow",
+            "Test": issue["step_name"],
+            "Description": issue["description"],
+            "Severity": issue["severity"]
+        })
+
+    # Add performance bottleneck issues
+    for bottleneck in performance_bottleneck_tester.results["bottlenecks"]:
+        combined_issues.append({
+            "Test Suite": "Performance Bottlenecks",
+            "Component": bottleneck["component"],
+            "Category": "Performance",
+            "Test": "Performance Test",
+            "Description": bottleneck["description"],
+            "Severity": bottleneck["severity"]
+        })
+
     # Create DataFrame from combined issues
     combined_issues_df = pd.DataFrame(combined_issues)
 
     # Save combined issues to CSV
     combined_issues_df.to_csv("science_data_kit/ui/tests/results/combined_test_issues.csv", index=False)
 
+    # Save component interactions to CSV
+    interactions_df = cross_component_workflow_tester.generate_interactions_report("science_data_kit/ui/tests/results/component_interactions.csv")
+
     # Print summary
     print("\n=== All Test Suites Completed ===")
     print(f"Total Test Duration: {test_duration:.2f} seconds")
     print(f"Total Tests Run: {len(combined_df)}")
     print(f"Total Issues Found: {len(combined_issues_df)}")
+    print(f"Total Component Interactions Recorded: {len(interactions_df)}")
+    print(f"Total Performance Bottlenecks Identified: {len(performance_bottleneck_tester.results['bottlenecks'])}")
     print(f"Results saved to science_data_kit/ui/tests/results/combined_test_results.csv")
     print(f"Issues saved to science_data_kit/ui/tests/results/combined_test_issues.csv")
+    print(f"Component Interactions saved to science_data_kit/ui/tests/results/component_interactions.csv")
+    print(f"Performance Bottlenecks saved to science_data_kit/ui/tests/results/performance_bottlenecks.csv")
 
     # Return summary statistics
     return {
         "total_tests": len(combined_df),
         "total_issues": len(combined_issues_df),
+        "total_interactions": len(interactions_df),
+        "total_bottlenecks": len(performance_bottleneck_tester.results['bottlenecks']),
         "test_duration": test_duration,
         "results_df": combined_df,
-        "issues_df": combined_issues_df
+        "issues_df": combined_issues_df,
+        "interactions_df": interactions_df,
+        "bottlenecks_df": bottlenecks_df
     }
 
 if __name__ == "__main__":
