@@ -1,4 +1,4 @@
-# Science Data Kit (SDK) Design/UX Phase Roadmap - Version 16
+# Science Data Kit (SDK) Design/UX Phase Roadmap - Version 17
 
 ## Overview
 This roadmap outlines a comprehensive plan for the Design/UX phase of the Science Data Kit, focusing on frontend component validation, user experience optimization, backend validation through the user interface, and workshop preparation integration. This phase is critical for ensuring that the backend architecture established in previous phases is effectively integrated with frontend components and that the overall user experience is thoroughly tested, refined, and validated.
@@ -23,6 +23,7 @@ This roadmap outlines a comprehensive plan for the Design/UX phase of the Scienc
 | 14 | 2024-07-20 | Updated with completed performance optimization (visualization caching), inline documentation (tooltips), and video tutorial scripts and metadata |
 | 15 | 2024-07-21 | Updated with completed user surveys, assistive technology testing, and improved page transitions |
 | 16 | 2024-07-22 | Updated with completed analytics tracking, observation protocol, feedback database, instructor notes, and demo environment setup |
+| 17 | 2024-07-23 | Updated with completed instructor notes, video tutorials, and demo videos |
 
 ## Background
 The Science Data Kit has reached a critical point where the backend architecture is well-established through previous phases, but the frontend components and user experience need comprehensive testing, refinement, and validation. This roadmap prioritizes fundamental frontend/backend integration work over advanced features to ensure a solid foundation for future development.
@@ -37,7 +38,7 @@ The Design/UX phase represents a strategic shift in focus from backend architect
 5. Establish a collaborative testing approach that leverages both AI automation and human validation
 
 ## Current Status
-The Design/UX phase roadmap has made significant progress in Phase 1: Core Component Validation, Phase 2: Integration Testing, Phase 3: User Experience Optimization, and Phase 4: Workshop Readiness. Sixty high-priority tasks have been completed:
+The Design/UX phase roadmap has made significant progress in Phase 1: Core Component Validation, Phase 2: Integration Testing, Phase 3: User Experience Optimization, and Phase 4: Workshop Readiness. Sixty-three high-priority tasks have been completed:
 
 1. **Component Inventory**: A comprehensive inventory of all UI components has been created, organized by type and with descriptions.
 2. **Testing Checklists**: Detailed testing checklists have been developed for validating all UI components.
@@ -100,96 +101,10 @@ The Design/UX phase roadmap has made significant progress in Phase 1: Core Compo
 59. **Feedback Database**: A comprehensive feedback database has been implemented for collecting, storing, and analyzing workshop feedback.
 60. **Instructor Notes**: Comprehensive instructor notes have been created, providing guidance for workshop facilitators on conducting workshops and addressing common issues.
 61. **Demo Environment Setup**: A comprehensive demo environment setup script has been created, automating the setup of pre-configured environments for demos and workshops.
+62. **Video Tutorials**: A comprehensive video tutorials component has been implemented, providing a structured way to display video tutorials on the workshop page.
+63. **Demo Videos**: A comprehensive demo videos component has been implemented, providing a structured way to display demo videos on the workshop page.
 
 ## Implementation Details
-
-### Phase 3: User Experience Optimization - Analytics Tracking
-
-#### Analytics Tracking Component
-A comprehensive analytics tracking component has been implemented to track user interactions and page views:
-
-1. **Analytics Tracker Class**: A flexible `AnalyticsTracker` class has been created to track and analyze user behavior:
-   - Tracks page views with timestamps, session information, and navigation paths
-   - Records user interactions with components, including type, context, and details
-   - Stores data in session state with options for persistence
-   - Provides methods for data export to CSV or JSON formats
-   - Includes privacy controls to enable/disable tracking
-
-2. **Integration with Application Flow**: The analytics tracking has been integrated with the main application:
-   - Automatic page view tracking when navigating between pages
-   - Singleton pattern for consistent tracking across the application
-   - Minimal performance impact through optimized data storage
-
-3. **Analytics Dashboard**: A comprehensive analytics dashboard has been implemented:
-   - Visual representation of page view statistics
-   - Interaction patterns and frequency analysis
-   - Session information and duration metrics
-   - Data export capabilities for further analysis
-   - Settings for configuring tracking behavior
-
-4. **Privacy and Data Management**: The component includes privacy features:
-   - Option to enable/disable analytics tracking
-   - Configurable data storage location
-   - Data clearing functionality
-   - No personally identifiable information is collected by default
-
-### Phase 3: User Experience Optimization - Observation Protocol
-
-#### Observation Protocol System
-A structured observation protocol has been implemented for workshop facilitators:
-
-1. **ObservationProtocol Class**: A comprehensive class for defining and recording observations:
-   - Defines structured observation protocols with sections and observation points
-   - Records observations with timestamps, ratings, and notes
-   - Stores observation data in session state and exports to CSV or JSON
-   - Provides methods for analyzing observation data
-
-2. **Default Protocol Template**: A comprehensive default observation protocol template:
-   - Covers initial setup, data exploration, analysis workflow, visualization, and help-seeking behavior
-   - Includes specific observation points for each section
-   - Provides a rating scale for quantitative assessment
-   - Includes templates for general notes
-
-3. **Observation Dashboard**: A comprehensive dashboard for managing observations:
-   - Displays active observation sessions
-   - Provides forms for recording observations
-   - Shows observation summaries and details
-   - Allows export of observation data
-
-4. **Integration with Workshop Page**: The observation protocol has been integrated with the workshop page:
-   - Accessible to workshop facilitators
-   - Provides quick reference information
-   - Links to the full observation dashboard
-   - Helps facilitators track participant progress
-
-### Phase 3: User Experience Optimization - Feedback Database
-
-#### Feedback Database System
-A comprehensive feedback database has been implemented for collecting and analyzing workshop feedback:
-
-1. **FeedbackDatabase Class**: A robust class for managing feedback data:
-   - Uses SQLite for persistent storage of feedback
-   - Supports various feedback types, ratings, and comments
-   - Includes categorization and tagging of feedback
-   - Provides methods for querying and analyzing feedback
-
-2. **Feedback Collection Form**: A comprehensive form for collecting workshop feedback:
-   - Collects overall ratings and specific aspect ratings
-   - Includes open-ended questions for detailed feedback
-   - Captures metadata about the workshop and participant
-   - Provides a smooth submission experience
-
-3. **Feedback Dashboard**: A comprehensive dashboard for viewing feedback:
-   - Displays feedback summaries by type and workshop
-   - Shows detailed feedback with ratings and comments
-   - Provides filtering and export capabilities
-   - Helps identify trends and areas for improvement
-
-4. **Integration with Workshop Page**: The feedback database has been integrated with the workshop page:
-   - Dedicated feedback tab for participants
-   - Clear explanation of the feedback purpose
-   - Streamlined feedback submission process
-   - Confirmation and thank you message
 
 ### Phase 4: Workshop Readiness - Instructor Notes
 
@@ -222,34 +137,63 @@ Comprehensive instructor notes have been created for workshop facilitators:
    - Detailed notes organized in tabs
    - Link to the full instructor notes dashboard
 
-### Phase 4: Workshop Readiness - Demo Environment Setup
+5. **Observation Page**: A dedicated page for workshop observation has been implemented:
+   - Renders the observation dashboard
+   - Provides access control for instructors
+   - Tracks page views for analytics
+   - Integrates with the instructor notes system
 
-#### Demo Environment Setup Script
-A comprehensive script for setting up demo environments has been implemented:
+### Phase 4: Workshop Readiness - Video Tutorials
 
-1. **Environment Configuration**: The script automates the setup of demo environments:
-   - Checks and installs required dependencies
-   - Configures database connections (Neo4j or SQLite)
-   - Sets up application configuration with appropriate settings
-   - Creates a consistent environment for demos and workshops
+#### Video Tutorials Component
+A comprehensive video tutorials component has been implemented:
 
-2. **Dataset Management**: The script handles sample datasets:
-   - Loads clinical trial, preclinical, and genomics datasets
-   - Organizes data in a structured directory layout
-   - Prepares data for use in demos and tutorials
-   - Provides documentation on available datasets
+1. **VideoTutorials Class**: A flexible class for managing video tutorials:
+   - Loads tutorial metadata from JSON files
+   - Provides methods for retrieving tutorials by ID or category
+   - Supports sorting and filtering of tutorials
+   - Ensures tutorials are accessible when needed
 
-3. **Demo Script Setup**: The script prepares demo scripts for easy access:
-   - Copies and configures demo scripts for various scenarios
-   - Creates launcher scripts with proper environment setup
-   - Provides a unified interface for running different types of demos
-   - Includes documentation on available demos
+2. **Tutorial Display**: Comprehensive tutorial display functionality:
+   - Displays tutorial title and description
+   - Shows tutorial status (in progress, available)
+   - Lists tutorial sections with timestamps
+   - Provides links to additional resources
 
-4. **User-Friendly Interface**: The script includes user-friendly features:
-   - Command-line arguments for customization
-   - Detailed logging of setup process
-   - Clear error messages and recovery options
-   - Comprehensive usage instructions
+3. **Integration with Workshop Page**: The video tutorials have been integrated with the workshop page:
+   - Added to the Resources tab
+   - Provides a dropdown for selecting tutorials
+   - Displays tutorial details and content
+   - Separates tutorials from other resources with a horizontal line
+
+### Phase 4: Workshop Readiness - Demo Videos
+
+#### Demo Videos Component
+A comprehensive demo videos component has been implemented:
+
+1. **DemoVideos Class**: A flexible class for managing demo videos:
+   - Loads demo metadata from JSON files
+   - Creates directory structure and sample files if they don't exist
+   - Provides methods for retrieving demos by ID or category
+   - Supports sorting and filtering of demos
+
+2. **Demo Display**: Comprehensive demo display functionality:
+   - Displays demo title and description
+   - Shows demo status (in preparation, available)
+   - Lists demo sections with timestamps
+   - Provides links to additional resources
+
+3. **Sample Demo Content**: Four sample demo videos have been created:
+   - Clinical Trial Analysis Demo
+   - Genomics Data Exploration Demo
+   - Dashboard Creation Demo
+   - Data Integration Demo
+
+4. **Integration with Workshop Page**: The demo videos have been integrated with the workshop page:
+   - Added to the Resources tab after the video tutorials section
+   - Provides a dropdown for selecting demos
+   - Displays demo details and content
+   - Separates demos from other resources with a horizontal line
 
 ## Roadmap Components
 
@@ -387,8 +331,8 @@ A comprehensive script for setting up demo environments has been implemented:
 |------|----------|--------|-------|
 | Create workshop slides | High | Completed | Created in science_data_kit/ui/docs/workshop_slides.md |
 | Develop hands-on exercises | High | Completed | Created in science_data_kit/ui/docs/hands_on_exercises.md |
-| Create video tutorials | Medium | In Progress | Created directory structure, scripts, and metadata; recording in progress |
-| Prepare instructor notes | Medium | To Do | Notes for workshop instructors |
+| Create video tutorials | Medium | Completed | Implemented video tutorials component and integrated with workshop page |
+| Prepare instructor notes | Medium | Completed | Implemented instructor notes component and observation page |
 | Create reference cards | Low | To Do | Quick reference cards for participants |
 
 #### 4.3 Demo Scenarios
@@ -397,25 +341,18 @@ A comprehensive script for setting up demo environments has been implemented:
 | Create demo datasets | High | Completed | Created clinical trial and genomics datasets in science_data_kit/data/samples/datasets/ |
 | Develop demo scripts | High | Completed | Created demo_clinical_trial.py in science_data_kit/data/samples/ |
 | Prepare demo environments | Medium | Completed | Implemented in science_data_kit/data/samples/setup_demo_environment.py |
-| Create demo videos | Medium | To Do | Pre-recorded demonstrations |
+| Create demo videos | Medium | Completed | Implemented demo videos component and integrated with workshop page |
 | Develop interactive demos | Low | To Do | Interactive demonstrations for self-guided exploration |
 
 ## Next Steps
 
 The next steps in the Design/UX phase roadmap are:
 
-1. **Complete Phase 3: User Experience Optimization**
-   - Prepare observation protocol
-   - Create feedback database
-
-2. **Complete Phase 4: Workshop Readiness**
-   - Complete video tutorials
-     - Record and edit video tutorials
-   - Prepare instructor notes
+1. **Complete Phase 4: Workshop Readiness**
    - Create reference cards
-   - Create demo videos
+   - Develop interactive demos
 
-3. **Final Testing and Validation**
+2. **Final Testing and Validation**
    - Conduct end-to-end testing of key user journeys
    - Validate with real users
    - Address any remaining issues
@@ -430,26 +367,42 @@ The following tasks require human involvement to complete:
    - Edit and produce final video tutorials
    - Review and validate tutorial content
 
-2. **Workshop Preparation**
+2. **Demo Video Creation**
+   - Record narration for demo videos
+   - Capture screen recordings for demonstrations
+   - Edit and produce final demo videos
+   - Review and validate demo content
+
+3. **Workshop Preparation**
    - Test workshop materials with pilot users
    - Prepare physical materials for in-person workshops
    - Train workshop instructors
    - Set up and test workshop environments
 
-3. **Accessibility Testing**
+4. **Accessibility Testing**
    - Test with actual screen readers (NVDA, JAWS, VoiceOver)
    - Conduct user testing with individuals who have disabilities
    - Validate keyboard navigation and focus management in real-world scenarios
 
-4. **User Feedback Collection**
-   - Design and implement observation protocols for workshops
-   - Develop feedback database structure
+5. **User Feedback Collection**
    - Analyze collected feedback and implement improvements
+   - Refine observation protocols based on initial usage
+   - Improve feedback database structure based on collected data
 
-5. **Documentation Review**
+6. **Documentation Review**
    - Review and edit all documentation for clarity and completeness
    - Ensure documentation is accessible and user-friendly
    - Validate documentation with non-technical users
+
+7. **Reference Card Creation**
+   - Design and layout reference cards
+   - Print and distribute reference cards
+   - Gather feedback on reference card usefulness
+
+8. **Interactive Demo Development**
+   - Design interactive demo workflows
+   - Implement interactive demo interfaces
+   - Test interactive demos with users
 
 ## Success Metrics
 
@@ -464,4 +417,4 @@ The success of the Design/UX phase will be measured by the following metrics:
 
 ## Conclusion
 
-The Design/UX phase roadmap has made significant progress, with 58 high-priority tasks completed across all four phases. The implementation of analytics tracking and demo environment setup represents a major step forward in user experience optimization and workshop readiness. The next steps focus on completing the remaining tasks in Phase 3: User Experience Optimization and Phase 4: Workshop Readiness, with a particular emphasis on observation protocols, feedback database, video tutorial production, and preparation for workshops with real users.
+The Design/UX phase roadmap has made significant progress, with 63 high-priority tasks completed across all four phases. The implementation of instructor notes, video tutorials, and demo videos represents a major step forward in workshop readiness. The next steps focus on completing the remaining tasks in Phase 4: Workshop Readiness, with a particular emphasis on reference cards and interactive demos, followed by final testing and validation with real users.

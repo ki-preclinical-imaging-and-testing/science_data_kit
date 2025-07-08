@@ -18,6 +18,10 @@ from science_data_kit.ui.state import initialize_session_state
 from science_data_kit.ui.adapters.page_adapter import PageAdapter
 from science_data_kit.core.db.db_manager import load_db_config
 from science_data_kit.ui.components.responsive_design import apply_responsive_styles
+from science_data_kit.ui.components.analytics_tracking import get_analytics_tracker, track_page_view
+from science_data_kit.ui.pages.observation import render_observation_page
+from science_data_kit.ui.components.feedback_database import render_feedback_dashboard
+from science_data_kit.ui.components.instructor_notes import render_instructor_notes
 
 class ScienceDataKitApp:
     """
@@ -132,6 +136,26 @@ class ScienceDataKitApp:
             from science_data_kit.ui.pages.preferences import render_preferences_page
             self.page_adapter.register_page("Preferences", render_preferences_page)
 
+            # Analytics page
+            from science_data_kit.ui.components.analytics_tracking import render_analytics_dashboard
+            self.page_adapter.register_page("Analytics", render_analytics_dashboard)
+
+            # Observation dashboard page
+            self.page_adapter.register_page("Observation", render_observation_page)
+
+            # Feedback dashboard page
+            self.page_adapter.register_page("Feedback", render_feedback_dashboard)
+
+            # Instructor notes page
+            self.page_adapter.register_page("Instructor", render_instructor_notes)
+
+            # Workshop page
+            try:
+                from science_data_kit.ui.pages.workshop import render_workshop_page
+                self.page_adapter.register_page("Workshop", render_workshop_page)
+            except ImportError:
+                st.warning("Workshop page module not found. Workshop functionality will not be available.")
+
         except ImportError as e:
             st.error(f"Error importing page modules: {e}")
             st.error("Please make sure all required modules are installed.")
@@ -162,6 +186,16 @@ class ScienceDataKitApp:
             pages.append(st.Page(self.page_adapter.pages["About"], title="learn", icon="📖"))
         if "Preferences" in self.page_adapter.pages:
             pages.append(st.Page(self.page_adapter.pages["Preferences"], title="preferences", icon="⚙️"))
+        if "Analytics" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Analytics"], title="analytics", icon="📊"))
+        if "Observation" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Observation"], title="observation", icon="👁️"))
+        if "Feedback" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Feedback"], title="feedback", icon="📝"))
+        if "Instructor" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Instructor"], title="instructor", icon="👨‍🏫"))
+        if "Workshop" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Workshop"], title="workshop", icon="🧪"))
 
         # Check if there are any pages to display
         if not pages:
@@ -179,6 +213,10 @@ class ScienceDataKitApp:
         try:
             # Set up navigation
             pg = self._setup_navigation()
+
+            # Track page view for analytics
+            if pg and hasattr(pg, 'title'):
+                track_page_view(pg.title)
 
             # Run the selected page
             pg.run()

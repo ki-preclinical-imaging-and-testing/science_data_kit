@@ -15,9 +15,109 @@ except ImportError:
     plt = None
 import plotly.graph_objects as go
 import plotly.express as px
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any, Union, Tuple
 import io
 import base64
+import hashlib
+import functools
+import time
+
+from science_data_kit.ui.components.visualization_templates import cache_visualization
+
+@cache_visualization
+def create_organizational_chart(users_df: pd.DataFrame, manager_column: str = "manager") -> str:
+    """
+    Create an organizational chart based on user data from Microsoft Graph API.
+
+    Args:
+        users_df: DataFrame containing user data from Microsoft Graph API.
+        manager_column: Column name containing the manager's ID or email.
+
+    Returns:
+        Base64-encoded image data for the visualization.
+    """
+    try:
+        if users_df.empty:
+            return ""
+
+        # Check if manager column exists
+        if manager_column not in users_df.columns:
+            return ""
+
+        # Create a graph
+        G = nx.DiGraph()
+
+        # Add nodes (users)
+        for _, user in users_df.iterrows():
+            user_id = user.get('id', '')
+            display_name = user.get('displayName', '')
+            job_title = user.get('jobTitle', '')
+            department = user.get('department', '')
+
+            # Add node with attributes
+            G.add_node(
+                user_id,
+                name=display_name,
+                title=job_title,
+                department=department
+            )
+
+        # Add edges (manager relationships)
+        for _, user in users_df.iterrows():
+            user_id = user.get('id', '')
+            manager_id = user.get(manager_column, '')
+
+            if manager_id and manager_id in G:
+                G.add_edge(manager_id, user_id)
+
+        # Create a hierarchical layout
+        pos = nx.nx_agraph.graphviz_layout(G, prog='dot')
+
+        # Create the figure
+        fig, ax = plt.subplots(figsize=(12, 10))
+
+        # Draw nodes
+        nx.draw_networkx_nodes(
+            G, pos,
+            node_color='skyblue',
+            node_size=500,
+            alpha=0.8
+        )
+
+        # Draw edges
+        nx.draw_networkx_edges(
+            G, pos,
+            arrows=True,
+            arrowsize=15,
+            width=1.5,
+            alpha=0.7
+        )
+
+        # Draw labels
+        node_labels = {node: f"{G.nodes[node]['name']}\n{G.nodes[node]['title']}" for node in G.nodes()}
+        nx.draw_networkx_labels(
+            G, pos,
+            labels=node_labels,
+            font_size=8,
+            font_weight='bold'
+        )
+
+        plt.axis('off')
+        plt.title('Organizational Chart')
+
+        # Save figure to bytes
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+        plt.close()
+
+        # Convert to base64
+        buf.seek(0)
+        img_data = base64.b64encode(buf.read()).decode("utf-8")
+
+        return img_data
+    except Exception as e:
+        st.error(f"Error creating organizational chart: {e}")
+        return ""
 
 def render_organizational_chart(users_df: pd.DataFrame, manager_column: str = "manager") -> None:
     """
@@ -36,81 +136,142 @@ def render_organizational_chart(users_df: pd.DataFrame, manager_column: str = "m
         st.warning(f"Manager column '{manager_column}' not found in user data.")
         return
 
-    # Create a graph
-    G = nx.DiGraph()
+    # Get the chart image data
+    img_data = create_organizational_chart(users_df, manager_column)
 
-    # Add nodes (users)
-    for _, user in users_df.iterrows():
-        user_id = user.get('id', '')
-        display_name = user.get('displayName', '')
-        job_title = user.get('jobTitle', '')
-        department = user.get('department', '')
+    if img_data:
+        # Display the image
+        st.image(f"data:image/png;base64,{img_data}", caption="Organizational Chart")
 
-        # Add node with attributes
-        G.add_node(
-            user_id,
-            name=display_name,
-            title=job_title,
-            department=department
+        # Add download button
+        b64_bytes = base64.b64decode(img_data)
+        btn = st.download_button(
+            label="Download Organizational Chart",
+            data=b64_bytes,
+            file_name="organizational_chart.png",
+            mime="image/png"
+        )
+    else:
+        st.warning("Failed to create organizational chart.")
+
+@cache_visualization
+def create_communication_network(messages_df: pd.DataFrame) -> str:
+    """
+    Create a communication network visualization based on message data from Microsoft Graph API.
+
+    Args:
+        messages_df: DataFrame containing message data from Microsoft Graph API.
+
+    Returns:
+        Base64-encoded image data for the visualization.
+    """
+    try:
+        if messages_df.empty:
+            return ""
+
+        # Check if required columns exist
+        required_columns = ['from', 'toRecipients']
+        for col in required_columns:
+            if col not in messages_df.columns:
+                return ""
+
+        # Create a graph
+        G = nx.Graph()
+
+        # Process messages to extract sender and recipients
+        for _, message in messages_df.iterrows():
+            # Extract sender
+            sender = None
+            if isinstance(message['from'], dict) and 'emailAddress' in message['from']:
+                sender = message['from']['emailAddress'].get('address', '')
+
+            # Extract recipients
+            recipients = []
+            if isinstance(message['toRecipients'], list):
+                for recipient in message['toRecipients']:
+                    if isinstance(recipient, dict) and 'emailAddress' in recipient:
+                        email = recipient['emailAddress'].get('address', '')
+                        if email:
+                            recipients.append(email)
+
+            # Add nodes and edges
+            if sender and recipients:
+                if sender not in G:
+                    G.add_node(sender, type='sender')
+
+                for recipient in recipients:
+                    if recipient not in G:
+                        G.add_node(recipient, type='recipient')
+
+                    # Add or update edge weight (number of messages)
+                    if G.has_edge(sender, recipient):
+                        G[sender][recipient]['weight'] += 1
+                    else:
+                        G.add_edge(sender, recipient, weight=1)
+
+        # Check if graph has nodes
+        if not G.nodes():
+            return ""
+
+        # Create a spring layout
+        pos = nx.spring_layout(G, k=0.3, iterations=50)
+
+        # Create the figure
+        fig, ax = plt.subplots(figsize=(12, 10))
+
+        # Draw nodes with different colors for senders and recipients
+        sender_nodes = [node for node, attr in G.nodes(data=True) if attr.get('type') == 'sender']
+        recipient_nodes = [node for node, attr in G.nodes(data=True) if attr.get('type') == 'recipient']
+
+        nx.draw_networkx_nodes(
+            G, pos,
+            nodelist=sender_nodes,
+            node_color='red',
+            node_size=300,
+            alpha=0.8,
+            label='Senders'
         )
 
-    # Add edges (manager relationships)
-    for _, user in users_df.iterrows():
-        user_id = user.get('id', '')
-        manager_id = user.get(manager_column, '')
+        nx.draw_networkx_nodes(
+            G, pos,
+            nodelist=recipient_nodes,
+            node_color='blue',
+            node_size=200,
+            alpha=0.8,
+            label='Recipients'
+        )
 
-        if manager_id and manager_id in G:
-            G.add_edge(manager_id, user_id)
+        # Draw edges with width based on weight
+        edge_weights = [G[u][v]['weight'] for u, v in G.edges()]
+        nx.draw_networkx_edges(
+            G, pos,
+            width=[w/max(edge_weights)*5 for w in edge_weights],
+            alpha=0.5
+        )
 
-    # Create a hierarchical layout
-    pos = nx.nx_agraph.graphviz_layout(G, prog='dot')
+        # Draw labels
+        nx.draw_networkx_labels(
+            G, pos,
+            font_size=8
+        )
 
-    # Create the figure
-    fig, ax = plt.subplots(figsize=(12, 10))
+        plt.axis('off')
+        plt.title('Communication Network')
+        plt.legend()
 
-    # Draw nodes
-    nx.draw_networkx_nodes(
-        G, pos,
-        node_color='skyblue',
-        node_size=500,
-        alpha=0.8
-    )
+        # Save figure to bytes
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+        plt.close()
 
-    # Draw edges
-    nx.draw_networkx_edges(
-        G, pos,
-        arrows=True,
-        arrowsize=15,
-        width=1.5,
-        alpha=0.7
-    )
+        # Convert to base64
+        buf.seek(0)
+        img_data = base64.b64encode(buf.read()).decode("utf-8")
 
-    # Draw labels
-    node_labels = {node: f"{G.nodes[node]['name']}\n{G.nodes[node]['title']}" for node in G.nodes()}
-    nx.draw_networkx_labels(
-        G, pos,
-        labels=node_labels,
-        font_size=8,
-        font_weight='bold'
-    )
-
-    plt.axis('off')
-    plt.title('Organizational Chart')
-
-    # Display the figure
-    st.pyplot(fig)
-
-    # Add download button
-    buf = io.BytesIO()
-    fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
-    buf.seek(0)
-
-    btn = st.download_button(
-        label="Download Organizational Chart",
-        data=buf,
-        file_name="organizational_chart.png",
-        mime="image/png"
-    )
+        return img_data
+    except Exception as e:
+        st.error(f"Error creating communication network: {e}")
+        return ""
 
 def render_communication_network(messages_df: pd.DataFrame) -> None:
     """
@@ -130,105 +291,137 @@ def render_communication_network(messages_df: pd.DataFrame) -> None:
             st.warning(f"Required column '{col}' not found in message data.")
             return
 
-    # Create a graph
-    G = nx.Graph()
+    # Get the network image data
+    img_data = create_communication_network(messages_df)
 
-    # Process messages to extract sender and recipients
-    for _, message in messages_df.iterrows():
-        # Extract sender
-        sender = None
-        if isinstance(message['from'], dict) and 'emailAddress' in message['from']:
-            sender = message['from']['emailAddress'].get('address', '')
+    if img_data:
+        # Display the image
+        st.image(f"data:image/png;base64,{img_data}", caption="Communication Network")
 
-        # Extract recipients
-        recipients = []
-        if isinstance(message['toRecipients'], list):
-            for recipient in message['toRecipients']:
-                if isinstance(recipient, dict) and 'emailAddress' in recipient:
-                    email = recipient['emailAddress'].get('address', '')
-                    if email:
-                        recipients.append(email)
-
-        # Add nodes and edges
-        if sender and recipients:
-            if sender not in G:
-                G.add_node(sender, type='sender')
-
-            for recipient in recipients:
-                if recipient not in G:
-                    G.add_node(recipient, type='recipient')
-
-                # Add or update edge weight (number of messages)
-                if G.has_edge(sender, recipient):
-                    G[sender][recipient]['weight'] += 1
-                else:
-                    G.add_edge(sender, recipient, weight=1)
-
-    # Check if graph has nodes
-    if not G.nodes():
+        # Add download button
+        b64_bytes = base64.b64decode(img_data)
+        btn = st.download_button(
+            label="Download Communication Network",
+            data=b64_bytes,
+            file_name="communication_network.png",
+            mime="image/png"
+        )
+    else:
         st.warning("No valid communication data found for network visualization.")
-        return
 
-    # Create a spring layout
-    pos = nx.spring_layout(G, k=0.3, iterations=50)
+@cache_visualization
+def create_document_collaboration_graph(files_df: pd.DataFrame, users_df: pd.DataFrame) -> str:
+    """
+    Create a document collaboration graph visualization based on file and user data from Microsoft Graph API.
 
-    # Create the figure
-    fig, ax = plt.subplots(figsize=(12, 10))
+    Args:
+        files_df: DataFrame containing file data from Microsoft Graph API.
+        users_df: DataFrame containing user data from Microsoft Graph API.
 
-    # Draw nodes with different colors for senders and recipients
-    sender_nodes = [node for node, attr in G.nodes(data=True) if attr.get('type') == 'sender']
-    recipient_nodes = [node for node, attr in G.nodes(data=True) if attr.get('type') == 'recipient']
+    Returns:
+        Base64-encoded image data for the visualization.
+    """
+    try:
+        if files_df.empty or users_df.empty:
+            return ""
 
-    nx.draw_networkx_nodes(
-        G, pos,
-        nodelist=sender_nodes,
-        node_color='red',
-        node_size=300,
-        alpha=0.8,
-        label='Senders'
-    )
+        # Check if required columns exist
+        file_required_columns = ['id', 'name', 'lastModifiedBy']
+        for col in file_required_columns:
+            if col not in files_df.columns:
+                return ""
 
-    nx.draw_networkx_nodes(
-        G, pos,
-        nodelist=recipient_nodes,
-        node_color='blue',
-        node_size=200,
-        alpha=0.8,
-        label='Recipients'
-    )
+        # Create a graph
+        G = nx.Graph()
 
-    # Draw edges with width based on weight
-    edge_weights = [G[u][v]['weight'] for u, v in G.edges()]
-    nx.draw_networkx_edges(
-        G, pos,
-        width=[w/max(edge_weights)*5 for w in edge_weights],
-        alpha=0.5
-    )
+        # Add nodes for users
+        for _, user in users_df.iterrows():
+            user_id = user.get('id', '')
+            display_name = user.get('displayName', '')
 
-    # Draw labels
-    nx.draw_networkx_labels(
-        G, pos,
-        font_size=8
-    )
+            if user_id:
+                G.add_node(user_id, type='user', name=display_name)
 
-    plt.axis('off')
-    plt.title('Communication Network')
-    plt.legend()
+        # Add nodes for files and edges for collaboration
+        for _, file in files_df.iterrows():
+            file_id = file.get('id', '')
+            file_name = file.get('name', '')
 
-    # Display the figure
-    st.pyplot(fig)
+            if file_id:
+                G.add_node(file_id, type='file', name=file_name)
 
-    # Add download button
-    buf = io.BytesIO()
-    fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
-    buf.seek(0)
+                # Add edge for last modifier
+                last_modified_by = None
+                if isinstance(file['lastModifiedBy'], dict) and 'user' in file['lastModifiedBy']:
+                    last_modified_by = file['lastModifiedBy']['user'].get('id', '')
 
-    btn = st.download_button(
-        label="Download Communication Network",
-        data=buf,
-        file_name="communication_network.png",
-        mime="image/png"
-    )
+                if last_modified_by and last_modified_by in G:
+                    G.add_edge(last_modified_by, file_id, relationship='modified')
+
+        # Check if graph has nodes
+        if not G.nodes():
+            return ""
+
+        # Create a spring layout
+        pos = nx.spring_layout(G, k=0.3, iterations=50)
+
+        # Create the figure
+        fig, ax = plt.subplots(figsize=(12, 10))
+
+        # Draw nodes with different colors for users and files
+        user_nodes = [node for node, attr in G.nodes(data=True) if attr.get('type') == 'user']
+        file_nodes = [node for node, attr in G.nodes(data=True) if attr.get('type') == 'file']
+
+        nx.draw_networkx_nodes(
+            G, pos,
+            nodelist=user_nodes,
+            node_color='green',
+            node_size=300,
+            alpha=0.8,
+            label='Users'
+        )
+
+        nx.draw_networkx_nodes(
+            G, pos,
+            nodelist=file_nodes,
+            node_color='orange',
+            node_size=200,
+            alpha=0.8,
+            label='Files'
+        )
+
+        # Draw edges
+        nx.draw_networkx_edges(
+            G, pos,
+            width=1.5,
+            alpha=0.5
+        )
+
+        # Draw labels
+        node_labels = {node: G.nodes[node]['name'] for node in G.nodes()}
+        nx.draw_networkx_labels(
+            G, pos,
+            labels=node_labels,
+            font_size=8
+        )
+
+        plt.axis('off')
+        plt.title('Document Collaboration Graph')
+        plt.legend()
+
+        # Save figure to bytes
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+        plt.close()
+
+        # Convert to base64
+        buf.seek(0)
+        img_data = base64.b64encode(buf.read()).decode("utf-8")
+
+        return img_data
+    except Exception as e:
+        st.error(f"Error creating document collaboration graph: {e}")
+        return ""
 
 def render_document_collaboration_graph(files_df: pd.DataFrame, users_df: pd.DataFrame) -> None:
     """
@@ -249,99 +442,23 @@ def render_document_collaboration_graph(files_df: pd.DataFrame, users_df: pd.Dat
             st.warning(f"Required column '{col}' not found in file data.")
             return
 
-    # Create a graph
-    G = nx.Graph()
+    # Get the graph image data
+    img_data = create_document_collaboration_graph(files_df, users_df)
 
-    # Add nodes for users
-    for _, user in users_df.iterrows():
-        user_id = user.get('id', '')
-        display_name = user.get('displayName', '')
+    if img_data:
+        # Display the image
+        st.image(f"data:image/png;base64,{img_data}", caption="Document Collaboration Graph")
 
-        if user_id:
-            G.add_node(user_id, type='user', name=display_name)
-
-    # Add nodes for files and edges for collaboration
-    for _, file in files_df.iterrows():
-        file_id = file.get('id', '')
-        file_name = file.get('name', '')
-
-        if file_id:
-            G.add_node(file_id, type='file', name=file_name)
-
-            # Add edge for last modifier
-            last_modified_by = None
-            if isinstance(file['lastModifiedBy'], dict) and 'user' in file['lastModifiedBy']:
-                last_modified_by = file['lastModifiedBy']['user'].get('id', '')
-
-            if last_modified_by and last_modified_by in G:
-                G.add_edge(last_modified_by, file_id, relationship='modified')
-
-    # Check if graph has nodes
-    if not G.nodes():
+        # Add download button
+        b64_bytes = base64.b64decode(img_data)
+        btn = st.download_button(
+            label="Download Document Collaboration Graph",
+            data=b64_bytes,
+            file_name="document_collaboration_graph.png",
+            mime="image/png"
+        )
+    else:
         st.warning("No valid collaboration data found for graph visualization.")
-        return
-
-    # Create a spring layout
-    pos = nx.spring_layout(G, k=0.3, iterations=50)
-
-    # Create the figure
-    fig, ax = plt.subplots(figsize=(12, 10))
-
-    # Draw nodes with different colors for users and files
-    user_nodes = [node for node, attr in G.nodes(data=True) if attr.get('type') == 'user']
-    file_nodes = [node for node, attr in G.nodes(data=True) if attr.get('type') == 'file']
-
-    nx.draw_networkx_nodes(
-        G, pos,
-        nodelist=user_nodes,
-        node_color='green',
-        node_size=300,
-        alpha=0.8,
-        label='Users'
-    )
-
-    nx.draw_networkx_nodes(
-        G, pos,
-        nodelist=file_nodes,
-        node_color='orange',
-        node_size=200,
-        alpha=0.8,
-        label='Files'
-    )
-
-    # Draw edges
-    nx.draw_networkx_edges(
-        G, pos,
-        width=1.5,
-        alpha=0.5
-    )
-
-    # Draw labels
-    node_labels = {node: G.nodes[node]['name'] for node in G.nodes()}
-    nx.draw_networkx_labels(
-        G, pos,
-        labels=node_labels,
-        font_size=8
-    )
-
-    plt.axis('off')
-    plt.title('Document Collaboration Graph')
-    plt.legend()
-
-    # Display the figure
-    st.pyplot(fig)
-
-    # Add download button
-    buf = io.BytesIO()
-    fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
-    buf.seek(0)
-
-    btn = st.download_button(
-        label="Download Document Collaboration Graph",
-        data=buf,
-        file_name="document_collaboration_graph.png",
-        mime="image/png"
-    )
 
 def render_interactive_org_chart(users_df: pd.DataFrame, manager_column: str = "manager") -> None:
     """
