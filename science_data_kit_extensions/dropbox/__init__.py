@@ -16,10 +16,24 @@ from .entities import (
     validate_dropbox_folder
 )
 from .neo4j import DropboxNeo4jIntegration
+from .sync import DropboxChangeTracker, DropboxSyncService
+from .teams import DropboxTeamManager
+from .sharing import DropboxSharingManager
+from .error_handling import (
+    DropboxErrorHandler,
+    with_retry,
+    DropboxApiException,
+    DropboxRateLimitException,
+    DropboxNetworkException,
+    DropboxAuthException,
+    DropboxServerException,
+    DropboxClientException
+)
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
+    # Core components
     'DropboxConnector',
     'DropboxFileManager',
     'DropboxFile',
@@ -27,5 +41,25 @@ __all__ = [
     'DropboxNeo4jIntegration',
     'create_entities_from_dropbox_items',
     'validate_dropbox_file',
-    'validate_dropbox_folder'
+    'validate_dropbox_folder',
+
+    # Sync components
+    'DropboxChangeTracker',
+    'DropboxSyncService',
+
+    # Team components
+    'DropboxTeamManager',
+
+    # Sharing components
+    'DropboxSharingManager',
+
+    # Error handling components
+    'DropboxErrorHandler',
+    'with_retry',
+    'DropboxApiException',
+    'DropboxRateLimitException',
+    'DropboxNetworkException',
+    'DropboxAuthException',
+    'DropboxServerException',
+    'DropboxClientException'
 ]
