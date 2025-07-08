@@ -81,6 +81,20 @@ The roadmap is divided into four phases:
 4. **Phase 4: Workshop Readiness** - Preparing documentation, training materials, feedback collection mechanisms, and demo scenarios.
 
 
+### Dropbox Extension
+
+This roadmap outlines a comprehensive plan for implementing the Dropbox extension for the Science Data Kit. The extension will enable integration with Dropbox cloud storage, including file access and synchronization, team folder management, and file sharing metadata extraction.
+
+**Latest Version**: [Dropbox Extension Roadmap](active/roadmap_DropboxExtension_01.md)
+
+**Status**: In Progress - Phase 1 - The Dropbox extension implementation has made significant progress with the foundation phase. The following high-priority tasks have been completed: authentication and connection setup, basic file/folder operations, core integration with entity schemas, and Neo4j knowledge graph integration. The roadmap is divided into four phases:
+
+1. **Phase 1: Foundation** - Authentication and connection setup, basic file/folder operations, core integration with entity schemas, and Neo4j knowledge graph integration.
+2. **Phase 2: Advanced Features** - Real-time sync capabilities, team folder management, file sharing and collaboration metadata extraction, and error handling/retry logic.
+3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
+4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated sync, advanced security and permissions handling, and performance optimization.
+
+
 ## Future Roadmaps
 
 The following roadmaps represent important strategic directions for the Science Data Kit but have been temporarily deprioritized to focus on fundamental frontend/backend integration work and user experience optimization. These roadmaps have been moved to the `future/` directory and will be revisited after the completion of the Design/UX phase and Repository Reorganization roadmap.
@@ -104,18 +118,6 @@ This roadmap outlines a comprehensive plan for implementing the Google Drive/Wor
 3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
 4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated sync, advanced security and permissions handling, and performance optimization.
 
-#### Dropbox Extension
-
-This roadmap outlines a comprehensive plan for implementing the Dropbox extension for the Science Data Kit. The extension will enable integration with Dropbox cloud storage, including file access and synchronization, team folder management, and file sharing metadata extraction.
-
-**Latest Version**: [Dropbox Extension Roadmap](future/roadmap_DropboxExtension_00.md)
-
-**Status**: Planning - The Dropbox extension roadmap has been defined but not started yet. The roadmap is divided into four phases:
-
-1. **Phase 1: Foundation** - Authentication and connection setup, basic file/folder operations, core integration with entity schemas, and Neo4j knowledge graph integration.
-2. **Phase 2: Advanced Features** - Real-time sync capabilities, team folder management, file sharing and collaboration metadata extraction, and error handling/retry logic.
-3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
-4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated sync, advanced security and permissions handling, and performance optimization.
 
 #### Enhanced Microsoft Graph Extension
 
