@@ -29,8 +29,16 @@ from .error_handling import (
     DropboxServerException,
     DropboxClientException
 )
+from .webhooks import DropboxWebhookHandler
+from .conflict import DropboxConflictResolver, ConflictResolutionStrategy
+from .status import DropboxSyncStatus, SyncStatus, SyncOperation
+from .selective_sync import DropboxSelectiveSync
+from .file_requests import DropboxFileRequestManager
+from .comments import DropboxCommentManager
+from .versions import DropboxVersionManager
+from .offline import DropboxOfflineDetector, ConnectionStatus
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     # Core components
@@ -46,12 +54,28 @@ __all__ = [
     # Sync components
     'DropboxChangeTracker',
     'DropboxSyncService',
+    'DropboxSyncStatus',
+    'SyncStatus',
+    'SyncOperation',
+    'DropboxConflictResolver',
+    'ConflictResolutionStrategy',
+    'DropboxSelectiveSync',
 
     # Team components
     'DropboxTeamManager',
 
     # Sharing components
     'DropboxSharingManager',
+    'DropboxFileRequestManager',
+    'DropboxCommentManager',
+    'DropboxVersionManager',
+
+    # Webhook components
+    'DropboxWebhookHandler',
+
+    # Offline mode components
+    'DropboxOfflineDetector',
+    'ConnectionStatus',
 
     # Error handling components
     'DropboxErrorHandler',

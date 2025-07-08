@@ -85,9 +85,9 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for implementing the Dropbox extension for the Science Data Kit. The extension will enable integration with Dropbox cloud storage, including file access and synchronization, team folder management, and file sharing metadata extraction.
 
-**Latest Version**: [Dropbox Extension Roadmap](active/roadmap_DropboxExtension_02.md)
+**Latest Version**: [Dropbox Extension Roadmap](active/roadmap_DropboxExtension_03.md)
 
-**Status**: In Progress - Phase 2 - The Dropbox extension implementation has completed Phase 1 (Foundation) and made significant progress in Phase 2 (Advanced Features). Phase 1 tasks including authentication, file operations, entity schemas, and Neo4j integration are complete. Phase 2 has seen implementation of real-time sync capabilities, team folder management, file sharing and collaboration metadata, and comprehensive error handling with retry logic. The roadmap is divided into four phases:
+**Status**: Completed Phase 2 - The Dropbox extension implementation has completed Phase 1 (Foundation) and Phase 2 (Advanced Features). Phase 1 tasks including authentication, file operations, entity schemas, and Neo4j integration are complete. Phase 2 has seen implementation of real-time sync capabilities, team folder management, file sharing and collaboration metadata, comprehensive error handling with retry logic, webhook support, conflict resolution, sync status indicators, selective sync, file request management, comment extraction, version history extraction, and offline mode detection. The next step is to begin Phase 3 (UI Integration). The roadmap is divided into four phases:
 
 1. **Phase 1: Foundation** - Authentication and connection setup, basic file/folder operations, core integration with entity schemas, and Neo4j knowledge graph integration.
 2. **Phase 2: Advanced Features** - Real-time sync capabilities, team folder management, file sharing and collaboration metadata extraction, and error handling/retry logic.
