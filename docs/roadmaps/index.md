@@ -87,6 +87,49 @@ The following roadmaps represent important strategic directions for the Science 
 
 For more information about future roadmaps, see the [Future Roadmaps README](future/README.md).
 
+### Cloud Extensions
+
+The Science Data Kit is expanding its cloud integration capabilities with the following extension roadmaps:
+
+#### Google Drive/Workspace Extension
+
+This roadmap outlines a comprehensive plan for implementing the Google Drive/Workspace extension for the Science Data Kit. The extension will enable integration with Google's cloud services, including Google Drive for file access and synchronization, Google Sheets for spreadsheet parsing, and Google Docs for metadata extraction.
+
+**Latest Version**: [Google Drive/Workspace Extension Roadmap](future/roadmap_GoogleExtension_00.md)
+
+**Status**: Planning - The Google Drive/Workspace extension roadmap has been defined but not started yet. The roadmap is divided into four phases:
+
+1. **Phase 1: Foundation** - Authentication and connection setup, basic file/folder operations, core integration with entity schemas, and Neo4j knowledge graph integration.
+2. **Phase 2: Advanced Features** - Real-time sync capabilities, spreadsheet/document parsing, collaboration metadata extraction, and error handling/retry logic.
+3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
+4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated sync, advanced security and permissions handling, and performance optimization.
+
+#### Dropbox Extension
+
+This roadmap outlines a comprehensive plan for implementing the Dropbox extension for the Science Data Kit. The extension will enable integration with Dropbox cloud storage, including file access and synchronization, team folder management, and file sharing metadata extraction.
+
+**Latest Version**: [Dropbox Extension Roadmap](future/roadmap_DropboxExtension_00.md)
+
+**Status**: Planning - The Dropbox extension roadmap has been defined but not started yet. The roadmap is divided into four phases:
+
+1. **Phase 1: Foundation** - Authentication and connection setup, basic file/folder operations, core integration with entity schemas, and Neo4j knowledge graph integration.
+2. **Phase 2: Advanced Features** - Real-time sync capabilities, team folder management, file sharing and collaboration metadata extraction, and error handling/retry logic.
+3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
+4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated sync, advanced security and permissions handling, and performance optimization.
+
+#### Enhanced Microsoft Graph Extension
+
+This roadmap outlines a comprehensive plan for enhancing the Microsoft Graph extension for the Science Data Kit. The extension enables integration with Microsoft 365 services including SharePoint, OneDrive, Teams, and Excel through the Microsoft Graph API.
+
+**Latest Version**: [Microsoft Graph Extension Roadmap](future/roadmap_MSGraphExtension_00.md)
+
+**Status**: In Progress - The Microsoft Graph extension is partially implemented, with basic functionality for connecting to Microsoft Graph API and accessing some Microsoft 365 services. The roadmap is divided into four phases:
+
+1. **Phase 1: Foundation** - Enhanced authentication and connection setup, SharePoint integration, core integration with entity schemas, and Neo4j knowledge graph integration.
+2. **Phase 2: Advanced Features** - OneDrive file management, Teams conversation analysis, Excel file processing, and error handling/retry logic.
+3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for operations, and cloud data visualization.
+4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated operations, advanced security and permissions handling, and performance optimization.
+
 ### Conversational Pipeline Builder
 
 This roadmap outlines a plan for implementing a conversational interface for scientific pipeline creation that integrates with the existing SciDK platform. Users would interact through natural language to build, modify, and visualize scientific data analysis pipelines, with the system leveraging the knowledge graph and component architecture to translate conversations into working pipelines.
