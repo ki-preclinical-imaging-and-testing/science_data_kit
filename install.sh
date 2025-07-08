@@ -96,6 +96,21 @@ check_dependencies() {
     else
         print_message $GREEN "Found Docker Compose"
     fi
+
+    # Check for GitHub CLI
+    if ! command_exists gh; then
+        print_message $YELLOW "Warning: GitHub CLI (gh) not found"
+        print_message $YELLOW "GitHub CLI is required for GitHub Actions and other GitHub integrations."
+        print_message $YELLOW "Would you like to install GitHub CLI? (y/n)"
+        read -r install_gh
+        if [[ "$install_gh" =~ ^[Yy]$ ]]; then
+            install_github_cli
+        else
+            print_message $YELLOW "Skipping GitHub CLI installation. You will need to install it manually if needed."
+        fi
+    else
+        print_message $GREEN "Found GitHub CLI"
+    fi
 }
 
 # Install Docker (platform-specific)
@@ -200,6 +215,88 @@ install_docker_compose() {
     fi
 
     print_message $GREEN "Docker Compose installed successfully"
+}
+
+# Install GitHub CLI
+install_github_cli() {
+    print_message $BLUE "Installing GitHub CLI..."
+
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Linux
+        if command_exists apt-get; then
+            # Debian/Ubuntu
+            print_message $BLUE "Detected Debian/Ubuntu system"
+
+            # Fix apt_pkg module error
+            fix_apt_pkg
+
+            # Add GitHub CLI repository
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
+            # Fix apt_pkg module error again before next apt-get
+            fix_apt_pkg
+
+            sudo apt-get update || true
+            sudo apt-get install -y gh
+
+        elif command_exists yum; then
+            # RHEL/CentOS/Fedora
+            print_message $BLUE "Detected RHEL/CentOS/Fedora system"
+
+            # Add GitHub CLI repository
+            sudo dnf install -y 'dnf-command(config-manager)'
+            sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+            sudo dnf install -y gh
+
+        elif command_exists dnf; then
+            # Newer Fedora
+            print_message $BLUE "Detected Fedora system"
+
+            # Add GitHub CLI repository
+            sudo dnf install -y 'dnf-command(config-manager)'
+            sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+            sudo dnf install -y gh
+
+        elif command_exists pacman; then
+            # Arch Linux
+            print_message $BLUE "Detected Arch Linux system"
+            sudo pacman -S --noconfirm github-cli
+
+        else
+            print_message $RED "Unsupported Linux distribution"
+            print_message $YELLOW "Please install GitHub CLI manually: https://github.com/cli/cli#installation"
+            return 1
+        fi
+
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        print_message $BLUE "Detected macOS system"
+
+        if command_exists brew; then
+            brew install gh
+        else
+            print_message $RED "Homebrew not found. Please install Homebrew first:"
+            print_message $YELLOW "/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+            print_message $YELLOW "Then install GitHub CLI with: brew install gh"
+            return 1
+        fi
+
+    elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        # Windows
+        print_message $BLUE "Detected Windows system"
+        print_message $YELLOW "Please install GitHub CLI for Windows manually:"
+        print_message $YELLOW "https://github.com/cli/cli#windows"
+        print_message $YELLOW "Or use: winget install --id GitHub.cli"
+        return 1
+
+    else
+        print_message $RED "Unsupported operating system: $OSTYPE"
+        print_message $YELLOW "Please install GitHub CLI manually: https://github.com/cli/cli#installation"
+        return 1
+    fi
+
+    print_message $GREEN "GitHub CLI installed successfully"
 }
 
 # Check if Ollama container is running
@@ -554,7 +651,7 @@ setup_python_env() {
     # Define Python version requirements
     PYTHON_MIN_VERSION="3.12"
     PYTHON_MAX_VERSION="3.13"
-    VENV_DIR=".venv"
+    VENV_DIR="science-data-kit-env"
 
     # Find suitable Python command
     PYTHON_CMD=""
@@ -817,6 +914,21 @@ configure_neo4j() {
         # Check if the container is already running via docker-compose
         if docker ps | grep -q "neo4j-instance"; then
             print_message $YELLOW "Neo4j container is already running"
+        # Check if Neo4j container exists but is not running
+        elif docker ps -a | grep -q "neo4j-instance"; then
+            print_message $YELLOW "Neo4j container exists but is not running."
+            print_message $YELLOW "Attempting to start the existing container..."
+            if ! docker start neo4j-instance; then
+                print_message $RED "Failed to start existing Neo4j container"
+                print_message $YELLOW "Removing the container and trying to create a new one..."
+                docker rm -f neo4j-instance >/dev/null 2>&1
+                # Start the Neo4j service using docker-compose
+                print_message $BLUE "Starting Neo4j container using docker-compose..."
+                docker-compose up -d neo4j
+                print_message $GREEN "Neo4j container started with docker-compose"
+            else
+                print_message $GREEN "Existing Neo4j container started"
+            fi
         else
             # Start the Neo4j service using docker-compose
             print_message $BLUE "Starting Neo4j container using docker-compose..."

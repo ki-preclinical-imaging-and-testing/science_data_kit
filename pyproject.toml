@@ -29,6 +29,7 @@ requires-python = ">=3.12"
 dependencies = [
     "altair>=5.5.0",
     "docker>=7.1.0",
+    "matplotlib>=3.7.0",
     "neo4j>=5.28.0",
     "neomodel>=5.4.0",
     "networkx>=3.4.0",
@@ -62,7 +63,6 @@ jupyter = [
     "jupyter>=1.0.0",
 ]
 viz = [
-    "matplotlib>=3.7.0",
     "pillow>=11.0.0",
 ]
 dev = [
@@ -84,14 +84,14 @@ all = [
 "Documentation" = "https://science-data-kit.readthedocs.io/"
 
 [project.scripts]
-science_data_kit = "run_app:main"
+science_data_kit = "science_data_kit.cli:main"
+sdk = "science_data_kit.cli:main"
 
 [tool.setuptools]
-packages = ["science_data_kit", "app"]
+packages = ["science_data_kit"]
 include-package-data = true
 
-[tool.setuptools.package-data]
-"app" = [".streamlit/*", "utils/*"]
+# Removed reference to non-existent 'app' package
 
 [tool.black]
 line-length = 100

@@ -28,10 +28,10 @@ class WorkshopApp(ScienceDataKitApp):
         """Initialize the Workshop application."""
         # Apply workshop-specific Streamlit configuration
         self._apply_workshop_config()
-        
+
         # Call the parent class constructor
         super().__init__()
-        
+
         # Add workshop-specific session state variables
         self._initialize_workshop_state()
 
@@ -40,10 +40,10 @@ class WorkshopApp(ScienceDataKitApp):
         # Path to the workshop config file
         workshop_config_path = Path(__file__).parent / ".streamlit" / "config_workshop.toml"
         streamlit_config_path = Path.home() / ".streamlit" / "config.toml"
-        
+
         # Create .streamlit directory in home if it doesn't exist
         os.makedirs(Path.home() / ".streamlit", exist_ok=True)
-        
+
         # Copy the workshop config to the Streamlit config location
         shutil.copy(workshop_config_path, streamlit_config_path)
 
@@ -51,10 +51,10 @@ class WorkshopApp(ScienceDataKitApp):
         """Initialize workshop-specific session state variables."""
         if "workshop_mode" not in st.session_state:
             st.session_state["workshop_mode"] = True
-        
+
         if "tutorial_step" not in st.session_state:
             st.session_state["tutorial_step"] = 1
-        
+
         if "tutorial_completed" not in st.session_state:
             st.session_state["tutorial_completed"] = False
 
@@ -62,26 +62,24 @@ class WorkshopApp(ScienceDataKitApp):
         """Set up the application pages with a workshop-specific subset."""
         # Import page modules
         try:
-            # Dashboard page
-            from science_data_kit.ui.pages.dashboard import render_dashboard_page
+            # Import page render functions from the pages package
+            from science_data_kit.ui.pages import (
+                render_dashboard_page,
+                render_server_page,
+                render_explore_page,
+                render_about_page
+            )
+
+            # Register pages
             self.page_adapter.register_page("Dashboard", render_dashboard_page)
-            
-            # Server page (needed for database connection)
-            from science_data_kit.ui.pages.connect import render_server_page
             self.page_adapter.register_page("Server", render_server_page)
-            
-            # Explore page (for data exploration)
-            from science_data_kit.ui.pages.explore import render_explore_page
             self.page_adapter.register_page("Explore", render_explore_page)
-            
-            # About/Learn page (for documentation)
-            from science_data_kit.ui.pages.about import render_about_page
             self.page_adapter.register_page("About", render_about_page)
-            
+
             # Workshop page (custom page for workshop)
             from science_data_kit.ui.pages.workshop import render_workshop_page
             self.page_adapter.register_page("Workshop", render_workshop_page)
-            
+
         except ImportError as e:
             st.error(f"Error importing page modules: {e}")
             st.error("Please make sure all required modules are installed.")
@@ -127,13 +125,13 @@ class WorkshopApp(ScienceDataKitApp):
                 </p>
             </div>
             """, unsafe_allow_html=True)
-            
+
             # Set up navigation
             pg = self._setup_navigation()
-            
+
             # Run the selected page
             pg.run()
-            
+
             # Add workshop footer
             st.markdown("""
             <div style='background-color:#F0F2F6; padding:10px; border-radius:5px; margin-top:20px'>
@@ -146,7 +144,7 @@ class WorkshopApp(ScienceDataKitApp):
                 </p>
             </div>
             """, unsafe_allow_html=True)
-            
+
         except Exception as e:
             st.error(f"Error running application: {e}")
             st.error("Please check the logs for more information.")

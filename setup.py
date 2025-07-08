@@ -22,12 +22,7 @@ setup(
     url='https://github.com/your-username/science_data_kit',
     packages=find_packages(exclude=['isa-api*', 'tests*']),
     include_package_data=True,
-    package_data={
-        'app': [
-            '.streamlit/*',
-            'utils/*',
-        ],
-    },
+    # Removed package_data for non-existent 'app' package
     install_requires=requirements,
     extras_require={
         'msgraph': [
@@ -37,7 +32,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'science_data_kit=run_app:main',
+            'science_data_kit=science_data_kit.cli:main',
+            'sdk=science_data_kit.cli:main',
         ],
     },
     classifiers=[

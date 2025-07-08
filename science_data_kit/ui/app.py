@@ -96,44 +96,30 @@ class ScienceDataKitApp:
         """Set up the application pages."""
         # Import page modules
         try:
-            # Dashboard page
-            from science_data_kit.ui.pages.dashboard import render_dashboard_page
+            # Import all page render functions from the pages package
+            from science_data_kit.ui.pages import (
+                render_dashboard_page,
+                render_server_page,
+                render_survey_page,
+                render_map_page,
+                render_explore_page,
+                render_ontology_page,
+                render_chat_page,
+                render_file_browser_page,
+                render_about_page,
+                render_preferences_page
+            )
+
+            # Register all pages
             self.page_adapter.register_page("Dashboard", render_dashboard_page)
-
-            # Server page
-            from science_data_kit.ui.pages.connect import render_server_page
             self.page_adapter.register_page("Server", render_server_page)
-
-            # Survey page
-            from science_data_kit.ui.pages.survey import render_survey_page
             self.page_adapter.register_page("Survey", render_survey_page)
-
-            # Map page
-            from science_data_kit.ui.pages.map import render_map_page
             self.page_adapter.register_page("Map", render_map_page)
-
-            # Explore page
-            from science_data_kit.ui.pages.explore import render_explore_page
             self.page_adapter.register_page("Explore", render_explore_page)
-
-            # Ontology page
-            from science_data_kit.ui.pages.ontology import render_ontology_page
             self.page_adapter.register_page("Ontology", render_ontology_page)
-
-            # Chat page
-            from science_data_kit.ui.pages.chat import render_chat_page
             self.page_adapter.register_page("Chat", render_chat_page)
-
-            # File Browser page
-            from science_data_kit.ui.pages.file_browser import render_file_browser_page
             self.page_adapter.register_page("Files", render_file_browser_page)
-
-            # About/Learn page
-            from science_data_kit.ui.pages.about import render_about_page
             self.page_adapter.register_page("About", render_about_page)
-
-            # Preferences page
-            from science_data_kit.ui.pages.preferences import render_preferences_page
             self.page_adapter.register_page("Preferences", render_preferences_page)
 
             # Analytics page
