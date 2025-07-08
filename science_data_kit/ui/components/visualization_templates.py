@@ -22,11 +22,80 @@ import numpy as np
 import matplotlib.pyplot as plt
 import io
 import base64
+import hashlib
+import functools
+import time
 from typing import Dict, Any, Optional, List, Union, Callable, Tuple
 import seaborn as sns
 import networkx as nx
 from matplotlib.colors import LinearSegmentedColormap
 
+# Visualization cache to avoid regenerating the same visualization multiple times
+# The cache is a dictionary mapping hash values to (timestamp, image_data) tuples
+_VIZ_CACHE: Dict[str, Tuple[float, str]] = {}
+_CACHE_EXPIRY_SECONDS = 300  # Cache entries expire after 5 minutes
+
+def _hash_args(*args, **kwargs) -> str:
+    """
+    Create a hash of the arguments to use as a cache key.
+
+    Args:
+        *args: Positional arguments
+        **kwargs: Keyword arguments
+
+    Returns:
+        A string hash of the arguments
+    """
+    # Convert args and kwargs to a string representation
+    args_str = str(args) + str(sorted(kwargs.items()))
+    # Create a hash of the string
+    return hashlib.md5(args_str.encode()).hexdigest()
+
+def cache_visualization(func):
+    """
+    Decorator to cache visualization results.
+
+    Args:
+        func: The visualization function to cache
+
+    Returns:
+        A wrapped function that uses the cache
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Skip caching if explicitly requested
+        if kwargs.get('skip_cache', False):
+            if 'skip_cache' in kwargs:
+                del kwargs['skip_cache']
+            return func(*args, **kwargs)
+
+        # Create a hash of the arguments
+        cache_key = _hash_args(func.__name__, *args, **kwargs)
+
+        # Check if the result is in the cache and not expired
+        current_time = time.time()
+        if cache_key in _VIZ_CACHE:
+            timestamp, result = _VIZ_CACHE[cache_key]
+            if current_time - timestamp < _CACHE_EXPIRY_SECONDS:
+                return result
+
+        # If not in cache or expired, call the function
+        result = func(*args, **kwargs)
+
+        # Store the result in the cache
+        _VIZ_CACHE[cache_key] = (current_time, result)
+
+        # Clean up expired cache entries
+        expired_keys = [k for k, (ts, _) in _VIZ_CACHE.items() 
+                       if current_time - ts > _CACHE_EXPIRY_SECONDS]
+        for k in expired_keys:
+            del _VIZ_CACHE[k]
+
+        return result
+
+    return wrapper
+
+@cache_visualization
 def create_bar_chart(
     data: pd.DataFrame,
     x_column: str,
@@ -125,6 +194,7 @@ def create_bar_chart(
         st.error(f"Error creating bar chart: {e}")
         return ""
 
+@cache_visualization
 def create_line_chart(
     data: pd.DataFrame,
     x_column: str,
@@ -136,7 +206,10 @@ def create_line_chart(
     figsize: Tuple[int, int] = (10, 6),
     show_markers: bool = True,
     show_legend: bool = True,
-    grid: bool = True
+    grid: bool = True,
+    downsample: bool = True,
+    max_points: int = 1000,
+    dpi: int = 150
 ) -> str:
     """
     Create a line chart visualization.
@@ -153,11 +226,23 @@ def create_line_chart(
         show_markers: Whether to show markers on the lines.
         show_legend: Whether to show the legend.
         grid: Whether to show grid lines.
+        downsample: Whether to downsample large datasets for better performance.
+        max_points: Maximum number of points to plot per line when downsampling.
+        dpi: DPI (dots per inch) for the output image.
 
     Returns:
         Base64-encoded image data for the visualization.
     """
     try:
+        # Create a copy of the data to avoid modifying the original
+        plot_data = data.copy()
+
+        # Downsample large datasets for better performance
+        if downsample and len(plot_data) > max_points:
+            # Calculate the step size for downsampling
+            step = max(1, len(plot_data) // max_points)
+            plot_data = plot_data.iloc[::step].copy()
+
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -182,8 +267,8 @@ def create_line_chart(
         # Create line chart
         for i, y_column in enumerate(y_columns):
             color = colors[i % len(colors)]
-            marker = 'o' if show_markers else None
-            ax.plot(data[x_column], data[y_column], label=y_column, color=color, marker=marker)
+            marker = 'o' if show_markers and len(plot_data) <= 100 else None
+            ax.plot(plot_data[x_column], plot_data[y_column], label=y_column, color=color, marker=marker)
 
         # Set labels and title
         ax.set_xlabel(x_label)
@@ -203,7 +288,7 @@ def create_line_chart(
 
         # Save figure to bytes
         buf = io.BytesIO()
-        plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+        plt.savefig(buf, format="png", dpi=dpi, bbox_inches="tight")
         plt.close()
 
         # Convert to base64
@@ -215,6 +300,7 @@ def create_line_chart(
         st.error(f"Error creating line chart: {e}")
         return ""
 
+@cache_visualization
 def create_scatter_plot(
     data: pd.DataFrame,
     x_column: str,
@@ -228,7 +314,10 @@ def create_scatter_plot(
     alpha: float = 0.7,
     show_trend_line: bool = False,
     grid: bool = True,
-    show_legend: bool = False
+    show_legend: bool = False,
+    downsample: bool = True,
+    max_points: int = 1000,
+    dpi: int = 150
 ) -> str:
     """
     Create a scatter plot visualization.
@@ -247,11 +336,23 @@ def create_scatter_plot(
         show_trend_line: Whether to show a trend line.
         grid: Whether to show grid lines.
         show_legend: Whether to show a legend (useful when color_column is provided).
+        downsample: Whether to downsample large datasets for better performance.
+        max_points: Maximum number of points to plot when downsampling.
+        dpi: DPI (dots per inch) for the output image.
 
     Returns:
         Base64-encoded image data for the visualization.
     """
     try:
+        # Create a copy of the data to avoid modifying the original
+        plot_data = data.copy()
+
+        # Downsample large datasets for better performance
+        if downsample and len(plot_data) > max_points:
+            # Calculate the step size for downsampling
+            step = max(1, len(plot_data) // max_points)
+            plot_data = plot_data.iloc[::step].copy()
+
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -270,28 +371,35 @@ def create_scatter_plot(
 
         # Add color parameter if color_column is provided
         if color_column is not None:
-            # If the color column has categorical data, create a categorical scatter plot with a legend
-            if data[color_column].dtype == 'object' or data[color_column].dtype.name == 'category':
-                # Get unique categories
-                categories = data[color_column].unique()
+            # If the color column has categorical data, use a colormap
+            if plot_data[color_column].dtype == 'object' or plot_data[color_column].dtype.name == 'category':
+                # Get unique categories and create a mapping to integers
+                categories = plot_data[color_column].unique()
+                cat_to_int = {cat: i for i, cat in enumerate(categories)}
 
-                # Create a scatter plot for each category
-                for category in categories:
-                    category_data = data[data[color_column] == category]
-                    ax.scatter(
-                        category_data[x_column], 
-                        category_data[y_column], 
-                        label=category,
-                        **scatter_params
-                    )
+                # Create a colormap with distinct colors
+                cmap = plt.cm.get_cmap('tab10', len(categories))
 
-                # Show legend if requested
+                # Map categories to integers for coloring
+                scatter_params['c'] = [cat_to_int[cat] for cat in plot_data[color_column]]
+                scatter_params['cmap'] = cmap
+
+                # Create a single scatter plot with all categories
+                scatter = ax.scatter(plot_data[x_column], plot_data[y_column], **scatter_params)
+
+                # Create a custom legend
                 if show_legend:
-                    ax.legend()
+                    from matplotlib.lines import Line2D
+                    legend_elements = [
+                        Line2D([0], [0], marker='o', color='w', markerfacecolor=cmap(cat_to_int[cat]), 
+                               markersize=10, label=str(cat)) 
+                        for cat in categories
+                    ]
+                    ax.legend(handles=legend_elements, title=color_column)
             else:
                 # For continuous color values, use a colorbar
-                scatter_params['c'] = data[color_column]
-                scatter = ax.scatter(data[x_column], data[y_column], **scatter_params)
+                scatter_params['c'] = plot_data[color_column]
+                scatter = ax.scatter(plot_data[x_column], plot_data[y_column], **scatter_params)
                 # Add colorbar
                 cbar = plt.colorbar(scatter, ax=ax)
                 cbar.set_label(color_column)
@@ -299,16 +407,24 @@ def create_scatter_plot(
             # Add size parameter if size_column is provided
             if size_column is not None:
                 # Scale sizes to be between 20 and 200
-                sizes = 20 + (data[size_column] - data[size_column].min()) / (data[size_column].max() - data[size_column].min()) * 180
+                min_val = plot_data[size_column].min()
+                max_val = plot_data[size_column].max()
+                # Avoid division by zero if all values are the same
+                if max_val > min_val:
+                    sizes = 20 + (plot_data[size_column] - min_val) / (max_val - min_val) * 180
+                else:
+                    sizes = 100  # Use a constant size if all values are the same
                 scatter_params['s'] = sizes
 
-            ax.scatter(data[x_column], data[y_column], **scatter_params)
+            ax.scatter(plot_data[x_column], plot_data[y_column], **scatter_params)
 
         # Add trend line if requested
         if show_trend_line:
-            z = np.polyfit(data[x_column], data[y_column], 1)
+            z = np.polyfit(plot_data[x_column], plot_data[y_column], 1)
             p = np.poly1d(z)
-            ax.plot(data[x_column], p(data[x_column]), "r--", alpha=0.8)
+            # Use fewer points for the trend line to improve performance
+            x_range = np.linspace(plot_data[x_column].min(), plot_data[x_column].max(), 100)
+            ax.plot(x_range, p(x_range), "r--", alpha=0.8)
 
         # Set labels and title
         ax.set_xlabel(x_label)
@@ -324,7 +440,7 @@ def create_scatter_plot(
 
         # Save figure to bytes
         buf = io.BytesIO()
-        plt.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+        plt.savefig(buf, format="png", dpi=dpi, bbox_inches="tight")
         plt.close()
 
         # Convert to base64
@@ -336,6 +452,7 @@ def create_scatter_plot(
         st.error(f"Error creating scatter plot: {e}")
         return ""
 
+@cache_visualization
 def create_pie_chart(
     data: pd.DataFrame,
     label_column: str,
@@ -449,6 +566,7 @@ def create_pie_chart(
         st.error(f"Error creating pie chart: {e}")
         return ""
 
+@cache_visualization
 def create_network_graph(
     nodes: pd.DataFrame,
     edges: pd.DataFrame,
@@ -593,6 +711,7 @@ def create_network_graph(
         st.error(f"Error creating network graph: {e}")
         return ""
 
+@cache_visualization
 def create_heatmap(
     data: pd.DataFrame,
     x_column: Optional[str] = None,
@@ -682,6 +801,7 @@ def create_heatmap(
         st.error(f"Error creating heatmap: {e}")
         return ""
 
+@cache_visualization
 def create_box_plot(
     data: pd.DataFrame,
     x_column: Optional[str] = None,
@@ -770,6 +890,7 @@ def create_box_plot(
         st.error(f"Error creating box plot: {e}")
         return ""
 
+@cache_visualization
 def create_histogram(
     data: pd.DataFrame,
     column: str,
@@ -850,7 +971,7 @@ def create_histogram(
         st.error(f"Error creating histogram: {e}")
         return ""
 
-def render_visualization(img_data: str, caption: Optional[str] = None, use_column_width: bool = True) -> None:
+def render_visualization(img_data: str, caption: Optional[str] = None, use_column_width: bool = True, help: Optional[str] = None) -> None:
     """
     Render a visualization in Streamlit.
 
@@ -858,8 +979,59 @@ def render_visualization(img_data: str, caption: Optional[str] = None, use_colum
         img_data: Base64-encoded image data.
         caption: Optional caption for the image.
         use_column_width: Whether to use the full column width.
+        help: Optional tooltip text to display when hovering over the visualization.
     """
-    if img_data:
-        st.image(f"data:image/png;base64,{img_data}", caption=caption, use_column_width=use_column_width)
-    else:
+    if not img_data:
         st.warning("No visualization data available.")
+        return
+
+    # Check if tooltips are enabled in user preferences
+    show_tooltips = st.session_state.get("user_preferences", {}).get("show_tooltips", True)
+
+    # If help text is provided and tooltips are enabled, add a tooltip
+    if help and show_tooltips:
+        # Create a unique ID for the image
+        import hashlib
+        img_id = f"viz_{hashlib.md5(img_data[:20].encode()).hexdigest()[:8]}"
+
+        # Display the image with a tooltip using HTML
+        html = f"""
+        <style>
+        #{img_id} {{
+            position: relative;
+            display: inline-block;
+        }}
+        #{img_id} .tooltip {{
+            visibility: hidden;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 300px;
+            font-size: 14px;
+        }}
+        #{img_id}:hover .tooltip {{
+            visibility: visible;
+            opacity: 1;
+        }}
+        </style>
+        <div id="{img_id}">
+            <img src="data:image/png;base64,{img_data}" style="width: {'100%' if use_column_width else 'auto'};" alt="{caption or 'Visualization'}">
+            <div class="tooltip">{help}</div>
+        </div>
+        """
+        if caption:
+            html += f'<div style="text-align: center; color: gray; font-size: 0.9em; margin-top: 5px;">{caption}</div>'
+
+        st.markdown(html, unsafe_allow_html=True)
+    else:
+        # Use standard Streamlit image display if no tooltip is needed
+        st.image(f"data:image/png;base64,{img_data}", caption=caption, use_column_width=use_column_width)
