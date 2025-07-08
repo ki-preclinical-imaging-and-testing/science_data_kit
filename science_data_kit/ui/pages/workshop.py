@@ -22,6 +22,8 @@ from science_data_kit.ui.components.feedback_database import collect_workshop_fe
 from science_data_kit.ui.components.instructor_notes import add_instructor_notes_to_workshop
 from science_data_kit.ui.components.video_tutorials import display_video_tutorials_section
 from science_data_kit.ui.components.demo_videos import display_demo_videos_section
+from science_data_kit.ui.components.reference_cards import display_reference_cards_section
+from science_data_kit.ui.components.interactive_demos import display_interactive_demos_section
 
 class WorkshopPage(BasePage):
     """
@@ -456,6 +458,14 @@ class WorkshopPage(BasePage):
         # Display demo videos section
         st.markdown("---")
         display_demo_videos_section()
+
+        # Display reference cards section
+        st.markdown("---")
+        display_reference_cards_section()
+
+        # Display interactive demos section
+        st.markdown("---")
+        display_interactive_demos_section()
 
     def _render_help(self):
         """Render the Help section."""
