@@ -31,13 +31,32 @@ The Strategic Enhancements roadmap outlines a comprehensive plan for platform ma
 2. **Phase 2: Community and Performance** - Implementing performance monitoring, AI assistant training, and community contribution frameworks
 3. **Phase 3: Platform Expansion** - Completing domain branch templates and adding cross-platform deployment and scientific workflow integration
 
+### GitHub Integration
+The GitHub Integration roadmap outlines a comprehensive plan for integrating GitHub issues and automation into the Science Data Kit development workflow. This integration will improve tracking, visibility, and collaboration for development progress, debugging cycles, and roadmap task management.
+
+**Status**: Initial Implementation - The GitHub Integration roadmap has been defined and partially implemented with the following components:
+
+1. **GitHub Actions Workflow** - A GitHub Actions workflow has been created for automated issue management
+2. **CLI Helper Scripts** - Helper scripts have been created for common issue management tasks
+3. **Roadmap-to-Issues Integration** - A Python script has been created to sync roadmap tasks with GitHub issues
+4. **Debugging Workflow** - A debugging workflow script has been created to integrate debugging cycles with GitHub issues
+
+The roadmap is divided into four phases:
+
+1. **Phase 1: GitHub Actions Setup** - Setting up GitHub Actions for automated issue management
+2. **Phase 2: CLI Integration** - Creating CLI scripts for common issue management tasks
+3. **Phase 3: Roadmap-to-Issues Integration** - Developing a system to sync roadmap tasks with GitHub issues
+4. **Phase 4: Documentation and Training** - Creating documentation and training materials for GitHub integration
+
 ## Timeline for Return to Active Development
 
 These roadmaps are expected to return to active development after the completion of the Design/UX phase and the Repository Reorganization roadmap. The estimated timeline is:
 
-1. **Knowledge Graph Documentation System**: Expected to return to active development after the Design/UX phase is completed and frontend-backend integration is thoroughly validated. Estimated timeline: 2-3 months.
+1. **GitHub Integration**: Expected to be completed and moved to active development in the near term, as it provides immediate benefits for tracking development progress. Estimated timeline: 1-2 months.
 
-2. **Strategic Enhancements**: Expected to return to active development after the Knowledge Graph Documentation System foundation is established. Estimated timeline: 3-4 months.
+2. **Knowledge Graph Documentation System**: Expected to return to active development after the Design/UX phase is completed and frontend-backend integration is thoroughly validated. Estimated timeline: 2-3 months.
+
+3. **Strategic Enhancements**: Expected to return to active development after the Knowledge Graph Documentation System foundation is established. Estimated timeline: 3-4 months.
 
 ## Integration with Current Development
 

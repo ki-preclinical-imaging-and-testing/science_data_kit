@@ -6,7 +6,7 @@ This roadmap outlines a comprehensive plan for the Design/UX phase of the Scienc
 ## Version History
 | Version | Date | Changes |
 |---------|------|---------|
-| 00 | 2024-08-15 | Initial version of Design/UX phase roadmap |
+| 00 | 2025-07-07 | Initial version of Design/UX phase roadmap |
 | 01 | 2024-07-07 | Updated with completed tasks and implementation details for Phase 1 core component validation |
 
 ## Background

@@ -125,6 +125,35 @@ Quick reference for common testing scenarios:
 - **Real Data Testing**: Prompt #24 - Validate with scientific datasets
 - **Pre-Review Analysis**: Prompt #21 - Prepare for human code review
 
+## GitHub Issues Integration
+
+### Issue Management Workflow
+The Science Data Kit development workflow integrates with GitHub issues for better tracking and visibility:
+
+**Automated Issue Updates**:
+- Commits that reference issues (e.g., "fixes #42") automatically update those issues
+- Roadmap-related commits are automatically labeled with roadmap components
+- CI/CD workflows provide status updates on issue progress
+
+**Issue Creation Helpers**:
+- Use `scripts/issue_helpers.sh` for common issue creation patterns
+- Use `scripts/sync_roadmap_issues.py` to create issues from roadmap tasks
+- Use `scripts/debug_workflow.sh` for debugging cycles
+
+**Issue Labels and Organization**:
+- `roadmap`: Issues created from roadmap tasks
+- `roadmap-{component}`: Specific roadmap component (e.g., roadmap-knowledge-graph)
+- `debugging`: Issues for debugging cycles
+- `testing`: Issues for testing workflows
+- `priority-{level}`: Priority level (high, medium, low)
+
+### Debugging Workflow Integration
+1. **Create debugging issue**: `./scripts/debug_workflow.sh "component" "description"`
+2. **Work on the issue**: Reference issue number in commits
+3. **Automatic updates**: GitHub Actions provide progress updates
+4. **Testing integration**: Use testing prompts and reference issue in results
+5. **Completion**: Close issue with summary of resolution
+
 ## Roadmap Index
 
 The main roadmap index (`index.md`) provides an overview of all active roadmaps and a link to the comprehensive index of all roadmaps (`archive/index_complete.md`). The comprehensive index includes both active and archived roadmaps, providing a complete history of the project's development.

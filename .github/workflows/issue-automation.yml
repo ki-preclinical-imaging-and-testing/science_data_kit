@@ -1,0 +1,73 @@
+name: SciDK Issue Automation
+on:
+  push:
+    branches: [main, 'feature/*']
+    paths: ['docs/roadmaps/active/**', 'science_data_kit/**']
+  issues:
+    types: [opened, closed]
+
+jobs:
+  roadmap-issue-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Auto-comment on issues from commits
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Find issue references in commit messages
+            const commits = context.payload.commits || [];
+            for (const commit of commits) {
+              // Look for patterns like "fixes #42", "addresses #15", "progress on #23"
+              const issueRefs = commit.message.match(/(?:fixes?|closes?|addresses?|progress on|working on|debugging)\s+#(\d+)/gi);
+              if (issueRefs) {
+                for (const ref of issueRefs) {
+                  const issueNumber = ref.match(/#(\d+)/)[1];
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    body: `🤖 **Development Update**
+                    
+**Commit**: ${commit.id.substring(0,7)}
+**Message**: ${commit.message}
+**Files changed**: ${commit.added?.length || 0} added, ${commit.modified?.length || 0} modified
+**Timestamp**: ${new Date().toISOString()}
+
+*This update was posted automatically by the SciDK development workflow.*`
+                  });
+                }
+              }
+            }
+      
+      - name: Label issues from roadmap references
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Auto-label issues that reference roadmap components
+            const commits = context.payload.commits || [];
+            for (const commit of commits) {
+              if (commit.message.includes('roadmap_')) {
+                const roadmapRefs = commit.message.match(/roadmap_(\w+)/g);
+                if (roadmapRefs) {
+                  // Extract issue numbers and add roadmap labels
+                  const issueRefs = commit.message.match(/#(\d+)/g);
+                  if (issueRefs) {
+                    for (const issueRef of issueRefs) {
+                      const issueNumber = issueRef.substring(1);
+                      // Add roadmap component labels
+                      for (const roadmapRef of roadmapRefs) {
+                        const component = roadmapRef.replace('roadmap_', '');
+                        await github.rest.issues.addLabels({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: issueNumber,
+                          labels: [`roadmap-${component.toLowerCase()}`]
+                        });
+                      }
+                    }
+                  }
+                }
+              }
+            }

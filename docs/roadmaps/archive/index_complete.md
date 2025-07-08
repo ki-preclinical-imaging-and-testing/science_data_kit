@@ -97,6 +97,26 @@ This roadmap outlines the plan for implementing a Knowledge Graph Documentation 
 - [Knowledge Graph Technical Specification](../future/knowledge_graph_technical_spec.md) - Technical specification covering documentation markup standards, schema design, and integration requirements
 - [Knowledge Graph Examples](../future/knowledge_graph_examples.md) - Concrete examples showing before/after documentation examples, sample AI queries, and tagging examples
 
+### GitHub Integration
+
+This roadmap outlines a comprehensive plan for integrating GitHub issues and automation into the Science Data Kit development workflow. This integration will improve tracking, visibility, and collaboration for development progress, debugging cycles, and roadmap task management.
+
+**Latest Version**: [GitHub Integration Roadmap](../future/roadmap_GitHubIntegration_00.md)
+
+**Status**: Initial Implementation - The GitHub Integration roadmap has been defined and partially implemented with the following components:
+
+1. **GitHub Actions Workflow** - A GitHub Actions workflow has been created for automated issue management
+2. **CLI Helper Scripts** - Helper scripts have been created for common issue management tasks
+3. **Roadmap-to-Issues Integration** - A Python script has been created to sync roadmap tasks with GitHub issues
+4. **Debugging Workflow** - A debugging workflow script has been created to integrate debugging cycles with GitHub issues
+
+The roadmap is divided into four phases:
+
+1. **Phase 1: GitHub Actions Setup** - Setting up GitHub Actions for automated issue management
+2. **Phase 2: CLI Integration** - Creating CLI scripts for common issue management tasks
+3. **Phase 3: Roadmap-to-Issues Integration** - Developing a system to sync roadmap tasks with GitHub issues
+4. **Phase 4: Documentation and Training** - Creating documentation and training materials for GitHub integration
+
 ### Strategic Enhancements
 
 This roadmap outlines a comprehensive plan for strategic enhancements to the Science Data Kit platform, focusing on key areas for platform maturation, community adoption, and long-term sustainability. These enhancements build upon the existing Knowledge Graph and Repository Reorganization roadmaps while addressing higher-level platform capabilities that will accelerate adoption in the scientific community.
