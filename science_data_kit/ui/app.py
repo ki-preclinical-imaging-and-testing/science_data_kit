@@ -107,7 +107,9 @@ class ScienceDataKitApp:
                 render_chat_page,
                 render_file_browser_page,
                 render_about_page,
-                render_preferences_page
+                render_preferences_page,
+                render_dropbox_connect_page,
+                render_dropbox_browser_page
             )
 
             # Register all pages
@@ -121,6 +123,8 @@ class ScienceDataKitApp:
             self.page_adapter.register_page("Files", render_file_browser_page)
             self.page_adapter.register_page("About", render_about_page)
             self.page_adapter.register_page("Preferences", render_preferences_page)
+            self.page_adapter.register_page("Dropbox Connect", render_dropbox_connect_page)
+            self.page_adapter.register_page("Dropbox Browser", render_dropbox_browser_page)
 
             # Analytics page
             from science_data_kit.ui.components.analytics_tracking import render_analytics_dashboard
@@ -182,6 +186,10 @@ class ScienceDataKitApp:
             pages.append(st.Page(self.page_adapter.pages["Instructor"], title="instructor", icon="👨‍🏫"))
         if "Workshop" in self.page_adapter.pages:
             pages.append(st.Page(self.page_adapter.pages["Workshop"], title="workshop", icon="🧪"))
+        if "Dropbox Connect" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Dropbox Connect"], title="dropbox_connect", icon="🔗"))
+        if "Dropbox Browser" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Dropbox Browser"], title="dropbox_browser", icon="📂"))
 
         # Check if there are any pages to display
         if not pages:
