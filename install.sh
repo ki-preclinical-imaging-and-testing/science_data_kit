@@ -923,12 +923,84 @@ setup_python_env() {
     print_message $GREEN "Python virtual environment set up successfully"
 }
 
+# Verify extension structure by checking for __init__.py files
+verify_extension_structure() {
+    print_message $BLUE "Verifying extension structure..."
+    # Check if the root extensions directory has an __init__.py file
+    if [ ! -f "science_data_kit_extensions/__init__.py" ]; then
+        print_message $YELLOW "Creating missing __init__.py in science_data_kit_extensions directory"
+        echo '"""
+Science Data Kit Extensions
+This package contains extensions for the Science Data Kit.
+"""
+__version__ = "0.1.0"' > science_data_kit_extensions/__init__.py
+    fi
+
+    # Check each extension directory for __init__.py
+    for ext_dir in science_data_kit_extensions/*/; do
+        ext_name=$(basename "$ext_dir")
+        if [ ! -f "${ext_dir}__init__.py" ]; then
+            print_message $YELLOW "Creating missing __init__.py in ${ext_dir}"
+            echo '"""
+Science Data Kit '${ext_name^}' Extension
+"""' > "${ext_dir}__init__.py"
+        fi
+    done
+}
+
+# Validate that extensions are properly installed and importable
+validate_extensions() {
+    print_message $BLUE "Validating extensions..."
+    if [[ "$EXTENSIONS_TO_INSTALL" == *"dropbox"* ]] || [ "$EXTENSIONS_TO_INSTALL" = "all" ]; then
+        print_message $BLUE "Validating Dropbox extension..."
+        python -c "from science_data_kit_extensions.dropbox import DropboxConnector" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            print_message $GREEN "Dropbox extension validated successfully"
+        else
+            print_message $RED "Dropbox extension validation failed. Please check the installation."
+        fi
+    fi
+
+    if [[ "$EXTENSIONS_TO_INSTALL" == *"google"* ]] || [ "$EXTENSIONS_TO_INSTALL" = "all" ]; then
+        print_message $BLUE "Validating Google extension..."
+        python -c "from science_data_kit_extensions.google import GoogleConnector" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            print_message $GREEN "Google extension validated successfully"
+        else
+            print_message $RED "Google extension validation failed. Please check the installation."
+        fi
+    fi
+
+    if [[ "$EXTENSIONS_TO_INSTALL" == *"msgraph"* ]] || [ "$EXTENSIONS_TO_INSTALL" = "all" ]; then
+        print_message $BLUE "Validating Microsoft Graph extension..."
+        python -c "from science_data_kit_extensions.msgraph import MSGraphConnector" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            print_message $GREEN "Microsoft Graph extension validated successfully"
+        else
+            print_message $RED "Microsoft Graph extension validation failed. Please check the installation."
+        fi
+    fi
+
+    if [[ "$EXTENSIONS_TO_INSTALL" == *"viz"* ]] || [ "$EXTENSIONS_TO_INSTALL" = "all" ]; then
+        print_message $BLUE "Validating Visualization extension..."
+        python -c "from science_data_kit_extensions.viz import Visualizer" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            print_message $GREEN "Visualization extension validated successfully"
+        else
+            print_message $RED "Visualization extension validation failed. Please check the installation."
+        fi
+    fi
+}
+
 # Install the package and its dependencies
 install_package() {
     print_message $BLUE "Installing Science Data Kit and dependencies..."
 
     # Install the package in development mode
     if [ "$INSTALL_EXTENSIONS" = true ]; then
+        # Verify extension structure before installation
+        verify_extension_structure
+
         if [ "$EXTENSIONS_TO_INSTALL" = "all" ]; then
             print_message $BLUE "Installing Science Data Kit with all extensions..."
             pip install -e ".[all]"
@@ -936,6 +1008,9 @@ install_package() {
             print_message $BLUE "Installing Science Data Kit with extensions: $EXTENSIONS_TO_INSTALL"
             pip install -e ".[$EXTENSIONS_TO_INSTALL]"
         fi
+
+        # Validate extensions after installation
+        validate_extensions
     else
         print_message $BLUE "Installing Science Data Kit core package..."
         pip install -e .

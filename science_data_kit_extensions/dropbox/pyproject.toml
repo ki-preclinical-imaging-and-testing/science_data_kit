@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "science_data_kit_dropbox"
+name = "science_data_kit_extensions.dropbox"
 version = "0.1.0"
 description = "Dropbox extension for Science Data Kit"
 readme = "README.md"
@@ -33,4 +33,4 @@ dependencies = [
 "Documentation" = "https://science-data-kit.readthedocs.io/"
 
 [tool.setuptools]
-packages = ["science_data_kit_dropbox"]
+packages = ["science_data_kit_extensions.dropbox"]
