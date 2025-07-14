@@ -552,7 +552,7 @@ class Entity(BaseEntity):
         source: Source of the entity (e.g., dataset, file).
         relationships: List of relationships to other entities.
     """
-    label: str
+    label: str = ""
     description: str = ""
     source: str = ""
     relationships: List[Dict[str, str]] = field(default_factory=list)
@@ -586,7 +586,7 @@ class OntologyTerm(BaseEntity):
         term_source: Source of the term (ontology name).
         definition: Definition of the term.
     """
-    term: str
+    term: str = ""
     term_accession: str = ""
     term_source: str = ""
     definition: str = ""
