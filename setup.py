@@ -20,7 +20,7 @@ setup(
     author='Science Data Kit Team',
     author_email='example@example.com',
     url='https://github.com/your-username/science_data_kit',
-    packages=find_packages(exclude=['isa-api*', 'tests*']),
+    packages=find_packages(exclude=['isa-api*', 'tests*']) + ['science_data_kit_extensions'],
     include_package_data=True,
     # Removed package_data for non-existent 'app' package
     install_requires=requirements,
@@ -28,6 +28,33 @@ setup(
         'msgraph': [
             'msgraph-sdk-python>=1.0.0',
             'azure-identity>=1.12.0',
+        ],
+        'dropbox': [
+            'dropbox>=11.36.0',
+        ],
+        'google': [
+            'google-api-python-client>=2.86.0',
+            'google-auth-httplib2>=0.1.0',
+            'google-auth-oauthlib>=1.0.0',
+        ],
+        'jupyter': [
+            'ipython>=9.0.0',
+            'jupyter>=1.0.0',
+        ],
+        'viz': [
+            'pillow>=11.0.0',
+        ],
+        'dev': [
+            'mypy>=1.10.0',
+            'black>=24.4.0',
+            'pytest>=7.0.0',
+            'pytest-cov>=4.0.0',
+            'sphinx>=7.3.0',
+            'sphinx-rtd-theme>=2.0.0',
+            'sphinx-autoapi>=3.0.0',
+        ],
+        'all': [
+            'science_data_kit[msgraph,dropbox,google,jupyter,viz,dev]',
         ],
     },
     entry_points={

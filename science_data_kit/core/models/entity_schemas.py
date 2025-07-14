@@ -321,8 +321,6 @@ class VersionedEntity:
     schema_version: ClassVar[str] = "1.0"
     schema_versions: ClassVar[Dict[str, Type[T]]] = {}
 
-    version: str = field(default="1.0")
-
     @classmethod
     def register_version(cls, version: str) -> None:
         """
@@ -397,12 +395,16 @@ class BaseEntity(VersionedEntity):
 
     Attributes:
         id: Unique identifier for the entity.
+        name: Name of the entity.
+        version: The version of the schema used by this instance.
         created_at: Timestamp when the entity was created.
         updated_at: Timestamp when the entity was last updated.
         properties: Additional properties not covered by the schema.
         complex_properties: Complex properties with schema validation.
     """
     id: str
+    name: str
+    version: str = field(default="1.0")
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     properties: Dict[str, Any] = field(default_factory=dict)
@@ -453,6 +455,7 @@ class BaseEntity(VersionedEntity):
         """
         result = {
             "id": self.id,
+            "name": self.name,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "version": self.version,
@@ -478,7 +481,7 @@ class BaseEntity(VersionedEntity):
         Returns:
             A new BaseEntity instance.
         """
-        entity = cls(id=data["id"])
+        entity = cls(id=data["id"], name=data.get("name", ""))
 
         # Set basic properties
         if "created_at" in data:
@@ -508,13 +511,11 @@ class Dataset(BaseEntity):
     Schema for a dataset.
 
     Attributes:
-        name: Name of the dataset.
         description: Description of the dataset.
         path: Path to the dataset files.
         files: List of files in the dataset.
         metadata: Additional metadata about the dataset.
     """
-    name: str
     description: str = ""
     path: str = ""
     files: List[str] = field(default_factory=list)
@@ -527,15 +528,13 @@ class File(BaseEntity):
     Schema for a file.
 
     Attributes:
-        name: Name of the file.
         path: Path to the file.
         size: Size of the file in bytes.
         format: Format of the file.
         dataset_id: ID of the dataset the file belongs to.
         metadata: Additional metadata about the file.
     """
-    name: str
-    path: str
+    path: str = ""
     size: int = 0
     format: str = ""
     dataset_id: Optional[str] = None
@@ -548,13 +547,11 @@ class Entity(BaseEntity):
     Schema for a generic entity.
 
     Attributes:
-        name: Name of the entity.
         label: Label of the entity (node type in Neo4j).
         description: Description of the entity.
         source: Source of the entity (e.g., dataset, file).
         relationships: List of relationships to other entities.
     """
-    name: str
     label: str
     description: str = ""
     source: str = ""

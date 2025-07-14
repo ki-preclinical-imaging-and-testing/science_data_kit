@@ -91,7 +91,7 @@ science_data_kit = "science_data_kit.cli:main"
 sdk = "science_data_kit.cli:main"
 
 [tool.setuptools]
-packages = ["science_data_kit"]
+packages = ["science_data_kit", "science_data_kit_extensions"]
 include-package-data = true
 
 # Removed reference to non-existent 'app' package

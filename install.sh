@@ -718,6 +718,8 @@ setup_python_env() {
 
                 # Handle apt_pkg issues gracefully
                 print_message $BLUE "Updating package lists..."
+                # Fix apt_pkg module error
+                fix_apt_pkg
                 if ! sudo apt-get update 2>/dev/null; then
                     print_message $YELLOW "Warning: apt update had some issues, but continuing..."
                     # Try to fix common apt_pkg issues
@@ -727,6 +729,8 @@ setup_python_env() {
                 # Try deadsnakes PPA for newer Python versions
                 if ! apt-cache show python3.13 >/dev/null 2>&1 && ! apt-cache show python3.12 >/dev/null 2>&1; then
                     print_message $BLUE "Adding deadsnakes PPA for Python 3.12/3.13..."
+                    # Fix apt_pkg module error
+                    fix_apt_pkg
                     sudo apt-get install -y software-properties-common || {
                         print_message $RED "Failed to install software-properties-common"
                         exit 1
@@ -735,12 +739,16 @@ setup_python_env() {
                     # Add PPA with error handling
                     if sudo add-apt-repository -y ppa:deadsnakes/ppa 2>/dev/null; then
                         print_message $GREEN "Successfully added deadsnakes PPA"
+                        # Fix apt_pkg module error
+                        fix_apt_pkg
                         sudo apt-get update 2>/dev/null || print_message $YELLOW "Update had warnings but continuing..."
                     else
                         print_message $YELLOW "Failed to add deadsnakes PPA, trying manual method..."
                         # Manual PPA addition as fallback
                         echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
                         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776 2>/dev/null || true
+                        # Fix apt_pkg module error
+                        fix_apt_pkg
                         sudo apt-get update 2>/dev/null || print_message $YELLOW "Update had warnings but continuing..."
                     fi
                 fi
@@ -877,6 +885,8 @@ setup_python_env() {
         print_message $YELLOW "Python venv module not available. Installing..."
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
             if command_exists apt-get; then
+                # Fix apt_pkg module error
+                fix_apt_pkg
                 sudo apt-get install -y python3-venv
             elif command_exists yum; then
                 sudo yum install -y python3-venv
@@ -1002,7 +1012,9 @@ install_system_dependencies() {
             # Debian/Ubuntu
             print_message $BLUE "Detected Debian/Ubuntu system"
             print_message $BLUE "Installing PostgreSQL client libraries..."
-            sudo apt-get update
+            # Fix apt_pkg module error
+            fix_apt_pkg
+            sudo apt-get update || true
             sudo apt-get install -y libpq-dev postgresql-client
         elif command_exists yum; then
             # RHEL/CentOS/Fedora
@@ -1074,6 +1086,12 @@ install_package() {
     # Explicitly install psycopg2 for PostgreSQL connections
     print_message $BLUE "Ensuring psycopg2 is installed..."
     pip install psycopg2-binary
+
+    # Explicitly install dropbox if the dropbox extension is specified
+    if [[ "$EXTENSIONS_TO_INSTALL" == *"dropbox"* ]] || [ "$EXTENSIONS_TO_INSTALL" = "all" ]; then
+        print_message $BLUE "Ensuring dropbox package is installed..."
+        pip install dropbox>=11.36.0
+    fi
 
     # Verify installations
     print_message $BLUE "Verifying installations..."

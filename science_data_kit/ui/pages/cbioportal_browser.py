@@ -411,4 +411,3 @@ def render_cbioportal_browser_page():
     """Render the cBioPortal Browser page."""
     page = CbioportalBrowserPage()
     page.render()
-"""
