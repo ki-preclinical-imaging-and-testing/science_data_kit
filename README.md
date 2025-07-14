@@ -130,6 +130,8 @@ The Science Data Kit is designed around the FAIR+ data principles:
 - Python 3.12+
 - Docker (for Neo4j and Jupyter containers)
 - Neo4j Graph Database
+- PostgreSQL client libraries (for psycopg2)
+- Visualization libraries (seaborn, matplotlib)
 
 #### Optional Dependencies
 
@@ -194,12 +196,14 @@ We provide a comprehensive installation script that handles all the necessary se
    ```
 
 The installation script will:
-- Check for system dependencies (Python 3.10+, pip, Docker, Docker Compose)
-- Offer to install missing dependencies
+- Check for system dependencies (Python 3.12+, pip, Docker, Docker Compose)
+- Install required system dependencies (PostgreSQL client libraries)
 - Set up a Python virtual environment
 - Install the Science Data Kit package and its dependencies
+- Ensure all required packages are installed (including seaborn and tqdm)
 - Configure Neo4j in a Docker container
-- Provide options for installing isatools (basic or full version)
+- Configure Ollama for local LLM functionality (optional)
+- Verify the installation of critical components
 
 #### Manual Installation (Alternative)
 

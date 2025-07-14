@@ -992,6 +992,53 @@ validate_extensions() {
     fi
 }
 
+# Install system dependencies
+install_system_dependencies() {
+    print_message $BLUE "Installing system dependencies..."
+
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Linux
+        if command_exists apt-get; then
+            # Debian/Ubuntu
+            print_message $BLUE "Detected Debian/Ubuntu system"
+            print_message $BLUE "Installing PostgreSQL client libraries..."
+            sudo apt-get update
+            sudo apt-get install -y libpq-dev postgresql-client
+        elif command_exists yum; then
+            # RHEL/CentOS/Fedora
+            print_message $BLUE "Detected RHEL/CentOS/Fedora system"
+            sudo yum install -y postgresql-devel postgresql-libs
+        elif command_exists dnf; then
+            # Newer Fedora
+            print_message $BLUE "Detected Fedora system"
+            sudo dnf install -y postgresql-devel postgresql-libs
+        elif command_exists pacman; then
+            # Arch Linux
+            print_message $BLUE "Detected Arch Linux system"
+            sudo pacman -S --noconfirm postgresql-libs
+        else
+            print_message $YELLOW "Unsupported Linux distribution. You may need to install PostgreSQL client libraries manually."
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        print_message $BLUE "Detected macOS system"
+        if command_exists brew; then
+            brew install postgresql libpq
+            # Make sure libpq is on the path
+            brew link --force libpq
+        else
+            print_message $YELLOW "Homebrew not found. Please install Homebrew and then PostgreSQL:"
+            print_message $YELLOW "/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+            print_message $YELLOW "Then: brew install postgresql libpq"
+        fi
+    else
+        print_message $YELLOW "Unsupported operating system: $OSTYPE"
+        print_message $YELLOW "You may need to install PostgreSQL client libraries manually."
+    fi
+
+    print_message $GREEN "System dependencies installed"
+}
+
 # Install the package and its dependencies
 install_package() {
     print_message $BLUE "Installing Science Data Kit and dependencies..."
@@ -1016,6 +1063,10 @@ install_package() {
         pip install -e .
     fi
 
+    # Explicitly install required packages that might be missing
+    print_message $BLUE "Installing additional required packages..."
+    pip install seaborn tqdm
+
     # Explicitly install neo4j-graphrag to ensure it's available
     print_message $BLUE "Ensuring neo4j-graphrag is installed..."
     pip install neo4j-graphrag>=0.6.1
@@ -1023,6 +1074,18 @@ install_package() {
     # Explicitly install psycopg2 for PostgreSQL connections
     print_message $BLUE "Ensuring psycopg2 is installed..."
     pip install psycopg2-binary
+
+    # Verify installations
+    print_message $BLUE "Verifying installations..."
+    python -c "import seaborn; print(f'Seaborn version: {seaborn.__version__}')" || {
+        print_message $RED "Failed to import seaborn. Trying to reinstall..."
+        pip install --force-reinstall seaborn
+    }
+
+    python -c "import psycopg2; print(f'psycopg2 version: {psycopg2.__version__}')" || {
+        print_message $RED "Failed to import psycopg2. This might be due to missing system dependencies."
+        print_message $YELLOW "Please make sure PostgreSQL client libraries are installed on your system."
+    }
 
     print_message $GREEN "Science Data Kit installed successfully"
 }
@@ -1347,6 +1410,9 @@ main() {
 
     # Check dependencies
     check_dependencies
+
+    # Install system dependencies
+    install_system_dependencies
 
     # Set up Python environment
     setup_python_env
