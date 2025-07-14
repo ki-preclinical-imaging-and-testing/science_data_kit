@@ -116,7 +116,26 @@ For developers who want to contribute to the Science Data Kit:
 
 3. Install development dependencies:
    ```bash
+   # For core package with development tools
    pip install -e ".[dev]"
+
+   # For all extensions (including dropbox, msgraph, google, etc.)
+   pip install -e ".[all]"
+
+   # For specific extensions
+   pip install -e ".[dropbox,msgraph]"
+   ```
+
+   Alternatively, you can use the installation script with the extensions flag:
+   ```bash
+   # Install with all extensions
+   ./install.sh -e
+
+   # Install with specific extensions
+   ./install.sh --extensions=dropbox,msgraph
+
+   # Show all installation options
+   ./install.sh --help
    ```
 
 4. Install Neo4j database (required):

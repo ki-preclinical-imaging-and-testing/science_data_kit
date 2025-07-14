@@ -8,19 +8,57 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Check if running with --clean flag
+# Check for flags
 CLEAN_INSTALL=false
+INSTALL_EXTENSIONS=false
+EXTENSIONS_TO_INSTALL="all"
+SHOW_HELP=false
+
 for arg in "$@"; do
     if [ "$arg" == "--clean" ]; then
         CLEAN_INSTALL=true
+    elif [ "$arg" == "-e" ] || [ "$arg" == "--extensions" ]; then
+        INSTALL_EXTENSIONS=true
+    elif [[ "$arg" == --extensions=* ]]; then
+        INSTALL_EXTENSIONS=true
+        EXTENSIONS_TO_INSTALL="${arg#*=}"
+    elif [ "$arg" == "-h" ] || [ "$arg" == "--help" ]; then
+        SHOW_HELP=true
     fi
 done
+
+# Show help and exit if requested
+if [ "$SHOW_HELP" = true ]; then
+    show_help
+    exit 0
+fi
 
 # Print a colored message
 print_message() {
     local color=$1
     local message=$2
     echo -e "${color}${message}${NC}"
+}
+
+# Display help information
+show_help() {
+    echo "Science Data Kit Installation Script"
+    echo ""
+    echo "Usage: ./install.sh [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --clean             Perform a clean installation (removes existing virtual environment)"
+    echo "  -e, --extensions    Install all extensions (dropbox, msgraph, google, etc.)"
+    echo "  --extensions=LIST   Install specific extensions (comma-separated list)"
+    echo "                      Available extensions: dropbox, msgraph, google, jupyter, viz, dev, all"
+    echo "  -h, --help          Display this help message"
+    echo ""
+    echo "Examples:"
+    echo "  ./install.sh                     # Install core package only"
+    echo "  ./install.sh --clean             # Clean installation of core package"
+    echo "  ./install.sh -e                  # Install core package with all extensions"
+    echo "  ./install.sh --extensions=dropbox,msgraph  # Install with specific extensions"
+    echo ""
 }
 
 # Check if a command exists
@@ -890,7 +928,18 @@ install_package() {
     print_message $BLUE "Installing Science Data Kit and dependencies..."
 
     # Install the package in development mode
-    pip install -e .
+    if [ "$INSTALL_EXTENSIONS" = true ]; then
+        if [ "$EXTENSIONS_TO_INSTALL" = "all" ]; then
+            print_message $BLUE "Installing Science Data Kit with all extensions..."
+            pip install -e ".[all]"
+        else
+            print_message $BLUE "Installing Science Data Kit with extensions: $EXTENSIONS_TO_INSTALL"
+            pip install -e ".[$EXTENSIONS_TO_INSTALL]"
+        fi
+    else
+        print_message $BLUE "Installing Science Data Kit core package..."
+        pip install -e .
+    fi
 
     # Explicitly install neo4j-graphrag to ensure it's available
     print_message $BLUE "Ensuring neo4j-graphrag is installed..."
@@ -1245,6 +1294,20 @@ main() {
     fi
 
     print_message $GREEN "=== Installation Complete ==="
+
+    # Display information about installed extensions
+    if [ "$INSTALL_EXTENSIONS" = true ]; then
+        if [ "$EXTENSIONS_TO_INSTALL" = "all" ]; then
+            print_message $GREEN "All extensions have been installed"
+        else
+            print_message $GREEN "Installed extensions: $EXTENSIONS_TO_INSTALL"
+        fi
+    else
+        print_message $YELLOW "Note: Only the core package was installed. To install extensions, use:"
+        print_message $YELLOW "  ./install.sh -e                  # Install all extensions"
+        print_message $YELLOW "  ./install.sh --extensions=dropbox,msgraph  # Install specific extensions"
+    fi
+
     print_message $GREEN "To start Science Data Kit, run:"
     print_message $YELLOW "source $ACTIVATE_SCRIPT"
     print_message $YELLOW "science_data_kit"
