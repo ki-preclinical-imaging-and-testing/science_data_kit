@@ -115,28 +115,30 @@ class ExplorePage(BasePage):
         Returns:
             A dictionary containing the schema data.
         """
-        # Check if we're connected according to session state
-        if st.session_state.get("connected", False):
-            # Ensure db_manager is connected using session state connection details
-            if not self.db_manager.is_connected():
-                try:
-                    # Reconnect using the session state connection details
-                    self.db_manager.uri = st.session_state.get("neo4j_uri")
-                    self.db_manager.user = st.session_state.get("neo4j_user")
-                    self.db_manager.password = st.session_state.get("neo4j_password")
-                    self.db_manager.database = st.session_state.get("neo4j_database")
-                    active_connection = st.session_state.get("active_connection")
-                    connection_successful = self.db_manager._connect(active_connection)
-                    if not connection_successful:
-                        error_msg = self.db_manager._connection_error or "Unknown connection error"
-                        st.error(f"Failed to reconnect to Neo4j: {error_msg}")
-                        return {}
-                except Exception as e:
-                    st.error(f"Failed to reconnect to Neo4j: {e}")
+        # Get active connection from session state
+        active_connection = st.session_state.get("active_connection")
+
+        # Check if we're connected
+        if not self.db_manager.is_connected(active_connection):
+            try:
+                # Reconnect using the session state connection details
+                self.db_manager.uri = st.session_state.get("neo4j_uri")
+                self.db_manager.user = st.session_state.get("neo4j_user")
+                self.db_manager.password = st.session_state.get("neo4j_password")
+                self.db_manager.database = st.session_state.get("neo4j_database")
+                connection_successful = self.db_manager._connect(active_connection)
+                if not connection_successful:
+                    error_msg = self.db_manager._connection_error or "Unknown connection error"
+                    st.error(f"Failed to reconnect to Neo4j: {error_msg}")
                     return {}
-        elif not self.db_manager.is_connected():
-            st.error("Not connected to Neo4j. Please connect first.")
-            return {}
+            except Exception as e:
+                st.error(f"Failed to reconnect to Neo4j: {e}")
+                return {}
+
+            # Check if reconnection was successful
+            if not self.db_manager.is_connected(active_connection):
+                st.error("Not connected to Neo4j. Please connect first.")
+                return {}
 
         try:
             # Fetch node labels
@@ -261,7 +263,8 @@ class ExplorePage(BasePage):
         Returns:
             A DataFrame containing the query results.
         """
-        if not self.db_manager.is_connected():
+        active_connection = st.session_state.get("active_connection")
+        if not self.db_manager.is_connected(active_connection):
             st.error("Not connected to Neo4j. Please connect first.")
             return pd.DataFrame()
 
@@ -344,7 +347,8 @@ class ExplorePage(BasePage):
         st.header("Schema Visualization")
 
         if st.button("Fetch Schema"):
-            if not st.session_state.get("connected", False):
+            active_connection = st.session_state.get("active_connection")
+            if not self.db_manager.is_connected(active_connection):
                 st.error("Not connected to Neo4j. Please connect first.")
             else:
                 with st.spinner("Fetching schema..."):
@@ -417,18 +421,20 @@ class ExplorePage(BasePage):
         if st.button("Execute Query"):
             if not query:
                 st.error("Please enter a query")
-            elif not st.session_state.get("connected", False):
-                st.error("Not connected to Neo4j. Please connect first.")
             else:
-                with st.spinner("Executing query..."):
-                    results = self._execute_query(query)
-                    st.session_state["query_results"] = results
-                    st.session_state["current_query"] = query
+                active_connection = st.session_state.get("active_connection")
+                if not self.db_manager.is_connected(active_connection):
+                    st.error("Not connected to Neo4j. Please connect first.")
+                else:
+                    with st.spinner("Executing query..."):
+                        results = self._execute_query(query)
+                        st.session_state["query_results"] = results
+                        st.session_state["current_query"] = query
 
-                    if not results.empty:
-                        st.success(f"Query executed successfully. Found {len(results)} results.")
-                    else:
-                        st.warning("Query executed successfully, but no results were returned.")
+                        if not results.empty:
+                            st.success(f"Query executed successfully. Found {len(results)} results.")
+                        else:
+                            st.warning("Query executed successfully, but no results were returned.")
 
         # Display query results if available
         if st.session_state["query_results"] is not None and not st.session_state["query_results"].empty:

@@ -201,7 +201,8 @@ class MapPage(BasePage):
         Returns:
             A DataFrame containing the entities.
         """
-        if not self.db_manager.is_connected():
+        active_connection = st.session_state.get("active_connection")
+        if not self.db_manager.is_connected(active_connection):
             st.error("Not connected to Neo4j. Please connect first.")
             return pd.DataFrame()
 
@@ -313,7 +314,8 @@ class MapPage(BasePage):
         Returns:
             True if successful, False otherwise.
         """
-        if not self.db_manager.is_connected():
+        active_connection = st.session_state.get("active_connection")
+        if not self.db_manager.is_connected(active_connection):
             st.error("Not connected to Neo4j. Please connect first.")
             return False
 
@@ -355,7 +357,8 @@ class MapPage(BasePage):
         Returns:
             True if successful, False otherwise.
         """
-        if not self.db_manager.is_connected():
+        active_connection = st.session_state.get("active_connection")
+        if not self.db_manager.is_connected(active_connection):
             st.error("Not connected to Neo4j. Please connect first.")
             return False
 
@@ -423,7 +426,8 @@ class MapPage(BasePage):
         Returns:
             True if successful, False otherwise.
         """
-        if not self.db_manager.is_connected():
+        active_connection = st.session_state.get("active_connection")
+        if not self.db_manager.is_connected(active_connection):
             st.error("Not connected to Neo4j. Please connect first.")
             return False
 
@@ -509,7 +513,8 @@ class MapPage(BasePage):
         Returns:
             True if successful, False otherwise.
         """
-        if not self.db_manager.is_connected():
+        active_connection = st.session_state.get("active_connection")
+        if not self.db_manager.is_connected(active_connection):
             st.error("Not connected to Neo4j. Please connect first.")
             return False
 
@@ -732,7 +737,8 @@ class MapPage(BasePage):
 
                 elif data_source == "Database":
                     # Database entity loading
-                    if st.session_state.get("connected", False):
+                    active_connection = st.session_state.get("active_connection")
+                    if self.db_manager.is_connected(active_connection):
                         # Get available labels
                         labels = self.db_manager.fetch_labels()
                         entity_label = st.selectbox("Select Node Label:", labels)
@@ -942,7 +948,8 @@ class MapPage(BasePage):
                         )
 
                         if rel_def["label_option"] == "Existing Label":
-                            if self.db_manager.is_connected():
+                            active_connection = st.session_state.get("active_connection")
+                            if self.db_manager.is_connected(active_connection):
                                 labels = self.db_manager.fetch_labels()
                                 rel_def["target_label"] = st.selectbox(
                                     "Select Target Node Label:",
@@ -1294,7 +1301,8 @@ class MapPage(BasePage):
 
                 elif data_source == "Database":
                     # Fetch available node labels from Neo4j
-                    if self.db_manager.is_connected():
+                    active_connection = st.session_state.get("active_connection")
+                    if self.db_manager.is_connected(active_connection):
                         labels = self.db_manager.fetch_labels()
                         # Allow the user to select a label type
                         entity_label = st.selectbox("Select Node Label to Use:", labels)
@@ -1339,7 +1347,8 @@ class MapPage(BasePage):
                             for i, key in enumerate(st.session_state["taxonomy_keys"], 1):
                                 st.write(f"Level {i}: {key}")
                             if data_source == "Database" and st.button("Pull Entities from Database"):
-                                if self.db_manager.is_connected():
+                                active_connection = st.session_state.get("active_connection")
+                                if self.db_manager.is_connected(active_connection):
                                     entity_data = self._load_entities_from_database(entity_label)
                                     st.session_state["entity_data"] = entity_data
 
@@ -1406,7 +1415,8 @@ class MapPage(BasePage):
 
                         # Select fields to match entities
                         available_columns = entity_data.columns.tolist() if entity_data is not None else []
-                        if self.db_manager.is_connected():
+                        active_connection = st.session_state.get("active_connection")
+                        if self.db_manager.is_connected(active_connection):
                             available_labels = self.db_manager.fetch_labels()
                             entity_label = st.selectbox("Select entity label to connect to:",
                                                       options=available_labels,
@@ -1421,7 +1431,8 @@ class MapPage(BasePage):
                                                         key="taxonomy_relationship_type")
 
                         if st.button("Push Taxonomy to Database"):
-                            if not self.db_manager.is_connected():
+                            active_connection = st.session_state.get("active_connection")
+                            if not self.db_manager.is_connected(active_connection):
                                 st.error("Not connected to Neo4j. Please connect first.")
                             elif not entity_label:
                                 st.error("Please select or enter an entity label.")
@@ -1479,7 +1490,8 @@ class MapPage(BasePage):
 
                     # Push to Neo4j button
                     if st.button("Push Ontology to Neo4j"):
-                        if not self.db_manager.is_connected():
+                        active_connection = st.session_state.get("active_connection")
+                        if not self.db_manager.is_connected(active_connection):
                             st.error("Not connected to Neo4j. Please connect first.")
                         else:
                             with st.spinner("Pushing ontology to Neo4j..."):
