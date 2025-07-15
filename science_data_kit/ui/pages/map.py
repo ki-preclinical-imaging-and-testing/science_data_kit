@@ -393,6 +393,12 @@ class MapPage(BasePage):
 
             if file_extension == '.json':
                 ontology_data = json.loads(uploaded_file.getvalue().decode('utf-8'))
+
+                # Handle case where ontology_data is a list instead of a dictionary
+                if isinstance(ontology_data, list):
+                    # Convert list to dictionary with 'terms' key
+                    return {'terms': {str(i): term for i, term in enumerate(ontology_data)}}
+
                 return ontology_data
             else:
                 st.error(f"Unsupported file type for ontology: {file_extension}")
