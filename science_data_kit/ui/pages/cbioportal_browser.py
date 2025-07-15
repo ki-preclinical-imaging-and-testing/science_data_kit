@@ -76,7 +76,12 @@ class CbioportalBrowserPage(BasePage):
             self.db_manager.database = database
 
             # Connect to the database
-            self.db_manager._connect()
+            connection_successful = self.db_manager._connect()
+
+            if not connection_successful:
+                error_msg = self.db_manager._connection_error or "Unknown connection error"
+                st.error(f"Failed to connect to Neo4j: {error_msg}")
+                return
 
             # Update session state
             st.session_state["connected"] = True

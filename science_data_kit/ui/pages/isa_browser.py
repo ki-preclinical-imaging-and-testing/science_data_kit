@@ -90,7 +90,12 @@ class IsaBrowserPage(BasePage):
             self.db_manager.database = database
 
             # Connect to the database
-            self.db_manager._connect()
+            connection_successful = self.db_manager._connect()
+
+            if not connection_successful:
+                error_msg = self.db_manager._connection_error or "Unknown connection error"
+                st.error(f"Failed to connect to Neo4j: {error_msg}")
+                return
 
             # Create Neo4j connection
             neo4j_config = {

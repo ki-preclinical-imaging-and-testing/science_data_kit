@@ -76,7 +76,12 @@ class ExplorePage(BasePage):
             self.db_manager.database = database
 
             # Connect to the database
-            self.db_manager._connect()
+            connection_successful = self.db_manager._connect()
+
+            if not connection_successful:
+                error_msg = self.db_manager._connection_error or "Unknown connection error"
+                st.error(f"Failed to connect to Neo4j: {error_msg}")
+                return
 
             # Update session state
             st.session_state["connected"] = True
@@ -119,7 +124,11 @@ class ExplorePage(BasePage):
                     self.db_manager.user = st.session_state.get("neo4j_user")
                     self.db_manager.password = st.session_state.get("neo4j_password")
                     self.db_manager.database = st.session_state.get("neo4j_database")
-                    self.db_manager._connect()
+                    connection_successful = self.db_manager._connect()
+                    if not connection_successful:
+                        error_msg = self.db_manager._connection_error or "Unknown connection error"
+                        st.error(f"Failed to reconnect to Neo4j: {error_msg}")
+                        return {}
                 except Exception as e:
                     st.error(f"Failed to reconnect to Neo4j: {e}")
                     return {}

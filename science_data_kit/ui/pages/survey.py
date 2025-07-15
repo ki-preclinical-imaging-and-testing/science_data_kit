@@ -93,7 +93,12 @@ class SurveyPage(BasePage):
             self.db_manager.database = database
 
             # Connect to the database
-            self.db_manager._connect()
+            connection_successful = self.db_manager._connect()
+
+            if not connection_successful:
+                error_msg = self.db_manager._connection_error or "Unknown connection error"
+                st.error(f"Failed to connect to Neo4j: {error_msg}")
+                return
 
             # Update session state
             st.session_state["connected"] = True
@@ -275,9 +280,9 @@ class SurveyPage(BasePage):
                 self.db_manager.user = st.session_state.get("neo4j_user", "neo4j")
                 self.db_manager.password = st.session_state.get("neo4j_password", "password")
                 self.db_manager.database = st.session_state.get("neo4j_database", "neo4j")
-                self.db_manager._connect()
+                connection_successful = self.db_manager._connect()
 
-                if not self.db_manager.is_connected():
+                if not connection_successful:
                     st.error("Failed to connect to Neo4j. Please check your connection details.")
                     return False
             except Exception as e:
@@ -389,9 +394,9 @@ class SurveyPage(BasePage):
                 self.db_manager.user = st.session_state.get("neo4j_user", "neo4j")
                 self.db_manager.password = st.session_state.get("neo4j_password", "password")
                 self.db_manager.database = st.session_state.get("neo4j_database", "neo4j")
-                self.db_manager._connect()
+                connection_successful = self.db_manager._connect()
 
-                if not self.db_manager.is_connected():
+                if not connection_successful:
                     st.error("Failed to connect to Neo4j. Please check your connection details.")
                     return False
             except Exception as e:
