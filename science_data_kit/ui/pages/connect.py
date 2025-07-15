@@ -836,27 +836,53 @@ class ServerPage(BasePage):
 
                         # Get database size
                         try:
-                            # First check if the procedure exists to avoid the error
-                            procedures = self.db_manager.execute_query(
-                                "CALL dbms.procedures() YIELD name RETURN name",
-                                connection_name=active_connection
-                            )
-
-                            procedure_names = [proc['name'] for proc in procedures] if procedures else []
-
-                            if 'dbms.database.size' in procedure_names:
-                                size = self.db_manager.execute_query(
-                                    "CALL dbms.database.size() YIELD database, totalSize RETURN database, totalSize",
+                            # First check if the dbms.procedures procedure exists
+                            try:
+                                # This call itself might fail if dbms.procedures is not available
+                                procedures = self.db_manager.execute_query(
+                                    "CALL dbms.procedures() YIELD name RETURN name",
                                     connection_name=active_connection
                                 )
-                                if size:
-                                    st.write(f"Database: {size[0]['database']}")
-                                    st.write(f"Size: {size[0]['totalSize']}")
-                            else:
-                                st.info("Database size information not available in this Neo4j version")
+
+                                procedure_names = [proc['name'] for proc in procedures] if procedures else []
+
+                                if 'dbms.database.size' in procedure_names:
+                                    size = self.db_manager.execute_query(
+                                        "CALL dbms.database.size() YIELD database, totalSize RETURN database, totalSize",
+                                        connection_name=active_connection
+                                    )
+                                    if size:
+                                        st.write(f"Database: {size[0]['database']}")
+                                        st.write(f"Size: {size[0]['totalSize']}")
+                                else:
+                                    st.info("Database size information not available in this Neo4j version")
+                            except Exception as proc_error:
+                                # Handle the case when dbms.procedures itself is not available
+                                if "ProcedureNotFound" in str(proc_error) and "dbms.procedures" in str(proc_error):
+                                    st.warning(
+                                        "The Neo4j database does not have the dbms.procedures procedure available. "
+                                        "Some features requiring procedure discovery will be limited. "
+                                        "If you're connecting to an external Neo4j database, it may not have APOC installed. "
+                                        "The Science Data Kit works best with Neo4j databases that have APOC installed."
+                                    )
+                                    # Try to get database size directly, it might still work
+                                    try:
+                                        size = self.db_manager.execute_query(
+                                            "CALL dbms.database.size() YIELD database, totalSize RETURN database, totalSize",
+                                            connection_name=active_connection
+                                        )
+                                        if size:
+                                            st.write(f"Database: {size[0]['database']}")
+                                            st.write(f"Size: {size[0]['totalSize']}")
+                                    except Exception:
+                                        # Silently ignore if this also fails
+                                        pass
+                                else:
+                                    # Re-raise to be caught by the outer exception handler
+                                    raise proc_error
                         except Exception as e:
                             # Handle the case when dbms.database.size() procedure is not available
-                            if "Neo.ClientError.Procedure.ProcedureNotFound" in str(e):
+                            if "Neo.ClientError.Procedure.ProcedureNotFound" in str(e) and "dbms.database.size" in str(e):
                                 st.info("Database size information not available in this Neo4j version")
                             else:
                                 # Log the error but don't raise it to prevent breaking the UI
