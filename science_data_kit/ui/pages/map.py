@@ -397,7 +397,13 @@ class MapPage(BasePage):
                 # Handle case where ontology_data is a list instead of a dictionary
                 if isinstance(ontology_data, list):
                     # Convert list to dictionary with 'terms' key
-                    return {'terms': {str(i): term for i, term in enumerate(ontology_data)}}
+                    # Use term_accession as the key if available, otherwise use index
+                    terms_dict = {}
+                    for i, term in enumerate(ontology_data):
+                        # Use term_accession as key if available, otherwise use index
+                        key = term.get('term_accession', str(i))
+                        terms_dict[key] = term
+                    return {'terms': terms_dict}
 
                 return ontology_data
             else:
@@ -429,13 +435,15 @@ class MapPage(BasePage):
                     # Create term node
                     query = """
                     MERGE (t:OntologyTerm {id: $id})
-                    SET t.name = $name,
-                        t.definition = $definition
+                    SET t.term = $term,
+                        t.term_accession = $term_accession,
+                        t.term_source = $term_source
                     """
                     session.run(query, {
                         "id": term_id,
-                        "name": term_data.get('name', ''),
-                        "definition": term_data.get('definition', '')
+                        "term": term_data.get('term', term_data.get('name', '')),
+                        "term_accession": term_data.get('term_accession', ''),
+                        "term_source": term_data.get('term_source', '')
                     })
 
                 # Create relationships between terms
