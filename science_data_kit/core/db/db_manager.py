@@ -67,20 +67,51 @@ def load_db_config(fn: str = 'db_config.yaml') -> Dict[str, Any]:
     Raises:
         ConfigError: If the configuration file cannot be loaded.
     """
-    # If the file is .db_config_auto.yaml, try to load it from the science_data_kit/core/config directory first
-    if fn == '.db_config_auto.yaml':
+    # Get the current working directory and project root directory
+    cwd = Path.cwd()
+    project_root = None
+
+    # Try to find the project root by looking for key files
+    if (cwd / 'science_data_kit.sh').exists():
+        project_root = cwd
+    else:
+        for parent in cwd.parents:
+            if (parent / 'science_data_kit.sh').exists():
+                project_root = parent
+                break
+
+    # List of possible locations to look for the configuration file
+    possible_locations = [
+        cwd / fn,  # Current directory
+        cwd / "config" / fn,  # config/ directory relative to current directory
+    ]
+
+    # Add project root related paths if we found the project root
+    if project_root:
+        possible_locations.extend([
+            project_root / fn,  # Project root directory
+            project_root / "config" / fn,  # config/ directory relative to project root
+            project_root / "science_data_kit" / "core" / "config" / fn,  # science_data_kit/core/config/ directory
+        ])
+
+    # Always check the user's home directory
+    possible_locations.append(Path.home() / fn)
+
+    # If the file is .db_config_auto.yaml, prioritize the science_data_kit/core/config directory
+    if fn == '.db_config_auto.yaml' and project_root:
+        possible_locations.insert(0, project_root / "science_data_kit" / "core" / "config" / fn)
+
+    # Try each location
+    for location in possible_locations:
         try:
-            with open(f"science_data_kit/core/config/{fn}", 'r') as file:
+            with open(location, 'r') as file:
                 return yaml.safe_load(file)
         except Exception:
-            # Fall back to the original location
-            pass
+            continue
 
-    try:
-        with open(fn, 'r') as file:
-            return yaml.safe_load(file)
-    except Exception as e:
-        raise ConfigError(f"Could not load {fn}: {e}")
+    # If we get here, we couldn't find the file in any of the locations
+    locations_str = "\n- ".join([str(loc) for loc in possible_locations])
+    raise ConfigError(f"Could not load {fn}: File not found in any of the expected locations:\n- {locations_str}")
 
 
 def update_db_config_auto(hostname: str, port: str, username: Optional[str] = None,
@@ -158,6 +189,32 @@ class Neo4jManager:
             cls._instance = super(Neo4jManager, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
+
+    @property
+    def session(self):
+        """
+        Get a session from the active driver.
+
+        This property is provided for compatibility with code that expects
+        a 'session' attribute on the Neo4jManager object.
+
+        Returns:
+            A Neo4j session object.
+
+        Raises:
+            ConnectionError: If there is no active connection.
+        """
+        if self._active_connection:
+            conn = self._connections[self._active_connection]
+            driver = conn["driver"]
+            database = conn["database"]
+            return driver.session(database=database)
+        elif self._driver:
+            return self._driver.session(database=self.database)
+        else:
+            if not self._connect():
+                raise ConnectionError(f"Cannot create session. No active connection to Neo4j. {self._connection_error}")
+            return self._driver.session(database=self.database)
 
     def query(self, query: str, parameters: Optional[Dict[str, Any]] = None, connection_name: Optional[str] = None, enable_cache: bool = True):
         """
@@ -930,17 +987,16 @@ class Neo4jManager:
             ConnectionError: If there is no active connection.
             QueryError: If the query execution fails.
         """
-        query = "MATCH (n) RETURN DISTINCT labels(n) as labels"
+        query = "CALL db.labels() YIELD label RETURN label"
         results = self.execute_query(query)
 
         all_labels = []
         for result in results:
-            for labels_list in result["labels"]:
-                for label in labels_list:
-                    if label and isinstance(label, str):
-                        all_labels.append(label)
+            label = result.get("label")
+            if label and isinstance(label, str):
+                all_labels.append(label)
 
-        return sorted(set(all_labels))
+        return sorted(all_labels)
 
     def fetch_node_properties(self, label: str) -> List[str]:
         """

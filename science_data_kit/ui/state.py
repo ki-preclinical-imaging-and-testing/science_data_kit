@@ -16,6 +16,30 @@ def initialize_session_state() -> None:
     Initialize the Streamlit session state with default values.
     This should be called at the start of the application.
     """
+    # Analytics tracking state
+    if "analytics_enabled" not in st.session_state:
+        st.session_state["analytics_enabled"] = True
+
+    if "analytics_session_id" not in st.session_state:
+        import uuid
+        st.session_state["analytics_session_id"] = str(uuid.uuid4())
+
+    if "analytics_session_start" not in st.session_state:
+        import time
+        st.session_state["analytics_session_start"] = time.time()
+
+    if "analytics_page_views" not in st.session_state:
+        st.session_state["analytics_page_views"] = []
+
+    if "analytics_interactions" not in st.session_state:
+        st.session_state["analytics_interactions"] = []
+
+    if "analytics_storage_path" not in st.session_state:
+        # Default to a directory in the user's home directory
+        from pathlib import Path
+        default_path = Path.home() / ".science_data_kit" / "analytics"
+        st.session_state["analytics_storage_path"] = str(default_path)
+
     # Database connection state
     if "connected" not in st.session_state:
         st.session_state["connected"] = False

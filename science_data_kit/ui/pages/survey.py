@@ -74,7 +74,7 @@ class SurveyPage(BasePage):
             on_disconnect=self._on_database_disconnect
         )
 
-    def _on_database_connect(self, uri: str, username: str, password: str, database: str):
+    def _on_database_connect(self, uri: str, username: str, password: str, database: str, conn_name: str = None):
         """
         Handle database connection.
 
@@ -83,6 +83,7 @@ class SurveyPage(BasePage):
             username: The username for authentication.
             password: The password for authentication.
             database: The name of the database to connect to.
+            conn_name: Optional name for the connection.
         """
         try:
             # Update connection details
@@ -261,45 +262,104 @@ class SurveyPage(BasePage):
         Returns:
             True if successful, False otherwise.
         """
-        if not self.db_manager.is_connected():
+        # Check if we're connected to Neo4j
+        if not st.session_state.get("connected", False):
             st.error("Not connected to Neo4j. Please connect first.")
             return False
 
+        # Ensure the db_manager is connected
+        if not self.db_manager.is_connected():
+            try:
+                # Try to reconnect using the session state connection details
+                self.db_manager.uri = st.session_state.get("neo4j_uri", "bolt://localhost:7687")
+                self.db_manager.user = st.session_state.get("neo4j_user", "neo4j")
+                self.db_manager.password = st.session_state.get("neo4j_password", "password")
+                self.db_manager.database = st.session_state.get("neo4j_database", "neo4j")
+                self.db_manager._connect()
+
+                if not self.db_manager.is_connected():
+                    st.error("Failed to connect to Neo4j. Please check your connection details.")
+                    return False
+            except Exception as e:
+                st.error(f"Error connecting to Neo4j: {e}")
+                return False
+
         try:
-            # Create a transaction
-            with self.db_manager._driver.session(database=self.db_manager.database) as session:
-                # Create folders first
-                folders = scan_results[scan_results["type"] == "Folder"]
-                for _, row in folders.iterrows():
-                    # Create folder node
-                    folder = Folder(filepath=row["path"]).save()
+            # Process folders first
+            folders = scan_results[scan_results["type"] == "Folder"]
+            for _, row in folders.iterrows():
+                # Check if folder exists
+                folder_query = "MATCH (f:Folder {filepath: $filepath}) RETURN f LIMIT 1"
+                folder_result = self.db_manager.execute_query(folder_query, {"filepath": row["path"]})
 
-                    # Create parent relationship if not root
-                    if row["parent"] != row["path"]:
-                        parent_folder = Folder.nodes.get_or_none(filepath=row["parent"])
-                        if parent_folder:
-                            folder.is_in.connect(parent_folder)
+                # Create folder if it doesn't exist
+                if not folder_result:
+                    create_folder_query = "CREATE (f:Folder {filepath: $filepath}) RETURN f"
+                    self.db_manager.execute_query(create_folder_query, {"filepath": row["path"]})
 
-                # Create files
-                files = scan_results[scan_results["type"] == "File"]
-                for _, row in files.iterrows():
-                    # Create file node
-                    file = File(filepath=row["path"]).save()
+                # Create parent relationship if not root
+                if row["parent"] != row["path"]:
+                    # Check if parent folder exists
+                    parent_query = "MATCH (f:Folder {filepath: $filepath}) RETURN f LIMIT 1"
+                    parent_result = self.db_manager.execute_query(parent_query, {"filepath": row["parent"]})
 
-                    # Create parent relationship
-                    parent_folder = Folder.nodes.get_or_none(filepath=row["parent"])
-                    if parent_folder:
-                        file.is_in.connect(parent_folder)
+                    # Create parent folder if it doesn't exist
+                    if not parent_result:
+                        create_parent_query = "CREATE (f:Folder {filepath: $filepath}) RETURN f"
+                        self.db_manager.execute_query(create_parent_query, {"filepath": row["parent"]})
 
-                # Apply entity labels if any
-                for path, labels in st.session_state["entity_labels"].items():
-                    for label in labels:
-                        # Add label to node
-                        query = """
-                        MATCH (n {filepath: $path})
-                        SET n:`{label}`
-                        """.format(label=label)
-                        session.run(query, {"path": path})
+                    # Create relationship
+                    relate_query = """
+                    MATCH (child:Folder {filepath: $child_path})
+                    MATCH (parent:Folder {filepath: $parent_path})
+                    MERGE (child)-[:IS_IN]->(parent)
+                    """
+                    self.db_manager.execute_query(relate_query, {
+                        "child_path": row["path"],
+                        "parent_path": row["parent"]
+                    })
+
+            # Process files
+            files = scan_results[scan_results["type"] == "File"]
+            for _, row in files.iterrows():
+                # Check if file exists
+                file_query = "MATCH (f:File {filepath: $filepath}) RETURN f LIMIT 1"
+                file_result = self.db_manager.execute_query(file_query, {"filepath": row["path"]})
+
+                # Create file if it doesn't exist
+                if not file_result:
+                    create_file_query = "CREATE (f:File {filepath: $filepath}) RETURN f"
+                    self.db_manager.execute_query(create_file_query, {"filepath": row["path"]})
+
+                # Check if parent folder exists
+                parent_query = "MATCH (f:Folder {filepath: $filepath}) RETURN f LIMIT 1"
+                parent_result = self.db_manager.execute_query(parent_query, {"filepath": row["parent"]})
+
+                # Create parent folder if it doesn't exist
+                if not parent_result:
+                    create_parent_query = "CREATE (f:Folder {filepath: $filepath}) RETURN f"
+                    self.db_manager.execute_query(create_parent_query, {"filepath": row["parent"]})
+
+                # Create relationship
+                relate_query = """
+                MATCH (child:File {filepath: $child_path})
+                MATCH (parent:Folder {filepath: $parent_path})
+                MERGE (child)-[:IS_IN]->(parent)
+                """
+                self.db_manager.execute_query(relate_query, {
+                    "child_path": row["path"],
+                    "parent_path": row["parent"]
+                })
+
+            # Apply entity labels if any
+            for path, labels in st.session_state["entity_labels"].items():
+                for label in labels:
+                    # Add label to node
+                    query = """
+                    MATCH (n {filepath: $path})
+                    SET n:`{label}`
+                    """.format(label=label)
+                    self.db_manager.execute_query(query, {"path": path})
 
             return True
         except Exception as e:
@@ -316,9 +376,27 @@ class SurveyPage(BasePage):
         Returns:
             True if successful, False otherwise.
         """
-        if not self.db_manager.is_connected():
+        # Check if we're connected to Neo4j
+        if not st.session_state.get("connected", False):
             st.error("Not connected to Neo4j. Please connect first.")
             return False
+
+        # Ensure the db_manager is connected
+        if not self.db_manager.is_connected():
+            try:
+                # Try to reconnect using the session state connection details
+                self.db_manager.uri = st.session_state.get("neo4j_uri", "bolt://localhost:7687")
+                self.db_manager.user = st.session_state.get("neo4j_user", "neo4j")
+                self.db_manager.password = st.session_state.get("neo4j_password", "password")
+                self.db_manager.database = st.session_state.get("neo4j_database", "neo4j")
+                self.db_manager._connect()
+
+                if not self.db_manager.is_connected():
+                    st.error("Failed to connect to Neo4j. Please check your connection details.")
+                    return False
+            except Exception as e:
+                st.error(f"Error connecting to Neo4j: {e}")
+                return False
 
         if st.session_state["scanned_files"].empty:
             st.error("No scan results available. Please run a scan first.")
@@ -344,28 +422,63 @@ class SurveyPage(BasePage):
                 disk_usage = row["Disk Usage (Bytes)"]
                 parent_path = Path(path).parent.as_posix()
 
-                # Create parent folder
-                with self.db_manager._driver.session(database=self.db_manager.database) as session:
-                    # Create parent folder
-                    parent_folder = Folder.nodes.first_or_none(filepath=parent_path)
-                    if parent_folder is None:
-                        parent_folder = Folder(filepath=parent_path).save()
+                try:
+                    # Use execute_query instead of direct session access to ensure proper authentication
+                    # Check if parent folder exists
+                    parent_query = "MATCH (f:Folder {filepath: $filepath}) RETURN f LIMIT 1"
+                    parent_result = self.db_manager.execute_query(parent_query, {"filepath": parent_path})
 
-                    # Create directory node
+                    # Create parent folder if it doesn't exist
+                    if not parent_result:
+                        create_parent_query = "CREATE (f:Folder {filepath: $filepath}) RETURN f"
+                        self.db_manager.execute_query(create_parent_query, {"filepath": parent_path})
+
+                    # For directories, create the folder node if it doesn't exist
                     if row["Type"] == "Directory":
-                        folder_node = Folder.nodes.first_or_none(filepath=path)
-                        if folder_node is None:
-                            folder_node = Folder(filepath=path).save()
-                            if parent_folder:
-                                folder_node.is_in.connect(parent_folder)
+                        # Check if folder exists
+                        folder_query = "MATCH (f:Folder {filepath: $filepath}) RETURN f LIMIT 1"
+                        folder_result = self.db_manager.execute_query(folder_query, {"filepath": path})
 
-                    # Create file node if include_files is True
+                        # Create folder if it doesn't exist
+                        if not folder_result:
+                            create_folder_query = "CREATE (f:Folder {filepath: $filepath}) RETURN f"
+                            self.db_manager.execute_query(create_folder_query, {"filepath": path})
+
+                            # Create relationship to parent
+                            relate_query = """
+                            MATCH (child:Folder {filepath: $child_path})
+                            MATCH (parent:Folder {filepath: $parent_path})
+                            CREATE (child)-[:IS_IN]->(parent)
+                            """
+                            self.db_manager.execute_query(relate_query, {
+                                "child_path": path,
+                                "parent_path": parent_path
+                            })
+
+                    # For files, create the file node if include_files is True
                     if include_files and row["Type"] == "File":
-                        file_node = File.nodes.first_or_none(filepath=path)
-                        if file_node is None:
-                            file_node = File(filepath=path).save()
-                            if parent_folder:
-                                file_node.is_in.connect(parent_folder)
+                        # Check if file exists
+                        file_query = "MATCH (f:File {filepath: $filepath}) RETURN f LIMIT 1"
+                        file_result = self.db_manager.execute_query(file_query, {"filepath": path})
+
+                        # Create file if it doesn't exist
+                        if not file_result:
+                            create_file_query = "CREATE (f:File {filepath: $filepath}) RETURN f"
+                            self.db_manager.execute_query(create_file_query, {"filepath": path})
+
+                            # Create relationship to parent
+                            relate_query = """
+                            MATCH (child:File {filepath: $child_path})
+                            MATCH (parent:Folder {filepath: $parent_path})
+                            CREATE (child)-[:IS_IN]->(parent)
+                            """
+                            self.db_manager.execute_query(relate_query, {
+                                "child_path": path,
+                                "parent_path": parent_path
+                            })
+                except Exception as e:
+                    st.error(f"Error processing {path}: {e}")
+                    raise
 
             return True
         except Exception as e:

@@ -16,6 +16,7 @@ from science_data_kit.core.models.entity_schemas import (
     File,
     ComplexProperty,
     ComplexPropertySchema,
+    PropertyType,
     validate_entity
 )
 
@@ -23,41 +24,96 @@ logger = logging.getLogger(__name__)
 
 # Define Dropbox-specific complex property schemas
 DROPBOX_METADATA_SCHEMA = ComplexPropertySchema(
-    name="dropbox_metadata",
+    property_type=PropertyType.OBJECT,
     properties={
-        "id": {"type": "string", "description": "Dropbox file/folder ID"},
-        "path": {"type": "string", "description": "Dropbox path"},
-        "content_hash": {"type": "string", "description": "Content hash for files", "required": False},
-        "shared": {"type": "boolean", "description": "Whether the item is shared", "required": False},
-        "shared_folder_id": {"type": "string", "description": "ID of the shared folder", "required": False},
-        "parent_shared_folder_id": {"type": "string", "description": "ID of the parent shared folder", "required": False},
-        "sharing_info": {"type": "object", "description": "Sharing information", "required": False},
-        "team_member_id": {"type": "string", "description": "Team member ID for team files", "required": False}
-    },
-    required=["id", "path"]
+        "id": ComplexPropertySchema(
+            property_type=PropertyType.STRING,
+            description="Dropbox file/folder ID",
+            required=True
+        ),
+        "path": ComplexPropertySchema(
+            property_type=PropertyType.STRING,
+            description="Dropbox path",
+            required=True
+        ),
+        "content_hash": ComplexPropertySchema(
+            property_type=PropertyType.STRING,
+            description="Content hash for files",
+            required=False
+        ),
+        "shared": ComplexPropertySchema(
+            property_type=PropertyType.BOOLEAN,
+            description="Whether the item is shared",
+            required=False
+        ),
+        "shared_folder_id": ComplexPropertySchema(
+            property_type=PropertyType.STRING,
+            description="ID of the shared folder",
+            required=False
+        ),
+        "parent_shared_folder_id": ComplexPropertySchema(
+            property_type=PropertyType.STRING,
+            description="ID of the parent shared folder",
+            required=False
+        ),
+        "sharing_info": ComplexPropertySchema(
+            property_type=PropertyType.OBJECT,
+            description="Sharing information",
+            required=False
+        ),
+        "team_member_id": ComplexPropertySchema(
+            property_type=PropertyType.STRING,
+            description="Team member ID for team files",
+            required=False
+        )
+    }
 )
 
 DROPBOX_SHARING_SCHEMA = ComplexPropertySchema(
-    name="dropbox_sharing",
+    property_type=PropertyType.OBJECT,
     properties={
-        "shared_link": {"type": "string", "description": "Shared link URL", "required": False},
-        "shared_link_metadata": {"type": "object", "description": "Shared link metadata", "required": False},
-        "access_level": {"type": "string", "description": "Access level (viewer, editor, owner)", "required": False},
-        "shared_folder_id": {"type": "string", "description": "ID of the shared folder", "required": False},
-        "permissions": {"type": "array", "description": "List of permissions", "required": False},
-        "shared_with": {"type": "array", "description": "List of users/groups the item is shared with", "required": False}
+        "shared_link": ComplexPropertySchema(
+            property_type=PropertyType.STRING,
+            description="Shared link URL",
+            required=False
+        ),
+        "shared_link_metadata": ComplexPropertySchema(
+            property_type=PropertyType.OBJECT,
+            description="Shared link metadata",
+            required=False
+        ),
+        "access_level": ComplexPropertySchema(
+            property_type=PropertyType.STRING,
+            description="Access level (viewer, editor, owner)",
+            required=False
+        ),
+        "shared_folder_id": ComplexPropertySchema(
+            property_type=PropertyType.STRING,
+            description="ID of the shared folder",
+            required=False
+        ),
+        "permissions": ComplexPropertySchema(
+            property_type=PropertyType.ARRAY,
+            description="List of permissions",
+            required=False
+        ),
+        "shared_with": ComplexPropertySchema(
+            property_type=PropertyType.ARRAY,
+            description="List of users/groups the item is shared with",
+            required=False
+        )
     }
 )
 
 class DropboxFile(File):
     """
     Entity schema for Dropbox files.
-    
+
     This class extends the core File entity schema with Dropbox-specific properties.
     """
-    
+
     entity_type: ClassVar[str] = "dropbox_file"
-    
+
     def __init__(
         self,
         id: Optional[str] = None,
@@ -76,7 +132,7 @@ class DropboxFile(File):
     ):
         """
         Initialize a Dropbox file entity.
-        
+
         Args:
             id: Entity ID (generated if not provided)
             name: File name
@@ -104,19 +160,19 @@ class DropboxFile(File):
             modified_at=modified_at or datetime.now(),
             **kwargs
         )
-        
+
         # Add Dropbox-specific complex properties
         dropbox_metadata = {
             "id": dropbox_id,
             "path": dropbox_path
         }
-        
+
         if content_hash:
             dropbox_metadata["content_hash"] = content_hash
-            
+
         if sharing_info:
             dropbox_metadata["sharing_info"] = sharing_info
-            
+
         self.add_complex_property(
             "dropbox_metadata",
             ComplexProperty(
@@ -124,7 +180,7 @@ class DropboxFile(File):
                 value=dropbox_metadata
             )
         )
-        
+
         if sharing_info:
             self.add_complex_property(
                 "dropbox_sharing",
@@ -139,22 +195,22 @@ class DropboxFile(File):
                     }
                 )
             )
-    
+
     @classmethod
     def from_dropbox_metadata(cls, metadata: Dict[str, Any]) -> 'DropboxFile':
         """
         Create a DropboxFile entity from Dropbox metadata.
-        
+
         Args:
             metadata: Dropbox file metadata dictionary
-            
+
         Returns:
             DropboxFile entity
         """
         # Extract basic file information
         name = metadata.get('name', '')
         file_type = name.split('.')[-1] if '.' in name else ''
-        
+
         # Create the entity
         return cls(
             name=name,
@@ -173,12 +229,12 @@ class DropboxFile(File):
 class DropboxFolder(BaseEntity):
     """
     Entity schema for Dropbox folders.
-    
+
     This class extends the core BaseEntity schema for Dropbox folders.
     """
-    
+
     entity_type: ClassVar[str] = "dropbox_folder"
-    
+
     def __init__(
         self,
         id: Optional[str] = None,
@@ -191,7 +247,7 @@ class DropboxFolder(BaseEntity):
     ):
         """
         Initialize a Dropbox folder entity.
-        
+
         Args:
             id: Entity ID (generated if not provided)
             name: Folder name
@@ -208,16 +264,16 @@ class DropboxFolder(BaseEntity):
             description=description,
             **kwargs
         )
-        
+
         # Add Dropbox-specific complex properties
         dropbox_metadata = {
             "id": dropbox_id,
             "path": dropbox_path
         }
-            
+
         if sharing_info:
             dropbox_metadata["sharing_info"] = sharing_info
-            
+
         self.add_complex_property(
             "dropbox_metadata",
             ComplexProperty(
@@ -225,7 +281,7 @@ class DropboxFolder(BaseEntity):
                 value=dropbox_metadata
             )
         )
-        
+
         if sharing_info:
             self.add_complex_property(
                 "dropbox_sharing",
@@ -240,15 +296,15 @@ class DropboxFolder(BaseEntity):
                     }
                 )
             )
-    
+
     @classmethod
     def from_dropbox_metadata(cls, metadata: Dict[str, Any]) -> 'DropboxFolder':
         """
         Create a DropboxFolder entity from Dropbox metadata.
-        
+
         Args:
             metadata: Dropbox folder metadata dictionary
-            
+
         Returns:
             DropboxFolder entity
         """
@@ -264,10 +320,10 @@ class DropboxFolder(BaseEntity):
 def validate_dropbox_file(entity: Any) -> bool:
     """
     Validate a DropboxFile entity.
-    
+
     Args:
         entity: Entity to validate
-        
+
     Returns:
         True if valid, raises exception otherwise
     """
@@ -276,10 +332,10 @@ def validate_dropbox_file(entity: Any) -> bool:
 def validate_dropbox_folder(entity: Any) -> bool:
     """
     Validate a DropboxFolder entity.
-    
+
     Args:
         entity: Entity to validate
-        
+
     Returns:
         True if valid, raises exception otherwise
     """
@@ -288,19 +344,19 @@ def validate_dropbox_folder(entity: Any) -> bool:
 def create_entities_from_dropbox_items(items: List[Dict[str, Any]]) -> List[BaseEntity]:
     """
     Create entity objects from a list of Dropbox items.
-    
+
     Args:
         items: List of Dropbox item metadata dictionaries
-        
+
     Returns:
         List of entity objects (DropboxFile or DropboxFolder)
     """
     entities = []
-    
+
     for item in items:
         if item.get('type') == 'file':
             entities.append(DropboxFile.from_dropbox_metadata(item))
         elif item.get('type') == 'folder':
             entities.append(DropboxFolder.from_dropbox_metadata(item))
-            
+
     return entities

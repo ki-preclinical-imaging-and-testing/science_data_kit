@@ -69,7 +69,7 @@ class DashboardPage(BasePage):
             on_disconnect=self._on_database_disconnect
         )
 
-    def _on_database_connect(self, uri: str, username: str, password: str, database: str):
+    def _on_database_connect(self, uri: str, username: str, password: str, database: str, conn_name: str = None):
         """
         Handle database connection.
 
@@ -78,6 +78,7 @@ class DashboardPage(BasePage):
             username: The username for authentication.
             password: The password for authentication.
             database: The name of the database to connect to.
+            conn_name: The name of the connection (optional).
         """
         try:
             # Update connection details

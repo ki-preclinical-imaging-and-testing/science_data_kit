@@ -18,8 +18,7 @@ from dropbox.exceptions import (
     BadInputError,
     HttpError,
     InternalServerError,
-    RateLimitError,
-    RouteError
+    RateLimitError
 )
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ T = TypeVar('T')
 
 class DropboxApiException(Exception):
     """Base exception for Dropbox API errors with enhanced context."""
-    
+
     def __init__(
         self, 
         message: str, 
@@ -40,7 +39,7 @@ class DropboxApiException(Exception):
     ):
         """
         Initialize the exception.
-        
+
         Args:
             message: Error message
             original_error: Original exception that caused this error
@@ -53,7 +52,7 @@ class DropboxApiException(Exception):
         self.params = params
         self.retry_count = retry_count
         self.timestamp = datetime.now()
-        
+
         # Build detailed message
         detailed_message = f"{message}"
         if operation:
@@ -62,12 +61,12 @@ class DropboxApiException(Exception):
             detailed_message += f" (retries: {retry_count})"
         if original_error:
             detailed_message += f" - Original error: {str(original_error)}"
-            
+
         super().__init__(detailed_message)
 
 class DropboxRateLimitException(DropboxApiException):
     """Exception for rate limit errors."""
-    
+
     def __init__(
         self, 
         message: str, 
@@ -79,7 +78,7 @@ class DropboxRateLimitException(DropboxApiException):
     ):
         """
         Initialize the exception.
-        
+
         Args:
             message: Error message
             original_error: Original exception that caused this error
@@ -115,13 +114,13 @@ def map_dropbox_exception(
 ) -> DropboxApiException:
     """
     Map a Dropbox API exception to a custom exception.
-    
+
     Args:
         error: Original exception
         operation: Name of the operation that failed
         params: Parameters passed to the operation
         retry_count: Number of retries attempted
-        
+
     Returns:
         Mapped exception
     """
@@ -130,7 +129,7 @@ def map_dropbox_exception(
         retry_after = None
         if hasattr(error, 'error') and hasattr(error.error, 'retry_after'):
             retry_after = error.error.retry_after
-            
+
         return DropboxRateLimitException(
             "Rate limit exceeded",
             error,
@@ -171,9 +170,9 @@ def map_dropbox_exception(
             params,
             retry_count
         )
-    elif isinstance(error, RouteError):
+    elif isinstance(error, BadInputError):
         return DropboxClientException(
-            "Invalid API route",
+            "Invalid API input or route",
             error,
             operation,
             params,
@@ -206,7 +205,7 @@ def with_retry(
 ) -> Callable:
     """
     Decorator for retrying Dropbox API operations with exponential backoff.
-    
+
     Args:
         max_retries: Maximum number of retries
         retry_delay: Initial delay between retries in seconds
@@ -214,7 +213,7 @@ def with_retry(
         jitter: Random jitter factor to add to delay
         retry_exceptions: List of exception types to retry on
         operation_name: Name of the operation for logging
-        
+
     Returns:
         Decorated function
     """
@@ -225,17 +224,17 @@ def with_retry(
             InternalServerError,
             ApiError
         ]
-        
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> T:
             # Get operation name from function if not provided
             op_name = operation_name or func.__name__
-            
+
             # Track retry count
             retry_count = 0
             last_exception = None
-            
+
             # Try the operation with retries
             while retry_count <= max_retries:
                 try:
@@ -243,31 +242,31 @@ def with_retry(
                 except tuple(retry_exceptions) as e:
                     last_exception = e
                     retry_count += 1
-                    
+
                     # Check if we've reached max retries
                     if retry_count > max_retries:
                         break
-                        
+
                     # Calculate delay with exponential backoff and jitter
                     delay = retry_delay * (backoff_factor ** (retry_count - 1))
                     jitter_amount = random.uniform(-jitter * delay, jitter * delay)
                     delay += jitter_amount
-                    
+
                     # Handle rate limit errors with retry-after header
                     if isinstance(e, RateLimitError) and hasattr(e, 'error') and hasattr(e.error, 'retry_after'):
                         delay = max(delay, e.error.retry_after)
-                        
+
                     logger.warning(
                         f"Retrying {op_name} after error: {str(e)}. "
                         f"Retry {retry_count}/{max_retries} in {delay:.2f} seconds"
                     )
-                    
+
                     # Sleep before retry
                     time.sleep(delay)
                 except Exception as e:
                     # Don't retry on other exceptions
                     raise map_dropbox_exception(e, op_name, kwargs)
-                    
+
             # If we've exhausted retries, raise the last exception
             if last_exception:
                 raise map_dropbox_exception(
@@ -276,7 +275,7 @@ def with_retry(
                     kwargs, 
                     retry_count
                 )
-                
+
             # This should never happen, but just in case
             raise DropboxApiException(
                 f"Failed after {max_retries} retries",
@@ -284,18 +283,18 @@ def with_retry(
                 params=kwargs,
                 retry_count=retry_count
             )
-                
+
         return wrapper
     return decorator
 
 class DropboxErrorHandler:
     """
     Class for handling Dropbox API errors and providing retry functionality.
-    
+
     This class provides methods for retrying operations, handling errors,
     and logging error information.
     """
-    
+
     def __init__(
         self,
         max_retries: int = 3,
@@ -305,7 +304,7 @@ class DropboxErrorHandler:
     ):
         """
         Initialize the error handler.
-        
+
         Args:
             max_retries: Maximum number of retries
             retry_delay: Initial delay between retries in seconds
@@ -317,7 +316,7 @@ class DropboxErrorHandler:
         self.backoff_factor = backoff_factor
         self.jitter = jitter
         self.error_log = []
-        
+
     def retry(
         self,
         func: Callable[..., T],
@@ -328,14 +327,14 @@ class DropboxErrorHandler:
     ) -> T:
         """
         Retry a function with exponential backoff.
-        
+
         Args:
             func: Function to retry
             *args: Positional arguments for the function
             operation_name: Name of the operation for logging
             retry_exceptions: List of exception types to retry on
             **kwargs: Keyword arguments for the function
-            
+
         Returns:
             Result of the function
         """
@@ -346,14 +345,14 @@ class DropboxErrorHandler:
                 InternalServerError,
                 ApiError
             ]
-            
+
         # Get operation name from function if not provided
         op_name = operation_name or func.__name__
-        
+
         # Track retry count
         retry_count = 0
         last_exception = None
-        
+
         # Try the operation with retries
         while retry_count <= self.max_retries:
             try:
@@ -361,37 +360,37 @@ class DropboxErrorHandler:
             except tuple(retry_exceptions) as e:
                 last_exception = e
                 retry_count += 1
-                
+
                 # Log the error
                 self._log_error(e, op_name, kwargs, retry_count)
-                
+
                 # Check if we've reached max retries
                 if retry_count > self.max_retries:
                     break
-                    
+
                 # Calculate delay with exponential backoff and jitter
                 delay = self.retry_delay * (self.backoff_factor ** (retry_count - 1))
                 jitter_amount = random.uniform(-self.jitter * delay, self.jitter * delay)
                 delay += jitter_amount
-                
+
                 # Handle rate limit errors with retry-after header
                 if isinstance(e, RateLimitError) and hasattr(e, 'error') and hasattr(e.error, 'retry_after'):
                     delay = max(delay, e.error.retry_after)
-                    
+
                 logger.warning(
                     f"Retrying {op_name} after error: {str(e)}. "
                     f"Retry {retry_count}/{self.max_retries} in {delay:.2f} seconds"
                 )
-                
+
                 # Sleep before retry
                 time.sleep(delay)
             except Exception as e:
                 # Log the error
                 self._log_error(e, op_name, kwargs, retry_count)
-                
+
                 # Don't retry on other exceptions
                 raise map_dropbox_exception(e, op_name, kwargs)
-                
+
         # If we've exhausted retries, raise the last exception
         if last_exception:
             raise map_dropbox_exception(
@@ -400,7 +399,7 @@ class DropboxErrorHandler:
                 kwargs, 
                 retry_count
             )
-            
+
         # This should never happen, but just in case
         raise DropboxApiException(
             f"Failed after {self.max_retries} retries",
@@ -408,7 +407,7 @@ class DropboxErrorHandler:
             params=kwargs,
             retry_count=retry_count
         )
-        
+
     def _log_error(
         self,
         error: Exception,
@@ -418,7 +417,7 @@ class DropboxErrorHandler:
     ) -> None:
         """
         Log an error to the error log.
-        
+
         Args:
             error: Exception that occurred
             operation: Name of the operation that failed
@@ -433,22 +432,22 @@ class DropboxErrorHandler:
             'params': params,
             'retry_count': retry_count
         })
-        
+
     def get_error_log(self) -> List[Dict[str, Any]]:
         """
         Get the error log.
-        
+
         Returns:
             List of error log entries
         """
         return self.error_log
-        
+
     def clear_error_log(self) -> None:
         """
         Clear the error log.
         """
         self.error_log = []
-        
+
     def get_retry_decorator(
         self,
         operation_name: Optional[str] = None,
@@ -456,11 +455,11 @@ class DropboxErrorHandler:
     ) -> Callable:
         """
         Get a retry decorator for a function.
-        
+
         Args:
             operation_name: Name of the operation for logging
             retry_exceptions: List of exception types to retry on
-            
+
         Returns:
             Retry decorator
         """

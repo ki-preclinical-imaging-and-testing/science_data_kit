@@ -149,42 +149,41 @@ def merge_nodes_with_existing(
         relationship_type: Type of relationship to create between nodes.
         source_to_target_map: Optional dictionary mapping source property names to target property names.
     """
-    with db_connection.session() as session:
-        for _, row in entities_df.iterrows():
-            node_label = row[label_column]
-            node_properties = {col: row[col] for col in property_columns if pd.notna(row[col])}
-            m_match_conditions = ", ".join([f"{col}: ${col}" for col in node_properties.keys()])
+    for _, row in entities_df.iterrows():
+        node_label = row[label_column]
+        node_properties = {col: row[col] for col in property_columns if pd.notna(row[col])}
+        m_match_conditions = ", ".join([f"{col}: ${col}" for col in node_properties.keys()])
 
-            # Use target property names in the Cypher query if a mapping is provided
-            if source_to_target_map:
-                # Create match conditions using target property names
-                n_match_conditions = ", ".join([f"{source_to_target_map.get(col, col)}: ${col}" for col in match_columns])
+        # Use target property names in the Cypher query if a mapping is provided
+        if source_to_target_map:
+            # Create match conditions using target property names
+            n_match_conditions = ", ".join([f"{source_to_target_map.get(col, col)}: ${col}" for col in match_columns])
 
-                # Create SET statements using target property names
-                n_set_statements = ", ".join([f"n.{source_to_target_map.get(key, key)} = ${key}" for key in match_columns]) if match_columns else ""
-            else:
-                # Use source property names if no mapping is provided
-                n_match_conditions = ", ".join([f"{col}: ${col}" for col in match_columns])
-                n_set_statements = ", ".join([f"n.{key} = ${key}" for key in match_columns]) if match_columns else ""
+            # Create SET statements using target property names
+            n_set_statements = ", ".join([f"n.{source_to_target_map.get(key, key)} = ${key}" for key in match_columns]) if match_columns else ""
+        else:
+            # Use source property names if no mapping is provided
+            n_match_conditions = ", ".join([f"{col}: ${col}" for col in match_columns])
+            n_set_statements = ", ".join([f"n.{key} = ${key}" for key in match_columns]) if match_columns else ""
 
-            # Create parameters using source property names
-            match_params = {col: row[col] for col in match_columns}
+        # Create parameters using source property names
+        match_params = {col: row[col] for col in match_columns}
 
-            # Create SET statements for the source entity
-            m_set_statements = ", ".join([f"m.{key} = ${key}" for key in node_properties.keys()])
+        # Create SET statements for the source entity
+        m_set_statements = ", ".join([f"m.{key} = ${key}" for key in node_properties.keys()])
 
-            cypher_query = f"""
-            MERGE (n:{target_label} {{{n_match_conditions}}})
-            ON CREATE SET {n_set_statements}
-            ON MATCH SET {n_set_statements}
-            MERGE (m:{node_label} {{{m_match_conditions}}})
-            ON CREATE SET {m_set_statements}
-            ON MATCH SET {m_set_statements}
-            MERGE (m)-[:{relationship_type}]->(n)
-            """
+        cypher_query = f"""
+        MERGE (n:{target_label} {{{n_match_conditions}}})
+        ON CREATE SET {n_set_statements}
+        ON MATCH SET {n_set_statements}
+        MERGE (m:{node_label} {{{m_match_conditions}}})
+        ON CREATE SET {m_set_statements}
+        ON MATCH SET {m_set_statements}
+        MERGE (m)-[:{relationship_type}]->(n)
+        """
 
-            params = {**match_params, **node_properties}
-            session.run(cypher_query, params)
+        params = {**match_params, **node_properties}
+        db_connection.execute_query(cypher_query, params)
 
 # Example model definitions using the functions above
 # These are equivalent to the models defined in the original models.py file

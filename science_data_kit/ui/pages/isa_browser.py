@@ -71,7 +71,7 @@ class IsaBrowserPage(BasePage):
             on_disconnect=self._on_database_disconnect
         )
 
-    def _on_database_connect(self, uri: str, username: str, password: str, database: str):
+    def _on_database_connect(self, uri: str, username: str, password: str, database: str, conn_name: str = None):
         """
         Handle database connection.
 
@@ -80,6 +80,7 @@ class IsaBrowserPage(BasePage):
             username: The username for authentication.
             password: The password for authentication.
             database: The name of the database to connect to.
+            conn_name: The name of the connection (optional).
         """
         try:
             # Update connection details
@@ -148,10 +149,10 @@ class IsaBrowserPage(BasePage):
     def _extract_node_classes(self, inv: Investigation) -> List[str]:
         """
         Collect ISA node types (Materials, DataFiles, etc.)
-        
+
         Args:
             inv: The ISA Investigation object.
-            
+
         Returns:
             A sorted list of node class names.
         """
@@ -167,10 +168,10 @@ class IsaBrowserPage(BasePage):
     def _extract_relationships(self, inv: Investigation) -> List[tuple]:
         """
         Infer relationships from process steps (input → process → output)
-        
+
         Args:
             inv: The ISA Investigation object.
-            
+
         Returns:
             A sorted list of relationship tuples (source, relationship, target).
         """
@@ -185,11 +186,11 @@ class IsaBrowserPage(BasePage):
     def _extract_properties(self, inv: Investigation, class_name: str) -> List[str]:
         """
         Gather sample properties for a given node class
-        
+
         Args:
             inv: The ISA Investigation object.
             class_name: The name of the node class to extract properties for.
-            
+
         Returns:
             A list of property strings.
         """
@@ -205,10 +206,10 @@ class IsaBrowserPage(BasePage):
     def _load_ontomaton_terms(self, file_path_or_buffer) -> List[OntologyAnnotation]:
         """
         Load OntoMaton 'Terms' table (TSV or XLSX) into OntologyAnnotation objects.
-        
+
         Args:
             file_path_or_buffer: The file path or buffer containing the terms.
-            
+
         Returns:
             A list of OntologyAnnotation objects.
         """
@@ -237,7 +238,7 @@ class IsaBrowserPage(BasePage):
     def _get_standard_isa_terms(self) -> List[OntologyAnnotation]:
         """
         Returns a list of standard ISA ontology terms.
-        
+
         Returns:
             A list of standard ISA OntologyAnnotation objects.
         """
@@ -1083,4 +1084,3 @@ def render_isa_browser_page():
     """Render the ISA Browser page."""
     page = IsaBrowserPage()
     page.render()
-"""
