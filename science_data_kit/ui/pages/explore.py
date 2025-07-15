@@ -487,15 +487,22 @@ class ExplorePage(BasePage):
                 st.write("Column Information:")
 
                 # Create column info table
-                col_info = pd.DataFrame([
-                    {
+                col_info_list = []
+                for col in st.session_state["query_results"].columns:
+                    try:
+                        unique_values = st.session_state["query_results"][col].nunique()
+                    except TypeError:
+                        # Handle unhashable types like lists
+                        unique_values = "N/A (unhashable type)"
+
+                    col_info_list.append({
                         "Column": col,
                         "Type": str(st.session_state["query_results"][col].dtype),
-                        "Unique Values": st.session_state["query_results"][col].nunique(),
+                        "Unique Values": unique_values,
                         "Missing Values": st.session_state["query_results"][col].isna().sum()
-                    }
-                    for col in st.session_state["query_results"].columns
-                ])
+                    })
+
+                col_info = pd.DataFrame(col_info_list)
 
                 st.dataframe(col_info)
 
