@@ -971,14 +971,14 @@ def create_histogram(
         st.error(f"Error creating histogram: {e}")
         return ""
 
-def render_visualization(img_data: str, caption: Optional[str] = None, use_column_width: bool = True, help: Optional[str] = None) -> None:
+def render_visualization(img_data: str, caption: Optional[str] = None, use_container_width: bool = True, help: Optional[str] = None) -> None:
     """
     Render a visualization in Streamlit.
 
     Args:
         img_data: Base64-encoded image data.
         caption: Optional caption for the image.
-        use_column_width: Whether to use the full column width.
+        use_container_width: Whether to use the full container width.
         help: Optional tooltip text to display when hovering over the visualization.
     """
     if not img_data:
@@ -1024,7 +1024,7 @@ def render_visualization(img_data: str, caption: Optional[str] = None, use_colum
         }}
         </style>
         <div id="{img_id}">
-            <img src="data:image/png;base64,{img_data}" style="width: {'100%' if use_column_width else 'auto'};" alt="{caption or 'Visualization'}">
+            <img src="data:image/png;base64,{img_data}" style="width: {'100%' if use_container_width else 'auto'};" alt="{caption or 'Visualization'}">
             <div class="tooltip">{help}</div>
         </div>
         """
@@ -1034,4 +1034,4 @@ def render_visualization(img_data: str, caption: Optional[str] = None, use_colum
         st.markdown(html, unsafe_allow_html=True)
     else:
         # Use standard Streamlit image display if no tooltip is needed
-        st.image(f"data:image/png;base64,{img_data}", caption=caption, use_column_width=use_column_width)
+        st.image(f"data:image/png;base64,{img_data}", caption=caption, use_container_width=use_container_width)

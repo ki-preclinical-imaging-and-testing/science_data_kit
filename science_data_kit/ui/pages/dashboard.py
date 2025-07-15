@@ -231,7 +231,7 @@ class DashboardPage(BasePage):
         def render_service_status():
             img_data = self._create_service_status_chart()
             if img_data:
-                st.image(f"data:image/png;base64,{img_data}", use_column_width=True)
+                st.image(f"data:image/png;base64,{img_data}", use_container_width=True)
 
         create_responsive_container(render_service_status)
 
@@ -243,47 +243,43 @@ class DashboardPage(BasePage):
         col1, col2 = create_responsive_columns(2)
 
         with col1:
-            with create_responsive_container(lambda: self._render_action_card(
+            create_responsive_container(lambda: self._render_action_card(
                 "🔌 Connect to Data Sources",
                 "Connect to various data sources including Neo4j, Microsoft Graph API, Dropbox, and Google Drive.",
                 "Go to Connections", 
                 "goto_connect", 
                 "pages/connect.py"
-            )):
-                pass
+            ))
 
         with col2:
-            with create_responsive_container(lambda: self._render_action_card(
+            create_responsive_container(lambda: self._render_action_card(
                 "🔍 Explore Data",
                 "Visualize and analyze your data from the knowledge graph.",
                 "Go to Explore", 
                 "goto_explore", 
                 "pages/explore.py"
-            )):
-                pass
+            ))
 
         # Second row
         col3, col4 = create_responsive_columns(2)
 
         with col3:
-            with create_responsive_container(lambda: self._render_action_card(
+            create_responsive_container(lambda: self._render_action_card(
                 "🧬 Manage Ontologies",
                 "Work with ontologies to structure your knowledge graph.",
                 "Go to Ontology", 
                 "goto_ontology", 
                 "pages/ontology.py"
-            )):
-                pass
+            ))
 
         with col4:
-            with create_responsive_container(lambda: self._render_action_card(
+            create_responsive_container(lambda: self._render_action_card(
                 "💬 Chat with Your Data",
                 "Use natural language to query and interact with your data.",
                 "Go to Chat", 
                 "goto_chat", 
                 "pages/chat.py"
-            )):
-                pass
+            ))
 
         # Feature Categories Section
         st.header("Feature Categories")
@@ -611,7 +607,7 @@ class DashboardPage(BasePage):
         def render_project_progress():
             img_data = self._create_sample_data_visualization()
             if img_data:
-                st.image(f"data:image/png;base64,{img_data}", use_column_width=True)
+                st.image(f"data:image/png;base64,{img_data}", use_container_width=True)
 
         create_responsive_container(render_project_progress)
 

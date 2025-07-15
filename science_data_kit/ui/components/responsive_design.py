@@ -115,32 +115,40 @@ def create_responsive_container(content_function, key: Optional[str] = None):
     Args:
         content_function: Function that renders the content inside the container
         key: Optional key for the container
+
+    Returns:
+        A context manager for use with 'with' statements
     """
-    with st.container():
-        # Add a small amount of padding that works well on mobile
-        st.markdown("""
-        <style>
+    # Create a container
+    container = st.container(key=key)
+
+    # Apply responsive styling
+    container.markdown("""
+    <style>
+    .responsive-container {
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+        background-color: rgba(240, 242, 246, 0.5);
+    }
+    @media (max-width: 768px) {
         .responsive-container {
-            padding: 0.5rem;
-            margin-bottom: 1rem;
-            border-radius: 0.5rem;
-            background-color: rgba(240, 242, 246, 0.5);
+            padding: 0.25rem;
+            margin-bottom: 0.5rem;
         }
-        @media (max-width: 768px) {
-            .responsive-container {
-                padding: 0.25rem;
-                margin-bottom: 0.5rem;
-            }
-        }
-        </style>
-        <div class="responsive-container">
-        """, unsafe_allow_html=True)
+    }
+    </style>
+    <div class="responsive-container">
+    """, unsafe_allow_html=True)
 
-        # Call the content function to render the content
-        content_function()
+    # Call the content function to render the content inside the container
+    content_function()
 
-        # Close the container div
-        st.markdown("</div>", unsafe_allow_html=True)
+    # Close the container div
+    container.markdown("</div>", unsafe_allow_html=True)
+
+    # Return the container for use with 'with' statement
+    return container
 
 def create_responsive_tabs(tab_names: List[str], tab_contents: List[callable]):
     """

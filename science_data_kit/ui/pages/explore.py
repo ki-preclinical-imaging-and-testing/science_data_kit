@@ -183,12 +183,13 @@ class ExplorePage(BasePage):
             st.error(f"Error fetching schema: {e}")
             return {}
 
-    def _create_schema_visualization(self, schema_data: Dict[str, Any]) -> Optional[str]:
+    def _create_schema_visualization(self, schema_data: Dict[str, Any], layout_type: str = "spring") -> Optional[str]:
         """
         Create a visualization of the database schema.
 
         Args:
             schema_data: Dictionary containing the schema data.
+            layout_type: Type of layout to use ('spring', 'hierarchical', 'force').
 
         Returns:
             Base64-encoded image data for the visualization.
@@ -217,8 +218,21 @@ class ExplorePage(BasePage):
             # Create figure
             plt.figure(figsize=(12, 8))
 
-            # Create layout
-            pos = nx.spring_layout(G, k=0.5, iterations=50)
+            # Create layout based on selected type
+            if layout_type == "hierarchical":
+                # Use dot layout for hierarchical visualization
+                try:
+                    # Try to use pygraphviz if available
+                    pos = nx.nx_agraph.graphviz_layout(G, prog="dot")
+                except ImportError:
+                    # Fall back to a simple hierarchical layout
+                    pos = nx.multipartite_layout(G, subset_key=lambda node: len(nx.shortest_path(G, source=list(G.nodes())[0], target=node)) if nx.has_path(G, list(G.nodes())[0], node) else 0)
+            elif layout_type == "force":
+                # Use force-directed layout with more iterations for better separation
+                pos = nx.spring_layout(G, k=0.8, iterations=100)
+            else:
+                # Default spring layout
+                pos = nx.spring_layout(G, k=0.5, iterations=50)
 
             # Draw nodes
             nx.draw_networkx_nodes(G, pos, node_size=2000, node_color="lightblue", alpha=0.8)
@@ -362,12 +376,25 @@ class ExplorePage(BasePage):
 
         # Display schema visualization if available
         if st.session_state["schema_data"]:
-            # Create visualization
-            img_data = self._create_schema_visualization(st.session_state["schema_data"])
+            # Layout selection
+            layout_options = {
+                "spring": "Spring Layout (Default)",
+                "hierarchical": "Hierarchical Layout",
+                "force": "Force-Separated Layout"
+            }
+            selected_layout = st.selectbox(
+                "Select Visualization Layout",
+                options=list(layout_options.keys()),
+                format_func=lambda x: layout_options[x],
+                key="schema_layout"
+            )
+
+            # Create visualization with selected layout
+            img_data = self._create_schema_visualization(st.session_state["schema_data"], layout_type=selected_layout)
 
             if img_data:
                 # Display visualization
-                st.image(f"data:image/png;base64,{img_data}", use_column_width=True)
+                st.image(f"data:image/png;base64,{img_data}", use_container_width=True)
 
                 # Display schema details
                 with st.expander("Schema Details"):
