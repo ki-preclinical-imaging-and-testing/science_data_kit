@@ -92,8 +92,8 @@ class SurveyPage(BasePage):
             self.db_manager.password = password
             self.db_manager.database = database
 
-            # Connect to the database
-            connection_successful = self.db_manager._connect()
+            # Connect to the database with the specified connection name
+            connection_successful = self.db_manager._connect(conn_name)
 
             if not connection_successful:
                 error_msg = self.db_manager._connection_error or "Unknown connection error"
@@ -106,6 +106,7 @@ class SurveyPage(BasePage):
             st.session_state["neo4j_user"] = username
             st.session_state["neo4j_password"] = password
             st.session_state["neo4j_database"] = database
+            st.session_state["active_connection"] = conn_name
 
             st.success(f"Connected to Neo4j database at {uri}")
         except Exception as e:
@@ -280,7 +281,8 @@ class SurveyPage(BasePage):
                 self.db_manager.user = st.session_state.get("neo4j_user", "neo4j")
                 self.db_manager.password = st.session_state.get("neo4j_password", "password")
                 self.db_manager.database = st.session_state.get("neo4j_database", "neo4j")
-                connection_successful = self.db_manager._connect()
+                active_connection = st.session_state.get("active_connection")
+                connection_successful = self.db_manager._connect(active_connection)
 
                 if not connection_successful:
                     st.error("Failed to connect to Neo4j. Please check your connection details.")
@@ -394,7 +396,8 @@ class SurveyPage(BasePage):
                 self.db_manager.user = st.session_state.get("neo4j_user", "neo4j")
                 self.db_manager.password = st.session_state.get("neo4j_password", "password")
                 self.db_manager.database = st.session_state.get("neo4j_database", "neo4j")
-                connection_successful = self.db_manager._connect()
+                active_connection = st.session_state.get("active_connection")
+                connection_successful = self.db_manager._connect(active_connection)
 
                 if not connection_successful:
                     st.error("Failed to connect to Neo4j. Please check your connection details.")

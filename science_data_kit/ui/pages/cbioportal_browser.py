@@ -75,8 +75,8 @@ class CbioportalBrowserPage(BasePage):
             self.db_manager.password = password
             self.db_manager.database = database
 
-            # Connect to the database
-            connection_successful = self.db_manager._connect()
+            # Connect to the database with the specified connection name
+            connection_successful = self.db_manager._connect(conn_name)
 
             if not connection_successful:
                 error_msg = self.db_manager._connection_error or "Unknown connection error"
@@ -89,6 +89,7 @@ class CbioportalBrowserPage(BasePage):
             st.session_state["neo4j_user"] = username
             st.session_state["neo4j_password"] = password
             st.session_state["neo4j_database"] = database
+            st.session_state["active_connection"] = conn_name
 
             st.success(f"Connected to Neo4j database at {uri}")
         except Exception as e:
