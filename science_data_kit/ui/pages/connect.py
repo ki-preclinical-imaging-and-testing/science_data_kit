@@ -836,20 +836,31 @@ class ServerPage(BasePage):
 
                         # Get database size
                         try:
-                            size = self.db_manager.execute_query(
-                                "CALL dbms.database.size() YIELD database, totalSize RETURN database, totalSize",
+                            # First check if the procedure exists to avoid the error
+                            procedures = self.db_manager.execute_query(
+                                "CALL dbms.procedures() YIELD name RETURN name",
                                 connection_name=active_connection
                             )
-                            if size:
-                                st.write(f"Database: {size[0]['database']}")
-                                st.write(f"Size: {size[0]['totalSize']}")
+
+                            procedure_names = [proc['name'] for proc in procedures] if procedures else []
+
+                            if 'dbms.database.size' in procedure_names:
+                                size = self.db_manager.execute_query(
+                                    "CALL dbms.database.size() YIELD database, totalSize RETURN database, totalSize",
+                                    connection_name=active_connection
+                                )
+                                if size:
+                                    st.write(f"Database: {size[0]['database']}")
+                                    st.write(f"Size: {size[0]['totalSize']}")
+                            else:
+                                st.info("Database size information not available in this Neo4j version")
                         except Exception as e:
                             # Handle the case when dbms.database.size() procedure is not available
                             if "Neo.ClientError.Procedure.ProcedureNotFound" in str(e):
                                 st.info("Database size information not available in this Neo4j version")
                             else:
-                                # Re-raise if it's a different error
-                                raise e
+                                # Log the error but don't raise it to prevent breaking the UI
+                                st.warning(f"Could not retrieve database size: {str(e)}")
 
                         # Get node and relationship counts
                         counts = self.db_manager.execute_query(

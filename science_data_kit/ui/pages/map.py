@@ -854,72 +854,179 @@ class MapPage(BasePage):
 
                 # Define relationships
                 st.subheader("Define Relationships")
+                st.markdown("Define relationships to connect your entities to other nodes in the database.")
 
-                # Add option to create a new node label
-                label_option = st.radio("Target Node Label:", ["Existing Label", "New Label"], key="label_option")
+                # Container for all relationship definitions
+                relationship_container = st.container()
 
-                if label_option == "Existing Label":
-                    if self.db_manager.is_connected():
-                        labels = self.db_manager.fetch_labels()
-                        target_label = st.selectbox("Select Target Node Label:", options=labels)
-                    else:
-                        st.error("Not connected to Neo4j. Please connect first.")
-                        target_label = None
-                else:
-                    st.info("A new node label will be created in the database if it doesn't already exist.")
-                    target_label = st.text_input("Enter New Node Label:")
+                # Initialize relationship definitions in session state if not present
+                if "relationship_definitions" not in st.session_state:
+                    st.session_state["relationship_definitions"] = []
+
+                # Function to add a new relationship definition
+                def add_relationship_definition():
+                    st.session_state["relationship_definitions"].append({
+                        "id": len(st.session_state["relationship_definitions"]),
+                        "label_option": "Existing Label",
+                        "target_label": "",
+                        "match_columns": [],
+                        "target_property_mappings": {},
+                        "relationship_type": ""
+                    })
+
+                # Function to remove a relationship definition
+                def remove_relationship_definition(index):
+                    st.session_state["relationship_definitions"].pop(index)
+
+                # Add relationship button
+                if st.button("Add Relationship"):
+                    add_relationship_definition()
+
+                # If no relationships defined yet, add one by default
+                if not st.session_state["relationship_definitions"]:
+                    add_relationship_definition()
 
                 # Create a list of property columns with their mapped names for selection
+                property_options = []
                 if "property_mappings" in st.session_state and st.session_state["property_mappings"]:
-                    # Create a list of tuples (original_name, mapped_name) for display
-                    property_options = []
                     for col in st.session_state["entity_data"].columns:
                         mapped_name = st.session_state["property_mappings"].get(col, col)
                         if col == mapped_name:
                             property_options.append(f"{col}")
                         else:
                             property_options.append(f"{col} → {mapped_name}")
-
-                    # Display the selection with mapped names
-                    st.markdown("### Select Matching Properties")
-                    st.markdown("Select properties to match with target nodes. Properties with mapped names show both original and mapped names.")
-
-                    # Store the selected options
-                    selected_options = st.multiselect(
-                        "Select Matching Properties:", 
-                        options=property_options
-                    )
-
-                    # Extract the original column names from the selected options
-                    match_columns = []
-                    for option in selected_options:
-                        if " → " in option:
-                            # Extract the original column name (before the arrow)
-                            original_col = option.split(" → ")[0]
-                            match_columns.append(original_col)
-                        else:
-                            match_columns.append(option)
                 else:
-                    # If no mappings exist, use the original column selection
-                    match_columns = st.multiselect("Select Matching Properties:", options=st.session_state["entity_data"].columns)
+                    property_options = list(st.session_state["entity_data"].columns)
 
-                # Only show property mapping if properties are selected
-                if match_columns:
-                    st.markdown("### Map Properties to Target Node Properties")
+                # Display and edit each relationship definition
+                for i, rel_def in enumerate(st.session_state["relationship_definitions"]):
+                    with relationship_container:
+                        st.markdown(f"#### Relationship {i+1}")
 
-                    # For existing labels, fetch available properties
-                    if label_option == "Existing Label" and target_label:
-                        try:
-                            # Fetch available properties for the selected target label
-                            target_properties = self.db_manager.fetch_node_properties(target_label)
+                        # Two columns for the relationship header
+                        header_col1, header_col2 = st.columns([3, 1])
 
-                            st.markdown(f"Map source properties to existing properties in '{target_label}' nodes")
+                        with header_col1:
+                            st.markdown(f"Define relationship to {rel_def['target_label'] or 'target nodes'}")
 
-                            # Create a container for the property mappings
-                            mapping_container = st.container()
+                        with header_col2:
+                            if st.button("Remove", key=f"remove_rel_{i}"):
+                                remove_relationship_definition(i)
+                                st.rerun()
 
-                            with mapping_container:
-                                # Create two columns for each property mapping
+                        # Target Node Label section
+                        rel_def["label_option"] = st.radio(
+                            "Target Node Label:",
+                            ["Existing Label", "New Label"],
+                            key=f"label_option_{i}"
+                        )
+
+                        if rel_def["label_option"] == "Existing Label":
+                            if self.db_manager.is_connected():
+                                labels = self.db_manager.fetch_labels()
+                                rel_def["target_label"] = st.selectbox(
+                                    "Select Target Node Label:",
+                                    options=labels,
+                                    key=f"target_label_{i}"
+                                )
+                            else:
+                                st.error("Not connected to Neo4j. Please connect first.")
+                                rel_def["target_label"] = None
+                        else:
+                            st.info("A new node label will be created in the database if it doesn't already exist.")
+                            rel_def["target_label"] = st.text_input(
+                                "New Label Name:",
+                                key=f"new_label_{i}"
+                            )
+
+                        # Property matching section
+                        st.markdown("##### Select Matching Properties")
+                        st.markdown("Select properties to match with target nodes. Properties with mapped names show both original and mapped names.")
+
+                        # Initialize match columns for this relationship if not present
+                        if "match_columns" not in rel_def or not rel_def["match_columns"]:
+                            rel_def["match_columns"] = []
+
+                        # Transform match_columns to match the format of property_options for the default parameter
+                        default_options = []
+                        for col in rel_def["match_columns"]:
+                            # Check if this column has a mapping
+                            mapped_name = st.session_state["property_mappings"].get(col, col)
+                            if col == mapped_name:
+                                # No mapping, use the column name as is
+                                if col in property_options:
+                                    default_options.append(col)
+                            else:
+                                # Has mapping, use the format with arrow
+                                option_with_arrow = f"{col} → {mapped_name}"
+                                if option_with_arrow in property_options:
+                                    default_options.append(option_with_arrow)
+
+                        # Select matching properties
+                        selected_options = st.multiselect(
+                            "Select Matching Properties:",
+                            options=property_options,
+                            default=default_options,
+                            key=f"match_columns_{i}"
+                        )
+
+                        # Extract the original column names from the selected options
+                        match_columns = []
+                        for option in selected_options:
+                            if " → " in option:
+                                # Extract the original column name (before the arrow)
+                                original_col = option.split(" → ")[0]
+                                match_columns.append(original_col)
+                            else:
+                                match_columns.append(option)
+
+                        rel_def["match_columns"] = match_columns
+
+                        # Property mapping section
+                        if match_columns:
+                            st.markdown("##### Map Properties to Target Node Properties")
+
+                            # Initialize target property mappings for this relationship if not present
+                            if "target_property_mappings" not in rel_def:
+                                rel_def["target_property_mappings"] = {}
+
+                            # For existing labels, fetch available properties
+                            if rel_def["label_option"] == "Existing Label" and rel_def["target_label"]:
+                                try:
+                                    # Fetch available properties for the selected target label
+                                    target_properties = self.db_manager.fetch_node_properties(rel_def["target_label"])
+
+                                    st.markdown(f"Map source properties to existing properties in '{rel_def['target_label']}' nodes")
+
+                                    # Create property mappings
+                                    for prop in match_columns:
+                                        col1, col2 = st.columns([1, 1])
+                                        with col1:
+                                            # Show the source property name (with mapped name if applicable)
+                                            mapped_name = st.session_state["property_mappings"].get(prop, prop)
+                                            if prop == mapped_name:
+                                                st.text(f"Source: {prop}")
+                                            else:
+                                                st.text(f"Source: {prop} → {mapped_name}")
+                                        with col2:
+                                            # Default to the same property name if it exists in target properties
+                                            default_value = rel_def["target_property_mappings"].get(prop, mapped_name)
+                                            default_index = target_properties.index(default_value) if default_value in target_properties else 0
+                                            target_prop = st.selectbox(
+                                                f"Target property for {mapped_name}",
+                                                options=target_properties,
+                                                index=default_index,
+                                                key=f"target_mapping_{i}_{prop}"
+                                            )
+                                            # Store the mapping
+                                            rel_def["target_property_mappings"][prop] = target_prop
+                                except Exception as e:
+                                    st.error(f"Error fetching properties for {rel_def['target_label']}: {e}")
+                            else:
+                                # For new labels, provide free text input
+                                st.markdown(f"Define property names for the new '{rel_def['target_label']}' nodes")
+
+                                # Create property mappings
                                 for prop in match_columns:
                                     col1, col2 = st.columns([1, 1])
                                     with col1:
@@ -930,59 +1037,52 @@ class MapPage(BasePage):
                                         else:
                                             st.text(f"Source: {prop} → {mapped_name}")
                                     with col2:
-                                        # Default to the same property name if it exists in target properties
-                                        default_index = target_properties.index(mapped_name) if mapped_name in target_properties else 0
-                                        target_prop = st.selectbox(
-                                            f"Target property for {mapped_name}",
-                                            options=target_properties,
-                                            index=default_index,
-                                            key=f"target_mapping_{prop}"
+                                        # Default to the same property name
+                                        default_value = rel_def["target_property_mappings"].get(prop, mapped_name)
+                                        target_prop = st.text_input(
+                                            f"Target property name for {mapped_name}",
+                                            value=default_value,
+                                            key=f"target_mapping_{i}_{prop}"
                                         )
                                         # Store the mapping
-                                        st.session_state["target_property_mappings"][prop] = target_prop
-                        except Exception as e:
-                            st.error(f"Error fetching properties for {target_label}: {e}")
-                    else:
-                        # For new labels, provide free text input
-                        st.markdown(f"Define property names for the new '{target_label}' nodes")
+                                        rel_def["target_property_mappings"][prop] = target_prop
 
-                        # Create a container for the property mappings
-                        mapping_container = st.container()
+                        # Relationship type
+                        rel_def["relationship_type"] = st.text_input(
+                            "Define Relationship Type (e.g., STORED_IN):",
+                            value=rel_def.get("relationship_type", ""),
+                            key=f"relationship_type_{i}"
+                        )
 
-                        with mapping_container:
-                            # Create two columns for each property mapping
-                            for prop in match_columns:
-                                col1, col2 = st.columns([1, 1])
-                                with col1:
-                                    # Show the source property name (with mapped name if applicable)
-                                    mapped_name = st.session_state["property_mappings"].get(prop, prop)
-                                    if prop == mapped_name:
-                                        st.text(f"Source: {prop}")
-                                    else:
-                                        st.text(f"Source: {prop} → {mapped_name}")
-                                with col2:
-                                    # Default to the same property name
-                                    default_value = st.session_state["target_property_mappings"].get(prop, mapped_name)
-                                    target_prop = st.text_input(
-                                        f"Target property name for {mapped_name}",
-                                        value=default_value,
-                                        key=f"target_mapping_{prop}"
-                                    )
-                                    # Store the mapping
-                                    st.session_state["target_property_mappings"][prop] = target_prop
-
-                relationship_type = st.text_input("Define Relationship Type (e.g., STORED_IN):")
+                        # Add a separator between relationships
+                        st.markdown("---")
 
                 # Submit to database
                 if st.button("Push to Database"):
-                    # Validate that a target label is provided if "New Label" is selected
-                    if label_option == "New Label" and not target_label:
-                        st.error("Please enter a new node label name.")
+                    # Validate that we have at least one relationship defined
+                    if not st.session_state["relationship_definitions"]:
+                        st.error("Please define at least one relationship.")
                         st.stop()
 
-                    # Validate that a relationship type is provided
-                    if not relationship_type:
-                        st.error("Please enter a relationship type.")
+                    # Validate each relationship definition
+                    valid = True
+                    for i, rel_def in enumerate(st.session_state["relationship_definitions"]):
+                        # Validate target label
+                        if rel_def["label_option"] == "New Label" and not rel_def["target_label"]:
+                            st.error(f"Relationship {i+1}: Please enter a new node label name.")
+                            valid = False
+
+                        # Validate relationship type
+                        if not rel_def["relationship_type"]:
+                            st.error(f"Relationship {i+1}: Please enter a relationship type.")
+                            valid = False
+
+                        # Validate matching properties
+                        if not rel_def["match_columns"]:
+                            st.error(f"Relationship {i+1}: Please select at least one matching property.")
+                            valid = False
+
+                    if not valid:
                         st.stop()
 
                     with st.spinner("Pushing to database..."):
@@ -1009,44 +1109,44 @@ class MapPage(BasePage):
                                 # If no mappings, use the original property columns
                                 mapped_property_columns = property_columns
 
-                            # Update match_columns to use the new names if they are in the property_columns
-                            mapped_match_columns = []
-                            for col in match_columns:
-                                if col in property_columns:
-                                    mapped_match_columns.append(st.session_state["property_mappings"].get(col, col))
-                                else:
-                                    # For columns not in property_columns, check if they have a mapping anyway
-                                    mapped_match_columns.append(st.session_state["property_mappings"].get(col, col))
+                            # Process each relationship definition
+                            for i, rel_def in enumerate(st.session_state["relationship_definitions"]):
+                                # Update match_columns to use the new names if they are in the property_columns
+                                mapped_match_columns = []
+                                for col in rel_def["match_columns"]:
+                                    if col in property_columns:
+                                        mapped_match_columns.append(st.session_state["property_mappings"].get(col, col))
+                                    else:
+                                        # For columns not in property_columns, check if they have a mapping anyway
+                                        mapped_match_columns.append(st.session_state["property_mappings"].get(col, col))
 
-                            # Create a mapping from source property names to target property names
-                            target_property_map = {}
-                            for col in match_columns:
-                                source_prop = st.session_state["property_mappings"].get(col, col)
-                                target_prop = st.session_state["target_property_mappings"].get(col, source_prop)
-                                target_property_map[source_prop] = target_prop
+                                # Create a mapping from source property names to target property names
+                                target_property_map = {}
+                                for col in rel_def["match_columns"]:
+                                    source_prop = st.session_state["property_mappings"].get(col, col)
+                                    target_prop = rel_def["target_property_mappings"].get(col, source_prop)
+                                    target_property_map[source_prop] = target_prop
 
-                            # Create a list of target property names for the match columns
-                            target_match_columns = []
-                            for col in mapped_match_columns:
-                                target_match_columns.append(target_property_map.get(col, col))
+                                # Create a list of target property names for the match columns
+                                target_match_columns = []
+                                for col in mapped_match_columns:
+                                    target_match_columns.append(target_property_map.get(col, col))
 
-                            # Merge new nodes with existing nodes in the database
-                            merge_nodes_with_existing(
-                                db_connection=self.db_manager,
-                                entities_df=mapped_df,
-                                label_column=label_column,
-                                property_columns=mapped_property_columns,
-                                target_label=target_label,
-                                match_columns=target_match_columns,
-                                relationship_type=relationship_type,
-                                source_to_target_map=target_property_map
-                            )
+                                # Merge new nodes with existing nodes in the database
+                                merge_nodes_with_existing(
+                                    db_connection=self.db_manager,
+                                    entities_df=mapped_df,
+                                    label_column=label_column,
+                                    property_columns=mapped_property_columns,
+                                    target_label=rel_def["target_label"],
+                                    match_columns=target_match_columns,
+                                    relationship_type=rel_def["relationship_type"],
+                                    source_to_target_map=target_property_map
+                                )
 
-                            # Success message with specific information about new labels
-                            if label_option == "New Label":
-                                st.success(f"Entities and relationships pushed successfully! New node label '{target_label}' created if it didn't exist.")
-                            else:
-                                st.success("Entities and relationships pushed successfully!")
+                            # Success message
+                            st.success(f"Entities and {len(st.session_state['relationship_definitions'])} relationships pushed successfully!")
+
                         except Exception as e:
                             st.error(f"Error: {e}")
 

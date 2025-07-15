@@ -109,7 +109,21 @@ class ExplorePage(BasePage):
         Returns:
             A dictionary containing the schema data.
         """
-        if not self.db_manager.is_connected():
+        # Check if we're connected according to session state
+        if st.session_state.get("connected", False):
+            # Ensure db_manager is connected using session state connection details
+            if not self.db_manager.is_connected():
+                try:
+                    # Reconnect using the session state connection details
+                    self.db_manager.uri = st.session_state.get("neo4j_uri")
+                    self.db_manager.user = st.session_state.get("neo4j_user")
+                    self.db_manager.password = st.session_state.get("neo4j_password")
+                    self.db_manager.database = st.session_state.get("neo4j_database")
+                    self.db_manager._connect()
+                except Exception as e:
+                    st.error(f"Failed to reconnect to Neo4j: {e}")
+                    return {}
+        elif not self.db_manager.is_connected():
             st.error("Not connected to Neo4j. Please connect first.")
             return {}
 
