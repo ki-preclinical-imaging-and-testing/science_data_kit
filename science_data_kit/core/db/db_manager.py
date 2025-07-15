@@ -1042,13 +1042,13 @@ class Neo4jManager:
             property_string = ", ".join([f"n.{prop} AS {prop}" for prop in properties])
             query = f"""
             MATCH (n:`{label}`)
-            RETURN id(n) AS id, {property_string}
+            RETURN elementId(n) AS id, {property_string}
             LIMIT {limit}
             """
         else:
             query = f"""
             MATCH (n:`{label}`)
-            RETURN id(n) AS id, n
+            RETURN elementId(n) AS id, n
             LIMIT {limit}
             """
 
@@ -1113,7 +1113,7 @@ class Neo4jManager:
             property_string = ", ".join([f"n.{prop} AS {prop}" for prop in properties])
             query = f"""
             MATCH (n:`{label}`)
-            RETURN id(n) AS id, {property_string}
+            RETURN elementId(n) AS id, {property_string}
             ORDER BY n.{order_by}
             SKIP {skip}
             LIMIT {page_size}
@@ -1432,6 +1432,10 @@ class Neo4jManager:
         """
         Exports the entire graph to a file.
 
+        This method works with or without APOC installed. It uses standard Cypher queries
+        to retrieve all nodes and relationships from the database, and then saves them to a file
+        using Python's pickle module.
+
         Args:
             file_path: Path where the graph will be saved.
             connection_name: Optional name of the connection to use.
@@ -1443,12 +1447,21 @@ class Neo4jManager:
         Raises:
             ConnectionError: If there is no active connection.
         """
+        # Handle the special case where connection_name is 'connected'
+        # This is a workaround for a bug where active_connection is set to 'connected'
+        if connection_name == 'connected':
+            # Use the active connection instead
+            connection_name = self._active_connection
+            if connection_name is None or connection_name == '':
+                raise ConnectionError("Cannot export graph. No active connection to Neo4j.")
+
         # If connection_name is provided, use that specific connection
         if connection_name:
             if connection_name not in self._connections:
                 raise ConnectionError(f"Connection '{connection_name}' does not exist")
 
-            if not self._connections[connection_name]["connected"]:
+            # Check if the connection is actually connected
+            if not self.is_connected(connection_name):
                 raise ConnectionError(f"Connection '{connection_name}' is not connected")
         else:
             # Use the active connection
@@ -1460,52 +1473,90 @@ class Neo4jManager:
                     raise ConnectionError("Cannot export graph. No active connection to Neo4j.")
 
         try:
+            # Check if we can execute basic queries before proceeding
+            try:
+                # Test a simple query to ensure the connection is working
+                test_query = "MATCH (n) RETURN count(n) as count LIMIT 1"
+                test_result = self.execute_query(test_query, connection_name=connection_name)
+                if test_result is None:
+                    return False, "Error exporting graph: Unable to execute queries on the database"
+            except Exception as test_error:
+                return False, f"Error exporting graph: Unable to execute queries on the database - {str(test_error)}"
+
             # Create a NetworkX graph
             G = nx.MultiDiGraph()
 
             # Get all nodes
-            nodes_query = "MATCH (n) RETURN id(n) AS id, labels(n) AS labels, properties(n) AS properties"
-            nodes_result = self.execute_query(nodes_query, connection_name=connection_name)
+            try:
+                nodes_query = "MATCH (n) RETURN elementId(n) AS id, labels(n) AS labels, properties(n) AS properties"
+                nodes_result = self.execute_query(nodes_query, connection_name=connection_name)
 
-            # Add nodes to the graph
-            for node in nodes_result:
-                node_id = node["id"]
-                labels = node["labels"]
-                properties = node["properties"]
+                if nodes_result is None:
+                    return False, "Error exporting graph: Failed to retrieve nodes from the database"
 
-                # Add node to graph with its properties
-                G.add_node(node_id, labels=labels, properties=properties)
+                # Add nodes to the graph
+                for node in nodes_result:
+                    node_id = node["id"]
+                    labels = node["labels"]
+                    properties = node["properties"]
+
+                    # Add node to graph with its properties
+                    G.add_node(node_id, labels=labels, properties=properties)
+            except Exception as node_error:
+                return False, f"Error exporting graph: Failed to retrieve or process nodes - {str(node_error)}"
 
             # Get all relationships
-            rels_query = """
-            MATCH (a)-[r]->(b)
-            RETURN id(a) AS source, id(b) AS target, type(r) AS type, 
-                   id(r) AS id, properties(r) AS properties
-            """
-            rels_result = self.execute_query(rels_query, connection_name=connection_name)
+            try:
+                rels_query = """
+                MATCH (a)-[r]->(b)
+                RETURN elementId(a) AS source, elementId(b) AS target, type(r) AS type, 
+                       elementId(r) AS id, properties(r) AS properties
+                """
+                rels_result = self.execute_query(rels_query, connection_name=connection_name)
 
-            # Add relationships to the graph
-            for rel in rels_result:
-                source = rel["source"]
-                target = rel["target"]
-                rel_type = rel["type"]
-                rel_id = rel["id"]
-                properties = rel["properties"]
+                if rels_result is None:
+                    return False, "Error exporting graph: Failed to retrieve relationships from the database"
 
-                # Add edge to graph with its properties
-                G.add_edge(source, target, key=rel_id, type=rel_type, properties=properties)
+                # Add relationships to the graph
+                for rel in rels_result:
+                    source = rel["source"]
+                    target = rel["target"]
+                    rel_type = rel["type"]
+                    rel_id = rel["id"]
+                    properties = rel["properties"]
+
+                    # Add edge to graph with its properties
+                    G.add_edge(source, target, key=rel_id, type=rel_type, properties=properties)
+            except Exception as rel_error:
+                # If we fail to get relationships but have nodes, we can still export the graph
+                self.logger.warning(f"Error retrieving relationships: {str(rel_error)}. Exporting nodes only.")
 
             # Save the graph to a file
-            with open(file_path, 'wb') as f:
-                pickle.dump(G, f)
+            try:
+                with open(file_path, 'wb') as f:
+                    pickle.dump(G, f)
+            except Exception as file_error:
+                return False, f"Error saving graph to file: {str(file_error)}"
 
             return True, f"Graph exported successfully with {len(G.nodes)} nodes and {len(G.edges)} relationships"
         except Exception as e:
-            return False, f"Error exporting graph: {str(e)}"
+            # Provide a more detailed error message
+            error_msg = str(e)
+            if "ProcedureNotFound" in error_msg:
+                return False, (
+                    f"Error exporting graph: There was an issue with a database procedure. "
+                    f"This is likely a temporary connection issue or a configuration problem. "
+                    f"Please try again or check your Neo4j configuration. "
+                    f"Detailed error: {error_msg}"
+                )
+            return False, f"Error exporting graph: {error_msg}"
 
     def import_graph(self, file_path: str, connection_name: Optional[str] = None) -> Tuple[bool, str]:
         """
         Imports a graph from a file into Neo4j.
+
+        This method works with or without APOC installed. It uses standard Cypher queries
+        to create nodes and relationships in the database from a previously exported graph file.
 
         Args:
             file_path: Path to the file containing the graph.
@@ -1518,12 +1569,21 @@ class Neo4jManager:
         Raises:
             ConnectionError: If there is no active connection.
         """
+        # Handle the special case where connection_name is 'connected'
+        # This is a workaround for a bug where active_connection is set to 'connected'
+        if connection_name == 'connected':
+            # Use the active connection instead
+            connection_name = self._active_connection
+            if connection_name is None or connection_name == '':
+                raise ConnectionError("Cannot import graph. No active connection to Neo4j.")
+
         # If connection_name is provided, use that specific connection
         if connection_name:
             if connection_name not in self._connections:
                 raise ConnectionError(f"Connection '{connection_name}' does not exist")
 
-            if not self._connections[connection_name]["connected"]:
+            # Check if the connection is actually connected
+            if not self.is_connected(connection_name):
                 raise ConnectionError(f"Connection '{connection_name}' is not connected")
         else:
             # Use the active connection
@@ -1535,63 +1595,98 @@ class Neo4jManager:
                     raise ConnectionError("Cannot import graph. No active connection to Neo4j.")
 
         try:
+            # Check if we can execute basic queries before proceeding
+            try:
+                # Test a simple query to ensure the connection is working
+                test_query = "MATCH (n) RETURN count(n) as count LIMIT 1"
+                test_result = self.execute_query(test_query, connection_name=connection_name)
+                if test_result is None:
+                    return False, "Error importing graph: Unable to execute queries on the database"
+            except Exception as test_error:
+                return False, f"Error importing graph: Unable to execute queries on the database - {str(test_error)}"
+
             # Load the graph from file
-            with open(file_path, 'rb') as f:
-                G = pickle.load(f)
+            try:
+                with open(file_path, 'rb') as f:
+                    G = pickle.load(f)
+            except FileNotFoundError:
+                return False, f"Error importing graph: File not found - {file_path}"
+            except (pickle.PickleError, EOFError, AttributeError) as pickle_error:
+                return False, f"Error importing graph: Invalid or corrupted file format - {str(pickle_error)}"
+            except Exception as file_error:
+                return False, f"Error importing graph: Error reading file - {str(file_error)}"
 
             # Clear the database
-            self.execute_query("MATCH (n) DETACH DELETE n", connection_name=connection_name)
+            try:
+                self.execute_query("MATCH (n) DETACH DELETE n", connection_name=connection_name)
+            except Exception as clear_error:
+                return False, f"Error importing graph: Failed to clear existing data - {str(clear_error)}"
 
             # Create nodes
-            for node_id, node_data in G.nodes(data=True):
-                labels = node_data.get('labels', [])
-                properties = node_data.get('properties', {})
+            try:
+                for node_id, node_data in G.nodes(data=True):
+                    labels = node_data.get('labels', [])
+                    properties = node_data.get('properties', {})
 
-                # Create label string
-                label_string = ":".join(labels)
+                    # Create label string
+                    label_string = ":".join(labels)
 
-                # Filter out None values and non-primitive types
-                filtered_props = {}
-                for k, v in properties.items():
-                    if v is not None and isinstance(v, (str, int, float, bool, list)):
-                        filtered_props[k] = v
+                    # Filter out None values and non-primitive types
+                    filtered_props = {}
+                    for k, v in properties.items():
+                        if v is not None and isinstance(v, (str, int, float, bool, list)):
+                            filtered_props[k] = v
 
-                # Create node
-                query = f"CREATE (n:{label_string}) SET n = $props RETURN id(n)"
-                new_id = self.query_to_value(query, {"props": filtered_props}, connection_name=connection_name)
+                    # Create node
+                    query = f"CREATE (n:{label_string}) SET n = $props RETURN elementId(n)"
+                    new_id = self.query_to_value(query, {"props": filtered_props}, connection_name=connection_name)
 
-                # Map old ID to new ID
-                G.nodes[node_id]['new_id'] = new_id
+                    # Map old ID to new ID
+                    G.nodes[node_id]['new_id'] = new_id
+            except Exception as node_error:
+                return False, f"Error importing graph: Failed to create nodes - {str(node_error)}"
 
             # Create relationships
-            for source, target, key, edge_data in G.edges(data=True, keys=True):
-                rel_type = edge_data.get('type', 'RELATED_TO')
-                properties = edge_data.get('properties', {})
+            try:
+                for source, target, key, edge_data in G.edges(data=True, keys=True):
+                    rel_type = edge_data.get('type', 'RELATED_TO')
+                    properties = edge_data.get('properties', {})
 
-                # Get new IDs
-                new_source = G.nodes[source].get('new_id')
-                new_target = G.nodes[target].get('new_id')
+                    # Get new IDs
+                    new_source = G.nodes[source].get('new_id')
+                    new_target = G.nodes[target].get('new_id')
 
-                # Filter out None values and non-primitive types
-                filtered_props = {}
-                for k, v in properties.items():
-                    if v is not None and isinstance(v, (str, int, float, bool, list)):
-                        filtered_props[k] = v
+                    # Filter out None values and non-primitive types
+                    filtered_props = {}
+                    for k, v in properties.items():
+                        if v is not None and isinstance(v, (str, int, float, bool, list)):
+                            filtered_props[k] = v
 
-                # Create relationship
-                query = f"""
-                MATCH (a), (b)
-                WHERE id(a) = {new_source} AND id(b) = {new_target}
-                CREATE (a)-[r:{rel_type}]->(b)
-                """
-                if filtered_props:
-                    query += " SET r = $props"
+                    # Create relationship
+                    query = f"""
+                    MATCH (a), (b)
+                    WHERE elementId(a) = '{new_source}' AND elementId(b) = '{new_target}'
+                    CREATE (a)-[r:{rel_type}]->(b)
+                    """
+                    if filtered_props:
+                        query += " SET r = $props"
 
-                self.execute_query(query, {"props": filtered_props}, connection_name=connection_name)
+                    self.execute_query(query, {"props": filtered_props}, connection_name=connection_name)
+            except Exception as rel_error:
+                return False, f"Error importing graph: Failed to create relationships - {str(rel_error)}"
 
             return True, f"Graph imported successfully with {len(G.nodes)} nodes and {len(G.edges)} relationships"
         except Exception as e:
-            return False, f"Error importing graph: {str(e)}"
+            # Provide a more detailed error message
+            error_msg = str(e)
+            if "ProcedureNotFound" in error_msg:
+                return False, (
+                    f"Error importing graph: There was an issue with a database procedure. "
+                    f"This is likely a temporary connection issue or a configuration problem. "
+                    f"Please try again or check your Neo4j configuration. "
+                    f"Detailed error: {error_msg}"
+                )
+            return False, f"Error importing graph: {error_msg}"
 
     # Database indexing methods
 

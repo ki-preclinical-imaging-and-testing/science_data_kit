@@ -818,6 +818,7 @@ class ServerPage(BasePage):
             st.dataframe(connection_data)
 
             # Display information about the active connection
+            # Check if we have an active Neo4j connection
             if active_connection and self.db_manager.is_connected(active_connection):
                 st.subheader(f"Active Connection: {active_connection}")
                 st.success(f"Connected to Neo4j database at {connections[active_connection].get('uri', '')}")
@@ -905,9 +906,17 @@ class ServerPage(BasePage):
                 except Exception as e:
                     st.error(f"Error fetching database information: {e}")
 
-                # Database Export/Import
+                # Database Export/Import - Only show for Neo4j connections
+                # We know this is a Neo4j connection because we're using self.db_manager
                 with st.expander("Database Export/Import", expanded=False):
-                    st.write("Export or import the entire database.")
+                    st.write("Export or import the entire Neo4j database.")
+
+                    # Add a note about Neo4j compatibility
+                    st.info(
+                        "Note: The export/import functionality works with all Neo4j versions, with or without the APOC plugin. "
+                        "While APOC is not required, having it installed may provide additional features and better performance "
+                        "in some cases. If you encounter any issues, please check your Neo4j configuration and connection status."
+                    )
 
                     # Export section
                     st.subheader("Export Database")
@@ -917,6 +926,16 @@ class ServerPage(BasePage):
 
                     if st.button("Export Database", key="export_btn"):
                         try:
+                            # Check if active_connection is valid before proceeding
+                            if not active_connection:
+                                st.error("No active connection. Please connect to a Neo4j database first.")
+                                return
+
+                            # Verify that the connection exists and is connected
+                            if not self.db_manager.is_connected(active_connection):
+                                st.error(f"Connection '{active_connection}' is not connected or does not exist. Please reconnect to the database.")
+                                return
+
                             with st.spinner("Exporting database..."):
                                 success, message = self.db_manager.export_graph(export_path, connection_name=active_connection)
 
@@ -924,8 +943,40 @@ class ServerPage(BasePage):
                                 st.success(message)
                             else:
                                 st.error(message)
+
+                                # Provide additional guidance for specific error types
+                                if "ProcedureNotFound" in message:
+                                    st.warning(
+                                        "This error indicates a temporary issue with database procedures. "
+                                        "Please try again or check your Neo4j configuration. "
+                                        "The export functionality should work with or without APOC installed."
+                                    )
+                                elif "Unable to execute queries" in message:
+                                    st.warning(
+                                        "This error indicates that there might be connectivity issues with your Neo4j database. "
+                                        "Please check that your connection is still active and that the database is running properly."
+                                    )
                         except Exception as e:
-                            st.error(f"Error exporting database: {e}")
+                            error_msg = str(e)
+                            st.error(f"Error exporting database: {error_msg}")
+
+                            # Log the full exception for debugging
+                            import traceback
+                            print(f"Export error: {error_msg}")
+                            print(traceback.format_exc())
+
+                            # Provide additional guidance for unexpected errors
+                            if "KeyError: 'connected'" in traceback.format_exc():
+                                st.warning(
+                                    "There was an issue with the connection name. "
+                                    "This is a known issue that has been fixed. Please try again."
+                                )
+                            else:
+                                st.warning(
+                                    "An unexpected error occurred during the export process. "
+                                    "This might be due to connectivity issues, insufficient permissions, "
+                                    "or a temporary database problem. Please check your connection and try again."
+                                )
 
                     # Import section
                     st.subheader("Import Database")
@@ -938,6 +989,16 @@ class ServerPage(BasePage):
                             st.error("Please specify a file to import")
                         else:
                             try:
+                                # Check if active_connection is valid before proceeding
+                                if not active_connection:
+                                    st.error("No active connection. Please connect to a Neo4j database first.")
+                                    return
+
+                                # Verify that the connection exists and is connected
+                                if not self.db_manager.is_connected(active_connection):
+                                    st.error(f"Connection '{active_connection}' is not connected or does not exist. Please reconnect to the database.")
+                                    return
+
                                 with st.spinner("Importing database..."):
                                     success, message = self.db_manager.import_graph(import_path, connection_name=active_connection)
 
@@ -945,9 +1006,88 @@ class ServerPage(BasePage):
                                     st.success(message)
                                 else:
                                     st.error(message)
+
+                                    # Provide additional guidance for specific error types
+                                    if "ProcedureNotFound" in message:
+                                        st.warning(
+                                            "This error indicates a temporary issue with database procedures. "
+                                            "Please try again or check your Neo4j configuration. "
+                                            "The import functionality should work with or without APOC installed."
+                                        )
+                                    elif "Unable to execute queries" in message:
+                                        st.warning(
+                                            "This error indicates that there might be connectivity issues with your Neo4j database. "
+                                            "Please check that your connection is still active and that the database is running properly."
+                                        )
+                                    elif "file" in message.lower() and ("not found" in message.lower() or "does not exist" in message.lower()):
+                                        st.warning(
+                                            "The specified import file could not be found. Please check the file path and ensure the file exists."
+                                        )
+                                    elif "permission" in message.lower():
+                                        st.warning(
+                                            "There might be permission issues accessing the import file. "
+                                            "Please check that you have the necessary permissions to read the file."
+                                        )
                             except Exception as e:
-                                st.error(f"Error importing database: {e}")
-            elif not active_connection:
+                                error_msg = str(e)
+                                st.error(f"Error importing database: {error_msg}")
+
+                                # Log the full exception for debugging
+                                import traceback
+                                print(f"Import error: {error_msg}")
+                                print(traceback.format_exc())
+
+                                # Provide additional guidance for unexpected errors
+                                if "KeyError: 'connected'" in traceback.format_exc():
+                                    st.warning(
+                                        "There was an issue with the connection name. "
+                                        "This is a known issue that has been fixed. Please try again."
+                                    )
+                                else:
+                                    st.warning(
+                                        "An unexpected error occurred during the import process. "
+                                        "This might be due to connectivity issues, insufficient permissions, "
+                                        "or a temporary database problem. Please check your connection and try again."
+                                    )
+
+            # Check if we have an active PostgreSQL connection
+            pg_active_connection = st.session_state.get("pg_active_connection")
+            if pg_active_connection and postgres_manager.is_connected(pg_active_connection):
+                st.subheader(f"Active PostgreSQL Connection: {pg_active_connection}")
+
+                # Get connection details from session state
+                pg_connections = st.session_state.get("pg_connections", {})
+                if pg_active_connection in pg_connections:
+                    conn_details = pg_connections[pg_active_connection]
+                    st.success(f"Connected to PostgreSQL database at {conn_details.get('host', '')}:{conn_details.get('port', '')}")
+
+                # Display PostgreSQL database information
+                try:
+                    with st.expander("Database Information", expanded=True):
+                        # Get PostgreSQL version
+                        version_query = "SELECT version();"
+                        version_result = postgres_manager.execute_query(version_query, connection_name=pg_active_connection)
+                        if version_result:
+                            st.write(f"PostgreSQL Version: {version_result[0]['version']}")
+
+                        # Get database size
+                        size_query = "SELECT pg_size_pretty(pg_database_size(current_database())) as size;"
+                        size_result = postgres_manager.execute_query(size_query, connection_name=pg_active_connection)
+                        if size_result:
+                            st.write(f"Database Size: {size_result[0]['size']}")
+
+                        # Get table count
+                        tables_query = "SELECT count(*) as table_count FROM information_schema.tables WHERE table_schema = 'public';"
+                        tables_result = postgres_manager.execute_query(tables_query, connection_name=pg_active_connection)
+                        if tables_result:
+                            st.write(f"Tables: {tables_result[0]['table_count']}")
+                except Exception as e:
+                    st.error(f"Error fetching PostgreSQL database information: {e}")
+
+                # Note: PostgreSQL export/import functionality is not implemented yet
+                st.info("Database export/import functionality for PostgreSQL is not yet implemented.")
+
+            elif not active_connection and not pg_active_connection:
                 st.info("No active connection. Use the sidebar to connect to a database.")
 
         # Information about features in development

@@ -259,11 +259,11 @@ def register_common_templates():
     template_registry.register_template(
         QueryTemplate(
             name="get_node_by_id",
-            template="MATCH (n) WHERE id(n) = {node_id} RETURN n",
-            description="Get a node by its internal ID",
-            parameter_descriptions={"node_id": "Internal ID of the node"},
+            template="MATCH (n) WHERE elementId(n) = {node_id} RETURN n",
+            description="Get a node by its element ID",
+            parameter_descriptions={"node_id": "Element ID of the node"},
             required_parameters={"node_id"},
-            parameter_validators={"node_id": lambda x: isinstance(x, int) and x >= 0}
+            parameter_validators={"node_id": lambda x: isinstance(x, (str, int))}
         )
     )
 
