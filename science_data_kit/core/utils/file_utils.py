@@ -3,11 +3,14 @@ File Utilities for Science Data Kit
 
 This module provides utilities for organizing and managing files, including
 creating structured directory hierarchies, copying files, browsing file trees,
-and reading spreadsheets/tables.
+reading spreadsheets/tables, and compressing/extracting files.
 """
 
 import os
 import subprocess
+import zipfile
+import tarfile
+import shutil
 from typing import List, Optional, Union, Dict, Any, Tuple
 from pathlib import Path
 import pandas as pd
@@ -436,3 +439,259 @@ def get_file_preview(file_path: str, max_rows: int = 5) -> Dict[str, Any]:
             "data": None,
             "error": error
         }
+
+
+# File Compression/Extraction Functions
+
+def is_archive_file(file_path: str) -> bool:
+    """
+    Check if a file is an archive (zip, tar, etc.).
+
+    Args:
+        file_path: Path to the file.
+
+    Returns:
+        True if the file is an archive, False otherwise.
+    """
+    # Check file extension
+    ext = os.path.splitext(file_path)[1].lower()
+    return ext in ['.zip', '.tar', '.gz', '.tgz', '.bz2', '.tbz2', '.xz', '.txz']
+
+
+def get_archive_type(file_path: str) -> str:
+    """
+    Get the type of archive file.
+
+    Args:
+        file_path: Path to the archive file.
+
+    Returns:
+        String indicating the archive type ('zip', 'tar', 'gzip', 'bzip2', 'xz', or 'unknown').
+    """
+    # Check file extension
+    ext = os.path.splitext(file_path)[1].lower()
+
+    # Check for double extensions like .tar.gz
+    if ext == '.gz' or ext == '.bz2' or ext == '.xz':
+        base_name = os.path.splitext(os.path.splitext(file_path)[0])[0]
+        if base_name.endswith('.tar'):
+            if ext == '.gz':
+                return 'tar_gzip'
+            elif ext == '.bz2':
+                return 'tar_bzip2'
+            elif ext == '.xz':
+                return 'tar_xz'
+
+    # Check for single extensions
+    if ext == '.zip':
+        return 'zip'
+    elif ext == '.tar':
+        return 'tar'
+    elif ext == '.gz':
+        return 'gzip'
+    elif ext == '.tgz':
+        return 'tar_gzip'
+    elif ext == '.bz2':
+        return 'bzip2'
+    elif ext == '.tbz2':
+        return 'tar_bzip2'
+    elif ext == '.xz':
+        return 'xz'
+    elif ext == '.txz':
+        return 'tar_xz'
+    else:
+        return 'unknown'
+
+
+def compress_files(
+    files: List[str], 
+    output_path: str, 
+    archive_type: str = 'zip',
+    compression_level: int = 9,
+    include_base_dir: bool = False
+) -> Tuple[bool, str]:
+    """
+    Compress files or directories into an archive.
+
+    Args:
+        files: List of file or directory paths to compress.
+        output_path: Path where the archive will be created.
+        archive_type: Type of archive to create ('zip', 'tar', 'tar_gzip', 'tar_bzip2', 'tar_xz').
+        compression_level: Compression level (0-9, where 9 is highest compression).
+        include_base_dir: Whether to include the base directory in the archive.
+
+    Returns:
+        Tuple containing:
+        - Success flag (True if compression was successful, False otherwise).
+        - Error message if compression failed, or empty string if successful.
+    """
+    try:
+        # Ensure output directory exists
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+
+        # Create appropriate archive based on type
+        if archive_type == 'zip':
+            with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=compression_level) as zipf:
+                for file_path in tqdm(files, desc="Compressing files"):
+                    if os.path.isdir(file_path):
+                        # Walk directory and add all files
+                        for root, _, files_in_dir in os.walk(file_path):
+                            for file in files_in_dir:
+                                file_to_add = os.path.join(root, file)
+                                # Determine arcname (path within the archive)
+                                if include_base_dir:
+                                    arcname = os.path.relpath(file_to_add, os.path.dirname(file_path))
+                                else:
+                                    arcname = os.path.relpath(file_to_add, file_path)
+                                    if arcname == '.':
+                                        arcname = os.path.basename(file_path)
+                                zipf.write(file_to_add, arcname)
+                    else:
+                        # Add single file
+                        if include_base_dir:
+                            arcname = os.path.basename(file_path)
+                        else:
+                            arcname = os.path.basename(file_path)
+                        zipf.write(file_path, arcname)
+
+        elif archive_type.startswith('tar'):
+            # Determine compression mode
+            if archive_type == 'tar':
+                mode = 'w'
+            elif archive_type == 'tar_gzip':
+                mode = 'w:gz'
+            elif archive_type == 'tar_bzip2':
+                mode = 'w:bz2'
+            elif archive_type == 'tar_xz':
+                mode = 'w:xz'
+            else:
+                return False, f"Unsupported tar archive type: {archive_type}"
+
+            with tarfile.open(output_path, mode) as tarf:
+                for file_path in tqdm(files, desc="Compressing files"):
+                    if os.path.isdir(file_path):
+                        # Add directory recursively
+                        base_dir = os.path.basename(file_path)
+                        if include_base_dir:
+                            tarf.add(file_path, arcname=base_dir)
+                        else:
+                            # Add contents of directory without the base directory
+                            for item in os.listdir(file_path):
+                                tarf.add(os.path.join(file_path, item), arcname=item)
+                    else:
+                        # Add single file
+                        if include_base_dir:
+                            arcname = os.path.basename(file_path)
+                        else:
+                            arcname = os.path.basename(file_path)
+                        tarf.add(file_path, arcname=arcname)
+
+        else:
+            return False, f"Unsupported archive type: {archive_type}"
+
+        return True, ""
+
+    except Exception as e:
+        return False, f"Error compressing files: {str(e)}"
+
+
+def extract_archive(
+    archive_path: str, 
+    output_dir: str,
+    specific_files: Optional[List[str]] = None
+) -> Tuple[bool, str]:
+    """
+    Extract files from an archive.
+
+    Args:
+        archive_path: Path to the archive file.
+        output_dir: Directory where files will be extracted.
+        specific_files: Optional list of specific files to extract. If None, all files are extracted.
+
+    Returns:
+        Tuple containing:
+        - Success flag (True if extraction was successful, False otherwise).
+        - Error message if extraction failed, or empty string if successful.
+    """
+    try:
+        # Ensure output directory exists
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Determine archive type
+        archive_type = get_archive_type(archive_path)
+
+        # Extract based on archive type
+        if archive_type == 'zip':
+            with zipfile.ZipFile(archive_path, 'r') as zipf:
+                if specific_files:
+                    # Extract specific files
+                    for file in tqdm(specific_files, desc="Extracting files"):
+                        zipf.extract(file, output_dir)
+                else:
+                    # Extract all files
+                    for file in tqdm(zipf.namelist(), desc="Extracting files"):
+                        zipf.extract(file, output_dir)
+
+        elif archive_type.startswith('tar'):
+            with tarfile.open(archive_path, 'r:*') as tarf:
+                if specific_files:
+                    # Extract specific files
+                    for file in tqdm(specific_files, desc="Extracting files"):
+                        tarf.extract(file, output_dir)
+                else:
+                    # Extract all files
+                    tarf.extractall(output_dir, members=tqdm(tarf.getmembers(), desc="Extracting files"))
+
+        else:
+            return False, f"Unsupported archive type: {archive_type}"
+
+        return True, ""
+
+    except Exception as e:
+        return False, f"Error extracting archive: {str(e)}"
+
+
+def list_archive_contents(archive_path: str) -> Tuple[List[Dict[str, Any]], str]:
+    """
+    List the contents of an archive file.
+
+    Args:
+        archive_path: Path to the archive file.
+
+    Returns:
+        Tuple containing:
+        - List of dictionaries with information about each file in the archive.
+          Each dictionary has keys: name, size, modified, is_dir
+        - Error message if listing failed, or empty string if successful.
+    """
+    try:
+        contents = []
+        archive_type = get_archive_type(archive_path)
+
+        if archive_type == 'zip':
+            with zipfile.ZipFile(archive_path, 'r') as zipf:
+                for info in zipf.infolist():
+                    contents.append({
+                        "name": info.filename,
+                        "size": info.file_size,
+                        "modified": datetime.datetime(*info.date_time).strftime('%Y-%m-%d %H:%M:%S'),
+                        "is_dir": info.filename.endswith('/')
+                    })
+
+        elif archive_type.startswith('tar'):
+            with tarfile.open(archive_path, 'r:*') as tarf:
+                for info in tarf.getmembers():
+                    contents.append({
+                        "name": info.name,
+                        "size": info.size,
+                        "modified": datetime.datetime.fromtimestamp(info.mtime).strftime('%Y-%m-%d %H:%M:%S'),
+                        "is_dir": info.isdir()
+                    })
+
+        else:
+            return [], f"Unsupported archive type: {archive_type}"
+
+        return contents, ""
+
+    except Exception as e:
+        return [], f"Error listing archive contents: {str(e)}"
