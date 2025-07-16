@@ -240,6 +240,12 @@
                                 <option value="apikey">API Key</option>
                             </select>
                         </div>
+
+                        <div id="oauthOptions" class="connection-options" style="display: none;">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> OAuth authentication requires additional steps. After creating the connection, you'll be redirected to the service provider to authorize access.
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -282,6 +288,19 @@
                 document.getElementById('databaseOptions').style.display = 'block';
             } else if (connectionType === 'api') {
                 document.getElementById('apiOptions').style.display = 'block';
+            }
+        });
+
+        // Handle API auth type selection
+        document.getElementById('apiAuthType').addEventListener('change', function() {
+            const authType = this.value;
+
+            // Hide OAuth options
+            document.getElementById('oauthOptions').style.display = 'none';
+
+            // Show options for selected auth type
+            if (authType === 'oauth') {
+                document.getElementById('oauthOptions').style.display = 'block';
             }
         });
 
@@ -367,58 +386,128 @@
 
             // Create config object based on connection type
             let config = {};
+            let isOAuth = false;
 
             if (type === 'database') {
                 config.dbType = document.getElementById('dbType').value;
             } else if (type === 'api') {
-                config.authType = document.getElementById('apiAuthType').value;
+                const authType = document.getElementById('apiAuthType').value;
+                config.authType = authType;
+                isOAuth = (authType === 'oauth');
+            } else if (type === 'msgraph' || type === 'google_drive' || type === 'github' || type === 'dropbox') {
+                // These are known OAuth connection types
+                isOAuth = true;
+
+                // Add client ID and secret if provided
+                const clientIdField = document.querySelector(`input[name="${type}_client_id"]`);
+                const clientSecretField = document.querySelector(`input[name="${type}_client_secret"]`);
+
+                if (clientIdField) {
+                    config.client_id = clientIdField.value;
+                }
+
+                if (clientSecretField) {
+                    config.client_secret = clientSecretField.value;
+                }
+
+                // Add tenant ID for Microsoft Graph API
+                if (type === 'msgraph') {
+                    const tenantIdField = document.querySelector('input[name="msgraph_tenant_id"]');
+                    if (tenantIdField) {
+                        config.tenant_id = tenantIdField.value;
+                    }
+                }
             }
 
             // Show loading state
             this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...';
             this.disabled = true;
 
-            // Send API request
-            fetch('/api/connect/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    type: type,
-                    name: name,
-                    config: config
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Reset button state
-                this.innerHTML = 'Create';
-                this.disabled = false;
+            if (isOAuth) {
+                // For OAuth connections, initiate the OAuth flow
+                fetch('/api/connect/oauth/initiate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        name: name,
+                        config: config
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Reset button state
+                    this.innerHTML = 'Create';
+                    this.disabled = false;
 
-                if (data.success) {
-                    // Close modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('newConnectionModal'));
-                    modal.hide();
+                    if (data.success && data.auth_url) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('newConnectionModal'));
+                        modal.hide();
 
-                    // Show success message
-                    showToast('Connection created successfully', 'success');
+                        // Show info message
+                        showToast('Redirecting to authorization page...', 'info');
 
-                    // Reload page to show new connection
-                    window.location.reload();
-                } else {
+                        // Redirect to the authorization URL
+                        window.location.href = data.auth_url;
+                    } else {
+                        // Show error message
+                        showToast('Failed to initiate OAuth flow: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    // Reset button state
+                    this.innerHTML = 'Create';
+                    this.disabled = false;
+
                     // Show error message
-                    showToast('Failed to create connection: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                // Reset button state
-                this.innerHTML = 'Create';
-                this.disabled = false;
+                    showToast('Error: ' + error.message, 'error');
+                });
+            } else {
+                // For non-OAuth connections, create the connection directly
+                fetch('/api/connect/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        name: name,
+                        config: config
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Reset button state
+                    this.innerHTML = 'Create';
+                    this.disabled = false;
 
-                // Show error message
-                showToast('Error: ' + error.message, 'error');
-            });
+                    if (data.success) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('newConnectionModal'));
+                        modal.hide();
+
+                        // Show success message
+                        showToast('Connection created successfully', 'success');
+
+                        // Reload page to show new connection
+                        window.location.reload();
+                    } else {
+                        // Show error message
+                        showToast('Failed to create connection: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    // Reset button state
+                    this.innerHTML = 'Create';
+                    this.disabled = false;
+
+                    // Show error message
+                    showToast('Error: ' + error.message, 'error');
+                });
+            }
         });
 
         // Add event listeners to test and disconnect buttons

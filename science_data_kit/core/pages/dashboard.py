@@ -15,16 +15,16 @@ from science_data_kit.core.db.db_manager import db_manager
 class DashboardPage(BasePage):
     """
     Dashboard page serving as the main entry point for the application.
-    
+
     This class provides the core business logic for the Dashboard page,
     independent of any UI framework.
     """
-    
+
     def __init__(self, db_connection=None):
         """Initialize the Dashboard page."""
         super().__init__(db_connection)
         self.db_manager = db_manager
-        
+
         # Default connected services state
         self.connected_services = {
             "neo4j": False,
@@ -34,11 +34,11 @@ class DashboardPage(BasePage):
             "dropbox": False,
             "google_drive": False
         }
-    
+
     def get_page_data(self) -> DashboardPageData:
         """
         Return data needed to render the Dashboard page.
-        
+
         Returns:
             An instance of DashboardPageData containing the data needed
             to render the Dashboard page.
@@ -54,18 +54,18 @@ class DashboardPage(BasePage):
             recent_activities=self._get_recent_activities(),
             feature_categories=self._get_feature_categories()
         )
-    
+
     def connect_to_database(self, uri: str, username: str, password: str, database: str, conn_name: str = None) -> Dict[str, Any]:
         """
         Connect to a database.
-        
+
         Args:
             uri: The URI of the Neo4j server.
             username: The username for authentication.
             password: The password for authentication.
             database: The name of the database to connect to.
             conn_name: The name of the connection (optional).
-            
+
         Returns:
             A dictionary with connection status and error message if any.
         """
@@ -73,35 +73,38 @@ class DashboardPage(BasePage):
             "success": False,
             "error": None
         }
-        
+
         try:
             # Update connection details
             self.db_manager.uri = uri
             self.db_manager.user = username
             self.db_manager.password = password
             self.db_manager.database = database
-            
+
             # Connect to the database with the specified connection name
             connection_successful = self.db_manager._connect(conn_name)
-            
+
             if not connection_successful:
                 error_msg = self.db_manager._connection_error or "Unknown connection error"
                 result["error"] = f"Failed to connect to Neo4j: {error_msg}"
                 return result
-            
+
             # Update connected services
             self.connected_services["neo4j"] = True
-            
+
+            # Emit updates to connected clients
+            self.emit_updates()
+
             result["success"] = True
             return result
         except Exception as e:
             result["error"] = f"Failed to connect to Neo4j: {str(e)}"
             return result
-    
+
     def disconnect_from_database(self) -> Dict[str, Any]:
         """
         Disconnect from the database.
-        
+
         Returns:
             A dictionary with disconnection status and error message if any.
         """
@@ -109,33 +112,36 @@ class DashboardPage(BasePage):
             "success": False,
             "error": None
         }
-        
+
         try:
             # Close the connection
             self.db_manager.close()
-            
+
             # Update connected services
             self.connected_services["neo4j"] = False
-            
+
+            # Emit updates to connected clients
+            self.emit_updates()
+
             result["success"] = True
             return result
         except Exception as e:
             result["error"] = f"Failed to disconnect from Neo4j: {str(e)}"
             return result
-    
+
     def _get_metrics(self) -> List[Dict[str, Any]]:
         """
         Get metrics for the Dashboard page.
-        
+
         Returns:
             A list of dictionaries containing metric data.
         """
         metrics = []
-        
+
         # Add connected services metric
         connected_count = sum(1 for status in self.connected_services.values() if status)
         total_count = len(self.connected_services)
-        
+
         metrics.append({
             "title": "Connected Services",
             "value": connected_count,
@@ -143,25 +149,25 @@ class DashboardPage(BasePage):
             "unit": "services",
             "trend": None
         })
-        
+
         # Add more metrics as needed
-        
+
         return metrics
-    
+
     def _get_charts(self) -> List[Dict[str, Any]]:
         """
         Get charts for the Dashboard page.
-        
+
         Returns:
             A list of dictionaries containing chart data.
         """
         charts = []
-        
+
         # Add service status chart
         services = list(self.connected_services.keys())
         status = [1 if self.connected_services[s] else 0 for s in services]
         display_names = [s.replace('_', ' ').title() for s in services]
-        
+
         charts.append({
             "title": "Service Connection Status",
             "type": "bar",
@@ -175,11 +181,11 @@ class DashboardPage(BasePage):
                 "colors": ["green" if s else "red" for s in status]
             }
         })
-        
+
         # Add project progress chart
         categories = ['Data Sources', 'Analysis', 'Visualization', 'Integration']
         values = [85, 70, 60, 40]
-        
+
         charts.append({
             "title": "Project Progress by Category",
             "type": "bar",
@@ -193,36 +199,36 @@ class DashboardPage(BasePage):
                 "color": "skyblue"
             }
         })
-        
+
         return charts
-    
+
     def _get_tables(self) -> List[Dict[str, Any]]:
         """
         Get tables for the Dashboard page.
-        
+
         Returns:
             A list of dictionaries containing table data.
         """
         tables = []
-        
+
         # Add recent activities table
         tables.append({
             "title": "Recent Activities",
             "data": self._get_recent_activities(),
             "columns": ["Date", "Activity", "Category"]
         })
-        
+
         return tables
-    
+
     def _get_status_items(self) -> List[Dict[str, Any]]:
         """
         Get status items for the Dashboard page.
-        
+
         Returns:
             A list of dictionaries containing status item data.
         """
         status_items = []
-        
+
         # Add service status items
         for service, connected in self.connected_services.items():
             display_name = service.replace('_', ' ').title()
@@ -231,13 +237,13 @@ class DashboardPage(BasePage):
                 "status": "connected" if connected else "disconnected",
                 "color": "green" if connected else "red"
             })
-        
+
         return status_items
-    
+
     def _get_recent_activities(self) -> List[Dict[str, Any]]:
         """
         Get recent activities for the Dashboard page.
-        
+
         Returns:
             A list of dictionaries containing recent activity data.
         """
@@ -268,16 +274,36 @@ class DashboardPage(BasePage):
                 "Category": "API"
             }
         ]
-    
+
+    def emit_updates(self) -> None:
+        """
+        Emit dashboard updates to connected clients.
+
+        This method is called when dashboard data changes to push updates
+        to connected clients via WebSockets.
+        """
+        try:
+            # Import here to avoid circular imports
+            from science_data_kit.web.events import emit_dashboard_update
+
+            # Emit dashboard updates
+            emit_dashboard_update()
+        except ImportError:
+            # WebSocket support is not available
+            pass
+        except Exception as e:
+            # Log the error but don't raise it
+            print(f"Error emitting dashboard updates: {str(e)}")
+
     def _get_feature_categories(self) -> Dict[str, List[Dict[str, Any]]]:
         """
         Get feature categories for the Dashboard page.
-        
+
         Returns:
             A dictionary mapping category names to lists of feature dictionaries.
         """
         feature_categories = {}
-        
+
         # Data Sources
         feature_categories["data_sources"] = [
             {
@@ -306,7 +332,7 @@ class DashboardPage(BasePage):
                 "Description": "Access files stored on the local file system"
             }
         ]
-        
+
         # Analysis Capabilities
         feature_categories["analysis_capabilities"] = [
             {
@@ -335,7 +361,7 @@ class DashboardPage(BasePage):
                 "Description": "Export data to various formats (CSV, Excel, JSON)"
             }
         ]
-        
+
         # Visualization Components
         feature_categories["visualization_components"] = [
             {
@@ -374,7 +400,7 @@ class DashboardPage(BasePage):
                 "Description": "Create complex, interactive dashboards with NeoDash"
             }
         ]
-        
+
         # Integration Capabilities
         feature_categories["integration_capabilities"] = [
             {
@@ -403,5 +429,5 @@ class DashboardPage(BasePage):
                 "Description": "Access SDK functionality through command-line interface"
             }
         ]
-        
+
         return feature_categories

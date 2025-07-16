@@ -155,6 +155,74 @@ def disconnect():
             'data': render_page_api(page).json
         }), 400
 
+@api_bp.route('/connect/oauth/initiate', methods=['POST'])
+@api_login_required
+def initiate_oauth():
+    """Initiate OAuth authorization flow."""
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    connection_type = data.get('type')
+    config = data.get('config', {})
+
+    if not connection_type:
+        return jsonify({'error': 'Connection type is required'}), 400
+
+    # Get the base URL for constructing the redirect URI
+    base_url = request.host_url.rstrip('/')
+
+    page = ConnectPage()
+    success, message, auth_url = page.initiate_oauth(connection_type, config, base_url)
+
+    if success:
+        return jsonify({
+            'success': True,
+            'message': message,
+            'auth_url': auth_url,
+            'data': render_page_api(page).json
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': message,
+            'data': render_page_api(page).json
+        }), 400
+
+@api_bp.route('/connect/oauth/callback')
+@api_login_required
+def oauth_callback():
+    """Handle OAuth callback."""
+    # Get query parameters
+    code = request.args.get('code')
+    state = request.args.get('state')
+
+    if not code or not state:
+        return jsonify({'error': 'Code and state parameters are required'}), 400
+
+    # Get the base URL for constructing the redirect URI
+    base_url = request.host_url.rstrip('/')
+
+    page = ConnectPage()
+    success, message, connection_id = page.handle_oauth_callback(code, state, base_url)
+
+    if success:
+        # Redirect to the connect page with a success message
+        return jsonify({
+            'success': True,
+            'message': message,
+            'connection_id': connection_id,
+            'data': render_page_api(page).json
+        })
+    else:
+        # Redirect to the connect page with an error message
+        return jsonify({
+            'success': False,
+            'message': message,
+            'data': render_page_api(page).json
+        }), 400
+
 @api_bp.route('/explore')
 @api_login_required
 def explore():

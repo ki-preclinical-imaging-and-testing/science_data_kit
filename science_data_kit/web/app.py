@@ -8,9 +8,13 @@ It sets up the application with the necessary configuration, blueprints, and ext
 from flask import Flask, render_template
 from flask_session import Session
 from flask_wtf.csrf import CSRFProtect
+from flask_socketio import SocketIO
 
 from science_data_kit.web.api import register_api_routes
 from science_data_kit.web.config import Config
+
+# Initialize SocketIO without an app (will be initialized in create_app)
+socketio = SocketIO()
 
 def create_app(config_class=Config):
     """
@@ -33,6 +37,7 @@ def create_app(config_class=Config):
     # Initialize extensions
     Session(app)
     csrf = CSRFProtect(app)
+    socketio.init_app(app, cors_allowed_origins="*")
 
     # Register blueprints
     from science_data_kit.web.routes import main_bp
@@ -40,6 +45,9 @@ def create_app(config_class=Config):
 
     # Register API routes
     register_api_routes(app)
+
+    # Import WebSocket events (this registers the event handlers)
+    import science_data_kit.web.events
 
     # Register error handlers
     @app.errorhandler(404)

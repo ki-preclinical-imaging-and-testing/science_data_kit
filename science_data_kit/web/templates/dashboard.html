@@ -35,7 +35,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Charts -->
     <div class="col-md-8 mb-4">
         <div class="card h-100">
@@ -57,7 +57,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Status Items -->
     <div class="col-md-4 mb-4">
         <div class="card h-100">
@@ -84,7 +84,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Tables -->
     <div class="col-md-12 mb-4">
         <div class="card">
@@ -124,10 +124,216 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Include Socket.IO client library -->
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
 <script>
-    // JavaScript for rendering charts would go here
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Dashboard loaded');
+
+        // Initialize Socket.IO connection
+        const socket = io();
+
+        // Handle connection events
+        socket.on('connect', function() {
+            console.log('Connected to WebSocket server');
+
+            // Join the dashboard room
+            socket.emit('join_dashboard', {});
+        });
+
+        socket.on('disconnect', function() {
+            console.log('Disconnected from WebSocket server');
+        });
+
+        socket.on('status', function(data) {
+            console.log('Status:', data.message);
+        });
+
+        // Handle dashboard data
+        socket.on('dashboard_data', function(data) {
+            console.log('Received dashboard data');
+            updateDashboard(data);
+        });
+
+        // Handle dashboard updates
+        socket.on('dashboard_update', function(data) {
+            console.log('Received dashboard update');
+            updateDashboard(data);
+        });
+
+        // Function to update the dashboard with new data
+        function updateDashboard(data) {
+            // Update metrics
+            if (data.metrics) {
+                updateMetrics(data.metrics);
+            }
+
+            // Update charts
+            if (data.charts) {
+                updateCharts(data.charts);
+            }
+
+            // Update status items
+            if (data.status_items) {
+                updateStatusItems(data.status_items);
+            }
+
+            // Update tables
+            if (data.tables) {
+                updateTables(data.tables);
+            }
+        }
+
+        // Function to update metrics
+        function updateMetrics(metrics) {
+            // Find the metrics container using vanilla JavaScript
+            const metricsContainer = Array.from(document.querySelectorAll('.card-header')).find(
+                el => el.textContent.includes('System Metrics')
+            ).closest('.card').querySelector('.row');
+
+            // Clear existing metrics
+            metricsContainer.innerHTML = '';
+
+            // Add updated metrics
+            metrics.forEach(function(metric) {
+                const metricHtml = `
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">${metric.title}</h5>
+                                <h2 class="display-4">${metric.value}</h2>
+                                ${metric.trend > 0 ? `<span class="text-success">↑ ${metric.trend}%</span>` : 
+                                  metric.trend < 0 ? `<span class="text-danger">↓ ${Math.abs(metric.trend)}%</span>` : 
+                                  `<span class="text-muted">No change</span>`}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                metricsContainer.innerHTML += metricHtml;
+            });
+        }
+
+        // Function to update charts
+        function updateCharts(charts) {
+            // Find the charts container using vanilla JavaScript
+            const chartsContainer = Array.from(document.querySelectorAll('.card-header')).find(
+                el => el.textContent.includes('Charts')
+            ).closest('.card').querySelector('.card-body');
+
+            // Clear existing charts
+            chartsContainer.innerHTML = '';
+
+            // Add updated charts
+            charts.forEach(function(chart) {
+                const chartHtml = `
+                    <div class="mb-4">
+                        <h6>${chart.title}</h6>
+                        <div class="chart-container" style="height: 200px;">
+                            <!-- Chart would be rendered here with JavaScript -->
+                            <div class="alert alert-info">
+                                Chart: ${chart.type} - ${chart.title}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chartsContainer.innerHTML += chartHtml;
+            });
+        }
+
+        // Function to update status items
+        function updateStatusItems(statusItems) {
+            // Find the status container using vanilla JavaScript
+            const statusContainer = Array.from(document.querySelectorAll('.card-header')).find(
+                el => el.textContent.includes('Status')
+            ).closest('.card').querySelector('.list-group');
+
+            // Clear existing status items
+            statusContainer.innerHTML = '';
+
+            // Add updated status items
+            statusItems.forEach(function(item) {
+                let badgeClass = 'bg-secondary';
+                let statusText = item.status;
+
+                if (item.status === 'ok') {
+                    badgeClass = 'bg-success';
+                    statusText = 'OK';
+                } else if (item.status === 'warning') {
+                    badgeClass = 'bg-warning';
+                    statusText = 'Warning';
+                } else if (item.status === 'error') {
+                    badgeClass = 'bg-danger';
+                    statusText = 'Error';
+                } else if (item.status === 'connected') {
+                    badgeClass = 'bg-success';
+                    statusText = 'Connected';
+                } else if (item.status === 'disconnected') {
+                    badgeClass = 'bg-danger';
+                    statusText = 'Disconnected';
+                }
+
+                const itemHtml = `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${item.name}
+                        <span class="badge ${badgeClass} rounded-pill">${statusText}</span>
+                    </li>
+                `;
+                statusContainer.innerHTML += itemHtml;
+            });
+        }
+
+        // Function to update tables
+        function updateTables(tables) {
+            // Find the tables container using vanilla JavaScript
+            const tablesContainer = Array.from(document.querySelectorAll('.card-header')).find(
+                el => el.textContent.includes('Data Tables')
+            ).closest('.card').querySelector('.card-body');
+
+            // Clear existing tables
+            tablesContainer.innerHTML = '';
+
+            // Add updated tables
+            tables.forEach(function(table) {
+                let tableHtml = `
+                    <div class="mb-4">
+                        <h6>${table.title}</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                `;
+
+                // Add table headers
+                table.data.columns.forEach(function(column) {
+                    tableHtml += `<th>${column}</th>`;
+                });
+
+                tableHtml += `
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                // Add table rows
+                table.data.rows.forEach(function(row) {
+                    tableHtml += `<tr>`;
+                    row.forEach(function(cell) {
+                        tableHtml += `<td>${cell}</td>`;
+                    });
+                    tableHtml += `</tr>`;
+                });
+
+                tableHtml += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                tablesContainer.innerHTML += tableHtml;
+            });
+        }
+
     });
 </script>
 {% endblock %}

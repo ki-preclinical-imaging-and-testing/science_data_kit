@@ -44,6 +44,8 @@ class ConnectPageData(PageData):
     active_connections: List[Dict[str, Any]] = field(default_factory=list)
     connection_status: Dict[str, bool] = field(default_factory=dict)
     connection_errors: Dict[str, str] = field(default_factory=dict)
+    oauth_auth_urls: Dict[str, str] = field(default_factory=dict)
+    oauth_states: Dict[str, str] = field(default_factory=dict)
 
 @dataclass
 class ExplorePageData(PageData):
