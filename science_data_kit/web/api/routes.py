@@ -1,0 +1,121 @@
+"""
+API Routes for the Flask Application
+
+This module defines the REST API endpoints for the Flask application.
+"""
+
+from flask import Blueprint, jsonify, request, session
+from functools import wraps
+
+from science_data_kit.core.pages.dashboard import DashboardPage
+from science_data_kit.core.pages.file_browser import FileBrowserPage
+from science_data_kit.core.pages.connect import ConnectPage
+from science_data_kit.core.pages.explore import ExplorePage
+from science_data_kit.web.adapters.flask_adapter import render_page_api
+
+# Create a blueprint for the API routes
+api_bp = Blueprint('api', __name__)
+
+def api_login_required(f):
+    """
+    Decorator to require login for API routes.
+    
+    If the user is not logged in, a 401 Unauthorized response is returned.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return jsonify({'error': 'Authentication required'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+def register_api_routes(app):
+    """
+    Register API routes with the Flask application.
+    
+    Args:
+        app: The Flask application instance.
+    """
+    # Register the API blueprint with the API prefix
+    app.register_blueprint(api_bp, url_prefix=app.config['API_PREFIX'])
+
+@api_bp.route('/dashboard')
+@api_login_required
+def dashboard():
+    """Get dashboard data."""
+    page = DashboardPage()
+    return render_page_api(page)
+
+@api_bp.route('/files')
+@api_login_required
+def files():
+    """Get file browser data."""
+    # Get query parameters
+    path = request.args.get('path', '')
+    view_mode = request.args.get('view_mode', 'list')
+    sort_by = request.args.get('sort_by', 'name')
+    sort_order = request.args.get('sort_order', 'ascending')
+    filter_pattern = request.args.get('filter', None)
+    
+    page = FileBrowserPage(
+        current_path=path,
+        view_mode=view_mode,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        filter_pattern=filter_pattern
+    )
+    return render_page_api(page)
+
+@api_bp.route('/connect')
+@api_login_required
+def connect():
+    """Get connection data."""
+    page = ConnectPage()
+    return render_page_api(page)
+
+@api_bp.route('/explore')
+@api_login_required
+def explore():
+    """Get explore data."""
+    page = ExplorePage()
+    return render_page_api(page)
+
+@api_bp.route('/auth/login', methods=['POST'])
+def login():
+    """Handle API login."""
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    username = data.get('username')
+    password = data.get('password')
+    
+    if not username or not password:
+        return jsonify({'error': 'Username and password are required'}), 400
+    
+    # Simple authentication for demonstration purposes
+    # In a real application, you would validate against a database
+    if username == 'admin' and password == 'password':
+        session['logged_in'] = True
+        session['username'] = username
+        return jsonify({'success': True, 'message': 'Login successful'})
+    else:
+        return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+
+@api_bp.route('/auth/logout', methods=['POST'])
+def logout():
+    """Handle API logout."""
+    session.clear()
+    return jsonify({'success': True, 'message': 'Logout successful'})
+
+@api_bp.route('/auth/status')
+def auth_status():
+    """Get authentication status."""
+    if session.get('logged_in'):
+        return jsonify({
+            'authenticated': True,
+            'username': session.get('username')
+        })
+    else:
+        return jsonify({'authenticated': False})

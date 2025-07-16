@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Science Data Kit - Home{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to Science Data Kit</h1>
+    <p class="lead">A framework-agnostic platform for scientific data analysis and visualization.</p>
+    <hr class="my-4">
+    <p>Science Data Kit provides tools for data exploration, visualization, and analysis in a framework-independent way.</p>
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Dashboard</h5>
+                    <p class="card-text">View system metrics, recent activities, and status information.</p>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">File Browser</h5>
+                    <p class="card-text">Browse, upload, and manage files in your workspace.</p>
+                    <a href="{{ url_for('main.files') }}" class="btn btn-primary">Browse Files</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Connect</h5>
+                    <p class="card-text">Connect to external data sources and services.</p>
+                    <a href="{{ url_for('main.connect') }}" class="btn btn-primary">Connect</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Explore</h5>
+                    <p class="card-text">Explore and visualize your data with interactive tools.</p>
+                    <a href="{{ url_for('main.explore') }}" class="btn btn-primary">Explore Data</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">API Documentation</h5>
+                    <p class="card-text">Access the REST API documentation for programmatic integration.</p>
+                    <a href="#" class="btn btn-primary">View API Docs</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Help & Support</h5>
+                    <p class="card-text">Get help and support for using Science Data Kit.</p>
+                    <a href="#" class="btn btn-primary">Get Help</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

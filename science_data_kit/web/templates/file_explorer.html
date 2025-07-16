@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Science Data Kit - File Explorer{% endblock %}
+
+{% block head %}
+<style>
+    .file-icon {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    .file-item, .directory-item {
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 4px;
+    }
+    .file-item:hover, .directory-item:hover {
+        background-color: #f8f9fa;
+    }
+    .selected {
+        background-color: #e9ecef;
+    }
+    .breadcrumb-item a {
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <!-- Breadcrumb navigation -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="?path=/">Root</a></li>
+                {% set path_parts = current_path.split('/') %}
+                {% set current = '' %}
+                {% for part in path_parts %}
+                    {% if part %}
+                        {% set current = current + '/' + part %}
+                        <li class="breadcrumb-item"><a href="?path={{ current }}">{{ part }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <!-- Path and navigation -->
+        <div class="input-group">
+            <span class="input-group-text">Current Path:</span>
+            <input type="text" class="form-control" value="{{ current_path }}" readonly>
+            <button class="btn btn-outline-secondary" type="button" onclick="window.location.href='?path={{ current_path }}'">Refresh</button>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <!-- Search and filter -->
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Filter files..." id="filter-input" value="{{ filter_pattern or '' }}">
+            <button class="btn btn-outline-primary" type="button" id="filter-button">Filter</button>
+            <button class="btn btn-outline-secondary" type="button" id="clear-filter">Clear</button>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <!-- Toolbar -->
+        <div class="btn-toolbar" role="toolbar">
+            <div class="btn-group me-2" role="group">
+                <button type="button" class="btn btn-primary" id="upload-btn">Upload</button>
+                <button type="button" class="btn btn-success" id="new-folder-btn">New Folder</button>
+            </div>
+            <div class="btn-group me-2" role="group">
+                <button type="button" class="btn btn-secondary" id="download-btn" disabled>Download</button>
+                <button type="button" class="btn btn-info" id="preview-btn" disabled>Preview</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-danger" id="delete-btn" disabled>Delete</button>
+                <button type="button" class="btn btn-warning" id="rename-btn" disabled>Rename</button>
+            </div>
+            <div class="btn-group ms-auto" role="group">
+                <button type="button" class="btn btn-outline-secondary" id="view-list">List</button>
+                <button type="button" class="btn btn-outline-secondary" id="view-grid">Grid</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <!-- File listing -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Files and Directories</h5>
+                <div>
+                    <span class="badge bg-primary">{{ directories|length }} directories</span>
+                    <span class="badge bg-secondary">{{ files|length }} files</span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if view_mode == 'list' %}
+                <!-- List view -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th>Name</th>
+                                <th>Size</th>
+                                <th>Type</th>
+                                <th>Modified</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for directory in directories %}
+                            <tr class="directory-item" data-path="{{ directory.path }}">
+                                <td><i class="bi bi-folder file-icon text-warning"></i></td>
+                                <td>{{ directory.name }}</td>
+                                <td>-</td>
+                                <td>Directory</td>
+                                <td>{{ directory.modified }}</td>
+                            </tr>
+                            {% endfor %}
+                            
+                            {% for file in files %}
+                            <tr class="file-item {% if file.path in selected_files %}selected{% endif %}" data-path="{{ file.path }}">
+                                <td><i class="bi bi-file-earmark file-icon text-primary"></i></td>
+                                <td>{{ file.name }}</td>
+                                <td>{{ file.size }}</td>
+                                <td>{{ file.type }}</td>
+                                <td>{{ file.modified }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <!-- Grid view -->
+                <div class="row">
+                    {% for directory in directories %}
+                    <div class="col-md-2 mb-4">
+                        <div class="card directory-item" data-path="{{ directory.path }}">
+                            <div class="card-body text-center">
+                                <i class="bi bi-folder display-4 text-warning"></i>
+                                <p class="card-text mt-2">{{ directory.name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% for file in files %}
+                    <div class="col-md-2 mb-4">
+                        <div class="card file-item {% if file.path in selected_files %}selected{% endif %}" data-path="{{ file.path }}">
+                            <div class="card-body text-center">
+                                <i class="bi bi-file-earmark display-4 text-primary"></i>
+                                <p class="card-text mt-2">{{ file.name }}</p>
+                                <small class="text-muted">{{ file.size }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle directory navigation
+        document.querySelectorAll('.directory-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                const path = this.getAttribute('data-path');
+                window.location.href = `?path=${path}`;
+            });
+        });
+        
+        // Handle file selection
+        document.querySelectorAll('.file-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                updateButtonStates();
+            });
+        });
+        
+        // Update button states based on selection
+        function updateButtonStates() {
+            const selectedFiles = document.querySelectorAll('.file-item.selected');
+            const hasSelection = selectedFiles.length > 0;
+            
+            document.getElementById('download-btn').disabled = !hasSelection;
+            document.getElementById('preview-btn').disabled = !hasSelection;
+            document.getElementById('delete-btn').disabled = !hasSelection;
+            document.getElementById('rename-btn').disabled = selectedFiles.length !== 1;
+        }
+        
+        // Handle view mode buttons
+        document.getElementById('view-list').addEventListener('click', function() {
+            window.location.href = `?path={{ current_path }}&view_mode=list`;
+        });
+        
+        document.getElementById('view-grid').addEventListener('click', function() {
+            window.location.href = `?path={{ current_path }}&view_mode=grid`;
+        });
+        
+        // Handle filter
+        document.getElementById('filter-button').addEventListener('click', function() {
+            const filterValue = document.getElementById('filter-input').value;
+            window.location.href = `?path={{ current_path }}&filter=${filterValue}`;
+        });
+        
+        document.getElementById('clear-filter').addEventListener('click', function() {
+            window.location.href = `?path={{ current_path }}`;
+        });
+        
+        // Set active view mode button
+        if ("{{ view_mode }}" === "list") {
+            document.getElementById('view-list').classList.add('active');
+        } else {
+            document.getElementById('view-grid').classList.add('active');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Science Data Kit - Dashboard{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="row mt-4">
+    <!-- Metrics -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">System Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for metric in metrics %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">{{ metric.title }}</h5>
+                                <h2 class="display-4">{{ metric.value }}</h2>
+                                {% if metric.trend > 0 %}
+                                <span class="text-success">↑ {{ metric.trend }}%</span>
+                                {% elif metric.trend < 0 %}
+                                <span class="text-danger">↓ {{ metric.trend|abs }}%</span>
+                                {% else %}
+                                <span class="text-muted">No change</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts -->
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Charts</h5>
+            </div>
+            <div class="card-body">
+                {% for chart in charts %}
+                <div class="mb-4">
+                    <h6>{{ chart.title }}</h6>
+                    <div class="chart-container" style="height: 200px;">
+                        <!-- Chart would be rendered here with JavaScript -->
+                        <div class="alert alert-info">
+                            Chart: {{ chart.type }} - {{ chart.title }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Status Items -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Status</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for item in status_items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ item.name }}
+                        {% if item.status == 'ok' %}
+                        <span class="badge bg-success rounded-pill">OK</span>
+                        {% elif item.status == 'warning' %}
+                        <span class="badge bg-warning rounded-pill">Warning</span>
+                        {% elif item.status == 'error' %}
+                        <span class="badge bg-danger rounded-pill">Error</span>
+                        {% else %}
+                        <span class="badge bg-secondary rounded-pill">{{ item.status }}</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tables -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Data Tables</h5>
+            </div>
+            <div class="card-body">
+                {% for table in tables %}
+                <div class="mb-4">
+                    <h6>{{ table.title }}</h6>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    {% for column in table.data.columns %}
+                                    <th>{{ column }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in table.data.rows %}
+                                <tr>
+                                    {% for cell in row %}
+                                    <td>{{ cell }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // JavaScript for rendering charts would go here
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Dashboard loaded');
+    });
+</script>
+{% endblock %}

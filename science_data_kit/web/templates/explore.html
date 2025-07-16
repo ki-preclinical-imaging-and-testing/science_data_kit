@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Science Data Kit - Explore{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <!-- Data Sources -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Data Sources</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for source in available_data_sources %}
+                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" 
+                       data-source-id="{{ source.id }}">
+                        <div>
+                            <h6 class="mb-1">{{ source.name }}</h6>
+                            <small class="text-muted">{{ source.type }}</small>
+                        </div>
+                        {% if source.connected %}
+                        <span class="badge bg-success rounded-pill">Connected</span>
+                        {% else %}
+                        <span class="badge bg-secondary rounded-pill">Disconnected</span>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+                
+                {% if not available_data_sources %}
+                <div class="alert alert-info">
+                    No data sources available. Please connect to a data source first.
+                </div>
+                <a href="{{ url_for('main.connect') }}" class="btn btn-primary mt-2">Go to Connect</a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Schema Info -->
+        {% if schema_info %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Schema Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="schemaAccordion">
+                    {% for table_name, columns in schema_info.tables.items() %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ loop.index }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" 
+                                    aria-controls="collapse{{ loop.index }}">
+                                {{ table_name }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" 
+                             aria-labelledby="heading{{ loop.index }}" data-bs-parent="#schemaAccordion">
+                            <div class="accordion-body">
+                                <ul class="list-group">
+                                    {% for column in columns %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ column.name }}
+                                        <span class="badge bg-primary rounded-pill">{{ column.type }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-9">
+        <!-- Query Editor -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Query Editor</h5>
+            </div>
+            <div class="card-body">
+                <form id="queryForm">
+                    <div class="mb-3">
+                        <label for="queryInput" class="form-label">Enter your query</label>
+                        <textarea class="form-control" id="queryInput" rows="5" placeholder="SELECT * FROM table_name"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="dataSourceSelect" class="form-label">Data Source</label>
+                        <select class="form-select" id="dataSourceSelect">
+                            <option value="">Select a data source...</option>
+                            {% for source in available_data_sources %}
+                            {% if source.connected %}
+                            <option value="{{ source.id }}">{{ source.name }} ({{ source.type }})</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-primary" id="runQueryBtn">Run Query</button>
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary" id="saveQueryBtn">Save Query</button>
+                            <button type="button" class="btn btn-outline-secondary" id="loadQueryBtn">Load Query</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Query Results -->
+        {% if query_results %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Query Results</h5>
+                <div>
+                    <span class="badge bg-info">{{ query_results.row_count }} rows</span>
+                    <span class="badge bg-secondary">{{ query_results.execution_time }}ms</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                {% for column in query_results.columns %}
+                                <th>{{ column }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in query_results.rows %}
+                            <tr>
+                                {% for cell in row %}
+                                <td>{{ cell }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3 d-flex justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-outline-primary" id="exportCsvBtn">Export CSV</button>
+                        <button type="button" class="btn btn-outline-primary" id="exportJsonBtn">Export JSON</button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary" id="visualizeBtn">Visualize</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Visualizations -->
+        {% if visualizations %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Visualizations</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="visualizationTabs" role="tablist">
+                    {% for viz in visualizations %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if loop.first %}active{% endif %}" 
+                                id="viz-tab-{{ loop.index }}" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#viz-content-{{ loop.index }}" 
+                                type="button" 
+                                role="tab" 
+                                aria-controls="viz-content-{{ loop.index }}" 
+                                aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                            {{ viz.title }}
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="tab-content mt-3" id="visualizationTabContent">
+                    {% for viz in visualizations %}
+                    <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                         id="viz-content-{{ loop.index }}" 
+                         role="tabpanel" 
+                         aria-labelledby="viz-tab-{{ loop.index }}">
+                        <div class="viz-container" style="height: 400px;">
+                            <!-- Visualization would be rendered here with JavaScript -->
+                            <div class="alert alert-info">
+                                Visualization: {{ viz.type }} - {{ viz.title }}
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Description</h6>
+                            <p>{{ viz.description }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle data source selection
+        document.querySelectorAll('[data-source-id]').forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sourceId = this.getAttribute('data-source-id');
+                document.getElementById('dataSourceSelect').value = sourceId;
+            });
+        });
+        
+        // Handle run query button
+        document.getElementById('runQueryBtn').addEventListener('click', function() {
+            const query = document.getElementById('queryInput').value;
+            const sourceId = document.getElementById('dataSourceSelect').value;
+            
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+            
+            if (!sourceId) {
+                alert('Please select a data source');
+                return;
+            }
+            
+            // In a real application, this would submit the query to the server
+            console.log('Running query:', query, 'on source:', sourceId);
+            
+            // For demonstration, we'll just show a loading message
+            alert('Query submitted. This would normally send the query to the server.');
+        });
+    });
+</script>
+{% endblock %}

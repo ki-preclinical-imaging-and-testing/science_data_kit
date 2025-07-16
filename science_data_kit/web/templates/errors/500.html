@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Science Data Kit - Server Error{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <h1 class="display-1">500</h1>
+        <h2 class="mb-4">Internal Server Error</h2>
+        <p class="lead">Something went wrong on our end. We're working to fix the issue.</p>
+        <div class="mt-4">
+            <a href="{{ url_for('main.index') }}" class="btn btn-primary">Go to Home</a>
+            <a href="javascript:history.back()" class="btn btn-outline-secondary">Go Back</a>
+            <a href="javascript:location.reload()" class="btn btn-outline-primary">Try Again</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
