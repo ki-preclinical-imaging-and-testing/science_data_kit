@@ -1,0 +1,18 @@
+Collecting dropbox
+  Using cached dropbox-12.0.2-py3-none-any.whl.metadata (4.3 kB)
+Requirement already satisfied: requests>=2.16.2 in ./science-data-kit-env/lib/python3.13/site-packages (from dropbox) (2.32.4)
+Requirement already satisfied: six>=1.12.0 in ./science-data-kit-env/lib/python3.13/site-packages (from dropbox) (1.17.0)
+Collecting stone<3.3.3,>=2 (from dropbox)
+  Using cached stone-3.3.1-py3-none-any.whl.metadata (8.0 kB)
+Collecting ply>=3.4 (from stone<3.3.3,>=2->dropbox)
+  Using cached ply-3.11-py2.py3-none-any.whl.metadata (844 bytes)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./science-data-kit-env/lib/python3.13/site-packages (from requests>=2.16.2->dropbox) (3.4.2)
+Requirement already satisfied: idna<4,>=2.5 in ./science-data-kit-env/lib/python3.13/site-packages (from requests>=2.16.2->dropbox) (3.10)
+Requirement already satisfied: urllib3<3,>=1.21.1 in ./science-data-kit-env/lib/python3.13/site-packages (from requests>=2.16.2->dropbox) (2.5.0)
+Requirement already satisfied: certifi>=2017.4.17 in ./science-data-kit-env/lib/python3.13/site-packages (from requests>=2.16.2->dropbox) (2025.7.14)
+Using cached dropbox-12.0.2-py3-none-any.whl (572 kB)
+Using cached stone-3.3.1-py3-none-any.whl (162 kB)
+Using cached ply-3.11-py2.py3-none-any.whl (49 kB)
+Installing collected packages: ply, stone, dropbox
+
+Successfully installed dropbox-12.0.2 ply-3.11 stone-3.3.1

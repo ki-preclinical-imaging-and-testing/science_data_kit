@@ -77,10 +77,36 @@
         border-radius: 4px;
         padding: 1rem;
     }
+
+    /* Responsive adjustments for file explorer */
+    @media (max-width: 576px) {
+        .file-explorer-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .file-explorer-toolbar .btn-group {
+            margin-bottom: 0.5rem;
+            width: 100%;
+        }
+
+        .file-explorer-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .file-explorer-actions .btn {
+            flex: 1;
+            min-width: 80px;
+        }
+    }
 </style>
 <!-- Add highlight.js for code syntax highlighting -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<!-- Add meta tag for better mobile experience -->
+<meta name="theme-color" content="#0d6efd">
 {% endblock %}
 
 {% block content %}
@@ -154,36 +180,52 @@
 <div class="row mb-4">
     <div class="col-md-12">
         <!-- Toolbar -->
-        <div class="btn-toolbar" role="toolbar" x-data="fileExplorer">
-            <div class="btn-group me-2" role="group">
-                <button type="button" class="btn btn-primary" id="upload-btn" @click="showUploadForm = true">Upload</button>
-                <button type="button" class="btn btn-success" id="new-folder-btn" @click="showNewFolderForm = true">New Folder</button>
+        <div class="btn-toolbar file-explorer-toolbar" role="toolbar" x-data="fileExplorer">
+            <div class="btn-group me-2 file-explorer-actions" role="group">
+                <button type="button" class="btn btn-primary btn-touch" id="upload-btn" @click="showUploadForm = true">
+                    <i class="bi bi-upload me-1 d-none d-sm-inline"></i>Upload
+                </button>
+                <button type="button" class="btn btn-success btn-touch" id="new-folder-btn" @click="showNewFolderForm = true">
+                    <i class="bi bi-folder-plus me-1 d-none d-sm-inline"></i>New Folder
+                </button>
             </div>
-            <div class="btn-group me-2" role="group">
-                <button type="button" class="btn btn-secondary" id="download-btn" x-bind:disabled="!hasSelection" 
-                        @click="downloadFiles()">Download</button>
-                <button type="button" class="btn btn-info" id="preview-btn" x-bind:disabled="!hasSelection || selectedFiles.length > 1"
-                        @click="previewFile()" data-bs-toggle="modal" data-bs-target="#previewModal">Preview</button>
+            <div class="btn-group me-2 file-explorer-actions" role="group">
+                <button type="button" class="btn btn-secondary btn-touch" id="download-btn" x-bind:disabled="!hasSelection" 
+                        @click="downloadFiles()">
+                    <i class="bi bi-download me-1 d-none d-sm-inline"></i>Download
+                </button>
+                <button type="button" class="btn btn-info btn-touch" id="preview-btn" x-bind:disabled="!hasSelection || selectedFiles.length > 1"
+                        @click="previewFile()" data-bs-toggle="modal" data-bs-target="#previewModal">
+                    <i class="bi bi-eye me-1 d-none d-sm-inline"></i>Preview
+                </button>
             </div>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-danger" id="delete-btn" x-bind:disabled="!hasSelection"
-                        @click="deleteFiles()">Delete</button>
-                <button type="button" class="btn btn-warning" id="rename-btn" x-bind:disabled="!hasSelection || selectedFiles.length !== 1"
-                        @click="showRenameForm = true">Rename</button>
+            <div class="btn-group file-explorer-actions" role="group">
+                <button type="button" class="btn btn-danger btn-touch" id="delete-btn" x-bind:disabled="!hasSelection"
+                        @click="deleteFiles()">
+                    <i class="bi bi-trash me-1 d-none d-sm-inline"></i>Delete
+                </button>
+                <button type="button" class="btn btn-warning btn-touch" id="rename-btn" x-bind:disabled="!hasSelection || selectedFiles.length !== 1"
+                        @click="showRenameForm = true">
+                    <i class="bi bi-pencil me-1 d-none d-sm-inline"></i>Rename
+                </button>
             </div>
-            <div class="btn-group ms-auto" role="group">
-                <button type="button" class="btn btn-outline-secondary" 
+            <div class="btn-group ms-auto file-explorer-actions" role="group">
+                <button type="button" class="btn btn-outline-secondary btn-touch" 
                         hx-get="/api/files/navigate?path={{ current_path }}&view_mode=list" 
                         hx-target="#file-listing-container"
                         hx-indicator=".htmx-indicator"
                         hx-push-url="?path={{ current_path }}&view_mode=list"
-                        x-bind:class="{ 'active': viewMode === 'list' }">List</button>
-                <button type="button" class="btn btn-outline-secondary" 
+                        x-bind:class="{ 'active': viewMode === 'list' }">
+                    <i class="bi bi-list-ul me-1 d-none d-sm-inline"></i>List
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-touch" 
                         hx-get="/api/files/navigate?path={{ current_path }}&view_mode=grid" 
                         hx-target="#file-listing-container"
                         hx-indicator=".htmx-indicator"
                         hx-push-url="?path={{ current_path }}&view_mode=grid"
-                        x-bind:class="{ 'active': viewMode === 'grid' }">Grid</button>
+                        x-bind:class="{ 'active': viewMode === 'grid' }">
+                    <i class="bi bi-grid-3x3-gap me-1 d-none d-sm-inline"></i>Grid
+                </button>
             </div>
         </div>
     </div>
@@ -268,20 +310,28 @@
 
 <div class="row mb-4">
     <div class="col-md-12">
+        <!-- Keyboard shortcuts toggle for mobile -->
+        <button class="btn btn-outline-secondary w-100 keyboard-shortcuts-toggle mb-2" type="button" 
+                data-bs-toggle="collapse" data-bs-target="#keyboardShortcutsCard" 
+                aria-expanded="false" aria-controls="keyboardShortcutsCard">
+            <i class="bi bi-keyboard me-1"></i> Show Keyboard Shortcuts
+        </button>
+
         <!-- Keyboard shortcuts help -->
-        <div class="card">
-            <div class="card-header">
+        <div class="card keyboard-shortcuts-card collapse show" id="keyboardShortcutsCard">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Keyboard Shortcuts</h5>
+                <button type="button" class="btn-close d-md-none" data-bs-toggle="collapse" data-bs-target="#keyboardShortcutsCard" aria-label="Close"></button>
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-4 col-sm-6 mb-2">
                         <p><strong>Ctrl/Cmd + Click</strong>: Select multiple files</p>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 col-sm-6 mb-2">
                         <p><strong>Shift + Click</strong>: Select range of files</p>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4 col-sm-12 mb-2">
                         <p><strong>Ctrl/Cmd + A</strong>: Select all files</p>
                     </div>
                 </div>

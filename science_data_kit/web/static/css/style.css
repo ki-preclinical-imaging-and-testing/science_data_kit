@@ -5,6 +5,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
     background-color: #f8f9fa;
+    -webkit-tap-highlight-color: rgba(0,0,0,0); /* Remove tap highlight on mobile */
 }
 
 /* Header and Navigation */
@@ -45,10 +46,25 @@ body {
     border-color: #0a58ca;
 }
 
+/* Touch-friendly buttons for mobile */
+.btn-touch {
+    min-height: 44px; /* Minimum touch target size */
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* Tables */
 .table th {
     font-weight: 600;
     background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Responsive tables */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
 /* File Explorer */
@@ -58,6 +74,13 @@ body {
 
 .directory-item:hover, .file-item:hover {
     background-color: #f8f9fa;
+}
+
+/* Touch-friendly file items */
+.file-item, .directory-item {
+    min-height: 44px; /* Minimum touch target size */
+    display: flex;
+    align-items: center;
 }
 
 /* Dashboard */
@@ -94,13 +117,251 @@ body {
     margin-top: 3rem;
 }
 
+/* Toolbar Responsive Adjustments */
+.btn-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.btn-toolbar .btn-group {
+    margin-bottom: 0.5rem;
+}
+
+/* Form Controls */
+.form-control {
+    min-height: 38px; /* Better touch targets */
+}
+
+/* Modal Adjustments */
+.modal-dialog {
+    margin: 0.5rem;
+}
+
 /* Responsive Adjustments */
-@media (max-width: 768px) {
+/* Small mobile devices (up to 576px) */
+@media (max-width: 576px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    h1, .h1 {
+        font-size: 1.75rem;
+    }
+
     .card {
         margin-bottom: 1rem;
     }
-    
+
+    .btn {
+        margin-bottom: 0.5rem;
+        padding: 0.375rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .btn-group .btn {
+        border-radius: 0.25rem !important;
+        margin-right: 0;
+    }
+
+    .input-group {
+        flex-direction: column;
+    }
+
+    .input-group > * {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        border-radius: 0.25rem !important;
+    }
+
+    .input-group-text {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .breadcrumb {
+        flex-wrap: wrap;
+        white-space: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.5rem;
+    }
+
+    .dropzone {
+        padding: 10px;
+    }
+
+    .dropzone-message {
+        font-size: 1rem;
+    }
+
+    .modal-dialog {
+        margin: 0.25rem;
+    }
+
+    .preview-container {
+        max-height: 60vh;
+    }
+
+    /* Stack file items vertically in mobile view */
+    .file-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Hide keyboard shortcuts on mobile by default */
+    .keyboard-shortcuts-card {
+        display: none;
+    }
+
+    /* Show keyboard shortcuts toggle */
+    .keyboard-shortcuts-toggle {
+        display: block;
+    }
+}
+
+/* Medium devices (tablets, 576px to 768px) */
+@media (min-width: 576px) and (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+
     .btn {
         margin-bottom: 0.5rem;
     }
+
+    .btn-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .input-group {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Two-column grid for file items on tablets */
+    .file-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Large devices (desktops, 768px to 992px) */
+@media (min-width: 768px) and (max-width: 992px) {
+    /* Three-column grid for file items on small desktops */
+    .file-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* Extra large devices (large desktops, 992px and up) */
+@media (min-width: 992px) {
+    /* Four-column grid for file items on large desktops */
+    .file-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    body.dark-mode-enabled {
+        background-color: #121212;
+        color: #e0e0e0;
+    }
+
+    body.dark-mode-enabled .card {
+        background-color: #1e1e1e;
+        border-color: #333;
+    }
+
+    body.dark-mode-enabled .card-header {
+        background-color: #252525;
+        border-color: #333;
+    }
+
+    body.dark-mode-enabled .navbar {
+        background-color: #252525 !important;
+    }
+
+    body.dark-mode-enabled .footer {
+        background-color: #252525;
+        border-color: #333;
+    }
+
+    body.dark-mode-enabled .text-muted {
+        color: #aaa !important;
+    }
+}
+
+/* Accessibility improvements */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus indicators for keyboard navigation */
+a:focus, button:focus, input:focus, select:focus, textarea:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* File grid layout */
+.file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.file-grid-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.file-grid-item:hover {
+    background-color: #f8f9fa;
+}
+
+.file-grid-item.selected {
+    background-color: #e9ecef;
+}
+
+.file-grid-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.file-grid-name {
+    word-break: break-word;
+    font-size: 0.875rem;
+}
+
+/* Toast notifications */
+.toast-container {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1050;
+}
+
+/* Keyboard shortcuts toggle for mobile */
+.keyboard-shortcuts-toggle {
+    display: none;
+    margin-bottom: 1rem;
 }

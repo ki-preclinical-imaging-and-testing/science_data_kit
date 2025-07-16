@@ -235,6 +235,8 @@ If you prefer to install manually:
 
 After installation, you can start the Science Data Kit application:
 
+#### Streamlit Interface (Default)
+
 ```bash
 # Activate the virtual environment (if not already activated)
 source venv/bin/activate  # Linux/macOS
@@ -245,11 +247,47 @@ venv\Scripts\activate  # Windows
 science_data_kit
 ```
 
-Access the GUI from your browser at:
+Access the Streamlit GUI from your browser at:
 
 ```
 localhost:8501
 ```
+
+#### Flask Web Interface
+
+The Science Data Kit also provides a Flask-based web interface with enhanced UI capabilities using HTMX and Alpine.js for dynamic updates and client-side interactivity:
+
+```bash
+# Activate the virtual environment (if not already activated)
+source venv/bin/activate  # Linux/macOS
+# or
+venv\Scripts\activate  # Windows
+
+# Ensure all dependencies are installed
+pip install -e .  # Install the Science Data Kit package and its dependencies
+pip install flask flask-session flask-wtf  # Install Flask-specific dependencies
+
+# Run the Flask application
+./run_flask.py
+```
+
+Access the Flask web interface from your browser at:
+
+```
+localhost:5000
+```
+
+You can customize the port by setting the PORT environment variable:
+
+```bash
+PORT=8080 ./run_flask.py
+```
+
+The Flask interface provides enhanced UI capabilities including:
+- Dynamic file browsing without page reloads
+- Rich file preview capabilities
+- Client-side interactivity
+- Responsive design
 
 ### Verifying the Installation
 
