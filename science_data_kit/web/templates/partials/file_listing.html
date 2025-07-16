@@ -1,0 +1,80 @@
+{% if view_mode == 'list' %}
+<!-- List view -->
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th style="width: 40px;">
+                    <div class="form-check">
+                        <input class="form-check-input select-all-checkbox" type="checkbox" id="select-all" 
+                               @click="$event.target.checked ? selectAll() : deselectAll()">
+                    </div>
+                </th>
+                <th>Name</th>
+                <th>Size</th>
+                <th>Type</th>
+                <th>Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for directory in directories %}
+            <tr class="directory-item" 
+                hx-get="/api/files/navigate?path={{ directory.path }}&view_mode={{ view_mode }}" 
+                hx-target="#file-listing-container"
+                hx-push-url="?path={{ directory.path }}&view_mode={{ view_mode }}">
+                <td><i class="bi bi-folder file-icon text-warning"></i></td>
+                <td>{{ directory.name }}</td>
+                <td>-</td>
+                <td>Directory</td>
+                <td>{{ directory.modified }}</td>
+            </tr>
+            {% endfor %}
+
+            {% for file in files %}
+            <tr class="file-item {% if file.path in selected_files %}selected{% endif %}" 
+                x-data="{ selected: {{ 'true' if file.path in selected_files else 'false' }} }"
+                x-bind:class="{ 'selected': selected }"
+                @click="selected = !selected; updateButtonStates()">
+                <td><i class="bi bi-file-earmark file-icon text-primary"></i></td>
+                <td>{{ file.name }}</td>
+                <td>{{ file.size }}</td>
+                <td>{{ file.type }}</td>
+                <td>{{ file.modified }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<!-- Grid view -->
+<div class="row">
+    {% for directory in directories %}
+    <div class="col-md-2 mb-4">
+        <div class="card directory-item" 
+             hx-get="/api/files/navigate?path={{ directory.path }}&view_mode={{ view_mode }}" 
+             hx-target="#file-listing-container"
+             hx-push-url="?path={{ directory.path }}&view_mode={{ view_mode }}">
+            <div class="card-body text-center">
+                <i class="bi bi-folder display-4 text-warning"></i>
+                <p class="card-text mt-2">{{ directory.name }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% for file in files %}
+    <div class="col-md-2 mb-4">
+        <div class="card file-item {% if file.path in selected_files %}selected{% endif %}" 
+             x-data="{ selected: {{ 'true' if file.path in selected_files else 'false' }} }"
+             x-bind:class="{ 'selected': selected }"
+             @click="selected = !selected; updateButtonStates()">
+            <div class="card-body text-center">
+                <i class="bi bi-file-earmark display-4 text-primary"></i>
+                <p class="card-text mt-2">{{ file.name }}</p>
+                <small class="text-muted">{{ file.size }}</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

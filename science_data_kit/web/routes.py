@@ -4,14 +4,15 @@ Main Routes for the Flask Application
 This module defines the main routes for the Flask application.
 """
 
-from flask import Blueprint, render_template, redirect, url_for, request, session, flash
+from flask import Blueprint, render_template, redirect, url_for, request, session, flash, jsonify
 from functools import wraps
+import os
 
 from science_data_kit.core.pages.dashboard import DashboardPage
 from science_data_kit.core.pages.file_browser import FileBrowserPage
 from science_data_kit.core.pages.connect import ConnectPage
 from science_data_kit.core.pages.explore import ExplorePage
-from science_data_kit.web.adapters.flask_adapter import render_page_html
+from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
 main_bp = Blueprint('main', __name__)
@@ -19,7 +20,7 @@ main_bp = Blueprint('main', __name__)
 def login_required(f):
     """
     Decorator to require login for routes.
-    
+
     If the user is not logged in, they will be redirected to the login page.
     """
     @wraps(f)
@@ -42,7 +43,7 @@ def login():
         # Simple authentication for demonstration purposes
         username = request.form.get('username')
         password = request.form.get('password')
-        
+
         # In a real application, you would validate against a database
         if username == 'admin' and password == 'password':
             session['logged_in'] = True
@@ -52,7 +53,7 @@ def login():
             return redirect(next_page or url_for('main.dashboard'))
         else:
             flash('Login failed. Please check your username and password.', 'danger')
-    
+
     return render_template('login.html')
 
 @main_bp.route('/logout')
@@ -73,8 +74,288 @@ def dashboard():
 @login_required
 def files():
     """Render the file browser page."""
-    page = FileBrowserPage()
+    path = request.args.get('path', os.path.expanduser('~'))
+    view_mode = request.args.get('view_mode', 'list')
+    sort_by = request.args.get('sort_by', 'name')
+    sort_order = request.args.get('sort_order', 'ascending')
+    filter_pattern = request.args.get('filter', None)
+
+    page = FileBrowserPage(initial_path=path)
+    page.set_view_mode(view_mode)
+    page.set_sort(sort_by, sort_order)
+    if filter_pattern:
+        page.set_filter(filter_pattern)
+
     return render_page_html(page)
+
+@main_bp.route('/api/files')
+@login_required
+def files_api():
+    """API endpoint for the file browser page."""
+    path = request.args.get('path', os.path.expanduser('~'))
+    page = FileBrowserPage(initial_path=path)
+    return render_page_api(page)
+
+@main_bp.route('/api/files/navigate')
+@login_required
+def navigate_directory():
+    """HTMX endpoint for navigating directories."""
+    path = request.args.get('path', os.path.expanduser('~'))
+    view_mode = request.args.get('view_mode', 'list')
+    sort_by = request.args.get('sort_by', 'name')
+    sort_order = request.args.get('sort_order', 'ascending')
+
+    page = FileBrowserPage(initial_path=path)
+    page.set_view_mode(view_mode)
+    page.set_sort(sort_by, sort_order)
+
+    return render_template('partials/file_listing.html',
+                          files=page.get_page_data().files,
+                          directories=page.get_page_data().directories,
+                          current_path=page.get_page_data().current_path,
+                          view_mode=view_mode,
+                          selected_files=[])
+
+@main_bp.route('/api/files/filter')
+@login_required
+def filter_files():
+    """HTMX endpoint for filtering files."""
+    path = request.args.get('path', os.path.expanduser('~'))
+    filter_pattern = request.args.get('filter', '')
+    view_mode = request.args.get('view_mode', 'list')
+    sort_by = request.args.get('sort_by', 'name')
+    sort_order = request.args.get('sort_order', 'ascending')
+
+    page = FileBrowserPage(initial_path=path)
+    page.set_view_mode(view_mode)
+    page.set_sort(sort_by, sort_order)
+    page.set_filter(filter_pattern)
+
+    return render_template('partials/file_listing.html',
+                          files=page.get_page_data().files,
+                          directories=page.get_page_data().directories,
+                          current_path=page.get_page_data().current_path,
+                          view_mode=view_mode,
+                          selected_files=[])
+
+@main_bp.route('/api/files/preview')
+@login_required
+def preview_file():
+    """HTMX endpoint for previewing a file."""
+    file_path = request.args.get('path', '')
+    if not os.path.isfile(file_path):
+        return jsonify({'error': 'File not found'}), 404
+
+    file_type = os.path.splitext(file_path)[1].lower()
+
+    # Read the first 100KB of the file for preview
+    try:
+        with open(file_path, 'rb') as f:
+            content = f.read(102400)
+
+        # Handle different file types
+        text_file_extensions = [
+            '.txt', '.md', '.csv', '.json', '.yaml', '.yml', 
+            '.py', '.js', '.html', '.css', '.java', '.c', '.cpp', 
+            '.cs', '.go', '.php', '.rb', '.rs', '.ts', '.sh', 
+            '.xml', '.log', '.ini', '.conf', '.toml', '.sql'
+        ]
+
+        image_file_extensions = [
+            '.jpg', '.jpeg', '.png', '.gif', '.bmp', 
+            '.svg', '.webp', '.ico', '.tiff', '.tif'
+        ]
+
+        pdf_file_extensions = ['.pdf']
+
+        if file_type in text_file_extensions:
+            # Text files
+            try:
+                content = content.decode('utf-8')
+                return render_template('partials/preview_text.html', content=content, file_path=file_path)
+            except UnicodeDecodeError:
+                return render_template('partials/preview_binary.html', file_path=file_path)
+        elif file_type in image_file_extensions:
+            # Image files
+            return render_template('partials/preview_image.html', file_path=file_path)
+        elif file_type in pdf_file_extensions:
+            # PDF files
+            return render_template('partials/preview_pdf.html', file_path=file_path)
+        else:
+            # Binary files
+            return render_template('partials/preview_binary.html', file_path=file_path)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/api/files/download')
+@login_required
+def download_file():
+    """Endpoint for downloading a file."""
+    from flask import send_file
+
+    file_path = request.args.get('path', '')
+    if not os.path.isfile(file_path):
+        return jsonify({'error': 'File not found'}), 404
+
+    try:
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/api/files/raw')
+@login_required
+def raw_file():
+    """Endpoint for serving raw file content (e.g., for images)."""
+    from flask import send_file
+
+    file_path = request.args.get('path', '')
+    if not os.path.isfile(file_path):
+        return jsonify({'error': 'File not found'}), 404
+
+    try:
+        return send_file(file_path)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/api/files/upload', methods=['POST'])
+@login_required
+def upload_file():
+    """Endpoint for uploading files."""
+    from werkzeug.utils import secure_filename
+
+    # Get the target directory
+    target_dir = request.form.get('path', os.path.expanduser('~'))
+
+    if not os.path.isdir(target_dir):
+        return jsonify({'error': 'Target directory not found'}), 404
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    try:
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(target_dir, filename)
+        file.save(file_path)
+
+        # Return updated file listing
+        page = FileBrowserPage(initial_path=target_dir)
+        page.set_view_mode(request.form.get('view_mode', 'list'))
+
+        return render_template('partials/file_listing.html',
+                              files=page.get_page_data().files,
+                              directories=page.get_page_data().directories,
+                              current_path=page.get_page_data().current_path,
+                              view_mode=request.form.get('view_mode', 'list'),
+                              selected_files=[])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/api/files/create-folder', methods=['POST'])
+@login_required
+def create_folder():
+    """Endpoint for creating a new folder."""
+    parent_dir = request.form.get('path', os.path.expanduser('~'))
+    folder_name = request.form.get('folder_name', '')
+
+    if not folder_name:
+        return jsonify({'error': 'Folder name is required'}), 400
+
+    if not os.path.isdir(parent_dir):
+        return jsonify({'error': 'Parent directory not found'}), 404
+
+    try:
+        # Create the folder
+        new_folder_path = os.path.join(parent_dir, folder_name)
+        os.makedirs(new_folder_path, exist_ok=True)
+
+        # Return updated file listing
+        page = FileBrowserPage(initial_path=parent_dir)
+        page.set_view_mode(request.form.get('view_mode', 'list'))
+
+        return render_template('partials/file_listing.html',
+                              files=page.get_page_data().files,
+                              directories=page.get_page_data().directories,
+                              current_path=page.get_page_data().current_path,
+                              view_mode=request.form.get('view_mode', 'list'),
+                              selected_files=[])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/api/files/delete', methods=['POST'])
+@login_required
+def delete_files():
+    """Endpoint for deleting files and folders."""
+    import shutil
+
+    parent_dir = request.form.get('path', os.path.expanduser('~'))
+    file_paths = request.form.getlist('file_paths[]')
+
+    if not file_paths:
+        return jsonify({'error': 'No files selected'}), 400
+
+    try:
+        for file_path in file_paths:
+            # Ensure the file is within the parent directory (security check)
+            if not file_path.startswith(parent_dir):
+                continue
+
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+
+        # Return updated file listing
+        page = FileBrowserPage(initial_path=parent_dir)
+        page.set_view_mode(request.form.get('view_mode', 'list'))
+
+        return render_template('partials/file_listing.html',
+                              files=page.get_page_data().files,
+                              directories=page.get_page_data().directories,
+                              current_path=page.get_page_data().current_path,
+                              view_mode=request.form.get('view_mode', 'list'),
+                              selected_files=[])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/api/files/rename', methods=['POST'])
+@login_required
+def rename_file():
+    """Endpoint for renaming a file or folder."""
+    parent_dir = request.form.get('path', os.path.expanduser('~'))
+    file_path = request.form.get('file_path', '')
+    new_name = request.form.get('new_name', '')
+
+    if not file_path or not new_name:
+        return jsonify({'error': 'File path and new name are required'}), 400
+
+    if not os.path.exists(file_path):
+        return jsonify({'error': 'File or directory not found'}), 404
+
+    try:
+        # Get the directory containing the file
+        dir_path = os.path.dirname(file_path)
+        # Create the new path
+        new_path = os.path.join(dir_path, new_name)
+        # Rename the file or directory
+        os.rename(file_path, new_path)
+
+        # Return updated file listing
+        page = FileBrowserPage(initial_path=parent_dir)
+        page.set_view_mode(request.form.get('view_mode', 'list'))
+
+        return render_template('partials/file_listing.html',
+                              files=page.get_page_data().files,
+                              directories=page.get_page_data().directories,
+                              current_path=page.get_page_data().current_path,
+                              view_mode=request.form.get('view_mode', 'list'),
+                              selected_files=[])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @main_bp.route('/connect')
 @login_required

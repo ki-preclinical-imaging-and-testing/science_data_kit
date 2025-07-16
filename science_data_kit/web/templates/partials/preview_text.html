@@ -1,0 +1,20 @@
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">Preview: {{ file_path }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        <div class="preview-container">
+            {% set file_ext = file_path.split('.')[-1].lower() %}
+            {% if file_ext in ['py', 'js', 'html', 'css', 'java', 'c', 'cpp', 'cs', 'go', 'php', 'rb', 'rs', 'ts', 'sh', 'json', 'xml', 'yaml', 'yml'] %}
+                <pre><code class="language-{{ file_ext }}">{{ content }}</code></pre>
+            {% else %}
+                <pre class="preview-text">{{ content }}</pre>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <a href="/api/files/download?path={{ file_path }}" class="btn btn-primary">Download</a>
+    </div>
+</div>
