@@ -566,6 +566,10 @@ class ExplorePage(BasePage):
                     st.info("No numeric columns found for visualization.")
 
 def render_explore_page():
-    """Render the Explore page."""
-    page = ExplorePage()
-    page.render()
+    """
+    Render the Explore page using the framework-agnostic implementation.
+
+    This function uses the core ExplorePage class through the Streamlit adapter.
+    """
+    from science_data_kit.ui.adapters.streamlit_adapter import render_explore_page as render_core_explore
+    render_core_explore()

@@ -1107,6 +1107,19 @@ class ServerPage(BasePage):
         """)
 
 def render_server_page():
-    """Render the Server page."""
+    """
+    Render the Server page.
+
+    Note: This is a temporary implementation that uses the existing ServerPage class.
+    In the future, this should be refactored to use the framework-agnostic ConnectPage
+    class through the adapter layer. The current ServerPage implementation includes
+    functionality beyond simple connections, such as server management, which would
+    need to be moved to the core layer as well.
+    """
+    # For now, use the existing ServerPage implementation
     page = ServerPage()
     page.render()
+
+    # TODO: In the future, replace with:
+    # from science_data_kit.ui.adapters.streamlit_adapter import render_connect_page as render_core_connect
+    # render_core_connect()
