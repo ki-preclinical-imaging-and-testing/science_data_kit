@@ -1108,18 +1108,11 @@ class ServerPage(BasePage):
 
 def render_server_page():
     """
-    Render the Server page.
+    Render the Server page using the framework-agnostic implementation.
 
-    Note: This is a temporary implementation that uses the existing ServerPage class.
-    In the future, this should be refactored to use the framework-agnostic ConnectPage
-    class through the adapter layer. The current ServerPage implementation includes
-    functionality beyond simple connections, such as server management, which would
-    need to be moved to the core layer as well.
+    This function uses the core ConnectPage class through the Streamlit adapter.
+    The adapter handles the connection management functionality, while server
+    management features will be added to the core layer in future updates.
     """
-    # For now, use the existing ServerPage implementation
-    page = ServerPage()
-    page.render()
-
-    # TODO: In the future, replace with:
-    # from science_data_kit.ui.adapters.streamlit_adapter import render_connect_page as render_core_connect
-    # render_core_connect()
+    from science_data_kit.ui.adapters.streamlit_adapter import render_connect_page as render_core_connect
+    render_core_connect()

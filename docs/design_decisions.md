@@ -139,6 +139,8 @@ This design follows the Template Method pattern, where the base class defines th
 - `science_data_kit/web/adapters/flask_adapter.py`: Flask adapter
 - `science_data_kit/frontend/adapters/react_adapter.py`: React adapter (future)
 
+For detailed documentation on the adapter pattern implementation, see [Framework Adapter Pattern Documentation](framework_adapters.md).
+
 ### Retention of Render Functions
 
 **Decision**: Maintain render functions but transform them into thin adapters.
