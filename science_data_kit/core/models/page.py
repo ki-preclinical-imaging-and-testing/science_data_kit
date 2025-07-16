@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Optional
 class PageData:
     """Base class for page data"""
     title: str
-    requires_auth: bool = True
+    requires_auth: bool = False
 
 @dataclass
 class DashboardPageData(PageData):
