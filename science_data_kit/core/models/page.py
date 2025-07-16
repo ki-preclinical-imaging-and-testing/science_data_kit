@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Optional
 class PageData:
     """Base class for page data"""
     title: str
-    requires_auth: bool = False
+    requires_auth: bool = True
 
 @dataclass
 class DashboardPageData(PageData):
@@ -28,7 +28,7 @@ class DashboardPageData(PageData):
 @dataclass
 class FileExplorerPageData(PageData):
     """File explorer page specific data"""
-    current_path: str
+    current_path: str = ""
     files: List[Dict[str, Any]] = field(default_factory=list)
     directories: List[Dict[str, Any]] = field(default_factory=list)
     selected_files: List[str] = field(default_factory=list)
