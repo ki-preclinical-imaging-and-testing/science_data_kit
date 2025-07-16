@@ -7,6 +7,7 @@ This roadmap outlines a comprehensive plan for implementing a containerized Flas
 | Version | Date | Changes |
 |---------|------|---------|
 | 00 | 2025-07-25 | Initial version of Containerized Flask/React Architecture roadmap |
+| 01 | 2025-07-26 | Added Singularity implementation phase |
 
 ## Background
 The Science Data Kit currently uses Streamlit as its primary UI framework. While Streamlit offers rapid development and simplicity, it presents challenges for containerization and scaling. Flask combined with React provides a more containerization-friendly architecture with clearer separation between frontend and backend, making it easier to deploy, scale, and maintain in containerized environments.
@@ -15,19 +16,20 @@ The Science Data Kit currently uses Streamlit as its primary UI framework. While
 1. Create a containerized Flask backend API that exposes SDK functionality
 2. Develop a React frontend that consumes the Flask API
 3. Implement Docker and Docker Compose configurations optimized for development and production
-4. Ensure seamless integration with existing SDK core functionality
-5. Provide a migration path from Streamlit to Flask/React
-6. Improve deployment flexibility and scalability
+4. Support Singularity containerization for HPC and environments without Docker
+5. Ensure seamless integration with existing SDK core functionality
+6. Provide a migration path from Streamlit to Flask/React
+7. Improve deployment flexibility and scalability
 
 ## Current Status
-The Containerized Flask/React Architecture implementation has not yet begun. The roadmap is divided into four phases:
+The Containerized Flask/React Architecture implementation has not yet begun. The roadmap is divided into five phases:
 
 1. **Phase 1: Flask API Foundation** - ⏳ PLANNED
    - Create Flask application structure
    - Implement core API endpoints
    - Set up authentication and session management
    - Implement comprehensive API testing
-   
+
 2. **Phase 2: React Frontend Development** - ⏳ PLANNED
    - Set up React application structure
    - Implement core UI components
@@ -159,22 +161,22 @@ The new architecture separates the application into distinct layers:
    ```dockerfile
    # Flask API Dockerfile
    FROM python:3.9-slim
-   
+
    WORKDIR /app
-   
+
    # Install dependencies
    COPY requirements.txt .
    RUN pip install --no-cache-dir -r requirements.txt
-   
+
    # Copy application code
    COPY . .
-   
+
    # Install the package
    RUN pip install -e .
-   
+
    # Expose API port
    EXPOSE 5000
-   
+
    # Run the API
    CMD ["gunicorn", "--bind", "0.0.0.0:5000", "science_data_kit.api.wsgi:app"]
    ```
@@ -183,31 +185,31 @@ The new architecture separates the application into distinct layers:
    ```dockerfile
    # React Frontend Dockerfile - Build Stage
    FROM node:16-alpine as build
-   
+
    WORKDIR /app
-   
+
    # Install dependencies
    COPY package.json package-lock.json ./
    RUN npm ci
-   
+
    # Copy source code
    COPY . .
-   
+
    # Build the application
    RUN npm run build
-   
+
    # Production Stage
    FROM nginx:alpine
-   
+
    # Copy built assets from build stage
    COPY --from=build /app/build /usr/share/nginx/html
-   
+
    # Copy nginx configuration
    COPY nginx.conf /etc/nginx/conf.d/default.conf
-   
+
    # Expose port
    EXPOSE 80
-   
+
    # Start nginx
    CMD ["nginx", "-g", "daemon off;"]
    ```
@@ -215,7 +217,7 @@ The new architecture separates the application into distinct layers:
 3. **Docker Compose Configuration**:
    ```yaml
    version: '3.8'
-   
+
    services:
      api:
        build:
@@ -230,7 +232,7 @@ The new architecture separates the application into distinct layers:
          - DATABASE_URL=postgres://user:password@db:5432/scidk
        depends_on:
          - db
-   
+
      frontend:
        build:
          context: ./frontend
@@ -239,7 +241,7 @@ The new architecture separates the application into distinct layers:
          - "3000:80"
        depends_on:
          - api
-   
+
      db:
        image: postgres:13
        environment:
@@ -248,7 +250,7 @@ The new architecture separates the application into distinct layers:
          - POSTGRES_DB=scidk
        volumes:
          - postgres_data:/var/lib/postgresql/data
-   
+
    volumes:
      postgres_data:
    ```
@@ -281,6 +283,81 @@ The new architecture separates the application into distinct layers:
    - Document deployment process for various environments
    - Provide configuration examples for different scenarios
    - Create troubleshooting guides
+
+### Phase 5: Singularity Implementation (2-3 weeks) - ⏳ PLANNED
+
+**Objective**: Implement Singularity containerization for HPC and environments without Docker support
+
+**Tasks**:
+- Create Singularity definition files for Flask API
+- Create Singularity definition files for React frontend
+- Implement conversion process from Docker to Singularity
+- Set up writable directories for Singularity containers
+- Create deployment scripts for HPC environments
+- Document Singularity deployment process
+- Test on HPC environments
+
+**Implementation Details**:
+
+1. **Docker to Singularity Conversion**:
+   - Implement direct conversion from Docker images:
+     ```bash
+     singularity pull docker://science-data-kit/api:latest
+     singularity pull docker://science-data-kit/frontend:latest
+     ```
+   - Create Singularity definition files for custom builds
+
+2. **Singularity Definition Files**:
+   ```singularity
+   # Flask API Singularity Definition File
+   Bootstrap: docker
+   From: python:3.9-slim
+
+   %files
+       requirements.txt /app/requirements.txt
+       . /app
+
+   %post
+       cd /app
+       pip install --no-cache-dir -r requirements.txt
+       pip install -e .
+
+   %runscript
+       cd /app
+       exec gunicorn --bind 0.0.0.0:5000 science_data_kit.api.wsgi:app
+
+   %startscript
+       cd /app
+       exec gunicorn --bind 0.0.0.0:5000 science_data_kit.api.wsgi:app
+   ```
+
+3. **Writable Directories Setup**:
+   - Create setup script for writable directories:
+     ```bash
+     #!/bin/bash
+     # Setup writable directories for Singularity
+     mkdir -p $HOME/scidk-data
+     mkdir -p $HOME/scidk-logs
+     mkdir -p $HOME/scidk-conf
+     mkdir -p $HOME/scidk-run
+     ```
+   - Document bind mount requirements for Singularity
+
+4. **HPC Deployment Scripts**:
+   - Create deployment scripts for common HPC environments
+   - Implement job submission templates for SLURM, PBS, etc.
+   - Document environment-specific configurations
+
+5. **Running in HPC Environments**:
+   ```bash
+   singularity exec \
+     --bind $HOME/scidk-data:/data \
+     --bind $HOME/scidk-logs:/var/log \
+     --bind $HOME/scidk-conf:/etc/scidk \
+     --bind $HOME/scidk-run:/var/run/scidk \
+     -e scidk_api_latest.sif \
+     /app/start.sh
+   ```
 
 ### Advantages of Flask/React for Containerization
 
@@ -321,6 +398,21 @@ The new architecture separates the application into distinct layers:
 | Container Size | Larger containers with all dependencies | Smaller, focused containers |
 | Hot Reloading | Limited to Python code changes | Comprehensive for both frontend and backend |
 | Production Optimization | Limited options | Many optimization possibilities |
+
+### Docker vs. Singularity Containerization Comparison
+
+| Aspect | Docker | Singularity |
+|--------|--------|-------------|
+| Root Access | Requires root privileges | Does not require root privileges |
+| Security Model | Less secure in multi-user environments | Designed for multi-user HPC environments |
+| Image Format | Docker image format | Can directly use Docker images |
+| File System | Overlay file system | Single file system image |
+| Persistence | Stateful containers with volumes | Immutable containers with bind mounts |
+| Environment Support | Standard in cloud and enterprise | Standard in HPC and research clusters |
+| Integration | Strong commercial ecosystem | Strong scientific computing ecosystem |
+| Performance | Moderate overhead | Minimal overhead (near bare-metal) |
+| Workflow | Build, push, pull, run | Pull or build, then run |
+| Networking | Complex networking capabilities | Simpler networking model |
 
 ### Success Metrics
 
@@ -369,6 +461,7 @@ The success of the containerized Flask/React architecture will be measured by:
 - **Phase 2**: 1 senior frontend developer, 4-6 weeks
 - **Phase 3**: 1 DevOps engineer, 2-3 weeks
 - **Phase 4**: 1 senior developer + 1 QA engineer, 3-4 weeks
+- **Phase 5**: 1 HPC specialist + 1 DevOps engineer, 2-3 weeks
 
 ## Next Steps
 
@@ -386,6 +479,11 @@ The success of the containerized Flask/React architecture will be measured by:
    - Research best practices for Flask and React containerization
    - Define Docker Compose strategy
    - Create development environment setup
+
+4. Research for Phase 5 (Singularity Implementation):
+   - Evaluate Singularity versions and compatibility
+   - Test Docker to Singularity conversion process
+   - Identify target HPC environments for testing
 
 ## Approval
 

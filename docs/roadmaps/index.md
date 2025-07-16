@@ -97,16 +97,17 @@ This roadmap outlines a comprehensive plan for evolving the current render funct
 
 ### Containerized Flask/React Architecture
 
-This roadmap outlines a comprehensive plan for implementing a containerized Flask/React architecture for the Science Data Kit. This approach will provide a more containerization-friendly alternative to the current Streamlit implementation, enabling better scalability, deployment flexibility, and enhanced user interface capabilities.
+This roadmap outlines a comprehensive plan for implementing a containerized Flask/React architecture for the Science Data Kit. This approach will provide a more containerization-friendly alternative to the current Streamlit implementation, enabling better scalability, deployment flexibility, and enhanced user interface capabilities. The roadmap includes support for both Docker and Singularity containerization, making it suitable for various environments including HPC clusters.
 
 **Latest Version**: [Containerized Flask/React Architecture Roadmap](active/roadmap_ContainerizedFlaskReact_00.md)
 
-**Status**: Planning - The Containerized Flask/React Architecture roadmap has been defined but not started yet. The roadmap is divided into four phases:
+**Status**: Planning - The Containerized Flask/React Architecture roadmap has been defined but not started yet. The roadmap is divided into five phases:
 
 1. **Phase 1: Flask API Foundation** - Create Flask application structure, implement core API endpoints, set up authentication and session management, and implement comprehensive API testing.
 2. **Phase 2: React Frontend Development** - Set up React application structure, implement core UI components, create API integration layer, and develop responsive design.
 3. **Phase 3: Containerization** - Create optimized Dockerfiles for Flask backend and React frontend, implement Docker Compose configuration, and set up development and production environments.
 4. **Phase 4: Integration and Deployment** - Integrate with existing SDK core functionality, implement comprehensive end-to-end testing, create deployment documentation, and provide migration guides from Streamlit.
+5. **Phase 5: Singularity Implementation** - Create Singularity definition files, implement conversion process from Docker to Singularity, set up writable directories for Singularity containers, and create deployment scripts for HPC environments.
 
 ### Dropbox Extension
 
