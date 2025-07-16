@@ -10,9 +10,10 @@ This document outlines the key architectural and design decisions made during th
 2. [Provider Pattern](#provider-pattern)
 3. [Database Connector Abstraction](#database-connector-abstraction)
 4. [UI Architecture](#ui-architecture)
-5. [Session Management](#session-management)
-6. [Error Handling](#error-handling)
-7. [Performance Optimization](#performance-optimization)
+5. [Framework-Agnostic Architecture](#framework-agnostic-architecture)
+6. [Session Management](#session-management)
+7. [Error Handling](#error-handling)
+8. [Performance Optimization](#performance-optimization)
 
 ## Core Architecture
 
@@ -112,6 +113,77 @@ This design follows the Template Method pattern, where the base class defines th
 - `science_data_kit/ui/pages/`: Page implementations
 - `science_data_kit/ui/components/`: Reusable UI components
 - `science_data_kit/ui/adapters/`: Adapters for external services
+
+## Framework-Agnostic Architecture
+
+### Core-Adapter Separation
+
+**Decision**: Separate the application into a framework-independent core layer and framework-specific adapter layers.
+
+**Rationale**: This separation allows the application to support multiple frontend frameworks (Streamlit, Flask, React) without duplicating business logic. It also makes the codebase more maintainable and testable by clearly separating concerns.
+
+**Implementation**: The architecture is organized into layers:
+- `science_data_kit/core/`: Framework-independent business logic and data models
+- `science_data_kit/ui/`: Streamlit-specific UI components and adapters
+- `science_data_kit/web/`: Flask-specific components and adapters
+- `science_data_kit/frontend/`: React-specific components and adapters (future)
+
+### Adapter Pattern for UI Frameworks
+
+**Decision**: Use the adapter pattern to bridge between core business logic and framework-specific UI components.
+
+**Rationale**: The adapter pattern provides a clean interface between the core and UI layers, allowing each to evolve independently. It also makes it easier to add support for new UI frameworks in the future.
+
+**Implementation**: Each UI framework has its own adapter layer that translates between core data structures and framework-specific UI components:
+- `science_data_kit/ui/adapters/streamlit_adapter.py`: Streamlit adapter
+- `science_data_kit/web/adapters/flask_adapter.py`: Flask adapter
+- `science_data_kit/frontend/adapters/react_adapter.py`: React adapter (future)
+
+### Retention of Render Functions
+
+**Decision**: Maintain render functions but transform them into thin adapters.
+
+**Rationale**: This approach enables gradual migration without breaking existing code, provides a clear boundary between business logic and UI rendering, creates a consistent pattern for all UI frameworks, and makes testing easier by separating concerns.
+
+**Implementation**: Existing render functions are refactored to use the adapter pattern:
+```python
+# Before
+def render_dashboard_page():
+    # Business logic mixed with UI
+    metrics = get_system_metrics(st.session_state.db_connection)
+    # Render metrics with Streamlit
+    # ...
+
+# After
+def render_dashboard_page():
+    # Use adapter to render the page
+    StreamlitAdapter.render_page(DashboardPage, db_connection=st.session_state.db_connection)
+```
+
+### Flask + HTMX for Web UI
+
+**Decision**: Use Flask with HTMX and Alpine.js as the primary web implementation rather than a pure React approach.
+
+**Rationale**: This approach maintains our Python-first philosophy, provides a simpler development model without a complex build system, allows for progressive enhancement starting with basic HTML, offers better initial load performance and SEO capabilities, eliminates the need for a build toolchain, and provides more straightforward integration with the existing Python codebase.
+
+**Implementation**: The web UI is implemented using:
+- Flask for server-side rendering and API endpoints
+- HTMX for dynamic updates without full page reloads
+- Alpine.js for client-side interactivity
+- Jinja2 templates for HTML generation
+
+### Phased Migration Strategy
+
+**Decision**: Implement a phased migration strategy, starting with simpler pages and gradually moving to more complex ones.
+
+**Rationale**: This approach allows for incremental validation and refinement of the architecture, minimizes risk by focusing on simpler components first, and provides early feedback on the approach.
+
+**Implementation**: The migration follows this sequence:
+1. Simple pages first (About, Preferences)
+2. File Browser as proof of concept for rich UI capabilities
+3. Dashboard to demonstrate real-time updates
+4. Data visualization pages to leverage enhanced interactive capabilities
+5. Complex workflow pages after patterns are well-established
 
 ## Session Management
 

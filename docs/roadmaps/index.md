@@ -81,6 +81,20 @@ The roadmap is divided into four phases:
 4. **Phase 4: Workshop Readiness** - Preparing documentation, training materials, feedback collection mechanisms, and demo scenarios.
 
 
+### Framework-Agnostic Architecture
+
+This roadmap outlines a comprehensive plan for evolving the current render function pattern into a framework-agnostic architecture. This will allow the app to support multiple frontends (Streamlit, Flask, React) without duplicating business logic.
+
+**Latest Version**: [Framework-Agnostic Architecture Roadmap](active/roadmap_FrameworkAgnosticArchitecture_00.md)
+
+**Status**: Planning - The Framework-Agnostic Architecture roadmap has been defined but not started yet. The roadmap is divided into five phases:
+
+1. **Phase 1: Core Extraction** - Extract page logic from render functions into framework-independent core classes, define base page data models, and maintain backward compatibility with current Streamlit UI.
+2. **Phase 2: Streamlit Adapter Layer** - Convert current render functions to thin Streamlit adapters, move all Streamlit-specific code to adapter layer, and ensure all pages work through new architecture.
+3. **Phase 3: Flask API Development** - Create Flask application structure, implement REST API endpoints for each page, add authentication/session management, and create simple Jinja2 templates for testing.
+4. **Phase 4: Enhanced UI Components** - Implement HTMX for dynamic updates, add Alpine.js for client-side interactivity, focus on file browser and connection management, and create rich preview capabilities.
+5. **Phase 5: React Exploration** - Evaluate need for full SPA, prototype key components, and consider hybrid approach.
+
 ### Dropbox Extension
 
 This roadmap outlines a comprehensive plan for implementing the Dropbox extension for the Science Data Kit. The extension will enable integration with Dropbox cloud storage, including file access and synchronization, team folder management, and file sharing metadata extraction.
