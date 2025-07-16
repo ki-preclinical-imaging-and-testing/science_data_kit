@@ -19,7 +19,7 @@ api_bp = Blueprint('api', __name__)
 def api_login_required(f):
     """
     Decorator to require login for API routes.
-    
+
     If the user is not logged in, a 401 Unauthorized response is returned.
     """
     @wraps(f)
@@ -32,7 +32,7 @@ def api_login_required(f):
 def register_api_routes(app):
     """
     Register API routes with the Flask application.
-    
+
     Args:
         app: The Flask application instance.
     """
@@ -56,7 +56,7 @@ def files():
     sort_by = request.args.get('sort_by', 'name')
     sort_order = request.args.get('sort_order', 'ascending')
     filter_pattern = request.args.get('filter', None)
-    
+
     page = FileBrowserPage(
         current_path=path,
         view_mode=view_mode,
@@ -73,6 +73,88 @@ def connect():
     page = ConnectPage()
     return render_page_api(page)
 
+@api_bp.route('/connect/create', methods=['POST'])
+@api_login_required
+def create_connection():
+    """Create a new connection."""
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    connection_type = data.get('type')
+    name = data.get('name')
+    config = data.get('config', {})
+
+    if not connection_type or not name:
+        return jsonify({'error': 'Connection type and name are required'}), 400
+
+    page = ConnectPage()
+    success = page.connect(connection_type, config, name)
+
+    if success:
+        return jsonify({
+            'success': True,
+            'message': f'Connection {name} created successfully',
+            'data': render_page_api(page).json
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': f'Failed to create connection: {page.connection_errors.get(list(page.connection_errors.keys())[-1], "Unknown error")}',
+            'data': render_page_api(page).json
+        }), 400
+
+@api_bp.route('/connect/test', methods=['POST'])
+@api_login_required
+def test_connection():
+    """Test a connection without saving it."""
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    connection_type = data.get('type')
+    config = data.get('config', {})
+
+    if not connection_type:
+        return jsonify({'error': 'Connection type is required'}), 400
+
+    page = ConnectPage()
+    result = page.test_connection(connection_type, config)
+
+    return jsonify(result)
+
+@api_bp.route('/connect/disconnect', methods=['POST'])
+@api_login_required
+def disconnect():
+    """Disconnect from a data source."""
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    connection_id = data.get('connection_id')
+
+    if not connection_id:
+        return jsonify({'error': 'Connection ID is required'}), 400
+
+    page = ConnectPage()
+    success = page.disconnect(connection_id)
+
+    if success:
+        return jsonify({
+            'success': True,
+            'message': 'Connection disconnected successfully',
+            'data': render_page_api(page).json
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to disconnect',
+            'data': render_page_api(page).json
+        }), 400
+
 @api_bp.route('/explore')
 @api_login_required
 def explore():
@@ -84,16 +166,16 @@ def explore():
 def login():
     """Handle API login."""
     data = request.get_json()
-    
+
     if not data:
         return jsonify({'error': 'No data provided'}), 400
-    
+
     username = data.get('username')
     password = data.get('password')
-    
+
     if not username or not password:
         return jsonify({'error': 'Username and password are required'}), 400
-    
+
     # Simple authentication for demonstration purposes
     # In a real application, you would validate against a database
     if username == 'admin' and password == 'password':

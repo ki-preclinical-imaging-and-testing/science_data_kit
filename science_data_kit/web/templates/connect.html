@@ -28,7 +28,7 @@
                     </a>
                     {% endfor %}
                 </div>
-                
+
                 <div class="mt-3">
                     <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#newConnectionModal">
                         <i class="bi bi-plus-circle"></i> New Connection
@@ -36,7 +36,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Connection Types -->
         <div class="card">
             <div class="card-header">
@@ -72,7 +72,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-8">
         <!-- Active Connections -->
         <div class="card mb-4">
@@ -124,7 +124,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <!-- Connection Errors -->
         {% if connection_errors %}
         <div class="card">
@@ -158,27 +158,27 @@
                 <form id="connectionForm">
                     <input type="hidden" id="connectionId" name="connectionId">
                     <input type="hidden" id="connectionType" name="connectionType">
-                    
+
                     <div class="mb-3">
                         <label for="connectionHost" class="form-label">Host</label>
                         <input type="text" class="form-control" id="connectionHost" name="host" required>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="connectionPort" class="form-label">Port</label>
                         <input type="number" class="form-control" id="connectionPort" name="port">
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="connectionUsername" class="form-label">Username</label>
                         <input type="text" class="form-control" id="connectionUsername" name="username">
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="connectionPassword" class="form-label">Password</label>
                         <input type="password" class="form-control" id="connectionPassword" name="password">
                     </div>
-                    
+
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="saveCredentials" name="saveCredentials">
                         <label class="form-check-label" for="saveCredentials">Save credentials</label>
@@ -207,7 +207,7 @@
                         <label for="newConnectionName" class="form-label">Connection Name</label>
                         <input type="text" class="form-control" id="newConnectionName" name="name" required>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="newConnectionType" class="form-label">Connection Type</label>
                         <select class="form-select" id="newConnectionType" name="type" required>
@@ -218,7 +218,7 @@
                             <option value="cloud">Cloud Service</option>
                         </select>
                     </div>
-                    
+
                     <div id="databaseOptions" class="connection-options" style="display: none;">
                         <div class="mb-3">
                             <label for="dbType" class="form-label">Database Type</label>
@@ -229,7 +229,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div id="apiOptions" class="connection-options" style="display: none;">
                         <div class="mb-3">
                             <label for="apiAuthType" class="form-label">Authentication Type</label>
@@ -262,21 +262,21 @@
             const connectionId = button.getAttribute('data-connection-id');
             const connectionName = button.getAttribute('data-connection-name');
             const connectionType = button.getAttribute('data-connection-type');
-            
+
             document.getElementById('connectionName').textContent = connectionName;
             document.getElementById('connectionId').value = connectionId;
             document.getElementById('connectionType').value = connectionType;
         });
-        
+
         // Handle new connection type selection
         document.getElementById('newConnectionType').addEventListener('change', function() {
             const connectionType = this.value;
-            
+
             // Hide all connection options
             document.querySelectorAll('.connection-options').forEach(function(element) {
                 element.style.display = 'none';
             });
-            
+
             // Show options for selected type
             if (connectionType === 'database') {
                 document.getElementById('databaseOptions').style.display = 'block';
@@ -284,6 +284,265 @@
                 document.getElementById('apiOptions').style.display = 'block';
             }
         });
+
+        // Handle connect button click
+        document.getElementById('connectButton').addEventListener('click', function() {
+            const connectionId = document.getElementById('connectionId').value;
+            const connectionType = document.getElementById('connectionType').value;
+            const connectionName = document.getElementById('connectionName').textContent;
+
+            // Get form values
+            const host = document.getElementById('connectionHost').value;
+            const port = document.getElementById('connectionPort').value;
+            const username = document.getElementById('connectionUsername').value;
+            const password = document.getElementById('connectionPassword').value;
+            const saveCredentials = document.getElementById('saveCredentials').checked;
+
+            // Create config object
+            const config = {
+                host: host,
+                port: port,
+                username: username,
+                password: password,
+                saveCredentials: saveCredentials
+            };
+
+            // Show loading state
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Connecting...';
+            this.disabled = true;
+
+            // Send API request
+            fetch('/api/connect/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: connectionType,
+                    name: connectionName,
+                    config: config
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button state
+                this.innerHTML = 'Connect';
+                this.disabled = false;
+
+                if (data.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(connectionModal);
+                    modal.hide();
+
+                    // Show success message
+                    showToast('Connection successful', 'success');
+
+                    // Reload page to show updated connections
+                    window.location.reload();
+                } else {
+                    // Show error message
+                    showToast('Connection failed: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                // Reset button state
+                this.innerHTML = 'Connect';
+                this.disabled = false;
+
+                // Show error message
+                showToast('Error: ' + error.message, 'error');
+            });
+        });
+
+        // Handle create connection button click
+        document.getElementById('createConnectionButton').addEventListener('click', function() {
+            const name = document.getElementById('newConnectionName').value;
+            const type = document.getElementById('newConnectionType').value;
+
+            // Validate form
+            if (!name || !type) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            // Create config object based on connection type
+            let config = {};
+
+            if (type === 'database') {
+                config.dbType = document.getElementById('dbType').value;
+            } else if (type === 'api') {
+                config.authType = document.getElementById('apiAuthType').value;
+            }
+
+            // Show loading state
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...';
+            this.disabled = true;
+
+            // Send API request
+            fetch('/api/connect/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: type,
+                    name: name,
+                    config: config
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button state
+                this.innerHTML = 'Create';
+                this.disabled = false;
+
+                if (data.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('newConnectionModal'));
+                    modal.hide();
+
+                    // Show success message
+                    showToast('Connection created successfully', 'success');
+
+                    // Reload page to show new connection
+                    window.location.reload();
+                } else {
+                    // Show error message
+                    showToast('Failed to create connection: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                // Reset button state
+                this.innerHTML = 'Create';
+                this.disabled = false;
+
+                // Show error message
+                showToast('Error: ' + error.message, 'error');
+            });
+        });
+
+        // Add event listeners to test and disconnect buttons
+        document.querySelectorAll('.btn-outline-primary[data-connection-id]').forEach(button => {
+            button.addEventListener('click', function() {
+                const connectionId = this.getAttribute('data-connection-id');
+                testConnection(connectionId, this);
+            });
+        });
+
+        document.querySelectorAll('.btn-outline-danger[data-connection-id]').forEach(button => {
+            button.addEventListener('click', function() {
+                const connectionId = this.getAttribute('data-connection-id');
+                disconnectConnection(connectionId, this);
+            });
+        });
+
+        // Function to test a connection
+        function testConnection(connectionId, button) {
+            // Get connection info from the table row
+            const row = button.closest('tr');
+            const connectionType = row.querySelector('td:nth-child(2)').textContent.trim();
+
+            // Show loading state
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            button.disabled = true;
+
+            // Send API request
+            fetch('/api/connect/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    connection_id: connectionId,
+                    type: connectionType
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button state
+                button.innerHTML = originalText;
+                button.disabled = false;
+
+                if (data.success) {
+                    // Show success message
+                    showToast('Connection test successful', 'success');
+                } else {
+                    // Show error message
+                    showToast('Connection test failed: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                // Reset button state
+                button.innerHTML = originalText;
+                button.disabled = false;
+
+                // Show error message
+                showToast('Error: ' + error.message, 'error');
+            });
+        }
+
+        // Function to disconnect a connection
+        function disconnectConnection(connectionId, button) {
+            // Confirm disconnection
+            if (!confirm('Are you sure you want to disconnect this connection?')) {
+                return;
+            }
+
+            // Show loading state
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            button.disabled = true;
+
+            // Send API request
+            fetch('/api/connect/disconnect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    connection_id: connectionId
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button state
+                button.innerHTML = originalText;
+                button.disabled = false;
+
+                if (data.success) {
+                    // Show success message
+                    showToast('Connection disconnected successfully', 'success');
+
+                    // Reload page to update connection list
+                    window.location.reload();
+                } else {
+                    // Show error message
+                    showToast('Failed to disconnect: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                // Reset button state
+                button.innerHTML = originalText;
+                button.disabled = false;
+
+                // Show error message
+                showToast('Error: ' + error.message, 'error');
+            });
+        }
+
+        // Function to show toast notifications
+        function showToast(message, type) {
+            // For now, just use alert for simplicity
+            if (type === 'error') {
+                alert('Error: ' + message);
+            } else {
+                alert(message);
+            }
+
+            // In a real implementation, you would use a toast library or create your own
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
     });
 </script>
 {% endblock %}
