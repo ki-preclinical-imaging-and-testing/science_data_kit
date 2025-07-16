@@ -438,7 +438,7 @@ class SurveyPage(BasePage):
 
                     # Create parent folder if it doesn't exist
                     if not parent_result:
-                        create_parent_query = "CREATE (f:Folder {filepath: $filepath}) RETURN f"
+                        create_parent_query = "MERGE (f:Folder {filepath: $filepath}) RETURN f"
                         self.db_manager.execute_query(create_parent_query, {"filepath": parent_path})
 
                     # For directories, create the folder node if it doesn't exist
@@ -449,7 +449,7 @@ class SurveyPage(BasePage):
 
                         # Create folder if it doesn't exist
                         if not folder_result:
-                            create_folder_query = "CREATE (f:Folder {filepath: $filepath}) RETURN f"
+                            create_folder_query = "MERGE (f:Folder {filepath: $filepath}) RETURN f"
                             self.db_manager.execute_query(create_folder_query, {"filepath": path})
 
                             # Create relationship to parent
@@ -471,7 +471,7 @@ class SurveyPage(BasePage):
 
                         # Create file if it doesn't exist
                         if not file_result:
-                            create_file_query = "CREATE (f:File {filepath: $filepath}) RETURN f"
+                            create_file_query = "MERGE (f:File {filepath: $filepath}) RETURN f"
                             self.db_manager.execute_query(create_file_query, {"filepath": path})
 
                             # Create relationship to parent
