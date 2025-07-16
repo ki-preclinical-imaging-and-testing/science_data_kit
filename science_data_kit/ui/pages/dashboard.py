@@ -634,5 +634,5 @@ class DashboardPage(BasePage):
 
 def render_dashboard_page():
     """Render the Dashboard page."""
-    page = DashboardPage()
-    page.render()
+    from science_data_kit.ui.adapters.streamlit_adapter import render_dashboard_page as render_core_dashboard
+    render_core_dashboard()
