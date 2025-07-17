@@ -94,13 +94,27 @@ This roadmap outlines a comprehensive plan for refactoring the Science Data Kit'
 3. **Phase 3: Connection Manager** - Implement a unified connection management system with plugin registry and auto-discovery.
 4. **Phase 4: UI Integration** - Create dynamic UI components based on available plugins and their capabilities.
 
-### Framework-Agnostic Architecture
+### Streamlit to Flask Migration
+
+This roadmap outlines a comprehensive plan for transitioning the Science Data Kit from its current Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintains both frameworks, this roadmap focuses specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
+
+**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_00.md)
+
+**Status**: Planning - The Streamlit to Flask Migration roadmap has been defined but not started yet. The roadmap is divided into five phases:
+
+1. **Phase 1: Feature Parity Assessment** - Conduct a comprehensive assessment of all features in the Streamlit version and their implementation status in the Flask version.
+2. **Phase 2: Flask Implementation Completion** - Complete the implementation of all features in the Flask version to achieve full feature parity with the Streamlit version.
+3. **Phase 3: User Experience Optimization** - Enhance the user experience of the Flask version to exceed the capabilities of the Streamlit version.
+4. **Phase 4: Streamlit Deprecation and Removal** - Gradually deprecate and remove the Streamlit implementation while ensuring a smooth transition for users.
+5. **Phase 5: Containerization and Deployment** - Optimize deployment of the Flask application through containerization and deployment automation.
+
+### Framework-Agnostic Architecture (Deprioritized)
 
 This roadmap outlines a comprehensive plan for evolving the current render function pattern into a framework-agnostic architecture. This will allow the app to support multiple frontends (Streamlit, Flask, React) without duplicating business logic.
 
 **Latest Version**: [Framework-Agnostic Architecture Roadmap](active/roadmap_FrameworkAgnosticArchitecture_00.md)
 
-**Status**: Planning - The Framework-Agnostic Architecture roadmap has been defined but not started yet. The roadmap is divided into five phases:
+**Status**: Deprioritized - The Framework-Agnostic Architecture roadmap has been deprioritized in favor of the more focused Streamlit to Flask Migration roadmap. The roadmap is divided into five phases:
 
 1. **Phase 1: Core Extraction** - Extract page logic from render functions into framework-independent core classes, define base page data models, and maintain backward compatibility with current Streamlit UI.
 2. **Phase 2: Streamlit Adapter Layer** - Convert current render functions to thin Streamlit adapters, move all Streamlit-specific code to adapter layer, and ensure all pages work through new architecture.
@@ -246,6 +260,20 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 **Next Testing Steps**: Test navigation components and responsive design
 **Recommended Testing**: Use prompts #22 for workshop feature testing, #19 for quality assessment, #23 for performance validation
 **Quality Gates**: Core Component Validation before Integration Testing, Integration Testing before User Experience Optimization
+
+### Streamlit to Flask Migration
+**Implementation Status**: Planning - Not yet started
+**Testing Status**: Pending - Awaiting implementation start
+**Next Testing Steps**: Create feature inventory and testing plan
+**Recommended Testing**: Use prompts #19 for quality assessment, #21 for code analysis, #23 for performance validation
+**Quality Gates**: Feature Parity Assessment before Flask Implementation Completion, User Experience Optimization before Streamlit Deprecation
+
+### Framework-Agnostic Architecture
+**Implementation Status**: Deprioritized - In favor of Streamlit to Flask Migration
+**Testing Status**: On hold - Awaiting reprioritization
+**Next Testing Steps**: Not applicable at this stage
+**Recommended Testing**: Not applicable at this stage
+**Quality Gates**: Not applicable at this stage
 
 ### Future Roadmaps
 
