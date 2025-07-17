@@ -6,7 +6,7 @@ These models are framework-independent and can be used with any UI framework.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 
 @dataclass
 class PageData:
@@ -67,3 +67,14 @@ class ExplorePageData(PageData):
     query_results: Optional[Dict[str, Any]] = None
     visualizations: List[Dict[str, Any]] = field(default_factory=list)
     schema_info: Optional[Dict[str, Any]] = None
+
+@dataclass
+class CbioportalBrowserPageData(PageData):
+    """cBioPortal browser page specific data"""
+    cancer_types: List[Dict[str, Any]] = field(default_factory=list)
+    tumor_types: List[Dict[str, Any]] = field(default_factory=list)
+    studies: List[Dict[str, Any]] = field(default_factory=list)
+    terms: List[Dict[str, Any]] = field(default_factory=list)
+    existing_term_accessions: Set[str] = field(default_factory=set)
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)

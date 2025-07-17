@@ -29,7 +29,7 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Ensure all core functionality is available in the Flask version
 - Implement medium-priority features
   - ✓ About page with project information
-  - cBioPortal browser
+  - ✓ cBioPortal browser for ontology term management
   - Dropbox integration
   - ISA browser
   - Map visualization
@@ -38,7 +38,6 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - User preferences
 - Implement low-priority features (analytics dashboard, chat interface, feedback collection, etc.)
 - Enhance UI components with Flask-specific capabilities
-- Implement comprehensive testing
   - ✓ Unit tests for API endpoints
 
 ### Phase 3: User Experience Optimization (2-3 weeks)
@@ -141,14 +140,15 @@ The Streamlit to Flask Migration has made significant progress:
 2. **Current Implementation Status**:
    - 5 high-priority pages have been implemented in Flask (connect, dashboard, file browser, explore, plugin connect)
    - All high-priority pages now have full API support with comprehensive functionality
-   - 1 medium-priority page has been implemented (About page with project information)
-   - 15 pages still need to be implemented, with varying priorities
+   - 2 medium-priority pages have been implemented (About page with project information, cBioPortal browser for ontology term management)
+   - 14 pages still need to be implemented, with varying priorities
    - Core architecture and Flask foundation are in place
    - Plugin connection management has been implemented with improved UI and API endpoints
    - Unit tests have been created for all implemented API endpoints
 
 3. **Next Steps**:
-   - Implement medium-priority features in Phase 2
+   - Continue implementing medium-priority features in Phase 2
+   - Focus on Dropbox integration, ISA browser, and Map visualization as the next medium-priority features
    - Enhance UI components with Flask-specific capabilities
    - Implement integration tests for workflows
    - Prepare for user experience optimization in Phase 3
@@ -192,6 +192,23 @@ The following high-priority pages have been fully implemented in Flask with comp
    - API endpoints for testing plugin connections
    - Dynamic form generation based on plugin configuration schemas
 
+### Medium-Priority Pages
+
+The following medium-priority pages have been implemented in Flask:
+
+1. **About Page**:
+   - Core functionality for providing information about the Science Data Kit
+   - Resources and educational materials about the toolkit, knowledge graphs, and FAIR data practices
+   - Links to documentation, tutorials, community resources, and video tutorials
+   - Responsive design with Bootstrap cards for different sections
+
+2. **cBioPortal Browser**:
+   - Core functionality for browsing and managing ontology terms from cBioPortal and OncoTree
+   - API endpoints for fetching cancer types, tumor types, and studies
+   - API endpoints for adding terms from various sources
+   - API endpoints for managing terms (adding manually, clearing)
+   - Responsive design with Bootstrap cards and dynamic content loading
+
 ### Testing Implementation
 
 A comprehensive test suite has been implemented to verify the functionality of the Flask API endpoints:
@@ -211,6 +228,6 @@ A comprehensive test suite has been implemented to verify the functionality of t
 
 This executive roadmap provides a clear path forward for the Science Data Kit project, focusing on the transition from Streamlit to Flask while preserving and enhancing the valuable work done in the Plugin Architecture and Design/UX phases. By following this roadmap, the project will achieve a more maintainable, user-friendly, and deployment-ready application that better serves the needs of scientific users.
 
-The completion of Phase 1 (Feature Parity Assessment) and the implementation of the plugin connection management page represent significant milestones in the migration process, providing a solid foundation for the implementation work to follow. With a clear understanding of the current state and a detailed plan for moving forward, the project is well-positioned to successfully complete the transition to Flask.
+The completion of Phase 1 (Feature Parity Assessment) and the implementation of high-priority pages and two medium-priority features (About page and cBioPortal browser) represent significant milestones in the migration process, providing a solid foundation for the implementation work to follow. With a clear understanding of the current state and a detailed plan for moving forward, the project is well-positioned to successfully complete the transition to Flask.
 
 Note: This file has been updated in place (rather than creating a new version with _v2 suffix) to keep file counts to a minimum.

@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}cBioPortal Browser - Science Data Kit{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">cBioPortal Ontology Browser</h1>
+    <p class="lead">
+        Browse and manage ontology terms from cBioPortal and OncoTree.
+    </p>
+
+    <div class="row">
+        <!-- Main content area -->
+        <div class="col-md-8">
+            <!-- Terms display -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-list-ul"></i> Ontology Terms</h2>
+                </div>
+                <div class="card-body">
+                    <div id="terms-container">
+                        <div class="alert alert-info" id="no-terms-message">
+                            <p>No terms loaded yet. Use the sidebar to load terms from cBioPortal or add them manually.</p>
+                        </div>
+                        <div id="terms-list" style="display: none;">
+                            <!-- Terms will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export options -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-download"></i> Export Terms</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Export Format</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportCSV" value="csv" checked>
+                            <label class="form-check-label" for="exportCSV">CSV</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportJSON" value="json">
+                            <label class="form-check-label" for="exportJSON">JSON</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="exportExcel" value="excel">
+                            <label class="form-check-label" for="exportExcel">Excel</label>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="exportButton" disabled>Export</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- cBioPortal Cancer Types -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-diagram-3"></i> cBioPortal Cancer Types</h2>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary w-100" id="loadCancerTypesButton">Load Cancer Types</button>
+                    <div class="mt-2" id="cancerTypesStatus"></div>
+                </div>
+            </div>
+
+            <!-- OncoTree Tumor Types -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-diagram-3"></i> OncoTree Tumor Types</h2>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary w-100" id="loadTumorTypesButton">Load Tumor Types</button>
+                    <div class="mt-2" id="tumorTypesStatus"></div>
+                </div>
+            </div>
+
+            <!-- cBioPortal Studies -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-journal-text"></i> cBioPortal Studies</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="studySelect" class="form-label">Select a study to explore</label>
+                        <select class="form-select" id="studySelect">
+                            <option value="">Loading studies...</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary w-100" id="loadStudyDataButton" disabled>Load Study Data</button>
+                    <div class="mt-2" id="studyDataStatus"></div>
+                </div>
+            </div>
+
+            <!-- Manual Term Addition -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-plus-circle"></i> Add Term Manually</h2>
+                </div>
+                <div class="card-body">
+                    <form id="addTermForm">
+                        <div class="mb-3">
+                            <label for="termName" class="form-label">Term Name</label>
+                            <input type="text" class="form-control" id="termName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="termURI" class="form-label">Term URI</label>
+                            <input type="text" class="form-control" id="termURI" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ontologySource" class="form-label">Ontology Source</label>
+                            <input type="text" class="form-control" id="ontologySource" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Term</button>
+                    </form>
+                    <div class="mt-2" id="addTermStatus"></div>
+                </div>
+            </div>
+
+            <!-- Clear Terms -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-trash"></i> Clear Terms</h2>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-danger w-100" id="clearTermsButton">Clear All Terms</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load studies when the page loads
+        loadStudies();
+        // Load terms when the page loads
+        loadTerms();
+
+        // Event listeners
+        document.getElementById('loadCancerTypesButton').addEventListener('click', loadCancerTypes);
+        document.getElementById('loadTumorTypesButton').addEventListener('click', loadTumorTypes);
+        document.getElementById('loadStudyDataButton').addEventListener('click', loadStudyData);
+        document.getElementById('addTermForm').addEventListener('submit', addTerm);
+        document.getElementById('clearTermsButton').addEventListener('click', clearTerms);
+        document.getElementById('exportButton').addEventListener('click', exportTerms);
+
+        // Functions
+        function loadTerms() {
+            fetch('/api/cbioportal/terms')
+                .then(response => response.json())
+                .then(data => {
+                    updateTermsDisplay(data.terms);
+                })
+                .catch(error => {
+                    console.error('Error loading terms:', error);
+                });
+        }
+
+        function updateTermsDisplay(terms) {
+            const termsContainer = document.getElementById('terms-container');
+            const noTermsMessage = document.getElementById('no-terms-message');
+            const termsList = document.getElementById('terms-list');
+            const exportButton = document.getElementById('exportButton');
+
+            if (terms.length === 0) {
+                noTermsMessage.style.display = 'block';
+                termsList.style.display = 'none';
+                exportButton.disabled = true;
+            } else {
+                noTermsMessage.style.display = 'none';
+                termsList.style.display = 'block';
+                exportButton.disabled = false;
+
+                // Group terms by source
+                const termsBySource = {};
+                terms.forEach(term => {
+                    const source = term.term_source;
+                    if (!termsBySource[source]) {
+                        termsBySource[source] = [];
+                    }
+                    termsBySource[source].push(term);
+                });
+
+                // Display terms grouped by source
+                let html = '';
+                for (const source in termsBySource) {
+                    html += `<h3 class="h6 mt-3">${source} (${termsBySource[source].length})</h3>`;
+                    html += '<ul class="list-group">';
+                    termsBySource[source].forEach((term, index) => {
+                        html += `<li class="list-group-item">${index + 1}. <strong>${term.term}</strong> → <code>${term.term_accession}</code></li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                termsList.innerHTML = html;
+            }
+        }
+
+        function loadStudies() {
+            fetch('/api/cbioportal/studies')
+                .then(response => response.json())
+                .then(studies => {
+                    const studySelect = document.getElementById('studySelect');
+                    studySelect.innerHTML = '';
+
+                    if (studies.length === 0) {
+                        studySelect.innerHTML = '<option value="">No studies available</option>';
+                        document.getElementById('loadStudyDataButton').disabled = true;
+                    } else {
+                        studies.forEach(study => {
+                            const option = document.createElement('option');
+                            option.value = study.studyId;
+                            option.textContent = study.name;
+                            studySelect.appendChild(option);
+                        });
+                        document.getElementById('loadStudyDataButton').disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading studies:', error);
+                    document.getElementById('studySelect').innerHTML = '<option value="">Error loading studies</option>';
+                    document.getElementById('loadStudyDataButton').disabled = true;
+                });
+        }
+
+        function loadCancerTypes() {
+            const statusElement = document.getElementById('cancerTypesStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...';
+
+            fetch('/api/cbioportal/add-cancer-types', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error loading cancer types:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error loading cancer types</div>';
+            });
+        }
+
+        function loadTumorTypes() {
+            const statusElement = document.getElementById('tumorTypesStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...';
+
+            fetch('/api/cbioportal/add-tumor-types', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error loading tumor types:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error loading tumor types</div>';
+            });
+        }
+
+        function loadStudyData() {
+            const studyId = document.getElementById('studySelect').value;
+            if (!studyId) {
+                return;
+            }
+
+            const statusElement = document.getElementById('studyDataStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...';
+
+            const formData = new FormData();
+            formData.append('study_id', studyId);
+
+            fetch('/api/cbioportal/add-study-data', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error loading study data:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error loading study data</div>';
+            });
+        }
+
+        function addTerm(event) {
+            event.preventDefault();
+
+            const termName = document.getElementById('termName').value;
+            const termURI = document.getElementById('termURI').value;
+            const ontologySource = document.getElementById('ontologySource').value;
+            const statusElement = document.getElementById('addTermStatus');
+
+            if (!termName || !termURI || !ontologySource) {
+                statusElement.innerHTML = '<div class="alert alert-danger">All fields are required</div>';
+                return;
+            }
+
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Adding...';
+
+            const formData = new FormData();
+            formData.append('term_name', termName);
+            formData.append('term_uri', termURI);
+            formData.append('ontology_source', ontologySource);
+
+            fetch('/api/cbioportal/add-term', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    document.getElementById('termName').value = '';
+                    document.getElementById('termURI').value = '';
+                    document.getElementById('ontologySource').value = '';
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error adding term:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error adding term</div>';
+            });
+        }
+
+        function clearTerms() {
+            if (!confirm('Are you sure you want to clear all terms?')) {
+                return;
+            }
+
+            fetch('/api/cbioportal/clear-terms', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert('Error clearing terms');
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error clearing terms:', error);
+                alert('Error clearing terms');
+            });
+        }
+
+        function exportTerms() {
+            const format = document.querySelector('input[name="exportFormat"]:checked').value;
+            
+            // In a real implementation, this would download the file
+            // For now, we'll just show an alert
+            alert(`Exporting terms in ${format.toUpperCase()} format. This would download a file in a real implementation.`);
+        }
+    });
+</script>
+{% endblock %}

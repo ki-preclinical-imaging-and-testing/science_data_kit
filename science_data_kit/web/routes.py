@@ -13,6 +13,7 @@ from science_data_kit.core.pages.file_browser import FileBrowserPage
 from science_data_kit.core.pages.connect import ConnectPage
 from science_data_kit.core.pages.explore import ExplorePage
 from science_data_kit.core.pages.plugin_connect import PluginConnectPage
+from science_data_kit.core.pages.cbioportal_browser import CbioportalBrowserPage
 from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
@@ -789,3 +790,94 @@ def test_plugin_connection():
 def about():
     """About page with project information."""
     return render_template('about.html')
+
+@main_bp.route('/cbioportal')
+@login_required
+def cbioportal_browser():
+    """cBioPortal browser page for browsing and managing ontology terms."""
+    page = CbioportalBrowserPage()
+    return render_page_html(page, 'cbioportal_browser.html')
+
+@main_bp.route('/api/cbioportal/cancer-types', methods=['GET'])
+@login_required
+def get_cancer_types():
+    """Get cancer types from cBioPortal API."""
+    page = CbioportalBrowserPage()
+    return jsonify(page._get_cancer_types())
+
+@main_bp.route('/api/cbioportal/tumor-types', methods=['GET'])
+@login_required
+def get_tumor_types():
+    """Get tumor types from OncoTree API."""
+    page = CbioportalBrowserPage()
+    return jsonify(page._get_oncotree_tumor_types())
+
+@main_bp.route('/api/cbioportal/studies', methods=['GET'])
+@login_required
+def get_studies():
+    """Get studies from cBioPortal API."""
+    page = CbioportalBrowserPage()
+    return jsonify(page._get_cbioportal_studies())
+
+@main_bp.route('/api/cbioportal/study/<study_id>', methods=['GET'])
+@login_required
+def get_study_data(study_id):
+    """Get study data from cBioPortal API."""
+    page = CbioportalBrowserPage()
+    return jsonify(page._load_cbioportal_study_data(study_id))
+
+@main_bp.route('/api/cbioportal/add-cancer-types', methods=['POST'])
+@login_required
+def add_cancer_types():
+    """Add cancer types to terms."""
+    page = CbioportalBrowserPage()
+    return jsonify(page.add_cancer_types_to_terms())
+
+@main_bp.route('/api/cbioportal/add-tumor-types', methods=['POST'])
+@login_required
+def add_tumor_types():
+    """Add tumor types to terms."""
+    page = CbioportalBrowserPage()
+    return jsonify(page.add_tumor_types_to_terms())
+
+@main_bp.route('/api/cbioportal/add-study-data', methods=['POST'])
+@login_required
+def add_study_data():
+    """Add study data to terms."""
+    study_id = request.form.get('study_id')
+    if not study_id:
+        return jsonify({'success': False, 'message': 'Study ID is required'}), 400
+
+    page = CbioportalBrowserPage()
+    return jsonify(page.add_study_data_to_terms(study_id))
+
+@main_bp.route('/api/cbioportal/add-term', methods=['POST'])
+@login_required
+def add_term():
+    """Add a term manually."""
+    term_name = request.form.get('term_name')
+    term_uri = request.form.get('term_uri')
+    ontology_source = request.form.get('ontology_source')
+
+    if not term_name or not term_uri or not ontology_source:
+        return jsonify({'success': False, 'message': 'Term name, URI, and ontology source are required'}), 400
+
+    page = CbioportalBrowserPage()
+    return jsonify(page.add_term_manually(term_name, term_uri, ontology_source))
+
+@main_bp.route('/api/cbioportal/clear-terms', methods=['POST'])
+@login_required
+def clear_terms():
+    """Clear all terms."""
+    page = CbioportalBrowserPage()
+    return jsonify(page.clear_terms())
+
+@main_bp.route('/api/cbioportal/terms', methods=['GET'])
+@login_required
+def get_terms():
+    """Get all terms."""
+    page = CbioportalBrowserPage()
+    return jsonify({
+        'terms': page.terms,
+        'existing_term_accessions': list(page.existing_term_accessions)
+    })
