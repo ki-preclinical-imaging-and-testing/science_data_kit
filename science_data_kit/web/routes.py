@@ -71,6 +71,56 @@ def dashboard():
     page = DashboardPage()
     return render_page_html(page)
 
+@main_bp.route('/api/dashboard/data')
+@login_required
+def dashboard_data():
+    """Get dashboard data."""
+    page = DashboardPage()
+    page_data = page.get_page_data()
+
+    return jsonify({
+        'metrics': page_data.metrics,
+        'charts': page_data.charts,
+        'tables': page_data.tables,
+        'status_items': page_data.status_items,
+        'connected_services': page_data.connected_services,
+        'recent_activities': page_data.recent_activities,
+        'feature_categories': page_data.feature_categories
+    })
+
+@main_bp.route('/api/dashboard/connect-database', methods=['POST'])
+@login_required
+def connect_to_database():
+    """Connect to a database."""
+    uri = request.form.get('uri')
+    username = request.form.get('username')
+    password = request.form.get('password')
+    database = request.form.get('database')
+    conn_name = request.form.get('conn_name')
+
+    if not uri or not username or not password or not database:
+        return jsonify({'success': False, 'error': 'Missing required parameters'}), 400
+
+    page = DashboardPage()
+    result = page.connect_to_database(uri, username, password, database, conn_name)
+
+    if result['success']:
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': result['error']})
+
+@main_bp.route('/api/dashboard/disconnect-database', methods=['POST'])
+@login_required
+def disconnect_from_database():
+    """Disconnect from a database."""
+    page = DashboardPage()
+    result = page.disconnect_from_database()
+
+    if result['success']:
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': result['error']})
+
 @main_bp.route('/files')
 @login_required
 def files():
@@ -365,12 +415,201 @@ def connect():
     page = ConnectPage()
     return render_page_html(page)
 
+@main_bp.route('/api/connect/available')
+@login_required
+def available_connections():
+    """Get available connection types."""
+    page = ConnectPage()
+    return jsonify(page._get_available_connections())
+
+@main_bp.route('/api/connect/active')
+@login_required
+def active_connections():
+    """Get active connections."""
+    page = ConnectPage()
+    return jsonify(page._get_active_connections())
+
+@main_bp.route('/api/connect/connect', methods=['POST'])
+@login_required
+def connect_to_source():
+    """Connect to a data source."""
+    connection_type = request.form.get('connection_type')
+    name = request.form.get('name')
+
+    # Build the config dictionary from form data
+    config = {}
+    for key, value in request.form.items():
+        if key not in ['connection_type', 'name']:
+            config[key] = value
+
+    page = ConnectPage()
+    success = page.connect(connection_type, config, name)
+
+    if success:
+        return jsonify({'success': True})
+    else:
+        error = page.connection_errors.get(f"{connection_type}_{len(page.active_connections)-1}", 
+                                          "Failed to connect to data source")
+        return jsonify({'success': False, 'error': error})
+
+@main_bp.route('/api/connect/disconnect', methods=['POST'])
+@login_required
+def disconnect_from_source():
+    """Disconnect from a data source."""
+    connection_id = request.form.get('connection_id')
+
+    page = ConnectPage()
+    success = page.disconnect(connection_id)
+
+    if success:
+        return jsonify({'success': True})
+    else:
+        error = page.connection_errors.get(connection_id, "Failed to disconnect from data source")
+        return jsonify({'success': False, 'error': error})
+
+@main_bp.route('/api/connect/test', methods=['POST'])
+@login_required
+def test_connection_to_source():
+    """Test a connection without saving it."""
+    connection_type = request.form.get('connection_type')
+
+    # Build the config dictionary from form data
+    config = {}
+    for key, value in request.form.items():
+        if key != 'connection_type':
+            config[key] = value
+
+    page = ConnectPage()
+    result = page.test_connection(connection_type, config)
+
+    return jsonify(result)
+
+@main_bp.route('/api/connect/oauth/initiate', methods=['POST'])
+@login_required
+def initiate_oauth_flow():
+    """Initiate OAuth authorization flow."""
+    connection_type = request.form.get('connection_type')
+
+    # Build the config dictionary from form data
+    config = {}
+    for key, value in request.form.items():
+        if key != 'connection_type':
+            config[key] = value
+
+    # Get the base URL
+    base_url = request.host_url.rstrip('/')
+
+    page = ConnectPage()
+    success, message, auth_url = page.initiate_oauth(connection_type, config, base_url)
+
+    if success:
+        return jsonify({'success': True, 'message': message, 'auth_url': auth_url})
+    else:
+        return jsonify({'success': False, 'error': message})
+
+@main_bp.route('/api/connect/oauth/callback')
+def oauth_callback():
+    """Handle OAuth callback."""
+    code = request.args.get('code')
+    state = request.args.get('state')
+
+    if not code or not state:
+        flash('OAuth authorization failed: Missing parameters', 'danger')
+        return redirect(url_for('main.connect'))
+
+    # Get the base URL
+    base_url = request.host_url.rstrip('/')
+
+    page = ConnectPage()
+    success, message, conn_id = page.handle_oauth_callback(code, state, base_url)
+
+    if success:
+        flash('OAuth authorization successful', 'success')
+    else:
+        flash(f'OAuth authorization failed: {message}', 'danger')
+
+    return redirect(url_for('main.connect'))
+
 @main_bp.route('/explore')
 @login_required
 def explore():
     """Render the explore page."""
     page = ExplorePage()
     return render_page_html(page)
+
+@main_bp.route('/api/explore/data-sources')
+@login_required
+def explore_data_sources():
+    """Get available data sources for exploration."""
+    page = ExplorePage()
+    return jsonify(page._get_available_data_sources())
+
+@main_bp.route('/api/explore/set-data-source', methods=['POST'])
+@login_required
+def set_explore_data_source():
+    """Set the current data source for exploration."""
+    data_source_id = request.form.get('data_source_id')
+
+    if not data_source_id:
+        return jsonify({'success': False, 'error': 'Data source ID is required'}), 400
+
+    page = ExplorePage()
+    success = page.set_data_source(data_source_id)
+
+    if success:
+        return jsonify({
+            'success': True,
+            'schema_info': page.schema_info
+        })
+    else:
+        return jsonify({'success': False, 'error': f'Invalid data source ID: {data_source_id}'}), 400
+
+@main_bp.route('/api/explore/execute-query', methods=['POST'])
+@login_required
+def execute_explore_query():
+    """Execute a query on the current data source."""
+    query = request.form.get('query')
+    data_source_id = request.form.get('data_source_id')
+
+    if not query:
+        return jsonify({'success': False, 'error': 'Query is required'}), 400
+
+    page = ExplorePage()
+
+    # Set the data source if provided
+    if data_source_id:
+        if not page.set_data_source(data_source_id):
+            return jsonify({'success': False, 'error': f'Invalid data source ID: {data_source_id}'}), 400
+
+    # Execute the query
+    success = page.execute_query(query)
+
+    if success:
+        return jsonify({
+            'success': True,
+            'query_results': page.query_results,
+            'visualizations': page.visualizations
+        })
+    else:
+        error = page.query_results.get('error', 'Failed to execute query') if page.query_results else 'Failed to execute query'
+        return jsonify({'success': False, 'error': error}), 400
+
+@main_bp.route('/api/explore/schema-info')
+@login_required
+def get_schema_info():
+    """Get schema information for a data source."""
+    data_source_id = request.args.get('data_source_id')
+
+    if not data_source_id:
+        return jsonify({'success': False, 'error': 'Data source ID is required'}), 400
+
+    page = ExplorePage()
+    schema_info = page._get_schema_info(data_source_id)
+
+    if schema_info:
+        return jsonify({'success': True, 'schema_info': schema_info})
+    else:
+        return jsonify({'success': False, 'error': f'Schema information not available for data source: {data_source_id}'}), 404
 
 @main_bp.route('/plugin-connect')
 @login_required
