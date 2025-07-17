@@ -48,6 +48,19 @@ class ConnectPageData(PageData):
     oauth_states: Dict[str, str] = field(default_factory=dict)
 
 @dataclass
+class PluginConnectPageData(PageData):
+    """Plugin connection page specific data"""
+    available_plugin_types: List[str] = field(default_factory=list)
+    available_plugins: Dict[str, List[str]] = field(default_factory=dict)
+    selected_plugin_type: Optional[str] = None
+    selected_plugin_name: Optional[str] = None
+    plugin_info: Dict[str, Any] = field(default_factory=dict)
+    plugin_capabilities: List[str] = field(default_factory=list)
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    active_connections: List[Dict[str, Any]] = field(default_factory=list)
+
+@dataclass
 class ExplorePageData(PageData):
     """Explore page specific data"""
     available_data_sources: List[Dict[str, Any]] = field(default_factory=list)

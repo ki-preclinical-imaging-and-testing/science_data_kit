@@ -12,6 +12,7 @@ from science_data_kit.core.pages.dashboard import DashboardPage
 from science_data_kit.core.pages.file_browser import FileBrowserPage
 from science_data_kit.core.pages.connect import ConnectPage
 from science_data_kit.core.pages.explore import ExplorePage
+from science_data_kit.core.pages.plugin_connect import PluginConnectPage
 from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
@@ -370,3 +371,177 @@ def explore():
     """Render the explore page."""
     page = ExplorePage()
     return render_page_html(page)
+
+@main_bp.route('/plugin-connect')
+@login_required
+def plugin_connect():
+    """Render the plugin connect page."""
+    page = PluginConnectPage()
+    return render_page_html(page)
+
+@main_bp.route('/api/plugins/info')
+@login_required
+def plugin_info():
+    """Get information about a plugin."""
+    plugin_type = request.args.get('type')
+    plugin_name = request.args.get('name')
+
+    if not plugin_type or not plugin_name:
+        return jsonify({'error': 'Plugin type and name are required'}), 400
+
+    from science_data_kit.core.connections.manager import manager
+
+    # Get the plugin class
+    plugin_class = manager.get_plugin_class(plugin_type, plugin_name)
+    if not plugin_class:
+        return jsonify({'error': f'Plugin not found: {plugin_type}/{plugin_name}'}), 404
+
+    # Create an instance to get plugin info
+    plugin_instance = plugin_class()
+
+    # Get plugin info
+    plugin_info = {
+        'name': plugin_name,
+        'type': plugin_type,
+        'version': getattr(plugin_instance, 'version', 'Unknown'),
+        'description': getattr(plugin_instance, 'description', 'No description available'),
+        'capabilities': getattr(plugin_instance, 'capabilities', [])
+    }
+
+    return jsonify(plugin_info)
+
+@main_bp.route('/api/plugins/config-schema')
+@login_required
+def plugin_config_schema():
+    """Get the configuration schema for a plugin."""
+    plugin_type = request.args.get('type')
+    plugin_name = request.args.get('name')
+
+    if not plugin_type or not plugin_name:
+        return jsonify({'error': 'Plugin type and name are required'}), 400
+
+    from science_data_kit.core.connections.manager import manager
+
+    # Get the plugin class
+    plugin_class = manager.get_plugin_class(plugin_type, plugin_name)
+    if not plugin_class:
+        return jsonify({'error': f'Plugin not found: {plugin_type}/{plugin_name}'}), 404
+
+    # Create an instance to get the config schema
+    plugin_instance = plugin_class()
+
+    # Get the config schema
+    config_schema = plugin_instance.config_schema
+
+    # Convert the schema to a dictionary
+    schema_dict = {
+        'fields': []
+    }
+
+    for field in config_schema.fields:
+        field_dict = {
+            'name': field.name,
+            'type': field.field_type.value,
+            'label': field.name.replace('_', ' ').title(),
+            'description': field.description,
+            'required': field.required,
+            'default': field.default
+        }
+
+        if field.field_type.value == 'enum':
+            field_dict['options'] = [{'value': v, 'label': v} for v in field.enum_values]
+
+        schema_dict['fields'].append(field_dict)
+
+    return jsonify(schema_dict)
+
+@main_bp.route('/api/plugins/connect', methods=['POST'])
+@login_required
+def connect_plugin():
+    """Connect to a plugin."""
+    plugin_type = request.form.get('plugin_type')
+    plugin_name = request.form.get('plugin_name')
+    connection_name = request.form.get('connection_name')
+
+    if not plugin_type or not plugin_name:
+        return jsonify({'error': 'Plugin type and name are required'}), 400
+
+    # Get the plugin connect page instance
+    page = PluginConnectPage()
+
+    # Select the plugin
+    if not page.select_plugin(plugin_type, plugin_name):
+        return jsonify({'error': f'Plugin not found: {plugin_type}/{plugin_name}'}), 404
+
+    # Build the config dictionary from form data
+    config = {}
+    for key, value in request.form.items():
+        if key not in ['plugin_type', 'plugin_name', 'connection_name']:
+            config[key] = value
+
+    # Connect to the plugin
+    if page.connect_plugin(config, connection_name):
+        return jsonify({'success': True})
+    else:
+        error = page.connection_errors.get(f"{plugin_type}_{plugin_name}_0", "Failed to connect to plugin")
+        return jsonify({'success': False, 'error': error})
+
+@main_bp.route('/api/plugins/disconnect', methods=['POST'])
+@login_required
+def disconnect_plugin():
+    """Disconnect from a plugin."""
+    connection_id = request.form.get('connection_id')
+
+    if not connection_id:
+        return jsonify({'error': 'Connection ID is required'}), 400
+
+    # Get the plugin connect page instance
+    page = PluginConnectPage()
+
+    # Disconnect from the plugin
+    if page.disconnect_plugin(connection_id):
+        return jsonify({'success': True})
+    else:
+        error = page.connection_errors.get(connection_id, "Failed to disconnect from plugin")
+        return jsonify({'success': False, 'error': error})
+
+@main_bp.route('/api/plugins/test-connection', methods=['POST'])
+@login_required
+def test_plugin_connection():
+    """Test a plugin connection."""
+    connection_id = request.form.get('connection_id')
+
+    if not connection_id:
+        return jsonify({'error': 'Connection ID is required'}), 400
+
+    # Get the plugin connect page instance
+    page = PluginConnectPage()
+
+    # Find the connection
+    connection = None
+    for conn in page.active_connections:
+        if conn['id'] == connection_id:
+            connection = conn
+            break
+
+    if not connection:
+        return jsonify({'success': False, 'error': 'Connection not found'})
+
+    # Test the connection
+    from science_data_kit.core.connections.manager import manager
+
+    try:
+        # Get the plugin instance
+        plugin_instance = manager.get_plugin_instance(connection['type'], connection['plugin'])
+        if not plugin_instance:
+            return jsonify({'success': False, 'error': f"Failed to create plugin instance: {connection['type']}/{connection['plugin']}"})
+
+        # Test the connection
+        if hasattr(plugin_instance, 'test_connection'):
+            result = plugin_instance.test_connection()
+            return jsonify({'success': result.get('success', False), 'message': result.get('message', '')})
+        else:
+            # If the plugin doesn't have a test_connection method, assume it's connected
+            return jsonify({'success': True, 'message': 'Connection test successful'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})

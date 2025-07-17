@@ -14,7 +14,8 @@ from science_data_kit.core.models.page import (
     DashboardPageData, 
     FileExplorerPageData, 
     ConnectPageData, 
-    ExplorePageData
+    ExplorePageData,
+    PluginConnectPageData
 )
 
 def render_page_html(page_instance: BasePage) -> str:
@@ -37,6 +38,8 @@ def render_page_html(page_instance: BasePage) -> str:
         return _render_connect_html(page_data)
     elif isinstance(page_data, ExplorePageData):
         return _render_explore_html(page_data)
+    elif isinstance(page_data, PluginConnectPageData):
+        return _render_plugin_connect_html(page_data)
     else:
         # Generic rendering for other page types
         return render_template('generic.html', page_data=page_data)
@@ -158,6 +161,30 @@ def _render_explore_html(page_data: ExplorePageData) -> str:
                           query_results=page_data.query_results,
                           visualizations=page_data.visualizations,
                           schema_info=page_data.schema_info,
+                          languages=get_available_languages(),
+                          current_language=get_current_language())
+
+def _render_plugin_connect_html(page_data: PluginConnectPageData) -> str:
+    """
+    Render a plugin connect page as HTML.
+
+    Args:
+        page_data: Plugin connect page data.
+
+    Returns:
+        A rendered HTML template.
+    """
+    return render_template('plugin_connect.html',
+                          title=page_data.title,
+                          available_plugin_types=page_data.available_plugin_types,
+                          available_plugins=page_data.available_plugins,
+                          selected_plugin_type=page_data.selected_plugin_type,
+                          selected_plugin_name=page_data.selected_plugin_name,
+                          plugin_info=page_data.plugin_info,
+                          plugin_capabilities=page_data.plugin_capabilities,
+                          connection_status=page_data.connection_status,
+                          connection_errors=page_data.connection_errors,
+                          active_connections=page_data.active_connections,
                           languages=get_available_languages(),
                           current_language=get_current_language())
 
