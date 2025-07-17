@@ -1,0 +1,1179 @@
+.
+├── =0.6.1
+├── =11.36.0
+├── activate_main.sh
+├── app
+│   ├── __pycache__
+│   │   ├── about.cpython-310.pyc
+│   │   ├── about.cpython-312.pyc
+│   │   ├── about.cpython-313.pyc
+│   │   ├── about.cpython-39.pyc
+│   │   ├── chat.cpython-310.pyc
+│   │   ├── chat.cpython-312.pyc
+│   │   ├── chat.cpython-313.pyc
+│   │   ├── chat.cpython-39.pyc
+│   │   ├── menu.cpython-310.pyc
+│   │   ├── menu.cpython-312.pyc
+│   │   ├── menu.cpython-313.pyc
+│   │   └── menu.cpython-39.pyc
+│   └── utils
+│       └── __pycache__
+│           ├── database.cpython-310.pyc
+│           ├── database.cpython-312.pyc
+│           ├── database.cpython-313.pyc
+│           ├── database.cpython-39.pyc
+│           ├── db_adapter.cpython-312.pyc
+│           ├── graph_utils.cpython-312.pyc
+│           ├── graph_utils.cpython-39.pyc
+│           ├── __init__.cpython-310.pyc
+│           ├── __init__.cpython-312.pyc
+│           ├── __init__.cpython-313.pyc
+│           ├── __init__.cpython-39.pyc
+│           ├── isa_compatibility.cpython-312.pyc
+│           ├── jupyter_server.cpython-310.pyc
+│           ├── jupyter_server.cpython-312.pyc
+│           ├── jupyter_server.cpython-313.pyc
+│           ├── jupyter_server.cpython-39.pyc
+│           ├── models.cpython-312.pyc
+│           ├── models.cpython-39.pyc
+│           ├── neodash_server.cpython-310.pyc
+│           ├── neodash_server.cpython-312.pyc
+│           ├── neodash_server.cpython-313.pyc
+│           ├── neodash_server.cpython-39.pyc
+│           ├── registry.cpython-312.pyc
+│           ├── registry.cpython-39.pyc
+│           ├── sidebar.cpython-310.pyc
+│           ├── sidebar.cpython-312.pyc
+│           ├── sidebar.cpython-313.pyc
+│           └── sidebar.cpython-39.pyc
+├── build_docs.py -> tools/build_docs.py
+├── changes_summary.md
+├── config
+│   ├── db_config.template.yaml
+│   └── README_CONFIG.md
+├── docker
+│   ├── docker-compose-full.yml
+│   ├── docker-compose-workshop.yml
+│   ├── docker-compose.yml
+│   ├── docker-entrypoint.sh
+│   ├── docker-entrypoint-workshop.sh
+│   ├── Dockerfile
+│   └── Dockerfile.workshop
+├── docker-compose-full.yml
+├── docker-compose-workshop.yml
+├── docker-compose.yml
+├── docker-entrypoint.sh
+├── docker-entrypoint-workshop.sh
+├── Dockerfile
+├── Dockerfile.workshop
+├── docs
+│   ├── api_docs
+│   │   ├── core
+│   │   │   ├── db
+│   │   │   │   ├── api_manager_base.md
+│   │   │   │   ├── db_manager.md
+│   │   │   │   ├── graph_utils.md
+│   │   │   │   ├── msgraph_adapter.md
+│   │   │   │   └── msgraph_manager.md
+│   │   │   ├── models
+│   │   │   │   ├── app_models.md
+│   │   │   │   ├── file_models.md
+│   │   │   │   └── msgraph_schemas.md
+│   │   │   └── utils
+│   │   │       ├── file_utils.md
+│   │   │       ├── isa_compatibility.md
+│   │   │       ├── isa_utils.md
+│   │   │       └── msgraph_utils.md
+│   │   └── index.md
+│   ├── architecture
+│   │   ├── caching_architecture.puml
+│   │   ├── framework-adapters.md
+│   │   └── README.md
+│   ├── code_standards.md
+│   ├── common_errors_faq.md
+│   ├── deprecation_plan.md
+│   ├── design_decisions.md
+│   ├── framework_adapters.md
+│   ├── high_priority_tasks.md
+│   ├── Makefile
+│   ├── module_standards.md
+│   ├── next_steps.md
+│   ├── ONTOLOGY_FEATURES.md
+│   ├── README.md
+│   ├── research_use_cases.md
+│   ├── restful_api_integration.md
+│   ├── roadmap.md
+│   ├── roadmaps
+│   │   ├── active
+│   │   │   ├── roadmap_ContainerizedFlaskReact_00.md
+│   │   │   ├── roadmap_DesignUX_00.md
+│   │   │   ├── roadmap_DesignUX_01.md
+│   │   │   ├── roadmap_DesignUX_02.md
+│   │   │   ├── roadmap_DesignUX_03.md
+│   │   │   ├── roadmap_DesignUX_04.md
+│   │   │   ├── roadmap_DesignUX_05.md
+│   │   │   ├── roadmap_DesignUX_06.md
+│   │   │   ├── roadmap_DesignUX_07.md
+│   │   │   ├── roadmap_DesignUX_08.md
+│   │   │   ├── roadmap_DesignUX_09.md
+│   │   │   ├── roadmap_DesignUX_10.md
+│   │   │   ├── roadmap_DesignUX_11.md
+│   │   │   ├── roadmap_DesignUX_12.md
+│   │   │   ├── roadmap_DesignUX_13.md
+│   │   │   ├── roadmap_DesignUX_14.md
+│   │   │   ├── roadmap_DesignUX_15.md
+│   │   │   ├── roadmap_DesignUX_16.md
+│   │   │   ├── roadmap_DesignUX_17.md
+│   │   │   ├── roadmap_DesignUX_18.md
+│   │   │   ├── roadmap_DropboxExtension_00.md
+│   │   │   ├── roadmap_DropboxExtension_01.md
+│   │   │   ├── roadmap_DropboxExtension_02.md
+│   │   │   ├── roadmap_DropboxExtension_03.md
+│   │   │   ├── roadmap_DropboxExtension_04.md
+│   │   │   ├── roadmap_DropboxExtension_05.md
+│   │   │   ├── roadmap_DropboxExtension_06.md
+│   │   │   ├── roadmap_DropboxExtension_07.md
+│   │   │   ├── roadmap_DropboxExtension_08.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_00.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_01.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_02.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_03.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_04.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_05.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_06.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_07.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_08.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_09.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_10.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_11.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_12.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_13.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_14.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_15.md
+│   │   │   ├── roadmap_FrameworkAgnosticArchitecture_16.md
+│   │   │   ├── roadmap_later.md
+│   │   │   ├── roadmap_memo.md
+│   │   │   └── testing_status_template.md
+│   │   ├── archive
+│   │   │   ├── adapter_transition_plan.md
+│   │   │   ├── index_complete.md
+│   │   │   ├── later_phase.md
+│   │   │   ├── roadmap_CodebaseOrganization_00.md
+│   │   │   ├── roadmap_CodebaseOrganization_01.md
+│   │   │   ├── roadmap_CodebaseOrganization_02.md
+│   │   │   ├── roadmap_CodebaseOrganization_03.md
+│   │   │   ├── roadmap_DataSourceIntegration_00.md
+│   │   │   ├── roadmap_DataSourceIntegration_01.md
+│   │   │   ├── roadmap_DataSourceIntegration_02.md
+│   │   │   ├── roadmap_DataSourceIntegration_03.md
+│   │   │   ├── roadmap_DataSourceIntegration_04.md
+│   │   │   ├── roadmap_DataSourceIntegration_05.md
+│   │   │   ├── roadmap_infrastructure_gui_00.md
+│   │   │   ├── roadmap_infrastructure_gui_01.md
+│   │   │   ├── roadmap_infrastructure_gui_02.md
+│   │   │   ├── roadmap_infrastructure_gui_03.md
+│   │   │   ├── roadmap_infrastructure_gui_04.md
+│   │   │   ├── roadmap_infrastructure_gui_05.md
+│   │   │   ├── roadmap_infrastructure_gui_06.md
+│   │   │   ├── roadmap_infrastructure_gui_07.md
+│   │   │   ├── roadmap_infrastructure_gui_08.md
+│   │   │   ├── roadmap_infrastructure_gui_09.md
+│   │   │   ├── roadmap_MSGraphAPI_00.md
+│   │   │   ├── roadmap_MSGraphAPI_01.md
+│   │   │   ├── roadmap_MSGraphAPI_02.md
+│   │   │   ├── roadmap_MSGraphAPI_03.md
+│   │   │   ├── roadmap_MSGraphAPI_04.md
+│   │   │   ├── roadmap_ontology_00.md
+│   │   │   ├── roadmap_ontology_01.md
+│   │   │   ├── roadmap_ontology_02.md
+│   │   │   ├── roadmap_ontology_03.md
+│   │   │   ├── roadmap_ontology_04.md
+│   │   │   ├── roadmap_phase01_bug_fixes_00.md
+│   │   │   ├── roadmap_phase01_bug_fixes_01.md
+│   │   │   ├── roadmap_phase01_bug_fixes_02.md
+│   │   │   ├── roadmap_phase01_bug_fixes_03.md
+│   │   │   ├── roadmap_phase1_01.md
+│   │   │   ├── roadmap_phase1_02.md
+│   │   │   ├── roadmap_phase1_03.md
+│   │   │   ├── roadmap_phase1_04.md
+│   │   │   ├── roadmap_phase1_05.md
+│   │   │   ├── roadmap_phase1_06.md
+│   │   │   ├── roadmap_phase1_07.md
+│   │   │   ├── roadmap_phase2_00.md
+│   │   │   ├── roadmap_phase2_01.md
+│   │   │   ├── roadmap_phase2_02.md
+│   │   │   ├── roadmap_phase2_03.md
+│   │   │   ├── roadmap_phase2_04.md
+│   │   │   ├── roadmap_phase2_05.md
+│   │   │   ├── roadmap_phase2_06.md
+│   │   │   ├── roadmap_phase2_07.md
+│   │   │   ├── roadmap_phase2_08.md
+│   │   │   ├── roadmap_phase2_09.md
+│   │   │   ├── roadmap_phase2_10.md
+│   │   │   ├── roadmap_phase2_11.md
+│   │   │   ├── roadmap_phase2_12.md
+│   │   │   ├── roadmap_phase2_13.md
+│   │   │   ├── roadmap_phase2_14.md
+│   │   │   ├── roadmap_phase2_15.md
+│   │   │   ├── roadmap_phase2_16.md
+│   │   │   ├── roadmap_phase2_17.md
+│   │   │   ├── roadmap_phase2_18.md
+│   │   │   ├── roadmap_phase2_19.md
+│   │   │   ├── roadmap_phase2_20.md
+│   │   │   ├── roadmap_phase2_21.md
+│   │   │   ├── roadmap_phase2_22.md
+│   │   │   ├── roadmap_phase2_23.md
+│   │   │   ├── roadmap_phase2_24.md
+│   │   │   ├── roadmap_phase3_00.md
+│   │   │   ├── roadmap_phase3_01.md
+│   │   │   ├── roadmap_phase3_02.md
+│   │   │   ├── roadmap_phase3_03.md
+│   │   │   ├── roadmap_phase3_04.md
+│   │   │   ├── roadmap_phase3_05.md
+│   │   │   ├── roadmap_phase3_06.md
+│   │   │   ├── roadmap_phase3_07.md
+│   │   │   ├── roadmap_phase3_08.md
+│   │   │   ├── roadmap_phase3_09.md
+│   │   │   ├── roadmap_phase3_10.md
+│   │   │   ├── roadmap_phase3_11.md
+│   │   │   ├── roadmap_phase3_12.md
+│   │   │   ├── roadmap_phase3_13.md
+│   │   │   ├── roadmap_phase4_00.md
+│   │   │   ├── roadmap_phase4_01.md
+│   │   │   ├── roadmap_phase4_02.md
+│   │   │   ├── roadmap_phase4_03.md
+│   │   │   ├── roadmap_phase4_04.md
+│   │   │   ├── roadmap_phase4_05.md
+│   │   │   ├── roadmap_phase4_05_oldapp_00.md
+│   │   │   ├── roadmap_phase4_05_oldapp_01.md
+│   │   │   ├── roadmap_phase4_05_oldapp_02.md
+│   │   │   ├── roadmap_phase4_05_oldapp_03.md
+│   │   │   ├── roadmap_phase4_05_oldapp_04.md
+│   │   │   ├── roadmap_phase4_05_oldapp_05.md
+│   │   │   ├── roadmap_phase4_05_oldapp_06.md
+│   │   │   ├── roadmap_phase4_05_oldapp_07.md
+│   │   │   ├── roadmap_phase4_05_oldapp_08.md
+│   │   │   ├── roadmap_phase4_06.md
+│   │   │   ├── roadmap_phase4_07.md
+│   │   │   ├── roadmap_phase4_08.md
+│   │   │   ├── roadmap_phase4_09.md
+│   │   │   ├── roadmap_phase4_10.md
+│   │   │   ├── roadmap_phase4_11.md
+│   │   │   ├── roadmap_phase4_12.md
+│   │   │   ├── roadmap_phase4_13.md
+│   │   │   ├── roadmap_phase4_14.md
+│   │   │   ├── roadmap_phase4_15.md
+│   │   │   ├── roadmap_phase4_16.md
+│   │   │   ├── roadmap_phase4_17.md
+│   │   │   ├── roadmap_phase4_18.md
+│   │   │   ├── roadmap_phase4_19.md
+│   │   │   ├── roadmap_phase4_20.md
+│   │   │   ├── roadmap_phase5_00.md
+│   │   │   ├── roadmap_phase5_01.md
+│   │   │   ├── roadmap_phase5_02.md
+│   │   │   ├── roadmap_phase5_03.md
+│   │   │   ├── roadmap_phase5_04.md
+│   │   │   ├── roadmap_phase5_05.md
+│   │   │   ├── roadmap_phase6_00.md
+│   │   │   ├── roadmap_phase6_01.md
+│   │   │   ├── roadmap_phase6_02.md
+│   │   │   ├── roadmap_phase6_03.md
+│   │   │   ├── roadmap_phase6_04.md
+│   │   │   ├── roadmap_phase6_05.md
+│   │   │   ├── roadmap_phase6_06.md
+│   │   │   ├── roadmap_phase6_07.md
+│   │   │   ├── roadmap_phase6_08.md
+│   │   │   ├── roadmap_phase6_09.md
+│   │   │   ├── roadmap_phase6_10.md
+│   │   │   ├── roadmap_phase6_11.md
+│   │   │   ├── roadmap_phase6_12.md
+│   │   │   ├── roadmap_phase6_13.md
+│   │   │   ├── roadmap_phase6_14.md
+│   │   │   ├── roadmap_phase6_15.md
+│   │   │   ├── roadmap_phase6_16.md
+│   │   │   ├── roadmap_phase6_17.md
+│   │   │   ├── roadmap_phase6_18.md
+│   │   │   ├── roadmap_phase6_19.md
+│   │   │   ├── roadmap_phase6_20.md
+│   │   │   ├── roadmap_refactor_app_01.md
+│   │   │   ├── roadmap_refactor_app_02.md
+│   │   │   ├── roadmap_refactor_app_03.md
+│   │   │   ├── roadmap_refactor_app_04.md
+│   │   │   ├── roadmap_refactor_app_05.md
+│   │   │   ├── roadmap_refactor_app_06.md
+│   │   │   ├── roadmap_refactor_app_07.md
+│   │   │   ├── roadmap_refactor_app_08.md
+│   │   │   ├── roadmap_refactor_app_09.md
+│   │   │   ├── roadmap_refactor_app_10.md
+│   │   │   ├── roadmap_refactor_app_11.md
+│   │   │   ├── roadmap_refactor_app_12.md
+│   │   │   ├── roadmap_refactor_app_13.md
+│   │   │   ├── roadmap_refactor_app_14.md
+│   │   │   ├── roadmap_refactor_app_15.md
+│   │   │   ├── roadmap_refactor_app_16.md
+│   │   │   ├── roadmap_refactor_app_17.md
+│   │   │   ├── roadmap_RepoReorg_00.md
+│   │   │   ├── roadmap_RepoReorg_01.md
+│   │   │   ├── roadmap_RepoReorg_02.md
+│   │   │   ├── roadmap_RepoReorg_03.md
+│   │   │   └── roadmap_RepoReorg_04.md
+│   │   ├── framework-agnostic-architecture.md
+│   │   ├── future
+│   │   │   ├── knowledge_graph_examples.md
+│   │   │   ├── knowledge_graph_technical_spec.md
+│   │   │   ├── knowledge_graph_vision.md
+│   │   │   ├── README.md
+│   │   │   ├── roadmap_CPB_00.md
+│   │   │   ├── roadmap_DropboxExtension_00.md
+│   │   │   ├── roadmap_GitHubIntegration_00.md
+│   │   │   ├── roadmap_GoogleExtension_00.md
+│   │   │   ├── roadmap_kg_00.md
+│   │   │   ├── roadmap_kgPhase1_00.md
+│   │   │   ├── roadmap_kgPhase2_00.md
+│   │   │   ├── roadmap_kgPhase3_00.md
+│   │   │   ├── roadmap_kgPhase4_00.md
+│   │   │   ├── roadmap_kgPhase5_00.md
+│   │   │   ├── roadmap_kgPhase6_00.md
+│   │   │   ├── roadmap_MSGraphExtension_00.md
+│   │   │   └── roadmap_StrategicEnhancements_00.md
+│   │   ├── index.md
+│   │   ├── organization.md
+│   │   ├── prompts.md
+│   │   └── templates
+│   │       ├── README.md
+│   │       ├── roadmap_template.md
+│   │       └── testing_status_template.md
+│   ├── source
+│   │   ├── api.rst
+│   │   ├── autoapi
+│   │   │   └── index.rst
+│   │   ├── conf.py
+│   │   ├── index.rst
+│   │   ├── installation.rst
+│   │   ├── introduction.rst
+│   │   ├── modules.rst
+│   │   ├── roadmaps -> ../roadmaps
+│   │   ├── roadmaps.rst
+│   │   └── usage.rst
+│   ├── sql_database_integration.md
+│   ├── tasks.md
+│   ├── TESTING_STRATEGY.md
+│   ├── troubleshooting
+│   │   └── messaging_connectors.md
+│   ├── tutorials
+│   │   ├── interactive
+│   │   │   └── sdk_interactive_tutorial.ipynb
+│   │   ├── videos
+│   │   │   ├── 03_advanced_visualization_transcript.md
+│   │   │   └── README.md
+│   │   └── video_tutorials
+│   │       └── complex_workflows_tutorial.md
+│   ├── user_guide
+│   │   ├── api_layer.md
+│   │   ├── database_operations.md
+│   │   ├── data_modeling.md
+│   │   ├── data_sources.md
+│   │   ├── data_transformation.md
+│   │   ├── features
+│   │   │   ├── connect_guide.md
+│   │   │   ├── dropbox_setup_guide.md
+│   │   │   ├── explore_guide.md
+│   │   │   ├── google_sheets_setup_guide.md
+│   │   │   ├── map_guide.md
+│   │   │   ├── messaging_connectors.md
+│   │   │   ├── msgraph_setup_guide.md
+│   │   │   ├── msgraph_usage_guide.md
+│   │   │   ├── ollama_integration.md
+│   │   │   └── survey_guide.md
+│   │   ├── index.md
+│   │   ├── integration_capabilities.md
+│   │   ├── migration_guide.md
+│   │   ├── server_deployment.md
+│   │   └── session_management.md
+│   ├── web
+│   │   └── responsive_design.md
+│   └── workshop
+├── environment.yml
+├── human_side_tasks.md
+├── __init__.py
+├── INSTALL.md
+├── install_python_venv.sh
+├── install_robust.sh
+├── install.sh
+├── ipynb
+│   ├── Example_Enrich_2.ipynb
+│   ├── Example_RandomFiles.ipynb
+│   ├── LauraDatasetWithRec_procByAdam.ipynb
+│   ├── LauraM_USGI_uCT_Entities-Copy1.ipynb
+│   ├── Neodash_UnpackingWidgets.ipynb
+│   ├── README.md
+│   ├── Tutorial_Enrich_1.ipynb
+│   ├── Tutorial_Enrich_2.ipynb
+│   ├── Tutorial_ResolveEntities.ipynb
+│   ├── Untitled01.ipynb
+│   ├── Untitled1.ipynb
+│   ├── Untitled-Copy1.ipynb
+│   ├── Untitled-Copy2.ipynb
+│   ├── Untitled.ipynb
+│   └── WFP_FileScan.ipynb
+├── kubernetes
+│   ├── celery-deployment.yaml
+│   ├── configmap.yaml
+│   ├── namespace.yaml
+│   ├── neo4j-deployment.yaml
+│   ├── README.md
+│   ├── redis-deployment.yaml
+│   ├── sdk-deployment.yaml
+│   └── secret.yaml
+├── MANIFEST.in
+├── pyproject.toml
+├── README.md
+├── requirements.txt
+├── run_app.py
+├── run_black.py -> tools/run_black.py
+├── run_coverage.py -> tools/run_coverage.py
+├── run_flask.py
+├── run_legacy_app.py
+├── run_mypy.py -> tools/run_mypy.py
+├── run_workshop.py
+├── science_data_kit
+│   ├── bin
+│   │   └── sdk
+│   ├── cli.py
+│   ├── core
+│   │   ├── analysis
+│   │   │   ├── data_analysis_pipeline.py
+│   │   │   ├── __init__.py
+│   │   │   ├── matplotlib_integration.py
+│   │   │   ├── numpy_integration.py
+│   │   │   ├── pandas_integration.py
+│   │   │   ├── plotly_integration.py
+│   │   │   ├── scipy_integration.py
+│   │   │   └── sklearn_integration.py
+│   │   ├── api
+│   │   │   ├── auth.py
+│   │   │   ├── base.py
+│   │   │   ├── cache.py
+│   │   │   ├── client.js
+│   │   │   ├── client.py
+│   │   │   ├── cli.py
+│   │   │   ├── docs
+│   │   │   │   ├── openapi.yaml
+│   │   │   │   └── swagger.py
+│   │   │   ├── endpoints.py
+│   │   │   ├── examples
+│   │   │   │   └── client_example.py
+│   │   │   ├── __init__.py
+│   │   │   └── rate_limiter.py
+│   │   ├── config
+│   │   │   ├── __init__.py
+│   │   │   └── providers.py
+│   │   ├── db
+│   │   │   ├── advanced_query_builder.py
+│   │   │   ├── api_manager_base.py
+│   │   │   ├── cache.py
+│   │   │   ├── database_connector_base.py
+│   │   │   ├── db_factory.py
+│   │   │   ├── db_manager.py
+│   │   │   ├── graph_utils.py
+│   │   │   ├── indexing.py
+│   │   │   ├── __init__.py
+│   │   │   ├── metrics.py
+│   │   │   ├── msgraph_adapter.py
+│   │   │   ├── msgraph_manager.py
+│   │   │   ├── neo4j_config.py
+│   │   │   ├── postgres_manager.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── api_manager_base.cpython-313.pyc
+│   │   │   │   ├── api_manager_base.cpython-39.pyc
+│   │   │   │   ├── cache.cpython-313.pyc
+│   │   │   │   ├── database_connector_base.cpython-313.pyc
+│   │   │   │   ├── db_manager.cpython-311.pyc
+│   │   │   │   ├── db_manager.cpython-313.pyc
+│   │   │   │   ├── db_manager.cpython-39.pyc
+│   │   │   │   ├── __init__.cpython-311.pyc
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-39.pyc
+│   │   │   │   ├── metrics.cpython-313.pyc
+│   │   │   │   ├── msgraph_manager.cpython-313.pyc
+│   │   │   │   ├── msgraph_manager.cpython-39.pyc
+│   │   │   │   ├── neo4j_config.cpython-313.pyc
+│   │   │   │   ├── postgres_manager.cpython-313.pyc
+│   │   │   │   └── query_profiler.cpython-313.pyc
+│   │   │   ├── query_builder.py
+│   │   │   ├── query_optimizer.py
+│   │   │   ├── query_profiler.py
+│   │   │   ├── query_templates.py
+│   │   │   └── relationship_manager.py
+│   │   ├── di
+│   │   │   ├── container.py
+│   │   │   ├── decorators.py
+│   │   │   ├── examples.py
+│   │   │   ├── __init__.py
+│   │   │   ├── interfaces.py
+│   │   │   └── providers.py
+│   │   ├── examples
+│   │   │   └── scientific_workflows.py
+│   │   ├── export
+│   │   │   ├── __init__.py
+│   │   │   └── json_export.py
+│   │   ├── __init__.py
+│   │   ├── integrations
+│   │   │   ├── fairdom_provider.py
+│   │   │   ├── __init__.py
+│   │   │   ├── isa_json_handler.py
+│   │   │   ├── isa_neo4j_importer.py
+│   │   │   ├── isa_ontology_manager.py
+│   │   │   ├── isa_tools_plugin.py
+│   │   │   ├── isa_tools_provider.py
+│   │   │   ├── jupyter_adapter.py
+│   │   │   ├── jupyter_server.py
+│   │   │   ├── nc3rs_provider.py
+│   │   │   ├── neodash_adapter.py
+│   │   │   ├── neodash_server.py
+│   │   │   ├── nextsee_provider.py
+│   │   │   ├── plugin_architecture.py
+│   │   │   └── pubmed_provider.py
+│   │   ├── interfaces
+│   │   │   ├── api.py
+│   │   │   ├── container.py
+│   │   │   ├── database.py
+│   │   │   └── __init__.py
+│   │   ├── keyboard
+│   │   │   ├── adapter_interface.py
+│   │   │   ├── adapters
+│   │   │   │   ├── flask_adapter.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── streamlit_adapter.py
+│   │   │   ├── __init__.py
+│   │   │   ├── keyboard_manager.py
+│   │   │   └── keyboard_shortcut.py
+│   │   ├── models
+│   │   │   ├── app_models.py
+│   │   │   ├── entity_schemas.py
+│   │   │   ├── examples.py
+│   │   │   ├── file_models.py
+│   │   │   ├── __init__.py
+│   │   │   ├── migration.py
+│   │   │   ├── msgraph_schemas.py
+│   │   │   ├── page.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── app_models.cpython-313.pyc
+│   │   │   │   ├── app_models.cpython-39.pyc
+│   │   │   │   ├── entity_schemas.cpython-313.pyc
+│   │   │   │   ├── file_models.cpython-313.pyc
+│   │   │   │   ├── file_models.cpython-39.pyc
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-39.pyc
+│   │   │   │   └── page.cpython-313.pyc
+│   │   │   └── validation_rules.py
+│   │   ├── notifications
+│   │   │   ├── adapters
+│   │   │   │   ├── base_adapter.py
+│   │   │   │   ├── flask_adapter.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── streamlit_adapter.py
+│   │   │   ├── __init__.py
+│   │   │   ├── notification_manager.py
+│   │   │   └── notification_types.py
+│   │   ├── ontology
+│   │   │   ├── browser.py
+│   │   │   ├── importer.py
+│   │   │   ├── __init__.py
+│   │   │   ├── models.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── browser.cpython-313.pyc
+│   │   │   │   ├── importer.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── models.cpython-313.pyc
+│   │   │   │   └── queries.cpython-313.pyc
+│   │   │   └── queries.py
+│   │   ├── pages
+│   │   │   ├── base.py
+│   │   │   ├── connect.py
+│   │   │   ├── dashboard.py
+│   │   │   ├── explore.py
+│   │   │   ├── file_browser.py
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── base.cpython-313.pyc
+│   │   │   │   ├── connect.cpython-313.pyc
+│   │   │   │   ├── dashboard.cpython-313.pyc
+│   │   │   │   ├── explore.cpython-313.pyc
+│   │   │   │   ├── file_browser.cpython-313.pyc
+│   │   │   │   └── __init__.cpython-313.pyc
+│   │   │   └── tests
+│   │   │       ├── __init__.py
+│   │   │       └── test_pages.py
+│   │   ├── pipeline
+│   │   │   ├── config.py
+│   │   │   ├── __init__.py
+│   │   │   ├── templates
+│   │   │   │   ├── csv_to_graph.yaml
+│   │   │   │   ├── data_validation.yaml
+│   │   │   │   ├── excel_to_graph.yaml
+│   │   │   │   ├── filesystem_to_graph.yaml
+│   │   │   │   └── __init__.py
+│   │   │   └── transform.py
+│   │   ├── plugins
+│   │   │   ├── base.py
+│   │   │   ├── discovery.py
+│   │   │   ├── examples
+│   │   │   │   ├── data_processor.py
+│   │   │   │   ├── hello_world.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── test_plugins.py
+│   │   │   │   └── visualization.py
+│   │   │   ├── __init__.py
+│   │   │   └── README.md
+│   │   ├── profiling
+│   │   │   ├── benchmarks.py
+│   │   │   ├── code_optimizer.py
+│   │   │   ├── __init__.py
+│   │   │   ├── memory_profiler.py
+│   │   │   ├── profiler.py
+│   │   │   └── recommendations.py
+│   │   ├── providers
+│   │   │   ├── abstract_providers.py
+│   │   │   ├── api
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── msgraph_provider.py
+│   │   │   │   └── rest_api_provider.py
+│   │   │   ├── database
+│   │   │   │   ├── cassandra_provider.py
+│   │   │   │   ├── elasticsearch_provider.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── mongodb_provider.py
+│   │   │   │   ├── sparql_provider.py
+│   │   │   │   └── sql_provider.py
+│   │   │   ├── __init__.py
+│   │   │   ├── messaging
+│   │   │   │   ├── examples.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── kafka_provider.py
+│   │   │   │   ├── mqtt_provider.py
+│   │   │   │   ├── rabbitmq_provider.py
+│   │   │   │   └── websocket_provider.py
+│   │   │   ├── registry.py
+│   │   │   └── storage
+│   │   │       ├── dropbox_provider.py
+│   │   │       ├── google_drive_provider.py
+│   │   │       ├── google_sheets_provider.py
+│   │   │       ├── __init__.py
+│   │   │       └── local_storage_provider.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   └── __init__.cpython-39.pyc
+│   │   ├── session
+│   │   │   ├── config.py
+│   │   │   ├── examples.py
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── config.cpython-311.pyc
+│   │   │   │   ├── config.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-311.pyc
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── registry.cpython-311.pyc
+│   │   │   │   ├── registry.cpython-313.pyc
+│   │   │   │   ├── session.cpython-311.pyc
+│   │   │   │   └── session.cpython-313.pyc
+│   │   │   ├── registry.py
+│   │   │   └── session.py
+│   │   ├── state
+│   │   │   ├── adapters
+│   │   │   │   ├── base_adapter.py
+│   │   │   │   ├── flask_adapter.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── memory_adapter.py
+│   │   │   │   └── streamlit_adapter.py
+│   │   │   ├── __init__.py
+│   │   │   ├── state_manager.py
+│   │   │   └── state_types.py
+│   │   ├── templates
+│   │   │   ├── jupyter
+│   │   │   │   ├── data_integration_template.py
+│   │   │   │   └── neo4j_basic_template.py
+│   │   │   └── module_template.py
+│   │   ├── utils
+│   │   │   ├── accessibility.py
+│   │   │   ├── background_processing.py
+│   │   │   ├── common_utils.py
+│   │   │   ├── config_utils.py
+│   │   │   ├── d3js_integration.py
+│   │   │   ├── error_handler.py
+│   │   │   ├── error_handling.py
+│   │   │   ├── file_sharing.py
+│   │   │   ├── file_utils.py
+│   │   │   ├── __init__.py
+│   │   │   ├── isa_compatibility.py
+│   │   │   ├── isa_utils.py
+│   │   │   ├── jupyter_utils.py
+│   │   │   ├── model_inference.py
+│   │   │   ├── model_serialization.py
+│   │   │   ├── model_serving.py
+│   │   │   ├── model_training.py
+│   │   │   ├── msgraph_utils.py
+│   │   │   ├── neodash_utils.py
+│   │   │   ├── ollama_utils.py
+│   │   │   ├── parallel_processing.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── background_processing.cpython-313.pyc
+│   │   │   │   ├── file_utils.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-39.pyc
+│   │   │   │   ├── isa_compatibility.cpython-313.pyc
+│   │   │   │   ├── isa_compatibility.cpython-39.pyc
+│   │   │   │   ├── jupyter_utils.cpython-313.pyc
+│   │   │   │   ├── neodash_utils.cpython-313.pyc
+│   │   │   │   ├── ollama_utils.cpython-313.pyc
+│   │   │   │   └── parallel_processing.cpython-313.pyc
+│   │   │   ├── registry_utils.py
+│   │   │   ├── schema_validation.py
+│   │   │   ├── streaming_processing.py
+│   │   │   └── visualization_utils.py
+│   │   └── visualization
+│   │       └── visualization_3d.py
+│   ├── data
+│   │   └── samples
+│   │       ├── datasets
+│   │       │   ├── clinical_trial
+│   │       │   │   └── README.md
+│   │       │   └── genomics
+│   │       │       └── README.md
+│   │       ├── demo_clinical_trial.py
+│   │       └── load_clinical_trial_dataset.py
+│   ├── docs
+│   │   └── deployment
+│   │       └── deployment_guide.md
+│   ├── frontend
+│   │   └── react
+│   │       ├── adapters
+│   │       │   └── ReactAdapter.js
+│   │       ├── App.js
+│   │       ├── components
+│   │       │   ├── DataVisualization.js
+│   │       │   └── FileBrowser.js
+│   │       ├── docs
+│   │       │   └── react_integration_evaluation.md
+│   │       ├── keyboard
+│   │       │   └── KeyboardAdapter.js
+│   │       └── README.md
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── cli.cpython-313.pyc
+│   │   ├── __init__.cpython-311.pyc
+│   │   ├── __init__.cpython-313.pyc
+│   │   └── __init__.cpython-39.pyc
+│   ├── tests
+│   │   ├── core
+│   │   │   ├── __init__.py
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── test_entity_schemas.py
+│   │   │   └── utils
+│   │   │       ├── __init__.py
+│   │   │       ├── test_background_processing.py
+│   │   │       ├── test_file_utils.py
+│   │   │       ├── test_parallel_processing.py
+│   │   │       └── test_streaming_processing.py
+│   │   ├── __init__.py
+│   │   ├── test_msgraph_adapter.py
+│   │   ├── test_msgraph_manager.py
+│   │   ├── test_msgraph_schemas.py
+│   │   └── test_msgraph_utils.py
+│   ├── tutorials
+│   │   └── videos
+│   │       └── resources
+│   │           └── diagrams
+│   │               ├── database_operations_workflow.png
+│   │               ├── database_operations_workflow.py
+│   │               ├── data_transformation_workflow.png
+│   │               ├── data_transformation_workflow.py
+│   │               ├── data_visualization_workflow.png
+│   │               ├── data_visualization_workflow.py
+│   │               ├── preclinical_challenge_workflow.png
+│   │               └── preclinical_challenge_workflow.py
+│   ├── ui
+│   │   ├── adapters
+│   │   │   ├── component_adapter.py
+│   │   │   ├── __init__.py
+│   │   │   ├── page_adapter.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-39.pyc
+│   │   │   │   ├── page_adapter.cpython-313.pyc
+│   │   │   │   ├── page_adapter.cpython-39.pyc
+│   │   │   │   └── streamlit_adapter.cpython-313.pyc
+│   │   │   └── streamlit_adapter.py
+│   │   ├── app.py
+│   │   ├── components
+│   │   │   ├── analytics_tracking.py
+│   │   │   ├── breadcrumbs.py
+│   │   │   ├── custom_visualization_templates.py
+│   │   │   ├── dashboard_widgets.py
+│   │   │   ├── data_source_selector.py
+│   │   │   ├── demo_videos.py
+│   │   │   ├── dropbox_selector.py
+│   │   │   ├── error_display.py
+│   │   │   ├── feedback_database.py
+│   │   │   ├── feedback_form.py
+│   │   │   ├── google_sheets_selector.py
+│   │   │   ├── high_contrast.py
+│   │   │   ├── __init__.py
+│   │   │   ├── instructor_notes.py
+│   │   │   ├── interactive_demos.py
+│   │   │   ├── keyboard_navigation.py
+│   │   │   ├── msgraph_query_builder.py
+│   │   │   ├── msgraph_selector.py
+│   │   │   ├── msgraph_visualizations.py
+│   │   │   ├── observation_protocol.py
+│   │   │   ├── page_transitions.py
+│   │   │   ├── progress_indicators.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── analytics_tracking.cpython-313.pyc
+│   │   │   │   ├── custom_visualization_templates.cpython-313.pyc
+│   │   │   │   ├── dashboard_widgets.cpython-313.pyc
+│   │   │   │   ├── feedback_database.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-39.pyc
+│   │   │   │   ├── instructor_notes.cpython-313.pyc
+│   │   │   │   ├── observation_protocol.cpython-313.pyc
+│   │   │   │   ├── responsive_design.cpython-313.pyc
+│   │   │   │   ├── sidebar.cpython-313.pyc
+│   │   │   │   ├── sidebar.cpython-39.pyc
+│   │   │   │   └── visualization_templates.cpython-313.pyc
+│   │   │   ├── reference_cards.py
+│   │   │   ├── responsive_design.py
+│   │   │   ├── schema_widget.py
+│   │   │   ├── screen_reader.py
+│   │   │   ├── sidebar.py
+│   │   │   ├── templates
+│   │   │   │   ├── button_templates.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── input_templates.py
+│   │   │   │   ├── layout_templates.py
+│   │   │   │   └── visualization_templates.py
+│   │   │   ├── terminology.py
+│   │   │   ├── ui_constants.py
+│   │   │   ├── user_surveys.py
+│   │   │   ├── video_tutorials.py
+│   │   │   └── visualization_templates.py
+│   │   ├── config.py
+│   │   ├── docs
+│   │   │   ├── ai_generated_test_scenarios.md
+│   │   │   ├── component_api.md
+│   │   │   ├── component_inventory.md
+│   │   │   ├── error_documentation.md
+│   │   │   ├── hands_on_exercises.md
+│   │   │   ├── key_user_journeys.md
+│   │   │   ├── performance_benchmarks.md
+│   │   │   ├── testing_checklists.md
+│   │   │   ├── testing_workflow.md
+│   │   │   ├── ui_pattern_examples.md
+│   │   │   ├── user_guide.md
+│   │   │   └── workshop_slides.md
+│   │   ├── __init__.py
+│   │   ├── pages
+│   │   │   ├── about.py
+│   │   │   ├── analytics.py
+│   │   │   ├── base_page.py
+│   │   │   ├── cbioportal_browser.py
+│   │   │   ├── chat.py
+│   │   │   ├── connect.py
+│   │   │   ├── dashboard.py
+│   │   │   ├── dropbox_browser.py
+│   │   │   ├── dropbox_connect.py
+│   │   │   ├── explore.py
+│   │   │   ├── feedback.py
+│   │   │   ├── file_browser.py
+│   │   │   ├── __init__.py
+│   │   │   ├── instructor.py
+│   │   │   ├── isa_browser.py
+│   │   │   ├── map.py
+│   │   │   ├── msgraph_connect.py
+│   │   │   ├── msgraph_explore.py
+│   │   │   ├── observation.py
+│   │   │   ├── ontology.py
+│   │   │   ├── preferences.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── about.cpython-313.pyc
+│   │   │   │   ├── about.cpython-39.pyc
+│   │   │   │   ├── base_page.cpython-313.pyc
+│   │   │   │   ├── base_page.cpython-39.pyc
+│   │   │   │   ├── chat.cpython-313.pyc
+│   │   │   │   ├── chat.cpython-39.pyc
+│   │   │   │   ├── connect.cpython-313.pyc
+│   │   │   │   ├── connect.cpython-39.pyc
+│   │   │   │   ├── dashboard.cpython-313.pyc
+│   │   │   │   ├── dropbox_browser.cpython-313.pyc
+│   │   │   │   ├── dropbox_connect.cpython-313.pyc
+│   │   │   │   ├── explore.cpython-313.pyc
+│   │   │   │   ├── explore.cpython-39.pyc
+│   │   │   │   ├── file_browser.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-313.pyc
+│   │   │   │   ├── __init__.cpython-39.pyc
+│   │   │   │   ├── map.cpython-313.pyc
+│   │   │   │   ├── map.cpython-39.pyc
+│   │   │   │   ├── observation.cpython-313.pyc
+│   │   │   │   ├── ontology.cpython-313.pyc
+│   │   │   │   ├── ontology.cpython-39.pyc
+│   │   │   │   ├── preferences.cpython-313.pyc
+│   │   │   │   ├── survey.cpython-313.pyc
+│   │   │   │   ├── survey.cpython-39.pyc
+│   │   │   │   └── workshop.cpython-313.pyc
+│   │   │   ├── survey.py
+│   │   │   └── workshop.py
+│   │   ├── __pycache__
+│   │   │   ├── app.cpython-313.pyc
+│   │   │   ├── app.cpython-39.pyc
+│   │   │   ├── config.cpython-313.pyc
+│   │   │   ├── config.cpython-39.pyc
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── __init__.cpython-39.pyc
+│   │   │   ├── state.cpython-313.pyc
+│   │   │   └── state.cpython-39.pyc
+│   │   ├── README.md
+│   │   ├── state.py
+│   │   ├── tests
+│   │   │   ├── accessibility_audit.py
+│   │   │   ├── analysis_engine_tests.py
+│   │   │   ├── cross_component_workflow_tests.py
+│   │   │   ├── database_connectivity_tests.py
+│   │   │   ├── data_flow_tests.py
+│   │   │   ├── data_import_export_tests.py
+│   │   │   ├── error_handling_tests.py
+│   │   │   ├── input_form_tests.py
+│   │   │   ├── navigation_component_tests.py
+│   │   │   ├── performance_bottleneck_tests.py
+│   │   │   ├── plugin_system_tests.py
+│   │   │   ├── README.md
+│   │   │   ├── responsive_design_tests.py
+│   │   │   ├── run_all_tests.py
+│   │   │   ├── run_ui_pattern_standardization.py
+│   │   │   ├── state_management_tests.py
+│   │   │   ├── streamlit_page_tests.py
+│   │   │   ├── test_accessibility_components.py
+│   │   │   ├── test_assistive_technologies.py
+│   │   │   ├── test_feedback_form.py
+│   │   │   ├── test_implementations.py
+│   │   │   ├── test_page_transitions.py
+│   │   │   ├── test_progress_indicators.py
+│   │   │   ├── test_tooltip_implementation.py
+│   │   │   ├── test_user_surveys.py
+│   │   │   ├── ui_pattern_standardizer.py
+│   │   │   ├── visual_design_audit.py
+│   │   │   ├── visualization_component_tests.py
+│   │   │   └── visualization_workflow_tests.py
+│   │   └── workshop_app.py
+│   ├── verify.py
+│   └── web
+│       ├── adapters
+│       │   ├── flask_adapter.py
+│       │   ├── __init__.py
+│       │   └── __pycache__
+│       │       ├── flask_adapter.cpython-313.pyc
+│       │       └── __init__.cpython-313.pyc
+│       ├── api
+│       │   ├── __init__.py
+│       │   ├── __pycache__
+│       │   │   ├── __init__.cpython-311.pyc
+│       │   │   ├── __init__.cpython-313.pyc
+│       │   │   ├── routes.cpython-311.pyc
+│       │   │   └── routes.cpython-313.pyc
+│       │   └── routes.py
+│       ├── app.py
+│       ├── config.py
+│       ├── events.py
+│       ├── __init__.py
+│       ├── __pycache__
+│       │   ├── app.cpython-311.pyc
+│       │   ├── app.cpython-313.pyc
+│       │   ├── config.cpython-313.pyc
+│       │   ├── events.cpython-313.pyc
+│       │   ├── __init__.cpython-311.pyc
+│       │   ├── __init__.cpython-313.pyc
+│       │   └── routes.cpython-313.pyc
+│       ├── routes.py
+│       ├── static
+│       │   ├── css
+│       │   │   └── style.css
+│       │   └── js
+│       │       └── main.js
+│       └── templates
+│           ├── base.html
+│           ├── connect.html
+│           ├── dashboard.html
+│           ├── errors
+│           │   ├── 404.html
+│           │   └── 500.html
+│           ├── explore.html
+│           ├── file_explorer.html
+│           ├── index.html
+│           ├── login.html
+│           └── partials
+│               ├── file_listing.html
+│               ├── preview_binary.html
+│               ├── preview_image.html
+│               ├── preview_pdf.html
+│               └── preview_text.html
+├── science-data-kit-env
+├── science_data_kit_extensions
+│   ├── dropbox
+│   │   ├── comments.py
+│   │   ├── conflict.py
+│   │   ├── connector.py
+│   │   ├── entities.py
+│   │   ├── error_handling.py
+│   │   ├── file_requests.py
+│   │   ├── files.py
+│   │   ├── __init__.py
+│   │   ├── neo4j.py
+│   │   ├── offline.py
+│   │   ├── __pycache__
+│   │   │   ├── comments.cpython-313.pyc
+│   │   │   ├── conflict.cpython-313.pyc
+│   │   │   ├── connector.cpython-313.pyc
+│   │   │   ├── entities.cpython-313.pyc
+│   │   │   ├── error_handling.cpython-313.pyc
+│   │   │   ├── file_requests.cpython-313.pyc
+│   │   │   ├── files.cpython-313.pyc
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── neo4j.cpython-313.pyc
+│   │   │   ├── offline.cpython-313.pyc
+│   │   │   ├── selective_sync.cpython-313.pyc
+│   │   │   ├── sharing.cpython-313.pyc
+│   │   │   ├── status.cpython-313.pyc
+│   │   │   ├── sync.cpython-313.pyc
+│   │   │   ├── teams.cpython-313.pyc
+│   │   │   ├── versions.cpython-313.pyc
+│   │   │   └── webhooks.cpython-313.pyc
+│   │   ├── pyproject.toml
+│   │   ├── README.md
+│   │   ├── selective_sync.py
+│   │   ├── sharing.py
+│   │   ├── status.py
+│   │   ├── sync.py
+│   │   ├── teams.py
+│   │   ├── test_dropbox.py
+│   │   ├── versions.py
+│   │   └── webhooks.py
+│   ├── google
+│   │   ├── __init__.py
+│   │   ├── pyproject.toml
+│   │   └── README.md
+│   ├── __init__.py
+│   ├── msgraph
+│   │   ├── __init__.py
+│   │   ├── pyproject.toml
+│   │   └── README.md
+│   ├── __pycache__
+│   │   ├── __init__.cpython-313.pyc
+│   │   └── __init__.py
+│   └── viz
+│       ├── __init__.py
+│       ├── pyproject.toml
+│       └── README.md
+├── science_data_kit.sh
+├── scripts
+│   ├── debug_workflow.sh
+│   ├── issue_helpers.sh
+│   └── sync_roadmap_issues.py
+├── setup.py
+├── test_elementid.py
+├── test_environments.sh
+├── test_fix.py
+├── test_import.py
+├── test_installation.py
+├── test_run.py
+├── tests
+│   ├── conftest.py
+│   ├── core
+│   │   └── utils
+│   │       ├── test_accessibility.py
+│   │       ├── test_error_handling.py
+│   │       ├── test_error_types.py
+│   │       ├── test_parallel_processing.py
+│   │       └── test_performance_monitoring.py
+│   ├── end_to_end
+│   │   ├── README.md
+│   │   ├── test_error_handling_workflow.py
+│   │   └── test_parallel_processing_workflow.py
+│   ├── integration
+│   │   ├── README.md
+│   │   ├── test_api_integration.py
+│   │   ├── test_chat_page.py
+│   │   ├── test_connect_page.py
+│   │   ├── test_database_connection.py
+│   │   ├── test_database_operations.py
+│   │   ├── test_data_source_selector.py
+│   │   ├── test_dropbox_integration.py
+│   │   └── test_google_sheets_integration.py
+│   ├── README.md
+│   ├── test_file_models_import.py
+│   ├── test_multiple_connections.py
+│   ├── test_persistent_connections.py
+│   ├── unit
+│   │   ├── app
+│   │   │   └── test_chat.py
+│   │   ├── core
+│   │   │   ├── api
+│   │   │   │   └── test_cache.py
+│   │   │   ├── db
+│   │   │   │   ├── test_graph_utils.py
+│   │   │   │   └── test_relationship_manager.py
+│   │   │   ├── ontology
+│   │   │   │   ├── test_browser.py
+│   │   │   │   ├── test_importer.py
+│   │   │   │   └── test_queries.py
+│   │   │   └── providers
+│   │   │       ├── test_dropbox_provider.py
+│   │   │       └── test_google_sheets_provider.py
+│   │   ├── README.md
+│   │   └── ui
+│   │       ├── adapters
+│   │       │   └── test_streamlit_adapter.py
+│   │       ├── components
+│   │       │   ├── test_schema_widget.py
+│   │       │   └── test_sidebar.py
+│   │       └── pages
+│   │           └── test_chat.py
+│   └── web
+│       └── test_responsive_ui.py
+├── test_session_import.py
+├── tools
+│   ├── build_docs.py
+│   ├── run_black.py
+│   ├── run_coverage.py
+│   └── run_mypy.py
+├── tree.txt
+├── tutorials
+│   ├── api_usage_tutorial.py
+│   ├── checkpoint_verification.py
+│   ├── database_operations_tutorial.ipynb
+│   ├── database_operations_tutorial.py
+│   ├── data_transformation_tutorial.ipynb
+│   ├── data_transformation_tutorial.py
+│   ├── data_visualization_tutorial.ipynb
+│   ├── data_visualization_tutorial.py
+│   ├── msgraph_tutorial_emails.py
+│   ├── msgraph_tutorial_files.py
+│   ├── msgraph_tutorial_users_groups.py
+│   ├── ontology_integration_tutorial.py
+│   ├── preclinical_challenge_tutorial.ipynb
+│   ├── preclinical_challenge_tutorial.py
+│   ├── streamlit_isa_browser.py
+│   └── videos
+│       ├── metadata
+│       ├── README.md
+│       └── scripts
+│           ├── database_operations_tutorial_script.md
+│           ├── data_transformation_tutorial_script.md
+│           ├── data_visualization_tutorial_script.md
+│           └── preclinical_challenge_tutorial_script.md
+├── Untitled.ipynb
+├── update_roadmap_dates.py
+├── verify.py
+└── visualisation.png
+
+154 directories, 1022 files
