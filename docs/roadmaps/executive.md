@@ -27,7 +27,15 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Plugin connection management with improved UI
   - ✓ Complete any missing functionality in existing pages (connect, dashboard, file browser, explore)
   - ✓ Ensure all core functionality is available in the Flask version
-- Implement medium-priority features (about page, cBioPortal browser, Dropbox integration, etc.)
+- Implement medium-priority features
+  - ✓ About page with project information
+  - cBioPortal browser
+  - Dropbox integration
+  - ISA browser
+  - Map visualization
+  - Microsoft Graph integration
+  - Ontology browser
+  - User preferences
 - Implement low-priority features (analytics dashboard, chat interface, feedback collection, etc.)
 - Enhance UI components with Flask-specific capabilities
 - Implement comprehensive testing

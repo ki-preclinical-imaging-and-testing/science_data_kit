@@ -24,7 +24,7 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for transitioning the Science Data Kit from its current Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintains both frameworks, this roadmap focuses specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
 
-**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_03.md)
+**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_04.md)
 
 **Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment) and is making significant progress in Phase 2 (Flask Implementation Completion). Key accomplishments include:
 
@@ -32,7 +32,8 @@ This roadmap outlines a comprehensive plan for transitioning the Science Data Ki
 2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages that have been implemented and 16 pages that still need to be implemented.
 3. **Detailed Migration Plan**: A detailed migration plan has been created with effort estimates, dependencies, and specific tasks for each feature.
 4. **High-Priority Pages Implementation**: All high-priority pages (connect, dashboard, file browser, explore, plugin connect) have been implemented with full API support and comprehensive functionality.
-5. **Testing Implementation**: Unit tests have been created for all implemented API endpoints.
+5. **Medium-Priority Features Implementation**: The About page with project information has been implemented.
+6. **Testing Implementation**: Unit tests have been created for all implemented API endpoints.
 
 The current implementation status shows:
 - 5 high-priority pages have been fully implemented in Flask (connect, dashboard, file browser, explore, plugin connect)

@@ -784,3 +784,8 @@ def test_plugin_connection():
             return jsonify({'success': True, 'message': 'Connection test successful'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+@main_bp.route('/about')
+def about():
+    """About page with project information."""
+    return render_template('about.html')
