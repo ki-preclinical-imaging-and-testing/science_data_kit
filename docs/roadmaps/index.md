@@ -81,6 +81,19 @@ The roadmap is divided into four phases:
 4. **Phase 4: Workshop Readiness** - Preparing documentation, training materials, feedback collection mechanisms, and demo scenarios.
 
 
+### Plugin Architecture
+
+This roadmap outlines a comprehensive plan for refactoring the Science Data Kit's connection system to create a consistent, extensible plugin architecture. The goal is to establish clear boundaries between core functionality, protocols, and provider-specific implementations while reducing redundancy and improving maintainability.
+
+**Latest Version**: [Plugin Architecture Roadmap](active/roadmap_PluginArchitecture_00.md)
+
+**Status**: Planning - The Plugin Architecture roadmap has been defined but not started yet. The roadmap is divided into four phases:
+
+1. **Phase 1: Core Protocol System** - Establish the foundation for all connections by creating base protocol classes, implementing capability mixins, and migrating existing code.
+2. **Phase 2: Plugin Standardization** - Refactor existing providers into plugins with standardized interfaces and configuration.
+3. **Phase 3: Connection Manager** - Implement a unified connection management system with plugin registry and auto-discovery.
+4. **Phase 4: UI Integration** - Create dynamic UI components based on available plugins and their capabilities.
+
 ### Framework-Agnostic Architecture
 
 This roadmap outlines a comprehensive plan for evolving the current render function pattern into a framework-agnostic architecture. This will allow the app to support multiple frontends (Streamlit, Flask, React) without duplicating business logic.
