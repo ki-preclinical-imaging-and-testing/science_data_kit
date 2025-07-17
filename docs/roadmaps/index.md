@@ -81,18 +81,6 @@ The roadmap is divided into four phases:
 4. **Phase 4: Workshop Readiness** - Preparing documentation, training materials, feedback collection mechanisms, and demo scenarios.
 
 
-### Plugin Architecture
-
-This roadmap outlines a comprehensive plan for refactoring the Science Data Kit's connection system to create a consistent, extensible plugin architecture. The goal is to establish clear boundaries between core functionality, protocols, and provider-specific implementations while reducing redundancy and improving maintainability.
-
-**Latest Version**: [Plugin Architecture Roadmap](active/roadmap_PluginArchitecture_00.md)
-
-**Status**: Planning - The Plugin Architecture roadmap has been defined but not started yet. The roadmap is divided into four phases:
-
-1. **Phase 1: Core Protocol System** - Establish the foundation for all connections by creating base protocol classes, implementing capability mixins, and migrating existing code.
-2. **Phase 2: Plugin Standardization** - Refactor existing providers into plugins with standardized interfaces and configuration.
-3. **Phase 3: Connection Manager** - Implement a unified connection management system with plugin registry and auto-discovery.
-4. **Phase 4: UI Integration** - Create dynamic UI components based on available plugins and their capabilities.
 
 ### Streamlit to Flask Migration
 
@@ -108,33 +96,7 @@ This roadmap outlines a comprehensive plan for transitioning the Science Data Ki
 4. **Phase 4: Streamlit Deprecation and Removal** - Gradually deprecate and remove the Streamlit implementation while ensuring a smooth transition for users.
 5. **Phase 5: Containerization and Deployment** - Optimize deployment of the Flask application through containerization and deployment automation.
 
-### Framework-Agnostic Architecture (Deprioritized)
 
-This roadmap outlines a comprehensive plan for evolving the current render function pattern into a framework-agnostic architecture. This will allow the app to support multiple frontends (Streamlit, Flask, React) without duplicating business logic.
-
-**Latest Version**: [Framework-Agnostic Architecture Roadmap](active/roadmap_FrameworkAgnosticArchitecture_00.md)
-
-**Status**: Deprioritized - The Framework-Agnostic Architecture roadmap has been deprioritized in favor of the more focused Streamlit to Flask Migration roadmap. The roadmap is divided into five phases:
-
-1. **Phase 1: Core Extraction** - Extract page logic from render functions into framework-independent core classes, define base page data models, and maintain backward compatibility with current Streamlit UI.
-2. **Phase 2: Streamlit Adapter Layer** - Convert current render functions to thin Streamlit adapters, move all Streamlit-specific code to adapter layer, and ensure all pages work through new architecture.
-3. **Phase 3: Flask API Development** - Create Flask application structure, implement REST API endpoints for each page, add authentication/session management, and create simple Jinja2 templates for testing.
-4. **Phase 4: Enhanced UI Components** - Implement HTMX for dynamic updates, add Alpine.js for client-side interactivity, focus on file browser and connection management, and create rich preview capabilities.
-5. **Phase 5: React Exploration** - Evaluate need for full SPA, prototype key components, and consider hybrid approach.
-
-### Containerized Flask/React Architecture
-
-This roadmap outlines a comprehensive plan for implementing a containerized Flask/React architecture for the Science Data Kit. This approach will provide a more containerization-friendly alternative to the current Streamlit implementation, enabling better scalability, deployment flexibility, and enhanced user interface capabilities. The roadmap includes support for both Docker and Singularity containerization, making it suitable for various environments including HPC clusters.
-
-**Latest Version**: [Containerized Flask/React Architecture Roadmap](active/roadmap_ContainerizedFlaskReact_00.md)
-
-**Status**: Planning - The Containerized Flask/React Architecture roadmap has been defined but not started yet. The roadmap is divided into five phases:
-
-1. **Phase 1: Flask API Foundation** - Create Flask application structure, implement core API endpoints, set up authentication and session management, and implement comprehensive API testing.
-2. **Phase 2: React Frontend Development** - Set up React application structure, implement core UI components, create API integration layer, and develop responsive design.
-3. **Phase 3: Containerization** - Create optimized Dockerfiles for Flask backend and React frontend, implement Docker Compose configuration, and set up development and production environments.
-4. **Phase 4: Integration and Deployment** - Integrate with existing SDK core functionality, implement comprehensive end-to-end testing, create deployment documentation, and provide migration guides from Streamlit.
-5. **Phase 5: Singularity Implementation** - Create Singularity definition files, implement conversion process from Docker to Singularity, set up writable directories for Singularity containers, and create deployment scripts for HPC environments.
 
 ### Dropbox Extension
 
@@ -155,6 +117,20 @@ This roadmap outlines a comprehensive plan for implementing the Dropbox extensio
 The following roadmaps represent important strategic directions for the Science Data Kit but have been temporarily deprioritized to focus on fundamental frontend/backend integration work and user experience optimization. These roadmaps have been moved to the `future/` directory and will be revisited after the completion of the Design/UX phase and Repository Reorganization roadmap.
 
 For more information about future roadmaps, see the [Future Roadmaps README](future/README.md).
+
+### Containerized Flask/React Architecture
+
+This roadmap outlines a comprehensive plan for implementing a containerized Flask/React architecture for the Science Data Kit. This approach will provide a more containerization-friendly alternative to the current Streamlit implementation, enabling better scalability, deployment flexibility, and enhanced user interface capabilities. The roadmap includes support for both Docker and Singularity containerization, making it suitable for various environments including HPC clusters.
+
+**Latest Version**: [Containerized Flask/React Architecture Roadmap](future/roadmap_ContainerizedFlaskReact_00.md)
+
+**Status**: Planning - The Containerized Flask/React Architecture roadmap has been defined but not started yet. The roadmap is divided into five phases:
+
+1. **Phase 1: Flask API Foundation** - Create Flask application structure, implement core API endpoints, set up authentication and session management, and implement comprehensive API testing.
+2. **Phase 2: React Frontend Development** - Set up React application structure, implement core UI components, create API integration layer, and develop responsive design.
+3. **Phase 3: Containerization** - Create optimized Dockerfiles for Flask backend and React frontend, implement Docker Compose configuration, and set up development and production environments.
+4. **Phase 4: Integration and Deployment** - Integrate with existing SDK core functionality, implement comprehensive end-to-end testing, create deployment documentation, and provide migration guides from Streamlit.
+5. **Phase 5: Singularity Implementation** - Create Singularity definition files, implement conversion process from Docker to Singularity, set up writable directories for Singularity containers, and create deployment scripts for HPC environments.
 
 ### Cloud Extensions
 
@@ -269,13 +245,27 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 **Quality Gates**: Feature Parity Assessment before Flask Implementation Completion, User Experience Optimization before Streamlit Deprecation
 
 ### Framework-Agnostic Architecture
-**Implementation Status**: Deprioritized - In favor of Streamlit to Flask Migration
-**Testing Status**: On hold - Awaiting reprioritization
-**Next Testing Steps**: Not applicable at this stage
-**Recommended Testing**: Not applicable at this stage
-**Quality Gates**: Not applicable at this stage
+**Implementation Status**: Archived (Deprioritized) - In favor of Streamlit to Flask Migration
+**Testing Status**: Archived - No further testing planned
+**Next Testing Steps**: Not applicable
+**Recommended Testing**: Not applicable
+**Quality Gates**: Not applicable
+
+### Plugin Architecture
+**Implementation Status**: Archived (Completed) - All phases successfully implemented
+**Testing Status**: Archived - Comprehensive testing completed
+**Next Testing Steps**: Not applicable
+**Recommended Testing**: Not applicable
+**Quality Gates**: Not applicable
 
 ### Future Roadmaps
+
+#### Containerized Flask/React Architecture
+**Implementation Status**: Planning - Moved to future roadmaps
+**Testing Status**: On hold until return to active development
+**Next Testing Steps**: Not applicable at this stage
+**Recommended Testing**: Use prompts #19 for quality assessment, #21 for code analysis when reactivated
+**Quality Gates**: Streamlit to Flask Migration completion before starting
 
 #### Conversational Pipeline Builder
 **Implementation Status**: Planning - Moved to future roadmaps
@@ -314,6 +304,33 @@ Use the testing prompts in `docs/roadmaps/prompts.md` (#17-24) at these natural 
 For guidance on selecting appropriate testing prompts, start with prompt #21 (Pre-Review Code Analysis) to assess current state and get recommendations for additional validation.
 
 ## Archived Roadmaps
+
+### Plugin Architecture
+
+This roadmap outlined a comprehensive plan for refactoring the Science Data Kit's connection system to create a consistent, extensible plugin architecture. The goal was to establish clear boundaries between core functionality, protocols, and provider-specific implementations while reducing redundancy and improving maintainability.
+
+**Latest Version**: [Plugin Architecture Roadmap](archive/roadmap_PluginArchitecture_09.md)
+
+**Status**: Completed - The Plugin Architecture implementation has been completed with all phases successfully implemented:
+
+1. **Phase 1: Core Protocol System** - Established the foundation for all connections by creating base protocol classes, implementing capability mixins, and migrating existing code.
+2. **Phase 2: Plugin Standardization** - Refactored existing providers into plugins with standardized interfaces and configuration.
+3. **Phase 3: Connection Manager** - Implemented a unified connection management system with plugin registry and auto-discovery.
+4. **Phase 4: UI Integration** - Created dynamic UI components based on available plugins and their capabilities.
+
+### Framework-Agnostic Architecture
+
+This roadmap outlined a comprehensive plan for evolving the current render function pattern into a framework-agnostic architecture. This would have allowed the app to support multiple frontends (Streamlit, Flask, React) without duplicating business logic.
+
+**Latest Version**: [Framework-Agnostic Architecture Roadmap](archive/roadmap_FrameworkAgnosticArchitecture_17.md)
+
+**Status**: Archived (Deprioritized) - The Framework-Agnostic Architecture roadmap was deprioritized in favor of the more focused Streamlit to Flask Migration roadmap. The roadmap was divided into five phases:
+
+1. **Phase 1: Core Extraction** - Extract page logic from render functions into framework-independent core classes, define base page data models, and maintain backward compatibility with current Streamlit UI.
+2. **Phase 2: Streamlit Adapter Layer** - Convert current render functions to thin Streamlit adapters, move all Streamlit-specific code to adapter layer, and ensure all pages work through new architecture.
+3. **Phase 3: Flask API Development** - Create Flask application structure, implement REST API endpoints for each page, add authentication/session management, and create simple Jinja2 templates for testing.
+4. **Phase 4: Enhanced UI Components** - Implement HTMX for dynamic updates, add Alpine.js for client-side interactivity, focus on file browser and connection management, and create rich preview capabilities.
+5. **Phase 5: React Exploration** - Evaluate need for full SPA, prototype key components, and consider hybrid approach.
 
 ### Repository Reorganization
 
