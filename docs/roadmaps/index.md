@@ -86,15 +86,28 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for transitioning the Science Data Kit from its current Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintains both frameworks, this roadmap focuses specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
 
-**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_00.md)
+**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_01.md)
 
-**Status**: Planning - The Streamlit to Flask Migration roadmap has been defined but not started yet. The roadmap is divided into five phases:
+**Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment) and is now moving into Phase 2 (Flask Implementation Completion). Key accomplishments include:
 
-1. **Phase 1: Feature Parity Assessment** - Conduct a comprehensive assessment of all features in the Streamlit version and their implementation status in the Flask version.
-2. **Phase 2: Flask Implementation Completion** - Complete the implementation of all features in the Flask version to achieve full feature parity with the Streamlit version.
+1. **Comprehensive Inventory**: A complete inventory of all 23 Streamlit pages and their features has been created.
+2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 4 high-priority pages that have been implemented and 17 pages that still need to be implemented.
+3. **Detailed Migration Plan**: A detailed migration plan has been created with effort estimates, dependencies, and specific tasks for each feature.
+
+The current implementation status shows:
+- 4 high-priority pages have been implemented in Flask (connect, dashboard, file browser, explore)
+- 17 pages still need to be implemented, with varying priorities
+- Core architecture and Flask foundation are in place
+
+The roadmap is divided into five phases:
+
+1. **Phase 1: Feature Parity Assessment** (COMPLETED) - Conduct a comprehensive assessment of all features in the Streamlit version and their implementation status in the Flask version.
+2. **Phase 2: Flask Implementation Completion** (IN PROGRESS) - Complete the implementation of all features in the Flask version to achieve full feature parity with the Streamlit version.
 3. **Phase 3: User Experience Optimization** - Enhance the user experience of the Flask version to exceed the capabilities of the Streamlit version.
 4. **Phase 4: Streamlit Deprecation and Removal** - Gradually deprecate and remove the Streamlit implementation while ensuring a smooth transition for users.
 5. **Phase 5: Containerization and Deployment** - Optimize deployment of the Flask application through containerization and deployment automation.
+
+Note: This file has been updated in place (rather than creating a new version with _v2 suffix) to keep file counts to a minimum.
 
 
 
