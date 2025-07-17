@@ -109,7 +109,8 @@ class ScienceDataKitApp:
                 render_about_page,
                 render_preferences_page,
                 render_dropbox_connect_page,
-                render_dropbox_browser_page
+                render_dropbox_browser_page,
+                render_plugin_connect_page
             )
 
             # Register all pages
@@ -125,6 +126,7 @@ class ScienceDataKitApp:
             self.page_adapter.register_page("Preferences", render_preferences_page)
             self.page_adapter.register_page("Dropbox Connect", render_dropbox_connect_page)
             self.page_adapter.register_page("Dropbox Browser", render_dropbox_browser_page)
+            self.page_adapter.register_page("Plugin Connect", render_plugin_connect_page)
 
             # Analytics page
             from science_data_kit.ui.components.analytics_tracking import render_analytics_dashboard
@@ -190,6 +192,8 @@ class ScienceDataKitApp:
             pages.append(st.Page(self.page_adapter.pages["Dropbox Connect"], title="dropbox_connect", icon="🔗"))
         if "Dropbox Browser" in self.page_adapter.pages:
             pages.append(st.Page(self.page_adapter.pages["Dropbox Browser"], title="dropbox_browser", icon="📂"))
+        if "Plugin Connect" in self.page_adapter.pages:
+            pages.append(st.Page(self.page_adapter.pages["Plugin Connect"], title="plugin_connect", icon="🔌"))
 
         # Check if there are any pages to display
         if not pages:

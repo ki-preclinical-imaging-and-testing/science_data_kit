@@ -22,6 +22,7 @@ from science_data_kit.ui.pages.about import render_about_page
 from science_data_kit.ui.pages.preferences import render_preferences_page
 from science_data_kit.ui.pages.dropbox_connect import render_dropbox_connect_page
 from science_data_kit.ui.pages.dropbox_browser import render_dropbox_browser_page
+from science_data_kit.ui.pages.plugin_connect import render_plugin_connect_page
 
 # Version information
 __version__ = "0.1.0"
@@ -40,4 +41,5 @@ __all__ = [
     'render_preferences_page',
     'render_dropbox_connect_page',
     'render_dropbox_browser_page',
+    'render_plugin_connect_page',
 ]
