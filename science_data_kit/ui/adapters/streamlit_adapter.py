@@ -11,6 +11,7 @@ import os
 import datetime
 
 from science_data_kit.core.pages.base import BasePage
+from science_data_kit.core.utils.i18n_utils import get_available_languages, get_current_language, set_current_language, _
 from science_data_kit.core.models.page import PageData, DashboardPageData, FileExplorerPageData, ConnectPageData, ExplorePageData
 from science_data_kit.core.pages.dashboard import DashboardPage
 from science_data_kit.core.pages.file_browser import FileBrowserPage
@@ -31,6 +32,24 @@ from science_data_kit.ui.components.responsive_design import (
     create_responsive_tabs
 )
 
+def render_language_selector() -> None:
+    """
+    Render a language selector dropdown in the sidebar.
+
+    This function displays a dropdown with available languages and handles language selection.
+    """
+    languages = get_available_languages()
+    current_language = get_current_language()
+
+    st.sidebar.selectbox(
+        _("Language"),
+        options=list(languages.keys()),
+        format_func=lambda x: languages[x],
+        index=list(languages.keys()).index(current_language),
+        key="language_selector",
+        on_change=lambda: set_current_language(st.session_state.language_selector)
+    )
+
 def render_page(page_instance: BasePage) -> None:
     """
     Render a page using Streamlit components.
@@ -38,6 +57,9 @@ def render_page(page_instance: BasePage) -> None:
     Args:
         page_instance: An instance of a BasePage subclass.
     """
+    # Render the language selector in the sidebar
+    render_language_selector()
+
     # Get the page data
     page_data = page_instance.get_page_data()
 

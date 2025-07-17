@@ -1,0 +1,50 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Science Data Kit 1.0\n"
+"POT-Creation-Date: 2025-09-20 14:00+0000\n"
+"PO-Revision-Date: 2025-09-20 14:00+0000\n"
+"Last-Translator: SDK Team <sdk@example.com>\n"
+"Language-Team: Spanish <es@example.com>\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "File Browser"
+msgstr "Explorador de Archivos"
+
+msgid "Connect"
+msgstr "Conectar"
+
+msgid "Explore"
+msgstr "Explorar"
+
+msgid "Dashboard"
+msgstr "Panel de Control"
+
+msgid "Settings"
+msgstr "Configuración"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Search"
+msgstr "Buscar"
+
+msgid "Upload"
+msgstr "Subir"
+
+msgid "Download"
+msgstr "Descargar"
+
+msgid "Delete"
+msgstr "Eliminar"
+
+msgid "Share"
+msgstr "Compartir"
+
+msgid "Compress"
+msgstr "Comprimir"
+
+msgid "Extract"
+msgstr "Extraer"

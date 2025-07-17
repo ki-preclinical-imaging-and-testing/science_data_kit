@@ -7,6 +7,8 @@
  */
 
 import React from 'react';
+import { LanguageProvider } from '../contexts/LanguageContext';
+import LanguageSelector from '../components/LanguageSelector';
 
 /**
  * Base React adapter class
@@ -106,6 +108,9 @@ export class ReactUIAdapter extends ReactAdapter {
         <div className="card-body">{children}</div>
       </div>
     ));
+
+    // Register internationalization components
+    this.registerComponent('LanguageSelector', LanguageSelector);
   }
 
   /**
@@ -150,6 +155,31 @@ export class ReactUIAdapter extends ReactAdapter {
   renderCard(props) {
     const Card = this.getComponent('Card');
     return <Card {...props} />;
+  }
+
+  /**
+   * Render a language selector
+   * 
+   * @param {Object} props - Language selector props
+   * @returns {React.Component} Language selector component
+   */
+  renderLanguageSelector(props) {
+    const LanguageSelector = this.getComponent('LanguageSelector');
+    return <LanguageSelector {...props} />;
+  }
+
+  /**
+   * Wrap a component with the language provider
+   * 
+   * @param {React.Component} component - Component to wrap
+   * @returns {React.Component} Wrapped component
+   */
+  withLanguageProvider(component) {
+    return (
+      <LanguageProvider>
+        {component}
+      </LanguageProvider>
+    );
   }
 }
 

@@ -30,6 +30,17 @@ from science_data_kit.core.utils.background_processing import (
     get_global_task_manager
 )
 
+# Import and expose internationalization utilities
+from science_data_kit.core.utils.i18n_utils import (
+    translate,
+    _,
+    get_current_language,
+    set_current_language,
+    get_available_languages,
+    TranslationManager,
+    translation_manager
+)
+
 __all__ = [
     # Parallel processing
     'ParallelExecutor',
@@ -39,7 +50,7 @@ __all__ = [
     'BackgroundTaskManager',
     'TaskStatus',
     'submit_background_task',
-    
+
     # Background processing
     'run_in_background',
     'run_task_in_background',
@@ -50,5 +61,14 @@ __all__ = [
     'wait_for_task',
     'wait_for_tasks',
     'shutdown_background_processing',
-    'get_global_task_manager'
+    'get_global_task_manager',
+
+    # Internationalization
+    'translate',
+    '_',
+    'get_current_language',
+    'set_current_language',
+    'get_available_languages',
+    'TranslationManager',
+    'translation_manager'
 ]
