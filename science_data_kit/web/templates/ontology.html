@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+
+{% block title %}Ontology Browser{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar for term list -->
+        <div class="col-md-3 sidebar">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Available Terms</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="termSearch" placeholder="Search terms...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="searchFields" class="form-label">Search in fields</label>
+                        <select class="form-select" id="searchFields" multiple>
+                            <option value="term" selected>Term</option>
+                            <option value="source" selected>Source</option>
+                            <option value="uri" selected>URI</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sourceFilter" class="form-label">Filter by source</label>
+                        <select class="form-select" id="sourceFilter">
+                            <option value="all">All Sources</option>
+                        </select>
+                    </div>
+                    <div id="termMatchInfo" class="alert alert-info">No terms available</div>
+                    <div id="termsList" class="list-group" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Terms will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="col-md-9">
+            <h1>Ontology Browser</h1>
+            
+            <!-- Neo4j Connection Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Neo4j Connection</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form id="neo4jConnectionForm">
+                                <div class="mb-3">
+                                    <label for="uri" class="form-label">Neo4j URI</label>
+                                    <input type="text" class="form-control" id="uri" name="uri" value="bolt://localhost:7687" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username" value="neo4j" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="database" class="form-label">Database</label>
+                                    <input type="text" class="form-control" id="database" name="database" value="neo4j" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Connect to Neo4j</button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="connectionStatus" class="alert alert-warning">
+                                <p>❌ Not connected to Neo4j. Some features will be disabled.</p>
+                            </div>
+                            <div id="labelsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ontology Terms Management Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Ontology Terms Management</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="ontologyTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="isa-terms-tab" data-bs-toggle="tab" data-bs-target="#isa-terms" type="button" role="tab" aria-controls="isa-terms" aria-selected="true">ISA Terms</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="term-management-tab" data-bs-toggle="tab" data-bs-target="#term-management" type="button" role="tab" aria-controls="term-management" aria-selected="false">Term Management</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="term-search-tab" data-bs-toggle="tab" data-bs-target="#term-search" type="button" role="tab" aria-controls="term-search" aria-selected="false">Term Search</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="term-hierarchy-tab" data-bs-toggle="tab" data-bs-target="#term-hierarchy" type="button" role="tab" aria-controls="term-hierarchy" aria-selected="false">Term Hierarchy</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="ontologyTabsContent">
+                        <!-- ISA Terms Tab -->
+                        <div class="tab-pane fade show active" id="isa-terms" role="tabpanel" aria-labelledby="isa-terms-tab">
+                            <div class="p-3">
+                                <h4>Standard ISA Terms</h4>
+                                <div id="isaTermsStatus"></div>
+                                <button id="loadStandardIsaTerms" class="btn btn-primary mb-3">Load Standard ISA Terms</button>
+                                
+                                <h4>Upload Custom Terms</h4>
+                                <div class="mb-3">
+                                    <label for="customTermsFile" class="form-label">Upload Terms .xlsx or .tsv</label>
+                                    <input class="form-control" type="file" id="customTermsFile" accept=".xlsx,.tsv,.csv">
+                                </div>
+                                <button id="uploadCustomTerms" class="btn btn-primary">Upload Terms</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Term Management Tab -->
+                        <div class="tab-pane fade" id="term-management" role="tabpanel" aria-labelledby="term-management-tab">
+                            <div class="p-3">
+                                <h4>Add New Term</h4>
+                                <div id="addTermStatus"></div>
+                                <form id="addTermForm">
+                                    <div class="mb-3">
+                                        <label for="termName" class="form-label">Term Name</label>
+                                        <input type="text" class="form-control" id="termName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="termUri" class="form-label">Term URI</label>
+                                        <input type="text" class="form-control" id="termUri" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="ontologySource" class="form-label">Ontology Source</label>
+                                        <input type="text" class="form-control" id="ontologySource" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Add Term</button>
+                                </form>
+                                
+                                <hr>
+                                
+                                <h4>Push Terms to Neo4j</h4>
+                                <div id="pushTermsStatus"></div>
+                                <button id="pushTermsToNeo4j" class="btn btn-primary">Push Terms to Neo4j</button>
+                                
+                                <hr>
+                                
+                                <h4>Clear Terms</h4>
+                                <div id="clearTermsStatus"></div>
+                                <button id="clearTerms" class="btn btn-danger">Clear All Terms</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Term Search Tab -->
+                        <div class="tab-pane fade" id="term-search" role="tabpanel" aria-labelledby="term-search-tab">
+                            <div class="p-3">
+                                <h4>Search Ontology Terms</h4>
+                                <div id="searchTermsStatus"></div>
+                                <form id="searchTermsForm">
+                                    <div class="mb-3">
+                                        <label for="searchTerm" class="form-label">Search Term</label>
+                                        <input type="text" class="form-control" id="searchTerm" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Search</button>
+                                </form>
+                                
+                                <div id="searchResults" class="mt-3">
+                                    <!-- Search results will be displayed here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Term Hierarchy Tab -->
+                        <div class="tab-pane fade" id="term-hierarchy" role="tabpanel" aria-labelledby="term-hierarchy-tab">
+                            <div class="p-3">
+                                <h4>Visualize Term Hierarchy</h4>
+                                <div id="hierarchyStatus"></div>
+                                <form id="termHierarchyForm">
+                                    <div class="mb-3">
+                                        <label for="hierarchyTerm" class="form-label">Term</label>
+                                        <input type="text" class="form-control" id="hierarchyTerm" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Visualize Hierarchy</button>
+                                </form>
+                                
+                                <div id="hierarchyVisualization" class="mt-3">
+                                    <!-- Hierarchy visualization will be displayed here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load terms on page load
+        loadTerms();
+        
+        // Neo4j Connection Form
+        document.getElementById('neo4jConnectionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const uri = document.getElementById('uri').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const database = document.getElementById('database').value;
+            
+            const connectionStatus = document.getElementById('connectionStatus');
+            connectionStatus.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Connecting...';
+            
+            const formData = new FormData();
+            formData.append('uri', uri);
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('database', database);
+            
+            fetch('/api/ontology/connect', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    connectionStatus.innerHTML = `
+                        <p>✅ Connected to Neo4j</p>
+                        <p>URI: ${uri}</p>
+                        <p>Database: ${database}</p>
+                    `;
+                    
+                    // Fetch labels
+                    fetch('/api/ontology/labels')
+                    .then(response => response.json())
+                    .then(data => {
+                        const labelsList = document.getElementById('labelsList');
+                        const labels = data.labels;
+                        
+                        labelsList.innerHTML = `<p>Available Labels: ${labels.length}</p>`;
+                        
+                        if (labels.length > 0) {
+                            let labelsHtml = '<div class="mt-2"><strong>Sample Labels:</strong><ul>';
+                            
+                            // Show first 10 labels
+                            for (let i = 0; i < Math.min(10, labels.length); i++) {
+                                labelsHtml += `<li>${labels[i]}</li>`;
+                            }
+                            
+                            if (labels.length > 10) {
+                                labelsHtml += `<li>... and ${labels.length - 10} more</li>`;
+                            }
+                            
+                            labelsHtml += '</ul></div>';
+                            labelsList.innerHTML += labelsHtml;
+                        }
+                        
+                        // Reload terms after connection
+                        loadTerms();
+                    });
+                } else {
+                    connectionStatus.innerHTML = `
+                        <p>❌ Failed to connect to Neo4j</p>
+                        <p>Error: ${data.error}</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                connectionStatus.innerHTML = `
+                    <p>❌ Error connecting to Neo4j</p>
+                    <p>Error: ${error.message}</p>
+                `;
+            });
+        });
+        
+        // Load Standard ISA Terms
+        document.getElementById('loadStandardIsaTerms').addEventListener('click', function() {
+            const statusElement = document.getElementById('isaTermsStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading standard ISA terms...';
+            
+            fetch('/api/ontology/standard-terms')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    loadTerms();
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                }
+            })
+            .catch(error => {
+                statusElement.innerHTML = '<div class="alert alert-danger">Error loading standard terms</div>';
+            });
+        });
+        
+        // Add Term Form
+        document.getElementById('addTermForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const termName = document.getElementById('termName').value;
+            const termUri = document.getElementById('termUri').value;
+            const ontologySource = document.getElementById('ontologySource').value;
+            
+            if (!termName || !termUri || !ontologySource) {
+                document.getElementById('addTermStatus').innerHTML = '<div class="alert alert-danger">All fields are required</div>';
+                return;
+            }
+            
+            const statusElement = document.getElementById('addTermStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Adding term...';
+            
+            const formData = new FormData();
+            formData.append('term_name', termName);
+            formData.append('term_uri', termUri);
+            formData.append('ontology_source', ontologySource);
+            
+            fetch('/api/ontology/add-term', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    
+                    // Clear form
+                    document.getElementById('termName').value = '';
+                    document.getElementById('termUri').value = '';
+                    document.getElementById('ontologySource').value = '';
+                    
+                    // Reload terms
+                    loadTerms();
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                }
+            })
+            .catch(error => {
+                statusElement.innerHTML = '<div class="alert alert-danger">Error adding term</div>';
+            });
+        });
+        
+        // Push Terms to Neo4j
+        document.getElementById('pushTermsToNeo4j').addEventListener('click', function() {
+            const statusElement = document.getElementById('pushTermsStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Pushing terms to Neo4j...';
+            
+            fetch('/api/ontology/push-terms', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                }
+            })
+            .catch(error => {
+                statusElement.innerHTML = '<div class="alert alert-danger">Error pushing terms to Neo4j</div>';
+            });
+        });
+        
+        // Clear Terms
+        document.getElementById('clearTerms').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all terms? This cannot be undone.')) {
+                const statusElement = document.getElementById('clearTermsStatus');
+                statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Clearing terms...';
+                
+                fetch('/api/ontology/clear-terms', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                        loadTerms();
+                    } else {
+                        statusElement.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                    }
+                })
+                .catch(error => {
+                    statusElement.innerHTML = '<div class="alert alert-danger">Error clearing terms</div>';
+                });
+            }
+        });
+        
+        // Search Terms Form
+        document.getElementById('searchTermsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const searchTerm = document.getElementById('searchTerm').value;
+            
+            if (!searchTerm) {
+                document.getElementById('searchTermsStatus').innerHTML = '<div class="alert alert-danger">Search term is required</div>';
+                return;
+            }
+            
+            const statusElement = document.getElementById('searchTermsStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Searching...';
+            
+            fetch(`/api/ontology/search-terms?term=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = '';
+                    
+                    const resultsElement = document.getElementById('searchResults');
+                    
+                    if (data.results.length === 0) {
+                        resultsElement.innerHTML = '<div class="alert alert-info">No results found</div>';
+                    } else {
+                        let html = `<div class="alert alert-success">Found ${data.results.length} results</div>`;
+                        html += '<div class="table-responsive"><table class="table table-striped">';
+                        html += '<thead><tr><th>Term</th><th>Accession</th><th>Source</th></tr></thead>';
+                        html += '<tbody>';
+                        
+                        data.results.forEach(result => {
+                            html += `<tr>
+                                <td>${result.term}</td>
+                                <td><a href="${result.term_accession}" target="_blank">${result.term_accession}</a></td>
+                                <td>${result.term_source}</td>
+                            </tr>`;
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        resultsElement.innerHTML = html;
+                    }
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                    document.getElementById('searchResults').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                statusElement.innerHTML = '<div class="alert alert-danger">Error searching terms</div>';
+                document.getElementById('searchResults').innerHTML = '';
+            });
+        });
+        
+        // Term Hierarchy Form
+        document.getElementById('termHierarchyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const term = document.getElementById('hierarchyTerm').value;
+            
+            if (!term) {
+                document.getElementById('hierarchyStatus').innerHTML = '<div class="alert alert-danger">Term is required</div>';
+                return;
+            }
+            
+            const statusElement = document.getElementById('hierarchyStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading hierarchy...';
+            
+            fetch(`/api/ontology/term-hierarchy?term=${encodeURIComponent(term)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = '';
+                    
+                    const visualizationElement = document.getElementById('hierarchyVisualization');
+                    
+                    if (data.hierarchy.length === 0) {
+                        visualizationElement.innerHTML = '<div class="alert alert-info">No hierarchy found for this term</div>';
+                    } else {
+                        // Create a simple visualization of the hierarchy
+                        let html = `<div class="alert alert-success">Found hierarchy for term "${term}"</div>`;
+                        html += '<div class="table-responsive"><table class="table table-striped">';
+                        html += '<thead><tr><th>Term</th><th>Parent Terms</th><th>Relationship</th></tr></thead>';
+                        html += '<tbody>';
+                        
+                        data.hierarchy.forEach(item => {
+                            const parentTerms = item.parent_terms ? item.parent_terms.join(', ') : 'None';
+                            html += `<tr>
+                                <td>${item.term}</td>
+                                <td>${parentTerms}</td>
+                                <td>${item.relationship_type || 'SUBCLASS_OF'}</td>
+                            </tr>`;
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        
+                        // Add a note about visualization
+                        html += '<div class="alert alert-info mt-3">For a more interactive visualization, connect to Neo4j Browser directly.</div>';
+                        
+                        visualizationElement.innerHTML = html;
+                    }
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                    document.getElementById('hierarchyVisualization').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                statusElement.innerHTML = '<div class="alert alert-danger">Error loading hierarchy</div>';
+                document.getElementById('hierarchyVisualization').innerHTML = '';
+            });
+        });
+        
+        // Term search in sidebar
+        document.getElementById('termSearch').addEventListener('input', filterTerms);
+        document.getElementById('sourceFilter').addEventListener('change', filterTerms);
+        
+        // Function to load terms
+        function loadTerms() {
+            fetch('/api/ontology/terms')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const terms = data.terms;
+                    const termsList = document.getElementById('termsList');
+                    const termMatchInfo = document.getElementById('termMatchInfo');
+                    const sourceFilter = document.getElementById('sourceFilter');
+                    
+                    // Clear existing options
+                    while (sourceFilter.options.length > 1) {
+                        sourceFilter.remove(1);
+                    }
+                    
+                    if (terms.length === 0) {
+                        termMatchInfo.textContent = 'No terms available';
+                        termsList.innerHTML = '';
+                        return;
+                    }
+                    
+                    // Get unique sources
+                    const sources = [...new Set(terms.map(term => term.term_source))].sort();
+                    
+                    // Add sources to filter
+                    sources.forEach(source => {
+                        const option = document.createElement('option');
+                        option.value = source;
+                        option.textContent = source;
+                        sourceFilter.appendChild(option);
+                    });
+                    
+                    // Update match info
+                    termMatchInfo.textContent = `${terms.length} terms available`;
+                    
+                    // Render terms
+                    renderTerms(terms);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading terms:', error);
+            });
+        }
+        
+        // Function to render terms
+        function renderTerms(terms) {
+            const termsList = document.getElementById('termsList');
+            termsList.innerHTML = '';
+            
+            terms.forEach(term => {
+                const item = document.createElement('div');
+                item.className = 'list-group-item';
+                item.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${term.term}</h6>
+                        <small>${term.term_source}</small>
+                    </div>
+                    <p class="mb-1"><small><a href="${term.term_accession}" target="_blank">${term.term_accession}</a></small></p>
+                `;
+                termsList.appendChild(item);
+            });
+        }
+        
+        // Function to filter terms
+        function filterTerms() {
+            const searchTerm = document.getElementById('termSearch').value.toLowerCase();
+            const selectedSource = document.getElementById('sourceFilter').value;
+            const searchFields = Array.from(document.getElementById('searchFields').selectedOptions).map(option => option.value);
+            
+            fetch('/api/ontology/terms')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let terms = data.terms;
+                    const termMatchInfo = document.getElementById('termMatchInfo');
+                    const totalTerms = terms.length;
+                    
+                    // Filter by source
+                    if (selectedSource !== 'all') {
+                        terms = terms.filter(term => term.term_source === selectedSource);
+                    }
+                    
+                    // Filter by search term
+                    if (searchTerm) {
+                        terms = terms.filter(term => {
+                            return (searchFields.includes('term') && term.term.toLowerCase().includes(searchTerm)) ||
+                                   (searchFields.includes('source') && term.term_source.toLowerCase().includes(searchTerm)) ||
+                                   (searchFields.includes('uri') && term.term_accession.toLowerCase().includes(searchTerm));
+                        });
+                    }
+                    
+                    // Update match info
+                    termMatchInfo.textContent = `Found ${terms.length} matches in ${totalTerms} terms.`;
+                    
+                    // Render filtered terms
+                    renderTerms(terms);
+                }
+            })
+            .catch(error => {
+                console.error('Error filtering terms:', error);
+            });
+        }
+    });
+</script>
+{% endblock %}

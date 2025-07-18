@@ -35,8 +35,8 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Map visualization
   - ✓ Microsoft Graph integration (connection)
   - ✓ Microsoft Graph exploration
-  - Ontology browser
-  - User preferences
+  - ✓ Ontology browser
+  - ✓ User preferences
 - Implement low-priority features (analytics dashboard, chat interface, feedback collection, etc.)
 - Enhance UI components with Flask-specific capabilities
   - ✓ Unit tests for API endpoints
@@ -280,8 +280,96 @@ A comprehensive test suite has been implemented to verify the functionality of t
    - Verification of data consistency across API calls
    - Session management tests
 
+## Implementation Details
+
+### Medium-Priority Features Implementation
+
+The following medium-priority features have been implemented in Flask:
+
+#### Ontology Browser
+
+The Ontology browser has been implemented with the following features:
+
+1. **Core Functionality**:
+   - Browsing and managing ontology terms
+   - Connecting to Neo4j for ontology storage and retrieval
+   - Searching for ontology terms
+   - Visualizing term hierarchies
+   - Adding standard ISA terms
+   - Adding custom terms
+   - Pushing terms to Neo4j
+
+2. **Implementation Details**:
+   - Core page class in `core/pages/ontology.py`
+   - HTML template in `web/templates/ontology.html`
+   - API routes for connecting to Neo4j, managing terms, searching, and visualizing hierarchies
+   - Integration with the core ontology functionality in `core/ontology/`
+   - Responsive design with sidebar for term list and main area for term management
+
+3. **User Interface**:
+   - Neo4j connection form with status display
+   - Tabs for different term management functions (ISA Terms, Term Management, Term Search, Term Hierarchy)
+   - Term list with search and filter capabilities
+   - Form for adding new terms
+   - Buttons for pushing terms to Neo4j and clearing terms
+
+#### User Preferences
+
+The User preferences page has been implemented with the following features:
+
+1. **Core Functionality**:
+   - Customizing application appearance (theme, font size, sidebar state)
+   - Setting behavior preferences (tooltips, auto-save, language)
+   - Configuring data display options (table rows)
+   - Setting accessibility options (high contrast, screen reader, reduced motion, focus indicators, text spacing)
+   - Saving and loading preferences from a file
+
+2. **Implementation Details**:
+   - Core page class in `core/pages/preferences.py`
+   - HTML template in `web/templates/preferences.html`
+   - API routes for getting, saving, updating, and resetting preferences
+   - Preferences stored in a YAML file in the user's home directory
+   - Default preferences provided if no saved preferences are found
+
+3. **User Interface**:
+   - Tabs for different preference categories (Appearance, Behavior, Data Display, Accessibility)
+   - Theme selection with custom color options
+   - Font size selection
+   - Language selection
+   - Accessibility options with explanations
+   - Buttons for saving, loading, and resetting preferences
+
+## Next Steps
+
+The next steps in the Streamlit to Flask Migration roadmap are:
+
+1. **Complete implementation of low-priority features**:
+   - Analytics dashboard
+   - Chat interface
+   - Feedback collection
+   - Instructor page
+   - Observation page
+   - Survey page
+   - Workshop page
+
+2. **Enhance UI components with Flask-specific capabilities**:
+   - Implement HTMX for dynamic updates
+   - Add Alpine.js for client-side interactivity
+   - Create rich preview capabilities for various file types
+   - Implement responsive design for all components
+
+3. **Implement end-to-end tests for critical paths**:
+   - Create test scenarios for common workflows
+   - Implement automated end-to-end tests
+   - Verify functionality across different browsers and devices
+
+4. **Conduct performance benchmarks**:
+   - Measure page load times
+   - Measure API response times
+   - Compare performance with Streamlit version
+
 ## Conclusion
 
 This executive roadmap provides a clear path forward for the Science Data Kit project, focusing on the transition from Streamlit to Flask while preserving and enhancing the valuable work done in the Plugin Architecture and Design/UX phases. By following this roadmap, the project will achieve a more maintainable, user-friendly, and deployment-ready application that better serves the needs of scientific users.
 
-The completion of Phase 1 (Feature Parity Assessment) and the implementation of high-priority pages and seven medium-priority features (About page, cBioPortal browser, Dropbox integration, ISA browser, Map visualization, Microsoft Graph connection management, and Microsoft Graph exploration) represent significant milestones in the migration process, providing a solid foundation for the implementation work to follow. With a clear understanding of the current state and a detailed plan for moving forward, the project is well-positioned to successfully complete the transition to Flask.
+The completion of Phase 1 (Feature Parity Assessment) and the implementation of high-priority pages and all medium-priority features (About page, cBioPortal browser, Dropbox integration, ISA browser, Map visualization, Microsoft Graph integration, Microsoft Graph exploration, Ontology browser, and User preferences) represent significant milestones in the migration process, providing a solid foundation for the implementation work to follow. With a clear understanding of the current state and a detailed plan for moving forward, the project is well-positioned to successfully complete the transition to Flask.

@@ -5,6 +5,7 @@ This module defines the main routes for the Flask application.
 """
 
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash, jsonify, make_response
+import json
 from functools import wraps
 import os
 
@@ -20,6 +21,8 @@ from science_data_kit.core.pages.isa_browser import IsaBrowserPage
 from science_data_kit.core.pages.map import MapPage
 from science_data_kit.core.pages.msgraph_connect import MSGraphConnectPage
 from science_data_kit.core.pages.msgraph_explore import MSGraphExplorePage
+from science_data_kit.core.pages.ontology import OntologyPage
+from science_data_kit.core.pages.preferences import PreferencesPage
 from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
@@ -1322,6 +1325,254 @@ def add_isa_study_data():
 
     page = IsaBrowserPage()
     return jsonify(page.add_study_data_to_terms(study_id))
+
+@main_bp.route('/ontology')
+@login_required
+def ontology():
+    """Ontology browser page for browsing and managing ontology terms."""
+    page = OntologyPage()
+    return render_page_html(page, 'ontology.html')
+
+@main_bp.route('/api/ontology/connect', methods=['POST'])
+@login_required
+def connect_to_ontology_neo4j():
+    """Connect to a Neo4j database for ontology browsing."""
+    uri = request.form.get('uri')
+    username = request.form.get('username')
+    password = request.form.get('password')
+    database = request.form.get('database')
+    conn_name = request.form.get('conn_name')
+
+    if not uri or not username or not password or not database:
+        return jsonify({'success': False, 'error': 'URI, username, password, and database are required'}), 400
+
+    page = OntologyPage()
+    result = page.connect_to_database(uri, username, password, database, conn_name)
+
+    if result.get('success'):
+        # Store connection in session
+        session['ontology_neo4j_connection'] = page.neo4j_connection
+        session['ontology_neo4j_connected'] = True
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to connect to Neo4j')}), 400
+
+@main_bp.route('/api/ontology/disconnect', methods=['POST'])
+@login_required
+def disconnect_from_ontology_neo4j():
+    """Disconnect from a Neo4j database for ontology browsing."""
+    page = OntologyPage()
+
+    # Restore connection from session if available
+    if 'ontology_neo4j_connection' in session:
+        page.neo4j_connection = session['ontology_neo4j_connection']
+
+    result = page.disconnect_from_database()
+
+    # Remove connection from session
+    if 'ontology_neo4j_connection' in session:
+        del session['ontology_neo4j_connection']
+    session['ontology_neo4j_connected'] = False
+
+    if result.get('success'):
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to disconnect from Neo4j')}), 400
+
+@main_bp.route('/api/ontology/labels', methods=['GET'])
+@login_required
+def get_ontology_labels():
+    """Get available labels from Neo4j for ontology browsing."""
+    page = OntologyPage()
+
+    # Restore connection from session if available
+    if 'ontology_neo4j_connection' in session:
+        page.neo4j_connection = session['ontology_neo4j_connection']
+        page.neo4j_connected = session.get('ontology_neo4j_connected', False)
+
+    if not page.neo4j_connected:
+        return jsonify({'success': False, 'error': 'Not connected to Neo4j'}), 400
+
+    return jsonify({'success': True, 'labels': page.available_labels})
+
+@main_bp.route('/api/ontology/standard-terms', methods=['GET'])
+@login_required
+def add_standard_ontology_terms():
+    """Add standard ISA terms to the ontology browser."""
+    page = OntologyPage()
+    return jsonify(page.add_standard_isa_terms())
+
+@main_bp.route('/api/ontology/terms', methods=['GET'])
+@login_required
+def get_ontology_terms():
+    """Get all terms from the ontology browser."""
+    page = OntologyPage()
+    return jsonify(page.get_terms())
+
+@main_bp.route('/api/ontology/add-term', methods=['POST'])
+@login_required
+def add_ontology_term():
+    """Add a new term to the ontology browser."""
+    term_name = request.form.get('term_name')
+    term_uri = request.form.get('term_uri')
+    ontology_source = request.form.get('ontology_source')
+
+    if not term_name or not term_uri or not ontology_source:
+        return jsonify({'success': False, 'error': 'Term name, URI, and source are required'}), 400
+
+    page = OntologyPage()
+    return jsonify(page.add_term(term_name, term_uri, ontology_source))
+
+@main_bp.route('/api/ontology/push-terms', methods=['POST'])
+@login_required
+def push_ontology_terms():
+    """Push terms to Neo4j from the ontology browser."""
+    page = OntologyPage()
+
+    # Restore connection from session if available
+    if 'ontology_neo4j_connection' in session:
+        page.neo4j_connection = session['ontology_neo4j_connection']
+        page.neo4j_connected = session.get('ontology_neo4j_connected', False)
+
+    return jsonify(page.push_terms_to_neo4j())
+
+@main_bp.route('/api/ontology/clear-terms', methods=['POST'])
+@login_required
+def clear_ontology_terms():
+    """Clear all terms from the ontology browser."""
+    page = OntologyPage()
+    return jsonify(page.clear_terms())
+
+@main_bp.route('/api/ontology/search-terms', methods=['GET'])
+@login_required
+def search_ontology_terms():
+    """Search for ontology terms in the database."""
+    search_term = request.args.get('term')
+
+    if not search_term:
+        return jsonify({'success': False, 'error': 'Search term is required'}), 400
+
+    page = OntologyPage()
+
+    # Restore connection from session if available
+    if 'ontology_neo4j_connection' in session:
+        page.neo4j_connection = session['ontology_neo4j_connection']
+        page.neo4j_connected = session.get('ontology_neo4j_connected', False)
+
+    return jsonify(page.search_terms(search_term))
+
+@main_bp.route('/api/ontology/term-hierarchy', methods=['GET'])
+@login_required
+def get_ontology_term_hierarchy():
+    """Get the hierarchy for a specific ontology term."""
+    term = request.args.get('term')
+
+    if not term:
+        return jsonify({'success': False, 'error': 'Term is required'}), 400
+
+    page = OntologyPage()
+
+    # Restore connection from session if available
+    if 'ontology_neo4j_connection' in session:
+        page.neo4j_connection = session['ontology_neo4j_connection']
+        page.neo4j_connected = session.get('ontology_neo4j_connected', False)
+
+    return jsonify(page.get_term_hierarchy(term))
+
+@main_bp.route('/preferences')
+@login_required
+def preferences():
+    """User preferences page for customizing application settings."""
+    page = PreferencesPage()
+    return render_page_html(page, 'preferences.html')
+
+@main_bp.route('/api/preferences/get', methods=['GET'])
+@login_required
+def get_preferences():
+    """Get the current user preferences."""
+    page = PreferencesPage()
+
+    # Load preferences from file
+    result = page.load_preferences()
+
+    # If loading failed, return default preferences
+    if not result.get('success'):
+        return jsonify(page.get_preferences())
+
+    return jsonify(result)
+
+@main_bp.route('/api/preferences/save', methods=['POST'])
+@login_required
+def save_preferences():
+    """Save the current user preferences to a file."""
+    page = PreferencesPage()
+
+    # Get current preferences
+    preferences = page.user_preferences
+
+    # Save preferences to file
+    result = page.save_preferences(preferences)
+
+    return jsonify(result)
+
+@main_bp.route('/api/preferences/update', methods=['POST'])
+@login_required
+def update_preference():
+    """Update a specific preference."""
+    key = request.form.get('key')
+    value = request.form.get('value')
+
+    if not key:
+        return jsonify({'success': False, 'error': 'Preference key is required'}), 400
+
+    # Handle JSON values (like custom_colors)
+    if value and (value.startswith('{') or value.startswith('[')):
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError:
+            pass
+
+    # Handle boolean values
+    if value == 'true':
+        value = True
+    elif value == 'false':
+        value = False
+
+    # Handle numeric values
+    if value and value.isdigit():
+        value = int(value)
+
+    page = PreferencesPage()
+
+    # Load preferences from file
+    page.load_preferences()
+
+    # Update preference
+    result = page.update_preference(key, value)
+
+    return jsonify(result)
+
+@main_bp.route('/api/preferences/reset', methods=['POST'])
+@login_required
+def reset_preferences():
+    """Reset preferences to defaults."""
+    page = PreferencesPage()
+
+    # Reset preferences
+    result = page.reset_preferences()
+
+    return jsonify(result)
+
+@main_bp.route('/api/preferences/language-names', methods=['GET'])
+@login_required
+def get_language_names():
+    """Get the names of available languages."""
+    page = PreferencesPage()
+
+    # Get language names
+    result = page.get_language_names()
+
+    return jsonify(result)
 
 @main_bp.route('/api/isa/add-term', methods=['POST'])
 @login_required
