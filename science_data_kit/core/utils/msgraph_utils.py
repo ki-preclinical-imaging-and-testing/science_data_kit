@@ -10,11 +10,50 @@ import pandas as pd
 import networkx as nx
 from typing import Dict, List, Optional, Any, Union, Tuple
 from pathlib import Path
+from urllib.parse import urlencode
 
 from science_data_kit.core.models.msgraph_schemas import (
     User, Group, Message, Event, DriveItem,
     convert_msgraph_user, convert_msgraph_group, convert_msgraph_message
 )
+
+
+def build_msgraph_query(resource_path: str, query_parameters: Optional[Dict[str, Any]] = None) -> str:
+    """
+    Build a Microsoft Graph API query URL from a resource path and query parameters.
+
+    Args:
+        resource_path: The resource path to query (e.g., '/me', '/users').
+        query_parameters: Optional query parameters.
+
+    Returns:
+        The full query URL.
+    """
+    # Ensure resource_path starts with a slash
+    if not resource_path.startswith('/'):
+        resource_path = f'/{resource_path}'
+
+    # If no query parameters, return the resource path
+    if not query_parameters:
+        return resource_path
+
+    # Convert query parameters to OData format
+    odata_params = {}
+    for key, value in query_parameters.items():
+        # Skip empty values
+        if value is None or value == '':
+            continue
+
+        # Convert key to OData format (e.g., 'select' -> '$select')
+        odata_key = f'${key}' if not key.startswith('$') else key
+        odata_params[odata_key] = value
+
+    # Build the query URL
+    if odata_params:
+        query_string = urlencode(odata_params)
+        return f"{resource_path}?{query_string}"
+    else:
+        return resource_path
 
 
 def msgraph_to_network(data: Dict[str, Any], entity_type: str) -> nx.Graph:
