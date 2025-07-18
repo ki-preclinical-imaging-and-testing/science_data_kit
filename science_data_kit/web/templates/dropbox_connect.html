@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}Connect to Dropbox{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Connect to Dropbox</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" id="dropboxTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="configuration-tab" data-bs-toggle="tab" data-bs-target="#configuration" type="button" role="tab" aria-controls="configuration" aria-selected="true">Configuration</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="false">Connection Status</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="help-tab" data-bs-toggle="tab" data-bs-target="#help" type="button" role="tab" aria-controls="help" aria-selected="false">Help</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="dropboxTabsContent">
+                <!-- Configuration Tab -->
+                <div class="tab-pane fade show active" id="configuration" role="tabpanel" aria-labelledby="configuration-tab">
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Dropbox API Configuration</h5>
+                            
+                            <form id="dropboxConnectForm">
+                                <div class="mb-3">
+                                    <label for="appKey" class="form-label">App Key</label>
+                                    <input type="text" class="form-control" id="appKey" name="app_key" placeholder="Enter your Dropbox app key">
+                                    <div class="form-text">The app key for your Dropbox application.</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="appSecret" class="form-label">App Secret</label>
+                                    <input type="password" class="form-control" id="appSecret" name="app_secret" placeholder="Enter your Dropbox app secret">
+                                    <div class="form-text">The app secret for your Dropbox application.</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="refreshToken" class="form-label">Refresh Token (Optional)</label>
+                                    <input type="password" class="form-control" id="refreshToken" name="refresh_token" placeholder="Enter your refresh token if you have one">
+                                    <div class="form-text">If you already have a refresh token, you can enter it here.</div>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="saveConfig" name="save_config">
+                                    <label class="form-check-label" for="saveConfig">Save Configuration</label>
+                                </div>
+                                
+                                <div class="mb-3 config-file-section" style="display: none;">
+                                    <label for="configFile" class="form-label">Configuration File</label>
+                                    <input type="text" class="form-control" id="configFile" name="config_file" value="dropbox_config.json">
+                                    <div class="form-text">The path to save the configuration to.</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <button type="button" id="loadConfigBtn" class="btn btn-secondary">Load Configuration</button>
+                                    <input type="file" id="configFileInput" style="display: none;">
+                                </div>
+                                
+                                <button type="button" id="connectBtn" class="btn btn-primary">Connect to Dropbox</button>
+                            </form>
+                            
+                            <!-- OAuth Flow Section (initially hidden) -->
+                            <div id="oauthSection" class="mt-4" style="display: none;">
+                                <div class="alert alert-info" id="authUrlMessage">
+                                    Please visit the following URL to authorize the application: <a href="#" id="authUrl" target="_blank"></a>
+                                </div>
+                                
+                                <form id="completeAuthForm">
+                                    <div class="mb-3">
+                                        <label for="authCode" class="form-label">Authorization Code</label>
+                                        <input type="text" class="form-control" id="authCode" name="auth_code" placeholder="Enter the authorization code from the Dropbox website">
+                                        <div class="form-text">Enter the authorization code from the Dropbox website.</div>
+                                    </div>
+                                    
+                                    <button type="button" id="completeAuthBtn" class="btn btn-primary">Complete Authentication</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status Tab -->
+                <div class="tab-pane fade" id="status" role="tabpanel" aria-labelledby="status-tab">
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Connection Status</h5>
+                            
+                            <div id="connectionStatus">
+                                <div class="alert alert-info">Checking connection status...</div>
+                            </div>
+                            
+                            <div id="accountInfo" style="display: none;">
+                                <h6 class="mt-4">Account Information</h6>
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">Name</th>
+                                            <td id="accountName">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Email</th>
+                                            <td id="accountEmail">-</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Account ID</th>
+                                            <td id="accountId">-</td>
+                                        </tr>
+                                        <tr id="teamRow" style="display: none;">
+                                            <th scope="row">Team</th>
+                                            <td id="accountTeam">-</td>
+                                        </tr>
+                                        <tr id="teamMemberIdRow" style="display: none;">
+                                            <th scope="row">Team Member ID</th>
+                                            <td id="accountTeamMemberId">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <button type="button" id="disconnectBtn" class="btn btn-danger">Disconnect</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Help Tab -->
+                <div class="tab-pane fade" id="help" role="tabpanel" aria-labelledby="help-tab">
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Help</h5>
+                            
+                            <h6 class="mt-3">Authentication</h6>
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">OAuth2 Authentication Flow</h6>
+                                    <p class="card-text">The Dropbox extension uses OAuth2 for authentication. The process works as follows:</p>
+                                    <ol>
+                                        <li>Enter your App Key and App Secret</li>
+                                        <li>Click "Connect to Dropbox"</li>
+                                        <li>You will be prompted to visit a URL to authorize the application</li>
+                                        <li>After authorization, you will receive an authorization code</li>
+                                        <li>Enter the authorization code and click "Complete Authentication"</li>
+                                        <li>The connection will be established and a refresh token will be stored for future use</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Using a Refresh Token</h6>
+                                    <p class="card-text">If you already have a refresh token, you can enter it directly in the "Refresh Token" field to connect without going through the OAuth2 flow again.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Saving Configuration</h6>
+                                    <p class="card-text">You can save your configuration to a file for future use. The configuration file will contain your App Key, App Secret, and Refresh Token.</p>
+                                </div>
+                            </div>
+                            
+                            <h6 class="mt-4">Configuration</h6>
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">App Key and App Secret</h6>
+                                    <p class="card-text">To use the Dropbox API, you need to create an app in the Dropbox App Console:</p>
+                                    <ol>
+                                        <li>Go to <a href="https://www.dropbox.com/developers/apps" target="_blank">Dropbox App Console</a></li>
+                                        <li>Click "Create app"</li>
+                                        <li>Choose "Scoped access" for API</li>
+                                        <li>Choose "Full Dropbox" for access type</li>
+                                        <li>Give your app a name</li>
+                                        <li>Click "Create app"</li>
+                                        <li>On the app settings page, find your App Key and App Secret</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Permissions</h6>
+                                    <p class="card-text">Your app needs the following permissions:</p>
+                                    <ul>
+                                        <li><code>files.metadata.read</code>: To read file and folder metadata</li>
+                                        <li><code>files.content.read</code>: To read file content</li>
+                                        <li><code>files.content.write</code>: To write file content</li>
+                                        <li><code>sharing.read</code>: To read sharing information</li>
+                                        <li><code>team_data.member</code>: To access team member information (for team folders)</li>
+                                    </ul>
+                                    <p class="card-text">You can set these permissions in the "Permissions" tab of your app settings.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Check connection status on page load
+        checkConnectionStatus();
+        
+        // Toggle config file section based on checkbox
+        $('#saveConfig').change(function() {
+            if ($(this).is(':checked')) {
+                $('.config-file-section').show();
+            } else {
+                $('.config-file-section').hide();
+            }
+        });
+        
+        // Connect button click handler
+        $('#connectBtn').click(function() {
+            const formData = new FormData($('#dropboxConnectForm')[0]);
+            formData.set('save_config', $('#saveConfig').is(':checked') ? 'true' : 'false');
+            
+            $.ajax({
+                url: '/api/dropbox/connect',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('success', 'Connected to Dropbox API successfully.');
+                        $('#oauthSection').hide();
+                        checkConnectionStatus();
+                        // Switch to status tab
+                        $('#dropboxTabs button[data-bs-target="#status"]').tab('show');
+                    } else if (response.auth_url) {
+                        // Show OAuth flow section
+                        $('#authUrl').attr('href', response.auth_url).text(response.auth_url);
+                        $('#oauthSection').show();
+                        showAlert('info', 'Please authorize the application using the link below.');
+                    }
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Failed to connect to Dropbox API.';
+                    showAlert('danger', errorMsg);
+                }
+            });
+        });
+        
+        // Complete authentication button click handler
+        $('#completeAuthBtn').click(function() {
+            const authCode = $('#authCode').val();
+            
+            if (!authCode) {
+                showAlert('danger', 'Authorization code is required.');
+                return;
+            }
+            
+            $.ajax({
+                url: '/api/dropbox/complete-auth',
+                type: 'POST',
+                data: { auth_code: authCode },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('success', 'Authentication completed successfully.');
+                        $('#oauthSection').hide();
+                        checkConnectionStatus();
+                        // Switch to status tab
+                        $('#dropboxTabs button[data-bs-target="#status"]').tab('show');
+                    }
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Failed to complete authentication.';
+                    showAlert('danger', errorMsg);
+                }
+            });
+        });
+        
+        // Disconnect button click handler
+        $('#disconnectBtn').click(function() {
+            $.ajax({
+                url: '/api/dropbox/disconnect',
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('success', 'Disconnected from Dropbox API.');
+                        checkConnectionStatus();
+                    }
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Failed to disconnect from Dropbox API.';
+                    showAlert('danger', errorMsg);
+                }
+            });
+        });
+        
+        // Load configuration button click handler
+        $('#loadConfigBtn').click(function() {
+            // Show file input dialog
+            $('#configFileInput').click();
+        });
+        
+        // Handle file selection
+        $('#configFileInput').change(function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    $('#appKey').val(config.app_key || '');
+                    $('#appSecret').val(config.app_secret || '');
+                    $('#refreshToken').val(config.refresh_token || '');
+                    showAlert('success', 'Configuration loaded successfully.');
+                } catch (error) {
+                    showAlert('danger', 'Failed to parse configuration file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Function to check connection status
+        function checkConnectionStatus() {
+            $.ajax({
+                url: '/api/dropbox/status',
+                type: 'GET',
+                success: function(response) {
+                    if (response.connected) {
+                        $('#connectionStatus').html('<div class="alert alert-success">Connected to Dropbox API</div>');
+                        
+                        // Display account info
+                        if (response.account_info) {
+                            $('#accountName').text(response.account_info.name || 'N/A');
+                            $('#accountEmail').text(response.account_info.email || 'N/A');
+                            $('#accountId').text(response.account_info.account_id || 'N/A');
+                            
+                            if (response.account_info.team) {
+                                $('#accountTeam').text(response.account_info.team || 'N/A');
+                                $('#teamRow').show();
+                                
+                                if (response.account_info.team_member_id) {
+                                    $('#accountTeamMemberId').text(response.account_info.team_member_id || 'N/A');
+                                    $('#teamMemberIdRow').show();
+                                } else {
+                                    $('#teamMemberIdRow').hide();
+                                }
+                            } else {
+                                $('#teamRow').hide();
+                                $('#teamMemberIdRow').hide();
+                            }
+                            
+                            $('#accountInfo').show();
+                        } else {
+                            $('#accountInfo').hide();
+                        }
+                    } else {
+                        $('#connectionStatus').html('<div class="alert alert-info">Not connected to Dropbox API</div>');
+                        $('#accountInfo').hide();
+                    }
+                    
+                    // Display errors if any
+                    if (response.errors && Object.keys(response.errors).length > 0) {
+                        let errorHtml = '<div class="alert alert-warning mt-3"><h6>Errors:</h6><ul>';
+                        for (const key in response.errors) {
+                            errorHtml += `<li><strong>${key}:</strong> ${response.errors[key]}</li>`;
+                        }
+                        errorHtml += '</ul></div>';
+                        $('#connectionStatus').append(errorHtml);
+                    }
+                },
+                error: function() {
+                    $('#connectionStatus').html('<div class="alert alert-danger">Failed to check connection status</div>');
+                    $('#accountInfo').hide();
+                }
+            });
+        }
+        
+        // Function to show alerts
+        function showAlert(type, message) {
+            const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+            
+            // Insert alert before the form
+            $('#dropboxConnectForm').before(alertHtml);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(function() {
+                $('.alert-dismissible').alert('close');
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}

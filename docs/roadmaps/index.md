@@ -29,17 +29,17 @@ This roadmap outlines a comprehensive plan for transitioning the Science Data Ki
 **Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment) and is making significant progress in Phase 2 (Flask Implementation Completion). Key accomplishments include:
 
 1. **Comprehensive Inventory**: A complete inventory of all 23 Streamlit pages and their features has been created.
-2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages that have been implemented and 14 pages that still need to be implemented.
+2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages that have been implemented and 13 pages that still need to be implemented.
 3. **Detailed Migration Plan**: A detailed migration plan has been created with effort estimates, dependencies, and specific tasks for each feature.
 4. **High-Priority Pages Implementation**: All high-priority pages (connect, dashboard, file browser, explore, plugin connect) have been implemented with full API support and comprehensive functionality.
-5. **Medium-Priority Features Implementation**: Two medium-priority features have been implemented: the About page with project information and the cBioPortal browser for ontology term management.
+5. **Medium-Priority Features Implementation**: Three medium-priority features have been implemented: the About page with project information, the cBioPortal browser for ontology term management, and Dropbox integration with browser and connection management.
 6. **Testing Implementation**: Unit tests have been created for all implemented API endpoints.
 
 The current implementation status shows:
 - 5 high-priority pages have been fully implemented in Flask (connect, dashboard, file browser, explore, plugin connect)
 - All high-priority pages now have full API support with comprehensive functionality
-- 2 medium-priority pages have been implemented (About page with project information, cBioPortal browser for ontology term management)
-- 14 pages still need to be implemented, with varying priorities
+- 3 medium-priority pages have been implemented (About page with project information, cBioPortal browser for ontology term management, Dropbox integration with browser and connection management)
+- 13 pages still need to be implemented, with varying priorities
 - Core architecture and Flask foundation are in place
 - Unit tests have been created for all implemented API endpoints
 

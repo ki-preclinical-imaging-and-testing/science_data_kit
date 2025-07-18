@@ -1,0 +1,640 @@
+{% extends "base.html" %}
+
+{% block title %}Dropbox File Browser{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h1>Dropbox File Browser</h1>
+    
+    <div class="row mt-4">
+        <!-- Sidebar for navigation and search -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Navigation</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Breadcrumb navigation -->
+                    <nav aria-label="breadcrumb" id="path-breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="#" data-path="">Home</a></li>
+                            <!-- Additional breadcrumb items will be added dynamically -->
+                        </ol>
+                    </nav>
+                    
+                    <!-- Go up button -->
+                    <button id="go-up-btn" class="btn btn-outline-secondary mb-3" style="display: none;">
+                        <i class="bi bi-arrow-up"></i> Go Up
+                    </button>
+                    
+                    <!-- Connection status -->
+                    <div id="connection-status" class="mb-3">
+                        <div class="alert alert-info">Checking connection status...</div>
+                    </div>
+                    
+                    <!-- Search -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Search</h6>
+                        </div>
+                        <div class="card-body">
+                            <form id="search-form">
+                                <div class="mb-3">
+                                    <label for="search-query" class="form-label">Search files</label>
+                                    <input type="text" class="form-control" id="search-query" placeholder="Enter search query">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="search-path" class="form-label">Search in path</label>
+                                    <input type="text" class="form-control" id="search-path" placeholder="Enter path to search in">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="search-extensions" class="form-label">File extensions</label>
+                                    <input type="text" class="form-control" id="search-extensions" placeholder="e.g., pdf,txt,docx">
+                                    <div class="form-text">Comma-separated list of extensions</div>
+                                </div>
+                                <button type="button" id="search-btn" class="btn btn-primary">Search</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main content area -->
+        <div class="col-md-9">
+            <!-- Search results (initially hidden) -->
+            <div id="search-results-container" style="display: none;">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Search Results</h5>
+                        <button type="button" id="clear-search-btn" class="btn btn-sm btn-outline-secondary">Clear Results</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="search-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Name</th>
+                                        <th>Path</th>
+                                        <th>Size</th>
+                                        <th>Modified</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="search-results-body">
+                                    <!-- Search results will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current directory contents -->
+            <div id="directory-contents">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Contents of <span id="current-path">Home</span></h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Folders section -->
+                        <div id="folders-container" class="mb-4">
+                            <h6 class="mb-3">Folders</h6>
+                            <div class="row row-cols-1 row-cols-md-3 g-4" id="folders-grid">
+                                <!-- Folders will be added here dynamically -->
+                            </div>
+                            <div id="no-folders-message" style="display: none;">
+                                <p class="text-muted">No folders found</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Files section -->
+                        <div id="files-container">
+                            <h6 class="mb-3">Files</h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="files-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Size</th>
+                                            <th>Modified</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="files-body">
+                                        <!-- Files will be added here dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="no-files-message" style="display: none;">
+                                <p class="text-muted">No files found</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty directory message -->
+                        <div id="empty-directory-message" style="display: none;">
+                            <div class="alert alert-info">This folder is empty</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- File details and preview -->
+            <div id="file-details-container" style="display: none;">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">File Details</h5>
+                        <button type="button" id="close-details-btn" class="btn btn-sm btn-outline-secondary">Close</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> <span id="file-name"></span></p>
+                                <p><strong>Path:</strong> <span id="file-path"></span></p>
+                                <p><strong>Size:</strong> <span id="file-size"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Modified:</strong> <span id="file-modified"></span></p>
+                                <p><strong>ID:</strong> <span id="file-id"></span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="button" id="preview-file-btn" class="btn btn-primary me-2">Preview File</button>
+                            <a href="#" id="download-file-btn" class="btn btn-success" download>Download File</a>
+                        </div>
+                        
+                        <!-- File preview container -->
+                        <div id="file-preview-container" class="mt-4" style="display: none;">
+                            <h6 class="mb-3">File Preview</h6>
+                            <div id="file-preview-content" class="border p-3 bg-light">
+                                <!-- Preview content will be added here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="errorModalLabel">Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="errorModalBody">
+                <!-- Error message will be added here dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initial variables
+        let currentPath = '';
+        let selectedFilePath = '';
+        
+        // Load current directory on page load
+        loadDirectory(currentPath);
+        
+        // Check connection status
+        checkConnectionStatus();
+        
+        // Event handler for folder click
+        $(document).on('click', '.folder-item', function() {
+            const path = $(this).data('path');
+            navigateToDirectory(path);
+        });
+        
+        // Event handler for breadcrumb navigation
+        $(document).on('click', '#path-breadcrumb a', function(e) {
+            e.preventDefault();
+            const path = $(this).data('path');
+            navigateToDirectory(path);
+        });
+        
+        // Event handler for "Go Up" button
+        $('#go-up-btn').click(function() {
+            const parentPath = getParentPath(currentPath);
+            navigateToDirectory(parentPath);
+        });
+        
+        // Event handler for file selection
+        $(document).on('click', '.file-details-btn', function() {
+            const filePath = $(this).data('path');
+            getFileDetails(filePath);
+        });
+        
+        // Event handler for closing file details
+        $('#close-details-btn').click(function() {
+            $('#file-details-container').hide();
+            $('#directory-contents').show();
+        });
+        
+        // Event handler for preview button
+        $('#preview-file-btn').click(function() {
+            previewFile(selectedFilePath);
+        });
+        
+        // Event handler for search button
+        $('#search-btn').click(function() {
+            const query = $('#search-query').val();
+            const path = $('#search-path').val() || currentPath;
+            const extensions = $('#search-extensions').val();
+            
+            if (!query) {
+                showError('Search query is required');
+                return;
+            }
+            
+            searchFiles(query, path, extensions);
+        });
+        
+        // Event handler for clear search button
+        $('#clear-search-btn').click(function() {
+            $('#search-results-container').hide();
+            $('#directory-contents').show();
+            $('#search-query').val('');
+            $('#search-extensions').val('');
+        });
+        
+        // Function to navigate to a directory
+        function navigateToDirectory(path) {
+            loadDirectory(path);
+        }
+        
+        // Function to load directory contents
+        function loadDirectory(path) {
+            $.ajax({
+                url: '/api/dropbox/files',
+                type: 'GET',
+                data: { path: path },
+                success: function(response) {
+                    currentPath = response.current_path;
+                    
+                    // Update current path display
+                    $('#current-path').text(currentPath || 'Home');
+                    
+                    // Update breadcrumb navigation
+                    updateBreadcrumbs(currentPath);
+                    
+                    // Update "Go Up" button visibility
+                    if (currentPath) {
+                        $('#go-up-btn').show();
+                    } else {
+                        $('#go-up-btn').hide();
+                    }
+                    
+                    // Display folders
+                    displayFolders(response.directories);
+                    
+                    // Display files
+                    displayFiles(response.files);
+                    
+                    // Show empty directory message if no files and folders
+                    if (response.directories.length === 0 && response.files.length === 0) {
+                        $('#empty-directory-message').show();
+                    } else {
+                        $('#empty-directory-message').hide();
+                    }
+                    
+                    // Hide file details if visible
+                    $('#file-details-container').hide();
+                    $('#directory-contents').show();
+                    
+                    // Hide search results if visible
+                    $('#search-results-container').hide();
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Failed to load directory contents';
+                    showError(errorMsg);
+                }
+            });
+        }
+        
+        // Function to display folders
+        function displayFolders(folders) {
+            const foldersGrid = $('#folders-grid');
+            foldersGrid.empty();
+            
+            if (folders.length > 0) {
+                folders.forEach(function(folder) {
+                    const folderHtml = `
+                        <div class="col">
+                            <div class="card h-100 folder-item" data-path="${folder.path}">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <i class="bi bi-folder"></i> ${folder.name}
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    foldersGrid.append(folderHtml);
+                });
+                
+                $('#folders-container').show();
+                $('#no-folders-message').hide();
+            } else {
+                $('#no-folders-message').show();
+            }
+        }
+        
+        // Function to display files
+        function displayFiles(files) {
+            const filesBody = $('#files-body');
+            filesBody.empty();
+            
+            if (files.length > 0) {
+                files.forEach(function(file) {
+                    const fileHtml = `
+                        <tr>
+                            <td>${file.name}</td>
+                            <td>${formatSize(file.size)}</td>
+                            <td>${formatDateTime(file.modified)}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary file-details-btn" data-path="${file.path}">
+                                    <i class="bi bi-info-circle"></i> Details
+                                </button>
+                                <a href="/api/dropbox/download?path=${encodeURIComponent(file.path)}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-download"></i> Download
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                    filesBody.append(fileHtml);
+                });
+                
+                $('#files-container').show();
+                $('#no-files-message').hide();
+            } else {
+                $('#no-files-message').show();
+            }
+        }
+        
+        // Function to get file details
+        function getFileDetails(filePath) {
+            $.ajax({
+                url: '/api/dropbox/file',
+                type: 'GET',
+                data: { path: filePath },
+                success: function(response) {
+                    if (response.success) {
+                        const file = response.file;
+                        selectedFilePath = file.path;
+                        
+                        // Update file details
+                        $('#file-name').text(file.name);
+                        $('#file-path').text(file.path);
+                        $('#file-size').text(formatSize(file.size));
+                        $('#file-modified').text(formatDateTime(file.modified));
+                        $('#file-id').text(file.id);
+                        
+                        // Update download button
+                        $('#download-file-btn').attr('href', `/api/dropbox/download?path=${encodeURIComponent(file.path)}`);
+                        
+                        // Show/hide preview button based on file type
+                        const fileExt = getFileExtension(file.name).toLowerCase();
+                        const previewableExtensions = ['.txt', '.csv', '.md', '.json', '.jpg', '.jpeg', '.png', '.gif', '.pdf', '.xlsx', '.xls', '.html', '.htm', '.xml', '.py', '.js'];
+                        
+                        if (previewableExtensions.includes(fileExt)) {
+                            $('#preview-file-btn').show();
+                        } else {
+                            $('#preview-file-btn').hide();
+                        }
+                        
+                        // Hide preview container
+                        $('#file-preview-container').hide();
+                        
+                        // Show file details
+                        $('#directory-contents').hide();
+                        $('#search-results-container').hide();
+                        $('#file-details-container').show();
+                    } else {
+                        showError(response.error || 'Failed to get file details');
+                    }
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Failed to get file details';
+                    showError(errorMsg);
+                }
+            });
+        }
+        
+        // Function to preview file
+        function previewFile(filePath) {
+            const fileExt = getFileExtension(filePath).toLowerCase();
+            const previewContainer = $('#file-preview-content');
+            
+            // Show loading indicator
+            previewContainer.html('<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading preview...</p></div>');
+            $('#file-preview-container').show();
+            
+            // Image files
+            if (['.jpg', '.jpeg', '.png', '.gif'].includes(fileExt)) {
+                const imgUrl = `/api/dropbox/preview?path=${encodeURIComponent(filePath)}`;
+                previewContainer.html(`<img src="${imgUrl}" class="img-fluid" alt="Image preview">`);
+            }
+            // PDF files
+            else if (fileExt === '.pdf') {
+                const pdfUrl = `/api/dropbox/preview?path=${encodeURIComponent(filePath)}`;
+                previewContainer.html(`<iframe src="${pdfUrl}" width="100%" height="500px" type="application/pdf"></iframe>`);
+            }
+            // Other previewable files
+            else {
+                $.ajax({
+                    url: '/api/dropbox/preview',
+                    type: 'GET',
+                    data: { path: filePath },
+                    success: function(response) {
+                        previewContainer.html(response);
+                    },
+                    error: function(xhr) {
+                        const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Failed to preview file';
+                        previewContainer.html(`<div class="alert alert-danger">${errorMsg}</div>`);
+                    }
+                });
+            }
+        }
+        
+        // Function to search files
+        function searchFiles(query, path, extensions) {
+            // Show loading indicator
+            $('#search-results-body').html('<tr><td colspan="6" class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Searching...</p></td></tr>');
+            $('#search-results-container').show();
+            $('#directory-contents').hide();
+            $('#file-details-container').hide();
+            
+            $.ajax({
+                url: '/api/dropbox/search',
+                type: 'GET',
+                data: {
+                    query: query,
+                    path: path,
+                    extensions: extensions
+                },
+                success: function(response) {
+                    if (response.success) {
+                        displaySearchResults(response.results);
+                    } else {
+                        showError(response.error || 'Search failed');
+                        $('#search-results-container').hide();
+                        $('#directory-contents').show();
+                    }
+                },
+                error: function(xhr) {
+                    const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Search failed';
+                    showError(errorMsg);
+                    $('#search-results-container').hide();
+                    $('#directory-contents').show();
+                }
+            });
+        }
+        
+        // Function to display search results
+        function displaySearchResults(results) {
+            const resultsBody = $('#search-results-body');
+            resultsBody.empty();
+            
+            if (results.length > 0) {
+                results.forEach(function(item) {
+                    const icon = item.type === 'folder' ? '<i class="bi bi-folder"></i>' : '<i class="bi bi-file-earmark"></i>';
+                    const size = item.type === 'folder' ? '-' : formatSize(item.size);
+                    const modified = formatDateTime(item.modified);
+                    
+                    let actionsHtml = '';
+                    if (item.type === 'folder') {
+                        actionsHtml = `
+                            <button type="button" class="btn btn-sm btn-primary folder-item" data-path="${item.path}">
+                                <i class="bi bi-folder-symlink"></i> Open
+                            </button>
+                        `;
+                    } else {
+                        actionsHtml = `
+                            <button type="button" class="btn btn-sm btn-primary file-details-btn" data-path="${item.path}">
+                                <i class="bi bi-info-circle"></i> Details
+                            </button>
+                            <a href="/api/dropbox/download?path=${encodeURIComponent(item.path)}" class="btn btn-sm btn-success">
+                                <i class="bi bi-download"></i> Download
+                            </a>
+                        `;
+                    }
+                    
+                    const resultHtml = `
+                        <tr>
+                            <td>${icon}</td>
+                            <td>${item.name}</td>
+                            <td>${item.path}</td>
+                            <td>${size}</td>
+                            <td>${modified}</td>
+                            <td>${actionsHtml}</td>
+                        </tr>
+                    `;
+                    resultsBody.append(resultHtml);
+                });
+            } else {
+                resultsBody.html('<tr><td colspan="6" class="text-center">No results found</td></tr>');
+            }
+        }
+        
+        // Function to check connection status
+        function checkConnectionStatus() {
+            $.ajax({
+                url: '/api/dropbox/status',
+                type: 'GET',
+                success: function(response) {
+                    if (response.connected) {
+                        $('#connection-status').html('<div class="alert alert-success">Connected to Dropbox API</div>');
+                    } else {
+                        $('#connection-status').html('<div class="alert alert-warning">Not connected to Dropbox API. Please <a href="/dropbox-connect">connect</a> first.</div>');
+                    }
+                },
+                error: function() {
+                    $('#connection-status').html('<div class="alert alert-danger">Failed to check connection status</div>');
+                }
+            });
+        }
+        
+        // Function to update breadcrumbs
+        function updateBreadcrumbs(path) {
+            const breadcrumb = $('#path-breadcrumb ol');
+            breadcrumb.empty();
+            
+            // Add home item
+            breadcrumb.append('<li class="breadcrumb-item"><a href="#" data-path="">Home</a></li>');
+            
+            if (path) {
+                const parts = path.split('/').filter(Boolean);
+                let currentPath = '';
+                
+                parts.forEach(function(part, index) {
+                    currentPath += '/' + part;
+                    const isLast = index === parts.length - 1;
+                    
+                    if (isLast) {
+                        breadcrumb.append(`<li class="breadcrumb-item active" aria-current="page">${part}</li>`);
+                    } else {
+                        breadcrumb.append(`<li class="breadcrumb-item"><a href="#" data-path="${currentPath}">${part}</a></li>`);
+                    }
+                });
+            }
+        }
+        
+        // Helper function to get parent path
+        function getParentPath(path) {
+            if (!path) return '';
+            const parts = path.split('/').filter(Boolean);
+            parts.pop();
+            return '/' + parts.join('/');
+        }
+        
+        // Helper function to get file extension
+        function getFileExtension(filename) {
+            return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 1);
+        }
+        
+        // Helper function to format file size
+        function formatSize(sizeBytes) {
+            if (!sizeBytes) return '0 B';
+            
+            const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+            let i = 0;
+            let size = sizeBytes;
+            
+            while (size >= 1024 && i < units.length - 1) {
+                size /= 1024;
+                i++;
+            }
+            
+            return size.toFixed(1) + ' ' + units[i];
+        }
+        
+        // Helper function to format datetime
+        function formatDateTime(datetime) {
+            if (!datetime) return '';
+            
+            // If datetime is a string, convert it to a Date object
+            const date = typeof datetime === 'string' ? new Date(datetime) : datetime;
+            
+            return date.toLocaleString();
+        }
+        
+        // Function to show error
+        function showError(message) {
+            $('#errorModalBody').text(message);
+            new bootstrap.Modal(document.getElementById('errorModal')).show();
+        }
+    });
+</script>
+{% endblock %}

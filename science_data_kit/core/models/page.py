@@ -78,3 +78,30 @@ class CbioportalBrowserPageData(PageData):
     existing_term_accessions: Set[str] = field(default_factory=set)
     connection_status: Dict[str, bool] = field(default_factory=dict)
     connection_errors: Dict[str, str] = field(default_factory=dict)
+
+@dataclass
+class DropboxConnectPageData(PageData):
+    """Dropbox connection page specific data"""
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    account_info: Optional[Dict[str, Any]] = None
+    app_key: Optional[str] = None
+    app_secret: Optional[str] = None
+    refresh_token: Optional[str] = None
+    config_file: Optional[str] = None
+    auth_url: Optional[str] = None
+
+@dataclass
+class DropboxBrowserPageData(PageData):
+    """Dropbox browser page specific data"""
+    current_path: str = ""
+    files: List[Dict[str, Any]] = field(default_factory=list)
+    directories: List[Dict[str, Any]] = field(default_factory=list)
+    selected_file: Optional[Dict[str, Any]] = None
+    search_results: List[Dict[str, Any]] = field(default_factory=list)
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    view_mode: str = "list"
+    sort_by: str = "name"
+    sort_order: str = "ascending"
+    filter_pattern: Optional[str] = None

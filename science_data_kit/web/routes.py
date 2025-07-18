@@ -4,7 +4,7 @@ Main Routes for the Flask Application
 This module defines the main routes for the Flask application.
 """
 
-from flask import Blueprint, render_template, redirect, url_for, request, session, flash, jsonify
+from flask import Blueprint, render_template, redirect, url_for, request, session, flash, jsonify, make_response
 from functools import wraps
 import os
 
@@ -14,6 +14,8 @@ from science_data_kit.core.pages.connect import ConnectPage
 from science_data_kit.core.pages.explore import ExplorePage
 from science_data_kit.core.pages.plugin_connect import PluginConnectPage
 from science_data_kit.core.pages.cbioportal_browser import CbioportalBrowserPage
+from science_data_kit.core.pages.dropbox_connect import DropboxConnectPage
+from science_data_kit.core.pages.dropbox_browser import DropboxBrowserPage
 from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
@@ -797,6 +799,316 @@ def cbioportal_browser():
     """cBioPortal browser page for browsing and managing ontology terms."""
     page = CbioportalBrowserPage()
     return render_page_html(page, 'cbioportal_browser.html')
+
+@main_bp.route('/dropbox-connect')
+@login_required
+def dropbox_connect():
+    """Dropbox connection management page."""
+    page = DropboxConnectPage()
+    return render_page_html(page, 'dropbox_connect.html')
+
+@main_bp.route('/api/dropbox/connect', methods=['POST'])
+@login_required
+def connect_to_dropbox():
+    """Connect to Dropbox API."""
+    app_key = request.form.get('app_key')
+    app_secret = request.form.get('app_secret')
+    refresh_token = request.form.get('refresh_token')
+    save_config = request.form.get('save_config') == 'true'
+    config_file = request.form.get('config_file')
+
+    if not app_key or not app_secret:
+        return jsonify({'success': False, 'error': 'App key and app secret are required'}), 400
+
+    page = DropboxConnectPage()
+    result = page.connect(app_key, app_secret, refresh_token, save_config, config_file)
+
+    if result.get('success'):
+        # Store connector in session
+        session['dropbox_connector'] = page.connector
+        session['dropbox_connected'] = True
+        return jsonify({'success': True})
+    elif result.get('auth_url'):
+        # Return auth URL for OAuth flow
+        return jsonify({'success': False, 'auth_url': result['auth_url']})
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to connect to Dropbox API')}), 400
+
+@main_bp.route('/api/dropbox/complete-auth', methods=['POST'])
+@login_required
+def complete_dropbox_auth():
+    """Complete Dropbox OAuth authentication."""
+    auth_code = request.form.get('auth_code')
+
+    if not auth_code:
+        return jsonify({'success': False, 'error': 'Authorization code is required'}), 400
+
+    page = DropboxConnectPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.connector = session['dropbox_connector']
+
+    result = page.complete_authentication(auth_code)
+
+    if result.get('success'):
+        # Store connector in session
+        session['dropbox_connector'] = page.connector
+        session['dropbox_connected'] = True
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to complete authentication')}), 400
+
+@main_bp.route('/api/dropbox/disconnect', methods=['POST'])
+@login_required
+def disconnect_from_dropbox():
+    """Disconnect from Dropbox API."""
+    page = DropboxConnectPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.connector = session['dropbox_connector']
+
+    result = page.disconnect()
+
+    # Remove connector from session
+    if 'dropbox_connector' in session:
+        del session['dropbox_connector']
+    session['dropbox_connected'] = False
+
+    if result.get('success'):
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to disconnect from Dropbox API')}), 400
+
+@main_bp.route('/api/dropbox/status', methods=['GET'])
+@login_required
+def get_dropbox_status():
+    """Get Dropbox connection status."""
+    page = DropboxConnectPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.connector = session['dropbox_connector']
+        page.connection_status['dropbox'] = page.connector.is_connected()
+
+        # Get account info if connected
+        if page.connection_status['dropbox']:
+            try:
+                page.account_info = page.connector.get_account_info()
+            except Exception as e:
+                page.connection_errors['account_info'] = str(e)
+
+    return jsonify({
+        'connected': page.connection_status.get('dropbox', False),
+        'account_info': page.account_info,
+        'errors': page.connection_errors
+    })
+
+@main_bp.route('/api/dropbox/load-config', methods=['POST'])
+@login_required
+def load_dropbox_config():
+    """Load Dropbox configuration from a file."""
+    config_file = request.form.get('config_file')
+
+    if not config_file:
+        return jsonify({'success': False, 'error': 'Configuration file path is required'}), 400
+
+    page = DropboxConnectPage()
+    result = page.load_config_from_file(config_file)
+
+    if result.get('success'):
+        return jsonify({'success': True, 'config': result.get('config', {})})
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to load configuration')}), 400
+
+@main_bp.route('/dropbox-browser')
+@login_required
+def dropbox_browser():
+    """Dropbox file browser page."""
+    # Get current path from query parameters
+    current_path = request.args.get('path', '')
+
+    # Create page instance
+    page = DropboxBrowserPage(initial_path=current_path)
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+
+    return render_page_html(page, 'dropbox_browser.html')
+
+@main_bp.route('/api/dropbox/files', methods=['GET'])
+@login_required
+def get_dropbox_files():
+    """Get files and folders from Dropbox."""
+    path = request.args.get('path', '')
+
+    # Create page instance
+    page = DropboxBrowserPage(initial_path=path)
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+
+    # Navigate to the specified path
+    page.navigate_to(path)
+
+    return jsonify({
+        'current_path': page.current_path,
+        'files': page.files,
+        'directories': page.directories,
+        'connection_status': page.connection_status,
+        'connection_errors': page.connection_errors
+    })
+
+@main_bp.route('/api/dropbox/file', methods=['GET'])
+@login_required
+def get_dropbox_file():
+    """Get file details from Dropbox."""
+    file_path = request.args.get('path', '')
+
+    if not file_path:
+        return jsonify({'success': False, 'error': 'File path is required'}), 400
+
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+
+    # Select the file
+    if not page.select_file(file_path):
+        return jsonify({'success': False, 'error': page.connection_errors.get('file_selection', 'Failed to select file')}), 400
+
+    return jsonify({
+        'success': True,
+        'file': page.selected_file
+    })
+
+@main_bp.route('/api/dropbox/download', methods=['GET'])
+@login_required
+def download_dropbox_file():
+    """Download a file from Dropbox."""
+    file_path = request.args.get('path', '')
+
+    if not file_path:
+        return jsonify({'success': False, 'error': 'File path is required'}), 400
+
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+
+    # Download the file
+    result = page.download_file(file_path)
+
+    if not result.get('success'):
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to download file')}), 400
+
+    # Get file name from path
+    file_name = file_path.split('/')[-1]
+
+    # Create response with file content
+    response = make_response(result['content'])
+    response.headers['Content-Disposition'] = f'attachment; filename="{file_name}"'
+    response.headers['Content-Type'] = 'application/octet-stream'
+
+    return response
+
+@main_bp.route('/api/dropbox/preview', methods=['GET'])
+@login_required
+def preview_dropbox_file():
+    """Preview a file from Dropbox."""
+    file_path = request.args.get('path', '')
+
+    if not file_path:
+        return jsonify({'success': False, 'error': 'File path is required'}), 400
+
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+
+    # Download the file
+    result = page.download_file(file_path)
+
+    if not result.get('success'):
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to download file')}), 400
+
+    # Get file extension
+    file_ext = os.path.splitext(file_path)[1].lower()
+
+    # Handle different file types
+    text_file_extensions = [
+        '.txt', '.md', '.csv', '.json', '.yaml', '.yml', 
+        '.py', '.js', '.html', '.css', '.java', '.c', '.cpp', 
+        '.cs', '.go', '.php', '.rb', '.rs', '.ts', '.sh', 
+        '.xml', '.log', '.ini', '.conf', '.toml', '.sql'
+    ]
+
+    image_file_extensions = [
+        '.jpg', '.jpeg', '.png', '.gif', '.bmp', 
+        '.svg', '.webp', '.ico', '.tiff', '.tif'
+    ]
+
+    pdf_file_extensions = ['.pdf']
+
+    if file_ext in text_file_extensions:
+        # Text files
+        try:
+            content = result['content'].decode('utf-8')
+            return render_template('partials/preview_text.html', content=content, file_path=file_path)
+        except UnicodeDecodeError:
+            return render_template('partials/preview_binary.html', file_path=file_path)
+    elif file_ext in image_file_extensions:
+        # Image files - return raw content with appropriate content type
+        response = make_response(result['content'])
+        response.headers['Content-Type'] = f'image/{file_ext[1:]}' if file_ext[1:] != 'jpg' else 'image/jpeg'
+        return response
+    elif file_ext in pdf_file_extensions:
+        # PDF files
+        response = make_response(result['content'])
+        response.headers['Content-Type'] = 'application/pdf'
+        return response
+    else:
+        # Binary files
+        return render_template('partials/preview_binary.html', file_path=file_path)
+
+@main_bp.route('/api/dropbox/search', methods=['GET'])
+@login_required
+def search_dropbox():
+    """Search for files and folders in Dropbox."""
+    query = request.args.get('query', '')
+    path = request.args.get('path', '')
+    extensions = request.args.get('extensions', '')
+
+    if not query:
+        return jsonify({'success': False, 'error': 'Search query is required'}), 400
+
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+
+    # Parse extensions
+    file_extensions = [ext.strip() for ext in extensions.split(',')] if extensions else None
+
+    # Perform search
+    if not page.search(query, path, file_extensions):
+        return jsonify({'success': False, 'error': page.connection_errors.get('search', 'Failed to search')}), 400
+
+    return jsonify({
+        'success': True,
+        'results': page.search_results
+    })
 
 @main_bp.route('/api/cbioportal/cancer-types', methods=['GET'])
 @login_required

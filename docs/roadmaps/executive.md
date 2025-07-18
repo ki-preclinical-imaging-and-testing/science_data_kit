@@ -30,7 +30,7 @@ The following roadmap outlines the key steps for implementing the strategic visi
 - Implement medium-priority features
   - ✓ About page with project information
   - ✓ cBioPortal browser for ontology term management
-  - Dropbox integration
+  - ✓ Dropbox integration (browser and connection management)
   - ISA browser
   - Map visualization
   - Microsoft Graph integration
@@ -140,15 +140,15 @@ The Streamlit to Flask Migration has made significant progress:
 2. **Current Implementation Status**:
    - 5 high-priority pages have been implemented in Flask (connect, dashboard, file browser, explore, plugin connect)
    - All high-priority pages now have full API support with comprehensive functionality
-   - 2 medium-priority pages have been implemented (About page with project information, cBioPortal browser for ontology term management)
-   - 14 pages still need to be implemented, with varying priorities
+   - 3 medium-priority pages have been implemented (About page with project information, cBioPortal browser for ontology term management, Dropbox integration with browser and connection management)
+   - 13 pages still need to be implemented, with varying priorities
    - Core architecture and Flask foundation are in place
    - Plugin connection management has been implemented with improved UI and API endpoints
    - Unit tests have been created for all implemented API endpoints
 
 3. **Next Steps**:
    - Continue implementing medium-priority features in Phase 2
-   - Focus on Dropbox integration, ISA browser, and Map visualization as the next medium-priority features
+   - Focus on ISA browser, Map visualization, and Microsoft Graph integration as the next medium-priority features
    - Enhance UI components with Flask-specific capabilities
    - Implement integration tests for workflows
    - Prepare for user experience optimization in Phase 3
@@ -208,6 +208,21 @@ The following medium-priority pages have been implemented in Flask:
    - API endpoints for adding terms from various sources
    - API endpoints for managing terms (adding manually, clearing)
    - Responsive design with Bootstrap cards and dynamic content loading
+
+3. **Dropbox Integration**:
+   - **Dropbox Connection Management**:
+     - Core functionality for connecting to Dropbox API using OAuth2 authentication
+     - API endpoints for connecting, completing authentication, disconnecting, and checking status
+     - Configuration management with save/load functionality
+     - Account information display with connection status
+     - Responsive design with tabbed interface for configuration, status, and help
+   - **Dropbox File Browser**:
+     - Core functionality for browsing Dropbox files and folders
+     - API endpoints for listing directories, getting file details, downloading files, and searching
+     - File preview capabilities for various file types (images, PDF, text, code, etc.)
+     - Breadcrumb navigation and folder browsing
+     - Search functionality with filtering by path and file extensions
+     - Responsive design with sidebar for navigation and search
 
 ### Testing Implementation
 
