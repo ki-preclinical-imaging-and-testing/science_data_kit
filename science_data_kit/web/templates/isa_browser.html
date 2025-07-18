@@ -1,0 +1,711 @@
+{% extends "base.html" %}
+
+{% block title %}ISA Browser - Science Data Kit{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">ISA Browser for Neo4j Mapping</h1>
+    <p class="lead">
+        Browse and manage ISA (Investigation, Study, Assay) data and ontology terms, and integrate them with Neo4j.
+    </p>
+
+    <div class="row">
+        <!-- Main content area -->
+        <div class="col-md-8">
+            <!-- Neo4j Connection -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-database"></i> Neo4j Connection</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form id="neo4jConnectionForm">
+                                <div class="mb-3">
+                                    <label for="uri" class="form-label">Neo4j URI</label>
+                                    <input type="text" class="form-control" id="uri" value="bolt://localhost:7687" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" value="neo4j" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="database" class="form-label">Database</label>
+                                    <input type="text" class="form-control" id="database" value="neo4j" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="conn_name" class="form-label">Connection Name (optional)</label>
+                                    <input type="text" class="form-control" id="conn_name">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Connect to Neo4j</button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="connectionStatus">
+                                <div class="alert alert-warning">
+                                    <p>Not connected to Neo4j. Some features will be disabled.</p>
+                                </div>
+                            </div>
+                            <div id="labelsContainer" style="display: none;">
+                                <h3 class="h6 mt-3">Available Labels</h3>
+                                <div id="labelsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terms display -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-list-ul"></i> Ontology Terms</h2>
+                </div>
+                <div class="card-body">
+                    <div id="terms-container">
+                        <div class="alert alert-info" id="no-terms-message">
+                            <p>No terms loaded yet. Use the sidebar to load terms from various sources or add them manually.</p>
+                        </div>
+                        <div id="terms-list" style="display: none;">
+                            <!-- Terms will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ISA File Processing -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-file-earmark-text"></i> ISA File Processing</h2>
+                </div>
+                <div class="card-body">
+                    <form id="isaFileForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="isaFile" class="form-label">Upload an ISA-Tab file (zipped) or select local path</label>
+                            <input type="file" class="form-control" id="isaFile" name="file" accept=".txt,.zip,.json">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Process ISA File</button>
+                    </form>
+                    <div class="mt-3" id="isaFileStatus"></div>
+
+                    <div id="isaDataContainer" style="display: none;">
+                        <h3 class="h6 mt-4">ISA Node Types → Neo4j Labels</h3>
+                        <select class="form-select mb-3" id="nodeClassSelect">
+                            <option value="">Select a node class to inspect</option>
+                        </select>
+                        <div id="nodeClassInfo"></div>
+
+                        <h3 class="h6 mt-4">ISA Relationship Types → Neo4j Relationships</h3>
+                        <div id="relationshipsList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Neo4j Integration -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-diagram-3"></i> Neo4j Integration</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createSourceNodes" checked>
+                            <label class="form-check-label" for="createSourceNodes">Create Ontology Source Nodes</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="relationshipType" class="form-label">Relationship Type</label>
+                        <input type="text" class="form-control" id="relationshipType" value="HAS_TERM">
+                    </div>
+                    <button class="btn btn-primary" id="loadToNeo4jButton" disabled>Load Ontology Terms to Neo4j</button>
+                    <div class="mt-3" id="neo4jLoadStatus"></div>
+
+                    <div class="mt-4">
+                        <h3 class="h6">View the Data in Neo4j</h3>
+                        <pre class="bg-light p-3 mt-2"><code>MATCH (s:OntologySource)-[r:HAS_TERM]->(t:OntologyTerm)
+RETURN s, r, t LIMIT 25</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Standard ISA Terms -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-diagram-3"></i> Standard ISA Terms</h2>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary w-100" id="loadStandardTermsButton">Load Standard ISA Terms</button>
+                    <div class="mt-2" id="standardTermsStatus"></div>
+                </div>
+            </div>
+
+            <!-- cBioPortal Cancer Types -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-diagram-3"></i> cBioPortal Cancer Types</h2>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary w-100" id="loadCancerTypesButton">Load Cancer Types</button>
+                    <div class="mt-2" id="cancerTypesStatus"></div>
+                </div>
+            </div>
+
+            <!-- OncoTree Tumor Types -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-diagram-3"></i> OncoTree Tumor Types</h2>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary w-100" id="loadTumorTypesButton">Load Tumor Types</button>
+                    <div class="mt-2" id="tumorTypesStatus"></div>
+                </div>
+            </div>
+
+            <!-- cBioPortal Studies -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-journal-text"></i> cBioPortal Studies</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="studySelect" class="form-label">Select a study to explore</label>
+                        <select class="form-select" id="studySelect">
+                            <option value="">Loading studies...</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary w-100" id="loadStudyDataButton" disabled>Load Study Data</button>
+                    <div class="mt-2" id="studyDataStatus"></div>
+                </div>
+            </div>
+
+            <!-- Manual Term Addition -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-plus-circle"></i> Add Term Manually</h2>
+                </div>
+                <div class="card-body">
+                    <form id="addTermForm">
+                        <div class="mb-3">
+                            <label for="termName" class="form-label">Term Name</label>
+                            <input type="text" class="form-control" id="termName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="termURI" class="form-label">Term URI</label>
+                            <input type="text" class="form-control" id="termURI" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ontologySource" class="form-label">Ontology Source</label>
+                            <input type="text" class="form-control" id="ontologySource" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Term</button>
+                    </form>
+                    <div class="mt-2" id="addTermStatus"></div>
+                </div>
+            </div>
+
+            <!-- Clear Terms -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0"><i class="bi bi-trash"></i> Clear Terms</h2>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-danger w-100" id="clearTermsButton">Clear All Terms</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load studies when the page loads
+        loadStudies();
+        // Load terms when the page loads
+        loadTerms();
+
+        // Event listeners
+        document.getElementById('neo4jConnectionForm').addEventListener('submit', connectToNeo4j);
+        document.getElementById('loadStandardTermsButton').addEventListener('click', loadStandardTerms);
+        document.getElementById('loadCancerTypesButton').addEventListener('click', loadCancerTypes);
+        document.getElementById('loadTumorTypesButton').addEventListener('click', loadTumorTypes);
+        document.getElementById('loadStudyDataButton').addEventListener('click', loadStudyData);
+        document.getElementById('addTermForm').addEventListener('submit', addTerm);
+        document.getElementById('clearTermsButton').addEventListener('click', clearTerms);
+        document.getElementById('isaFileForm').addEventListener('submit', processIsaFile);
+        document.getElementById('loadToNeo4jButton').addEventListener('click', loadTermsToNeo4j);
+
+        // Check Neo4j connection status
+        checkNeo4jConnection();
+
+        // Functions
+        function checkNeo4jConnection() {
+            // In a real implementation, this would check the connection status
+            // For now, we'll just assume not connected
+            updateConnectionStatus(false);
+        }
+
+        function updateConnectionStatus(connected, labels = []) {
+            const connectionStatus = document.getElementById('connectionStatus');
+            const labelsContainer = document.getElementById('labelsContainer');
+            const labelsList = document.getElementById('labelsList');
+            const loadToNeo4jButton = document.getElementById('loadToNeo4jButton');
+
+            if (connected) {
+                connectionStatus.innerHTML = `
+                    <div class="alert alert-success">
+                        <p>✅ Connected to Neo4j</p>
+                    </div>
+                `;
+                
+                if (labels.length > 0) {
+                    labelsContainer.style.display = 'block';
+                    labelsList.innerHTML = `<p>Available Labels: ${labels.length}</p>`;
+                    
+                    // Show a sample of labels
+                    const sampleLabels = labels.slice(0, 10);
+                    let labelsHtml = '<ul class="list-group">';
+                    sampleLabels.forEach(label => {
+                        labelsHtml += `<li class="list-group-item">${label}</li>`;
+                    });
+                    if (labels.length > 10) {
+                        labelsHtml += `<li class="list-group-item">... and ${labels.length - 10} more</li>`;
+                    }
+                    labelsHtml += '</ul>';
+                    labelsList.innerHTML += labelsHtml;
+                } else {
+                    labelsContainer.style.display = 'none';
+                }
+                
+                loadToNeo4jButton.disabled = false;
+            } else {
+                connectionStatus.innerHTML = `
+                    <div class="alert alert-warning">
+                        <p>❌ Not connected to Neo4j. Some features will be disabled.</p>
+                    </div>
+                `;
+                labelsContainer.style.display = 'none';
+                loadToNeo4jButton.disabled = true;
+            }
+        }
+
+        function connectToNeo4j(event) {
+            event.preventDefault();
+            
+            const uri = document.getElementById('uri').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const database = document.getElementById('database').value;
+            const conn_name = document.getElementById('conn_name').value;
+            
+            if (!uri || !username || !password || !database) {
+                alert('URI, username, password, and database are required');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('uri', uri);
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('database', database);
+            if (conn_name) {
+                formData.append('conn_name', conn_name);
+            }
+            
+            fetch('/api/isa/connect', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateConnectionStatus(true, data.labels || []);
+                } else {
+                    alert(`Failed to connect to Neo4j: ${data.error}`);
+                    updateConnectionStatus(false);
+                }
+            })
+            .catch(error => {
+                console.error('Error connecting to Neo4j:', error);
+                alert('Error connecting to Neo4j');
+                updateConnectionStatus(false);
+            });
+        }
+
+        function loadTerms() {
+            fetch('/api/isa/terms')
+                .then(response => response.json())
+                .then(data => {
+                    updateTermsDisplay(data.terms);
+                })
+                .catch(error => {
+                    console.error('Error loading terms:', error);
+                });
+        }
+
+        function updateTermsDisplay(terms) {
+            const termsContainer = document.getElementById('terms-container');
+            const noTermsMessage = document.getElementById('no-terms-message');
+            const termsList = document.getElementById('terms-list');
+
+            if (terms.length === 0) {
+                noTermsMessage.style.display = 'block';
+                termsList.style.display = 'none';
+            } else {
+                noTermsMessage.style.display = 'none';
+                termsList.style.display = 'block';
+
+                // Group terms by source
+                const termsBySource = {};
+                terms.forEach(term => {
+                    const source = term.term_source;
+                    if (!termsBySource[source]) {
+                        termsBySource[source] = [];
+                    }
+                    termsBySource[source].push(term);
+                });
+
+                // Display terms grouped by source
+                let html = '';
+                for (const source in termsBySource) {
+                    html += `<h3 class="h6 mt-3">${source} (${termsBySource[source].length})</h3>`;
+                    html += '<ul class="list-group">';
+                    termsBySource[source].forEach((term, index) => {
+                        html += `<li class="list-group-item">${index + 1}. <strong>${term.term}</strong> → <code>${term.term_accession}</code></li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                termsList.innerHTML = html;
+            }
+        }
+
+        function loadStandardTerms() {
+            const statusElement = document.getElementById('standardTermsStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...';
+
+            fetch('/api/isa/standard-terms')
+                .then(response => response.json())
+                .then(terms => {
+                    // Add terms to the existing terms
+                    const formData = new FormData();
+                    terms.forEach(term => {
+                        formData.append('term_name', term.term);
+                        formData.append('term_uri', term.term_accession);
+                        formData.append('ontology_source', term.term_source);
+                        
+                        fetch('/api/isa/add-term', {
+                            method: 'POST',
+                            body: formData
+                        });
+                    });
+                    
+                    statusElement.innerHTML = `<div class="alert alert-success">Added ${terms.length} standard ISA terms.</div>`;
+                    loadTerms();
+                })
+                .catch(error => {
+                    console.error('Error loading standard terms:', error);
+                    statusElement.innerHTML = '<div class="alert alert-danger">Error loading standard terms</div>';
+                });
+        }
+
+        function loadStudies() {
+            fetch('/api/isa/studies')
+                .then(response => response.json())
+                .then(studies => {
+                    const studySelect = document.getElementById('studySelect');
+                    studySelect.innerHTML = '';
+
+                    if (studies.length === 0) {
+                        studySelect.innerHTML = '<option value="">No studies available</option>';
+                        document.getElementById('loadStudyDataButton').disabled = true;
+                    } else {
+                        studies.forEach(study => {
+                            const option = document.createElement('option');
+                            option.value = study.studyId;
+                            option.textContent = study.name;
+                            studySelect.appendChild(option);
+                        });
+                        document.getElementById('loadStudyDataButton').disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading studies:', error);
+                    document.getElementById('studySelect').innerHTML = '<option value="">Error loading studies</option>';
+                    document.getElementById('loadStudyDataButton').disabled = true;
+                });
+        }
+
+        function loadCancerTypes() {
+            const statusElement = document.getElementById('cancerTypesStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...';
+
+            fetch('/api/isa/add-cancer-types', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error loading cancer types:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error loading cancer types</div>';
+            });
+        }
+
+        function loadTumorTypes() {
+            const statusElement = document.getElementById('tumorTypesStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...';
+
+            fetch('/api/isa/add-tumor-types', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error loading tumor types:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error loading tumor types</div>';
+            });
+        }
+
+        function loadStudyData() {
+            const studyId = document.getElementById('studySelect').value;
+            if (!studyId) {
+                return;
+            }
+
+            const statusElement = document.getElementById('studyDataStatus');
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...';
+
+            const formData = new FormData();
+            formData.append('study_id', studyId);
+
+            fetch('/api/isa/add-study-data', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error loading study data:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error loading study data</div>';
+            });
+        }
+
+        function addTerm(event) {
+            event.preventDefault();
+
+            const termName = document.getElementById('termName').value;
+            const termURI = document.getElementById('termURI').value;
+            const ontologySource = document.getElementById('ontologySource').value;
+            const statusElement = document.getElementById('addTermStatus');
+
+            if (!termName || !termURI || !ontologySource) {
+                statusElement.innerHTML = '<div class="alert alert-danger">All fields are required</div>';
+                return;
+            }
+
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Adding...';
+
+            const formData = new FormData();
+            formData.append('term_name', termName);
+            formData.append('term_uri', termURI);
+            formData.append('ontology_source', ontologySource);
+
+            fetch('/api/isa/add-term', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    document.getElementById('termName').value = '';
+                    document.getElementById('termURI').value = '';
+                    document.getElementById('ontologySource').value = '';
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error adding term:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error adding term</div>';
+            });
+        }
+
+        function clearTerms() {
+            if (!confirm('Are you sure you want to clear all terms?')) {
+                return;
+            }
+
+            fetch('/api/isa/clear-terms', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert('Error clearing terms');
+                }
+                loadTerms();
+            })
+            .catch(error => {
+                console.error('Error clearing terms:', error);
+                alert('Error clearing terms');
+            });
+        }
+
+        function processIsaFile(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('isaFile');
+            const statusElement = document.getElementById('isaFileStatus');
+            const isaDataContainer = document.getElementById('isaDataContainer');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                statusElement.innerHTML = '<div class="alert alert-danger">Please select a file</div>';
+                return;
+            }
+
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Processing...';
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/api/isa/process-file', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    
+                    // Update node classes select
+                    const nodeClassSelect = document.getElementById('nodeClassSelect');
+                    nodeClassSelect.innerHTML = '<option value="">Select a node class to inspect</option>';
+                    data.node_classes.forEach(nodeClass => {
+                        const option = document.createElement('option');
+                        option.value = nodeClass;
+                        option.textContent = nodeClass;
+                        nodeClassSelect.appendChild(option);
+                    });
+                    
+                    // Update relationships list
+                    const relationshipsList = document.getElementById('relationshipsList');
+                    if (data.relationships && data.relationships.length > 0) {
+                        let html = '<ul class="list-group">';
+                        data.relationships.forEach(rel => {
+                            html += `<li class="list-group-item">${rel.source} → ${rel.target} (${rel.type})</li>`;
+                        });
+                        html += '</ul>';
+                        relationshipsList.innerHTML = html;
+                    } else {
+                        relationshipsList.innerHTML = '<p>No relationships found</p>';
+                    }
+                    
+                    isaDataContainer.style.display = 'block';
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                    isaDataContainer.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error processing ISA file:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error processing ISA file</div>';
+                isaDataContainer.style.display = 'none';
+            });
+        }
+
+        function loadTermsToNeo4j() {
+            const createSourceNodes = document.getElementById('createSourceNodes').checked;
+            const relationshipType = document.getElementById('relationshipType').value;
+            const statusElement = document.getElementById('neo4jLoadStatus');
+
+            statusElement.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading terms to Neo4j...';
+
+            const formData = new FormData();
+            formData.append('create_source_nodes', createSourceNodes);
+            formData.append('relationship_type', relationshipType);
+
+            fetch('/api/isa/load-to-neo4j', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    
+                    // Update the Cypher query with the actual relationship type
+                    const cypher = document.querySelector('pre code');
+                    cypher.textContent = `MATCH (s:OntologySource)-[r:${relationshipType}]->(t:OntologyTerm)
+RETURN s, r, t LIMIT 25`;
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading terms to Neo4j:', error);
+                statusElement.innerHTML = '<div class="alert alert-danger">Error loading terms to Neo4j</div>';
+            });
+        }
+
+        // Node class select event listener
+        document.getElementById('nodeClassSelect').addEventListener('change', function() {
+            const selectedClass = this.value;
+            const nodeClassInfo = document.getElementById('nodeClassInfo');
+            
+            if (!selectedClass) {
+                nodeClassInfo.innerHTML = '';
+                return;
+            }
+            
+            // In a real implementation, this would fetch properties for the selected class
+            // For now, we'll just show a placeholder
+            nodeClassInfo.innerHTML = `<p>Neo4j Label: <code>${selectedClass}</code></p>
+                <h4 class="h6 mt-3">Example Properties</h4>
+                <ul class="list-group">
+                    <li class="list-group-item">title: "Example Title"</li>
+                    <li class="list-group-item">description: "Example Description"</li>
+                    <li class="list-group-item">identifier: "Example Identifier"</li>
+                </ul>`;
+        });
+    });
+</script>
+{% endblock %}

@@ -31,7 +31,7 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ About page with project information
   - ✓ cBioPortal browser for ontology term management
   - ✓ Dropbox integration (browser and connection management)
-  - ISA browser
+  - ✓ ISA browser
   - Map visualization
   - Microsoft Graph integration
   - Ontology browser

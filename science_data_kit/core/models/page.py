@@ -105,3 +105,16 @@ class DropboxBrowserPageData(PageData):
     sort_by: str = "name"
     sort_order: str = "ascending"
     filter_pattern: Optional[str] = None
+
+@dataclass
+class IsaBrowserPageData(PageData):
+    """ISA browser page specific data"""
+    terms: List[Dict[str, Any]] = field(default_factory=list)
+    existing_term_accessions: Set[str] = field(default_factory=set)
+    available_labels: List[str] = field(default_factory=list)
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    account_info: Optional[Dict[str, Any]] = None
+    node_classes: List[str] = field(default_factory=list)
+    properties: List[Dict[str, Any]] = field(default_factory=list)
+    relationships: List[Dict[str, Any]] = field(default_factory=list)

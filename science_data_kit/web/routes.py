@@ -16,6 +16,7 @@ from science_data_kit.core.pages.plugin_connect import PluginConnectPage
 from science_data_kit.core.pages.cbioportal_browser import CbioportalBrowserPage
 from science_data_kit.core.pages.dropbox_connect import DropboxConnectPage
 from science_data_kit.core.pages.dropbox_browser import DropboxBrowserPage
+from science_data_kit.core.pages.isa_browser import IsaBrowserPage
 from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
@@ -1193,3 +1194,199 @@ def get_terms():
         'terms': page.terms,
         'existing_term_accessions': list(page.existing_term_accessions)
     })
+
+@main_bp.route('/isa-browser')
+@login_required
+def isa_browser():
+    """ISA browser page for browsing and managing ISA data and ontology terms."""
+    page = IsaBrowserPage()
+    return render_page_html(page, 'isa_browser.html')
+
+@main_bp.route('/api/isa/connect', methods=['POST'])
+@login_required
+def connect_to_neo4j():
+    """Connect to a Neo4j database."""
+    uri = request.form.get('uri')
+    username = request.form.get('username')
+    password = request.form.get('password')
+    database = request.form.get('database')
+    conn_name = request.form.get('conn_name')
+
+    if not uri or not username or not password or not database:
+        return jsonify({'success': False, 'error': 'URI, username, password, and database are required'}), 400
+
+    page = IsaBrowserPage()
+    result = page.connect_to_database(uri, username, password, database, conn_name)
+
+    if result.get('success'):
+        # Store connection in session
+        session['neo4j_connection'] = page.neo4j_connection
+        session['neo4j_connected'] = True
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to connect to Neo4j')}), 400
+
+@main_bp.route('/api/isa/disconnect', methods=['POST'])
+@login_required
+def disconnect_from_neo4j():
+    """Disconnect from a Neo4j database."""
+    page = IsaBrowserPage()
+
+    # Restore connection from session if available
+    if 'neo4j_connection' in session:
+        page.neo4j_connection = session['neo4j_connection']
+
+    result = page.disconnect_from_database()
+
+    # Remove connection from session
+    if 'neo4j_connection' in session:
+        del session['neo4j_connection']
+    session['neo4j_connected'] = False
+
+    if result.get('success'):
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to disconnect from Neo4j')}), 400
+
+@main_bp.route('/api/isa/standard-terms', methods=['GET'])
+@login_required
+def get_standard_isa_terms():
+    """Get standard ISA terms."""
+    page = IsaBrowserPage()
+    terms = page._get_standard_isa_terms()
+
+    # Convert terms to dictionaries for JSON serialization
+    terms_data = []
+    for term in terms:
+        source_name = term.term_source.name if hasattr(term.term_source, 'name') else str(term.term_source)
+        terms_data.append({
+            "term": term.term,
+            "term_accession": term.term_accession,
+            "term_source": source_name
+        })
+
+    return jsonify(terms_data)
+
+@main_bp.route('/api/isa/cancer-types', methods=['GET'])
+@login_required
+def get_isa_cancer_types():
+    """Get cancer types from cBioPortal API."""
+    page = IsaBrowserPage()
+    return jsonify(page._get_cancer_types())
+
+@main_bp.route('/api/isa/tumor-types', methods=['GET'])
+@login_required
+def get_isa_tumor_types():
+    """Get tumor types from OncoTree API."""
+    page = IsaBrowserPage()
+    return jsonify(page._get_oncotree_tumor_types())
+
+@main_bp.route('/api/isa/studies', methods=['GET'])
+@login_required
+def get_isa_studies():
+    """Get studies from cBioPortal API."""
+    page = IsaBrowserPage()
+    return jsonify(page._get_cbioportal_studies())
+
+@main_bp.route('/api/isa/study/<study_id>', methods=['GET'])
+@login_required
+def get_isa_study_data(study_id):
+    """Get study data from cBioPortal API."""
+    page = IsaBrowserPage()
+    return jsonify(page._load_cbioportal_study_data(study_id))
+
+@main_bp.route('/api/isa/add-cancer-types', methods=['POST'])
+@login_required
+def add_isa_cancer_types():
+    """Add cancer types to terms."""
+    page = IsaBrowserPage()
+    return jsonify(page.add_cancer_types_to_terms())
+
+@main_bp.route('/api/isa/add-tumor-types', methods=['POST'])
+@login_required
+def add_isa_tumor_types():
+    """Add tumor types to terms."""
+    page = IsaBrowserPage()
+    return jsonify(page.add_tumor_types_to_terms())
+
+@main_bp.route('/api/isa/add-study-data', methods=['POST'])
+@login_required
+def add_isa_study_data():
+    """Add study data to terms."""
+    study_id = request.form.get('study_id')
+    if not study_id:
+        return jsonify({'success': False, 'message': 'Study ID is required'}), 400
+
+    page = IsaBrowserPage()
+    return jsonify(page.add_study_data_to_terms(study_id))
+
+@main_bp.route('/api/isa/add-term', methods=['POST'])
+@login_required
+def add_isa_term():
+    """Add a term manually."""
+    term_name = request.form.get('term_name')
+    term_uri = request.form.get('term_uri')
+    ontology_source = request.form.get('ontology_source')
+
+    if not term_name or not term_uri or not ontology_source:
+        return jsonify({'success': False, 'message': 'Term name, URI, and ontology source are required'}), 400
+
+    page = IsaBrowserPage()
+    return jsonify(page.add_term_manually(term_name, term_uri, ontology_source))
+
+@main_bp.route('/api/isa/clear-terms', methods=['POST'])
+@login_required
+def clear_isa_terms():
+    """Clear all terms."""
+    page = IsaBrowserPage()
+    return jsonify(page.clear_terms())
+
+@main_bp.route('/api/isa/terms', methods=['GET'])
+@login_required
+def get_isa_terms():
+    """Get all terms."""
+    page = IsaBrowserPage()
+
+    # Convert terms to dictionaries for JSON serialization
+    terms_data = []
+    for term in page.terms:
+        source_name = term.term_source.name if hasattr(term.term_source, 'name') else str(term.term_source)
+        terms_data.append({
+            "term": term.term,
+            "term_accession": term.term_accession,
+            "term_source": source_name
+        })
+
+    return jsonify({
+        'terms': terms_data,
+        'existing_term_accessions': list(page.existing_term_accessions)
+    })
+
+@main_bp.route('/api/isa/process-file', methods=['POST'])
+@login_required
+def process_isa_file():
+    """Process an ISA file."""
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No selected file'}), 400
+
+    page = IsaBrowserPage()
+    return jsonify(page.process_isa_file(file))
+
+@main_bp.route('/api/isa/load-to-neo4j', methods=['POST'])
+@login_required
+def load_isa_terms_to_neo4j():
+    """Load ontology terms to Neo4j."""
+    create_source_nodes = request.form.get('create_source_nodes', 'true').lower() == 'true'
+    relationship_type = request.form.get('relationship_type', 'HAS_TERM')
+
+    page = IsaBrowserPage()
+
+    # Restore connection from session if available
+    if 'neo4j_connection' in session:
+        page.neo4j_connection = session['neo4j_connection']
+
+    return jsonify(page.load_ontology_terms_to_neo4j(create_source_nodes, relationship_type))
