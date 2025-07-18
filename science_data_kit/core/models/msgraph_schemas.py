@@ -16,20 +16,20 @@ from science_data_kit.core.models.entity_schemas import BaseEntity, validate_ent
 class MicrosoftGraphEntity(BaseEntity):
     """
     Base class for Microsoft Graph API entities.
-    
+
     Attributes:
         graph_id: The unique identifier for the entity in Microsoft Graph.
         resource_type: The type of resource in Microsoft Graph.
     """
-    graph_id: str
-    resource_type: str
+    graph_id: str = ""  # Add default value
+    resource_type: str = ""  # Add default value
 
 
 @dataclass
 class User(MicrosoftGraphEntity):
     """
     Schema for a Microsoft Graph user.
-    
+
     Attributes:
         display_name: The display name of the user.
         email: The email address of the user.
@@ -54,7 +54,7 @@ class User(MicrosoftGraphEntity):
 class Group(MicrosoftGraphEntity):
     """
     Schema for a Microsoft Graph group.
-    
+
     Attributes:
         display_name: The display name of the group.
         description: The description of the group.
@@ -77,7 +77,7 @@ class Group(MicrosoftGraphEntity):
 class Message(MicrosoftGraphEntity):
     """
     Schema for a Microsoft Graph message.
-    
+
     Attributes:
         subject: The subject of the message.
         body: The body of the message.
@@ -102,7 +102,7 @@ class Message(MicrosoftGraphEntity):
 class Event(MicrosoftGraphEntity):
     """
     Schema for a Microsoft Graph calendar event.
-    
+
     Attributes:
         subject: The subject of the event.
         body: The body of the event.
@@ -127,7 +127,7 @@ class Event(MicrosoftGraphEntity):
 class DriveItem(MicrosoftGraphEntity):
     """
     Schema for a Microsoft Graph drive item (file or folder).
-    
+
     Attributes:
         name: The name of the drive item.
         size: The size of the drive item in bytes.
@@ -151,11 +151,11 @@ class DriveItem(MicrosoftGraphEntity):
 def validate_msgraph_entity(entity: Any, schema_class: type) -> List[str]:
     """
     Validates a Microsoft Graph entity against a schema class.
-    
+
     Args:
         entity: The entity to validate.
         schema_class: The schema class to validate against.
-        
+
     Returns:
         A list of validation errors, or an empty list if validation passes.
     """
@@ -165,10 +165,10 @@ def validate_msgraph_entity(entity: Any, schema_class: type) -> List[str]:
 def convert_msgraph_user(user_data: Dict[str, Any]) -> User:
     """
     Convert Microsoft Graph user data to a User entity.
-    
+
     Args:
         user_data: The user data from Microsoft Graph API.
-        
+
     Returns:
         A User entity.
     """
@@ -193,10 +193,10 @@ def convert_msgraph_user(user_data: Dict[str, Any]) -> User:
 def convert_msgraph_group(group_data: Dict[str, Any]) -> Group:
     """
     Convert Microsoft Graph group data to a Group entity.
-    
+
     Args:
         group_data: The group data from Microsoft Graph API.
-        
+
     Returns:
         A Group entity.
     """
@@ -220,10 +220,10 @@ def convert_msgraph_group(group_data: Dict[str, Any]) -> Group:
 def convert_msgraph_message(message_data: Dict[str, Any]) -> Message:
     """
     Convert Microsoft Graph message data to a Message entity.
-    
+
     Args:
         message_data: The message data from Microsoft Graph API.
-        
+
     Returns:
         A Message entity.
     """
@@ -231,22 +231,22 @@ def convert_msgraph_message(message_data: Dict[str, Any]) -> Message:
     from_email = ""
     if 'from' in message_data and 'emailAddress' in message_data['from']:
         from_email = message_data['from']['emailAddress'].get('address', '')
-    
+
     # Extract recipient emails
     to_recipients = []
     if 'toRecipients' in message_data:
         to_recipients = [r['emailAddress'].get('address', '') for r in message_data['toRecipients'] if 'emailAddress' in r]
-    
+
     # Extract CC recipient emails
     cc_recipients = []
     if 'ccRecipients' in message_data:
         cc_recipients = [r['emailAddress'].get('address', '') for r in message_data['ccRecipients'] if 'emailAddress' in r]
-    
+
     # Extract BCC recipient emails
     bcc_recipients = []
     if 'bccRecipients' in message_data:
         bcc_recipients = [r['emailAddress'].get('address', '') for r in message_data['bccRecipients'] if 'emailAddress' in r]
-    
+
     # Extract received datetime
     received_datetime = datetime.now()
     if 'receivedDateTime' in message_data:
@@ -254,7 +254,7 @@ def convert_msgraph_message(message_data: Dict[str, Any]) -> Message:
             received_datetime = datetime.fromisoformat(message_data['receivedDateTime'].replace('Z', '+00:00'))
         except (ValueError, TypeError):
             pass
-    
+
     return Message(
         id=message_data.get('id', ''),
         graph_id=message_data.get('id', ''),
