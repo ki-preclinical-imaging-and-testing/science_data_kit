@@ -40,9 +40,9 @@ class User(MicrosoftGraphEntity):
         business_phones: The business phone numbers of the user.
         mobile_phone: The mobile phone number of the user.
     """
-    display_name: str
-    email: str
-    user_principal_name: str
+    display_name: str = ""
+    email: str = ""
+    user_principal_name: str = ""
     department: str = ""
     job_title: str = ""
     office_location: str = ""
@@ -64,7 +64,7 @@ class Group(MicrosoftGraphEntity):
         mail_enabled: Whether the group is mail-enabled.
         members: The members of the group.
     """
-    display_name: str
+    display_name: str = ""
     description: str = ""
     mail: str = ""
     group_types: List[str] = field(default_factory=list)
@@ -88,10 +88,10 @@ class Message(MicrosoftGraphEntity):
         received_datetime: The date and time the message was received.
         has_attachments: Whether the message has attachments.
     """
-    subject: str
-    body: str
-    from_email: str
-    to_recipients: List[str]
+    subject: str = ""
+    body: str = ""
+    from_email: str = ""
+    to_recipients: List[str] = field(default_factory=list)
     cc_recipients: List[str] = field(default_factory=list)
     bcc_recipients: List[str] = field(default_factory=list)
     received_datetime: datetime = field(default_factory=datetime.now)
@@ -113,10 +113,10 @@ class Event(MicrosoftGraphEntity):
         attendees: The attendees of the event.
         is_all_day: Whether the event is an all-day event.
     """
-    subject: str
-    body: str
-    start_datetime: datetime
-    end_datetime: datetime
+    subject: str = ""
+    body: str = ""
+    start_datetime: datetime = field(default_factory=datetime.now)
+    end_datetime: datetime = field(default_factory=datetime.now)
     location: str = ""
     organizer: str = ""
     attendees: List[str] = field(default_factory=list)
@@ -138,11 +138,11 @@ class DriveItem(MicrosoftGraphEntity):
         folder_child_count: The number of children in the folder.
         parent_reference: The parent folder of the drive item.
     """
-    name: str
-    size: int
-    web_url: str
-    created_by: str
-    last_modified_by: str
+    name: str = ""
+    size: int = 0
+    web_url: str = ""
+    created_by: str = ""
+    last_modified_by: str = ""
     file_type: str = ""
     folder_child_count: int = 0
     parent_reference: str = ""
