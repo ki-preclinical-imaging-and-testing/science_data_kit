@@ -17,6 +17,9 @@ from science_data_kit.core.pages.cbioportal_browser import CbioportalBrowserPage
 from science_data_kit.core.pages.dropbox_connect import DropboxConnectPage
 from science_data_kit.core.pages.dropbox_browser import DropboxBrowserPage
 from science_data_kit.core.pages.isa_browser import IsaBrowserPage
+from science_data_kit.core.pages.map import MapPage
+from science_data_kit.core.pages.msgraph_connect import MSGraphConnectPage
+from science_data_kit.core.pages.msgraph_explore import MSGraphExplorePage
 from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
@@ -1390,3 +1393,436 @@ def load_isa_terms_to_neo4j():
         page.neo4j_connection = session['neo4j_connection']
 
     return jsonify(page.load_ontology_terms_to_neo4j(create_source_nodes, relationship_type))
+
+# Map Visualization Routes
+
+@main_bp.route('/map')
+@login_required
+def map():
+    """Render the Map visualization page."""
+    page = MapPage()
+    return render_page_html(page, 'map.html')
+
+@main_bp.route('/api/map/connect-to-database', methods=['POST'])
+@login_required
+def connect_to_map_database():
+    """Connect to a Neo4j database for map visualization."""
+    try:
+        page = MapPage()
+
+        # Get form data
+        uri = request.json.get('uri')
+        username = request.json.get('username')
+        password = request.json.get('password')
+        database = request.json.get('database')
+        conn_name = request.json.get('conn_name')
+
+        # Connect to the database
+        result = page.connect_to_database(uri, username, password, database, conn_name)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/disconnect-from-database', methods=['POST'])
+@login_required
+def disconnect_from_map_database():
+    """Disconnect from the Neo4j database for map visualization."""
+    try:
+        page = MapPage()
+
+        # Disconnect from the database
+        result = page.disconnect_from_database()
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/load-entities-from-file', methods=['POST'])
+@login_required
+def load_entities_from_file():
+    """Load entities from a file for map visualization."""
+    try:
+        page = MapPage()
+
+        # Get the uploaded file
+        file = request.files.get('file')
+        if not file:
+            return jsonify({"success": False, "message": "No file provided"})
+
+        # Get form data
+        file_type = request.form.get('file_type')
+        sheet_name = request.form.get('sheet_name')
+
+        # Load entities from the file
+        result = page.load_entities_from_file(file.read(), file.filename, file_type, sheet_name)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/load-entities-from-database', methods=['POST'])
+@login_required
+def load_entities_from_database():
+    """Load entities from the Neo4j database for map visualization."""
+    try:
+        page = MapPage()
+
+        # Get form data
+        label = request.json.get('label')
+
+        # Load entities from the database
+        result = page.load_entities_from_database(label)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/create-entity-structure', methods=['POST'])
+@login_required
+def create_entity_structure():
+    """Create a structure for entities in map visualization."""
+    try:
+        page = MapPage()
+
+        # Get form data
+        entity_data = request.json.get('entity_data')
+
+        # Create entity structure
+        result = page.create_entity_structure(entity_data)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/push-entities-to-neo4j', methods=['POST'])
+@login_required
+def push_entities_to_neo4j():
+    """Push entities to the Neo4j database for map visualization."""
+    try:
+        page = MapPage()
+
+        # Get form data
+        entity_data = request.json.get('entity_data')
+        label = request.json.get('label')
+        structure = request.json.get('structure')
+
+        # Push entities to Neo4j
+        result = page.push_entities_to_neo4j(entity_data, label, structure)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/create-relationships', methods=['POST'])
+@login_required
+def create_map_relationships():
+    """Create relationships between entities in the Neo4j database for map visualization."""
+    try:
+        page = MapPage()
+
+        # Get form data
+        source_label = request.json.get('source_label')
+        target_label = request.json.get('target_label')
+        relationship_type = request.json.get('relationship_type')
+        source_property = request.json.get('source_property')
+        target_property = request.json.get('target_property')
+
+        # Create relationships
+        result = page.create_relationships(source_label, target_label, relationship_type, source_property, target_property)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/load-ontology', methods=['POST'])
+@login_required
+def load_map_ontology():
+    """Load ontology data for map visualization."""
+    try:
+        page = MapPage()
+
+        # Get the uploaded file
+        file = request.files.get('file')
+        if not file:
+            return jsonify({"success": False, "message": "No file provided"})
+
+        # Load ontology data
+        result = page.load_ontology(file.read())
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/push-ontology-to-neo4j', methods=['POST'])
+@login_required
+def push_map_ontology_to_neo4j():
+    """Push ontology data to the Neo4j database for map visualization."""
+    try:
+        page = MapPage()
+
+        # Get form data
+        ontology_data = request.json.get('ontology_data')
+
+        # Push ontology data to Neo4j
+        result = page.push_ontology_to_neo4j(ontology_data)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/create-taxonomy', methods=['POST'])
+@login_required
+def create_map_taxonomy():
+    """Create a taxonomy from entity data for map visualization."""
+    try:
+        page = MapPage()
+
+        # Get form data
+        entity_data = request.json.get('entity_data')
+        taxonomy_keys = request.json.get('taxonomy_keys')
+
+        # Create taxonomy
+        result = page.create_taxonomy(entity_data, taxonomy_keys)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/map/filter-entity-data', methods=['POST'])
+@login_required
+def filter_map_entity_data():
+    """Filter entity data for map visualization."""
+    try:
+        page = MapPage()
+
+        # Get form data
+        entity_data = request.json.get('entity_data')
+        filter_column = request.json.get('filter_column')
+        filter_operation = request.json.get('filter_operation')
+        filter_value = request.json.get('filter_value')
+
+        # Filter entity data
+        result = page.filter_entity_data(entity_data, filter_column, filter_operation, filter_value)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+# Microsoft Graph Connection Routes
+
+@main_bp.route('/msgraph-connect')
+@login_required
+def msgraph_connect():
+    """Render the Microsoft Graph connection page."""
+    page = MSGraphConnectPage()
+    return render_page_html(page, 'msgraph_connect.html')
+
+@main_bp.route('/api/msgraph/connect', methods=['POST'])
+@login_required
+def connect_to_msgraph():
+    """Connect to Microsoft Graph API."""
+    try:
+        page = MSGraphConnectPage()
+
+        # Get form data
+        tenant_id = request.json.get('tenant_id')
+        client_id = request.json.get('client_id')
+        client_secret = request.json.get('client_secret')
+        auth_method = request.json.get('auth_method', 'device_code')
+        config_file = request.json.get('config_file')
+
+        # Connect to Microsoft Graph API
+        result = page.connect(tenant_id, client_id, client_secret, auth_method, config_file)
+
+        # Store connection manager in session if connection was successful
+        if result.get('success', False):
+            session['msgraph_connection_manager'] = page.connection_manager
+            session['msgraph_adapter'] = page.adapter
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/msgraph/disconnect', methods=['POST'])
+@login_required
+def disconnect_from_msgraph():
+    """Disconnect from Microsoft Graph API."""
+    try:
+        page = MSGraphConnectPage()
+
+        # Disconnect from Microsoft Graph API
+        result = page.disconnect()
+
+        # Remove connection manager from session
+        if 'msgraph_connection_manager' in session:
+            del session['msgraph_connection_manager']
+        if 'msgraph_adapter' in session:
+            del session['msgraph_adapter']
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/msgraph/status', methods=['GET'])
+@login_required
+def get_msgraph_status():
+    """Get Microsoft Graph connection status."""
+    try:
+        page = MSGraphConnectPage()
+
+        # Restore connection manager from session if available
+        if 'msgraph_connection_manager' in session:
+            page.connection_manager = session['msgraph_connection_manager']
+        if 'msgraph_adapter' in session:
+            page.adapter = session['msgraph_adapter']
+
+        # Get connection status
+        result = page.get_connection_status()
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/msgraph/load-config', methods=['POST'])
+@login_required
+def load_msgraph_config():
+    """Load Microsoft Graph configuration from a file."""
+    try:
+        page = MSGraphConnectPage()
+
+        # Get form data
+        config_file = request.json.get('config_file')
+
+        # Load configuration from file
+        result = page.load_config_from_file(config_file)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/api/msgraph/save-config', methods=['POST'])
+@login_required
+def save_msgraph_config():
+    """Save Microsoft Graph configuration to a file."""
+    try:
+        page = MSGraphConnectPage()
+
+        # Get form data
+        config_file = request.json.get('config_file')
+
+        # Restore connection manager from session if available
+        if 'msgraph_connection_manager' in session:
+            page.connection_manager = session['msgraph_connection_manager']
+        if 'msgraph_adapter' in session:
+            page.adapter = session['msgraph_adapter']
+
+        # Save configuration to file
+        result = page.save_config_to_file(config_file)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
+@main_bp.route('/msgraph_explore')
+@login_required
+def msgraph_explore():
+    """
+    Render the Microsoft Graph API explorer page.
+    """
+    return render_page_html(MSGraphExplorePage())
+
+@main_bp.route('/api/msgraph/execute-query', methods=['POST'])
+@login_required
+def execute_msgraph_query():
+    """
+    Execute a query against Microsoft Graph API.
+    """
+    try:
+        # Get data from request
+        data = request.get_json()
+        resource_path = data.get('resource_path')
+        query_parameters = data.get('query_parameters', {})
+
+        # Get page from session
+        if 'msgraph_explore_page' in session:
+            page = session['msgraph_explore_page']
+        else:
+            page = MSGraphExplorePage()
+            session['msgraph_explore_page'] = page
+
+        # Get connection manager from session
+        if 'msgraph_connection_manager' in session:
+            connection_manager = session['msgraph_connection_manager']
+            # Check connection
+            if page.check_connection(connection_manager):
+                # Execute query
+                result = page.execute_query(resource_path, query_parameters)
+                return jsonify(result)
+
+        return jsonify({
+            "success": False,
+            "message": "Not connected to Microsoft Graph API"
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Error executing query: {str(e)}"
+        })
+
+@main_bp.route('/api/msgraph/export-data', methods=['POST'])
+@login_required
+def export_msgraph_data():
+    """
+    Export Microsoft Graph API data to a file.
+    """
+    try:
+        # Get data from request
+        data = request.get_json()
+        format = data.get('format', 'csv')
+
+        # Get page from session
+        if 'msgraph_explore_page' in session:
+            page = session['msgraph_explore_page']
+        else:
+            return jsonify({
+                "success": False,
+                "message": "No data to export"
+            })
+
+        # Export data
+        result = page.export_data(format)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Error exporting data: {str(e)}"
+        })
+
+@main_bp.route('/api/msgraph/sample-queries', methods=['GET'])
+@login_required
+def get_msgraph_sample_queries():
+    """
+    Get sample queries for Microsoft Graph API.
+    """
+    try:
+        # Get page from session
+        if 'msgraph_explore_page' in session:
+            page = session['msgraph_explore_page']
+        else:
+            page = MSGraphExplorePage()
+            session['msgraph_explore_page'] = page
+
+        # Get sample queries
+        sample_queries = page.get_page_data().sample_queries
+
+        return jsonify({
+            "success": True,
+            "sample_queries": sample_queries
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Error getting sample queries: {str(e)}"
+        })

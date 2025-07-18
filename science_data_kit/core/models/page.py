@@ -118,3 +118,44 @@ class IsaBrowserPageData(PageData):
     node_classes: List[str] = field(default_factory=list)
     properties: List[Dict[str, Any]] = field(default_factory=list)
     relationships: List[Dict[str, Any]] = field(default_factory=list)
+
+@dataclass
+class MapPageData(PageData):
+    """Map visualization page specific data"""
+    entities: List[Dict[str, Any]] = field(default_factory=list)
+    relationships: List[Dict[str, Any]] = field(default_factory=list)
+    entity_labels: List[str] = field(default_factory=list)
+    entity_structures: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    taxonomy_keys: List[str] = field(default_factory=list)
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    node_classes: List[str] = field(default_factory=list)
+    properties: Dict[str, List[str]] = field(default_factory=dict)
+    relationship_types: List[str] = field(default_factory=list)
+    ontology_data: Optional[Dict[str, Any]] = None
+
+@dataclass
+class MSGraphConnectPageData(PageData):
+    """Microsoft Graph connection page specific data"""
+    tenant_id: Optional[str] = None
+    client_id: Optional[str] = None
+    client_secret: Optional[str] = None
+    auth_method: str = "device_code"
+    config_file: Optional[str] = None
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    user_info: Optional[Dict[str, Any]] = None
+    msgraph_available: bool = False
+
+@dataclass
+class MSGraphExplorePageData(PageData):
+    """Microsoft Graph exploration page specific data"""
+    resource_path: Optional[str] = None
+    query_parameters: Dict[str, str] = field(default_factory=dict)
+    response: Optional[Dict[str, Any]] = None
+    dataframe: Optional[Any] = None
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    sample_queries: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    visualization_data: Optional[Dict[str, Any]] = None
+    entity_type: str = "unknown"

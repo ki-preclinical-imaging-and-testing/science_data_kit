@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+
+{% block title %}Microsoft Graph API Explorer{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mt-4 mb-4">Microsoft Graph API Explorer</h1>
+
+    {% if not page_data.connection_status.get('msgraph', False) %}
+    <div class="alert alert-warning" role="alert">
+        Not connected to Microsoft Graph API. Please connect first.
+        <a href="{{ url_for('main.msgraph_connect') }}" class="btn btn-primary ml-3">Connect to Microsoft Graph API</a>
+    </div>
+    {% else %}
+    <ul class="nav nav-tabs" id="msgraphTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="query-builder-tab" data-bs-toggle="tab" data-bs-target="#query-builder" type="button" role="tab" aria-controls="query-builder" aria-selected="true">Query Builder</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="advanced-query-tab" data-bs-toggle="tab" data-bs-target="#advanced-query" type="button" role="tab" aria-controls="advanced-query" aria-selected="false">Advanced Query Builder</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results" type="button" role="tab" aria-controls="results" aria-selected="false">Results</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="visualization-tab" data-bs-toggle="tab" data-bs-target="#visualization" type="button" role="tab" aria-controls="visualization" aria-selected="false">Visualization</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="msgraphTabsContent">
+        <!-- Query Builder Tab -->
+        <div class="tab-pane fade show active" id="query-builder" role="tabpanel" aria-labelledby="query-builder-tab">
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h3 class="card-title">Query Builder</h3>
+                    
+                    <h4 class="mt-4">Sample Queries</h4>
+                    <div class="form-group">
+                        <select class="form-control" id="sample-query-select">
+                            <option value="">Select a sample query</option>
+                        </select>
+                    </div>
+                    
+                    <h4 class="mt-4">Resource Path</h4>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="resource-path" placeholder="e.g., /me, /users">
+                    </div>
+                    
+                    <h4 class="mt-4">Query Parameters</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="select-param">Select</label>
+                                <input type="text" class="form-control" id="select-param" placeholder="Comma-separated list of properties">
+                                <small class="form-text text-muted">Comma-separated list of properties to include in the response.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="filter-param">Filter</label>
+                                <input type="text" class="form-control" id="filter-param" placeholder="OData filter query">
+                                <small class="form-text text-muted">OData filter query.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="expand-param">Expand</label>
+                                <input type="text" class="form-control" id="expand-param" placeholder="Comma-separated list of relationships">
+                                <small class="form-text text-muted">Comma-separated list of relationships to expand.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="orderby-param">Order By</label>
+                                <input type="text" class="form-control" id="orderby-param" placeholder="Comma-separated list of properties">
+                                <small class="form-text text-muted">Comma-separated list of properties to sort by.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="top-param">Top</label>
+                                <input type="text" class="form-control" id="top-param" placeholder="Maximum number of items">
+                                <small class="form-text text-muted">Maximum number of items to return.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="skip-param">Skip</label>
+                                <input type="text" class="form-control" id="skip-param" placeholder="Number of items to skip">
+                                <small class="form-text text-muted">Number of items to skip.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button class="btn btn-primary" id="execute-query-btn">Execute Query</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advanced Query Builder Tab -->
+        <div class="tab-pane fade" id="advanced-query" role="tabpanel" aria-labelledby="advanced-query-tab">
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h3 class="card-title">Advanced Query Builder</h3>
+                    
+                    <h4 class="mt-4">Resource Path</h4>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="advanced-resource-path" placeholder="e.g., /me, /users">
+                    </div>
+                    
+                    <h4 class="mt-4">Query Parameters</h4>
+                    <div id="advanced-query-params">
+                        <div class="row param-row">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" class="form-control param-key" placeholder="Parameter name">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" class="form-control param-value" placeholder="Parameter value">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-danger remove-param-btn">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-secondary" id="add-param-btn">Add Parameter</button>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button class="btn btn-primary" id="execute-advanced-query-btn">Execute Query</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Tab -->
+        <div class="tab-pane fade" id="results" role="tabpanel" aria-labelledby="results-tab">
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h3 class="card-title">Results</h3>
+                    
+                    <div id="results-container">
+                        <div class="alert alert-info" role="alert">
+                            No query results available. Please execute a query first.
+                        </div>
+                    </div>
+                    
+                    <div id="dataframe-container" class="mt-4" style="display: none;">
+                        <h4>DataFrame</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="dataframe-table">
+                                <thead>
+                                    <tr id="dataframe-header"></tr>
+                                </thead>
+                                <tbody id="dataframe-body"></tbody>
+                            </table>
+                        </div>
+                        
+                        <h4 class="mt-4">Export</h4>
+                        <div class="form-group">
+                            <select class="form-control" id="export-format">
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" id="export-btn">Export</button>
+                        <div id="export-link-container" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Visualization Tab -->
+        <div class="tab-pane fade" id="visualization" role="tabpanel" aria-labelledby="visualization-tab">
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h3 class="card-title">Visualization</h3>
+                    
+                    <div id="visualization-container">
+                        <div class="alert alert-info" role="alert">
+                            No visualization available. Please execute a query first.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load sample queries
+        fetch('/api/msgraph/sample-queries')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const select = document.getElementById('sample-query-select');
+                    select.innerHTML = '<option value="">Select a sample query</option>';
+                    
+                    for (const [name, query] of Object.entries(data.sample_queries)) {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        select.appendChild(option);
+                    }
+                    
+                    // Handle sample query selection
+                    select.addEventListener('change', function() {
+                        const selectedQuery = data.sample_queries[this.value];
+                        if (selectedQuery) {
+                            document.getElementById('resource-path').value = selectedQuery.resource_path;
+                            
+                            // Clear existing parameters
+                            document.getElementById('select-param').value = '';
+                            document.getElementById('filter-param').value = '';
+                            document.getElementById('expand-param').value = '';
+                            document.getElementById('orderby-param').value = '';
+                            document.getElementById('top-param').value = '';
+                            document.getElementById('skip-param').value = '';
+                            
+                            // Set parameters from selected query
+                            if (selectedQuery.query_parameters) {
+                                if (selectedQuery.query_parameters.select) {
+                                    document.getElementById('select-param').value = selectedQuery.query_parameters.select;
+                                }
+                                if (selectedQuery.query_parameters.filter) {
+                                    document.getElementById('filter-param').value = selectedQuery.query_parameters.filter;
+                                }
+                                if (selectedQuery.query_parameters.expand) {
+                                    document.getElementById('expand-param').value = selectedQuery.query_parameters.expand;
+                                }
+                                if (selectedQuery.query_parameters.orderby) {
+                                    document.getElementById('orderby-param').value = selectedQuery.query_parameters.orderby;
+                                }
+                                if (selectedQuery.query_parameters.top) {
+                                    document.getElementById('top-param').value = selectedQuery.query_parameters.top;
+                                }
+                                if (selectedQuery.query_parameters.skip) {
+                                    document.getElementById('skip-param').value = selectedQuery.query_parameters.skip;
+                                }
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading sample queries:', error));
+        
+        // Execute query
+        document.getElementById('execute-query-btn').addEventListener('click', function() {
+            const resourcePath = document.getElementById('resource-path').value;
+            const queryParameters = {};
+            
+            const selectParam = document.getElementById('select-param').value;
+            if (selectParam) {
+                queryParameters.select = selectParam;
+            }
+            
+            const filterParam = document.getElementById('filter-param').value;
+            if (filterParam) {
+                queryParameters.filter = filterParam;
+            }
+            
+            const expandParam = document.getElementById('expand-param').value;
+            if (expandParam) {
+                queryParameters.expand = expandParam;
+            }
+            
+            const orderbyParam = document.getElementById('orderby-param').value;
+            if (orderbyParam) {
+                queryParameters.orderby = orderbyParam;
+            }
+            
+            const topParam = document.getElementById('top-param').value;
+            if (topParam) {
+                queryParameters.top = topParam;
+            }
+            
+            const skipParam = document.getElementById('skip-param').value;
+            if (skipParam) {
+                queryParameters.skip = skipParam;
+            }
+            
+            executeQuery(resourcePath, queryParameters);
+        });
+        
+        // Add parameter button
+        document.getElementById('add-param-btn').addEventListener('click', function() {
+            const paramRow = document.querySelector('.param-row').cloneNode(true);
+            paramRow.querySelector('.param-key').value = '';
+            paramRow.querySelector('.param-value').value = '';
+            
+            paramRow.querySelector('.remove-param-btn').addEventListener('click', function() {
+                this.closest('.param-row').remove();
+            });
+            
+            document.getElementById('advanced-query-params').appendChild(paramRow);
+        });
+        
+        // Remove parameter button
+        document.querySelectorAll('.remove-param-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.param-row').remove();
+            });
+        });
+        
+        // Execute advanced query
+        document.getElementById('execute-advanced-query-btn').addEventListener('click', function() {
+            const resourcePath = document.getElementById('advanced-resource-path').value;
+            const queryParameters = {};
+            
+            document.querySelectorAll('.param-row').forEach(row => {
+                const key = row.querySelector('.param-key').value;
+                const value = row.querySelector('.param-value').value;
+                
+                if (key && value) {
+                    queryParameters[key] = value;
+                }
+            });
+            
+            executeQuery(resourcePath, queryParameters);
+        });
+        
+        // Export button
+        document.getElementById('export-btn').addEventListener('click', function() {
+            const format = document.getElementById('export-format').value;
+            
+            fetch('/api/msgraph/export-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    format: format
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const linkContainer = document.getElementById('export-link-container');
+                    linkContainer.innerHTML = `<a href="data:${data.mime_type};base64,${data.data}" download="${data.filename}" class="btn btn-success">Download ${format.toUpperCase()}</a>`;
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Error exporting data:', error));
+        });
+        
+        // Function to execute query
+        function executeQuery(resourcePath, queryParameters) {
+            if (!resourcePath) {
+                alert('Resource path is required');
+                return;
+            }
+            
+            fetch('/api/msgraph/execute-query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    resource_path: resourcePath,
+                    query_parameters: queryParameters
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show results tab
+                    document.getElementById('results-tab').click();
+                    
+                    // Display response
+                    const resultsContainer = document.getElementById('results-container');
+                    resultsContainer.innerHTML = `
+                        <h4>Response</h4>
+                        <pre class="bg-light p-3 rounded"><code>${JSON.stringify(data.response, null, 2)}</code></pre>
+                    `;
+                    
+                    // Display DataFrame
+                    if (data.dataframe && data.dataframe.length > 0) {
+                        document.getElementById('dataframe-container').style.display = 'block';
+                        
+                        // Get all keys from the first object
+                        const keys = Object.keys(data.dataframe[0]);
+                        
+                        // Create header
+                        const header = document.getElementById('dataframe-header');
+                        header.innerHTML = '';
+                        keys.forEach(key => {
+                            const th = document.createElement('th');
+                            th.textContent = key;
+                            header.appendChild(th);
+                        });
+                        
+                        // Create body
+                        const body = document.getElementById('dataframe-body');
+                        body.innerHTML = '';
+                        data.dataframe.forEach(row => {
+                            const tr = document.createElement('tr');
+                            keys.forEach(key => {
+                                const td = document.createElement('td');
+                                td.textContent = row[key] !== null ? row[key] : '';
+                                tr.appendChild(td);
+                            });
+                            body.appendChild(tr);
+                        });
+                    } else {
+                        document.getElementById('dataframe-container').style.display = 'none';
+                    }
+                    
+                    // Display visualization
+                    if (data.visualization_data) {
+                        // Show visualization tab
+                        document.getElementById('visualization-tab').click();
+                        
+                        const visualizationContainer = document.getElementById('visualization-container');
+                        
+                        if (data.entity_type === 'users' || data.entity_type === 'groups') {
+                            visualizationContainer.innerHTML = `
+                                <h4>Network Visualization</h4>
+                                <div id="network-visualization" class="border rounded p-3" style="height: 500px;"></div>
+                            `;
+                            
+                            // Create network visualization using vis.js
+                            // This would require including vis.js in the base template
+                            // For now, just display a placeholder
+                            document.getElementById('network-visualization').innerHTML = `
+                                <div class="alert alert-info">
+                                    Network visualization would be displayed here using vis.js.
+                                    <br>
+                                    Entity type: ${data.entity_type}
+                                    <br>
+                                    Nodes: ${data.visualization_data.nodes ? data.visualization_data.nodes.length : 0}
+                                    <br>
+                                    Edges: ${data.visualization_data.edges ? data.visualization_data.edges.length : 0}
+                                </div>
+                            `;
+                        } else {
+                            visualizationContainer.innerHTML = `
+                                <div class="alert alert-info">
+                                    Visualization not available for entity type: ${data.entity_type}
+                                </div>
+                            `;
+                        }
+                    } else {
+                        const visualizationContainer = document.getElementById('visualization-container');
+                        visualizationContainer.innerHTML = `
+                            <div class="alert alert-info">
+                                No visualization available for this query.
+                            </div>
+                        `;
+                    }
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Error executing query:', error));
+        }
+    });
+</script>
+{% endblock %}
