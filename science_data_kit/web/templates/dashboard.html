@@ -5,6 +5,99 @@
 {% block content %}
 <h1>{{ title }}</h1>
 
+<!-- Quick Access Links -->
+<div class="row mt-4">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Access</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Data Management -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Data Management</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="{{ url_for('main.files') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-folder me-2"></i> File Browser
+                                        <span class="ms-auto badge bg-primary">Browse local files</span>
+                                    </a>
+                                    <a href="{{ url_for('main.explore') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-search me-2"></i> Explore Data
+                                        <span class="ms-auto badge bg-primary">Query and visualize data</span>
+                                    </a>
+                                    <a href="{{ url_for('main.map') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-map me-2"></i> Map
+                                        <span class="ms-auto badge bg-primary">Visualize data relationships</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connections -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Connections</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="{{ url_for('main.connect') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-database me-2"></i> Data Sources
+                                        <span class="ms-auto badge bg-success">Manage database connections</span>
+                                    </a>
+                                    <a href="{{ url_for('main.plugin_connect') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-puzzle me-2"></i> Plugins
+                                        <span class="ms-auto badge bg-success">Connect to plugins</span>
+                                    </a>
+                                    <a href="{{ url_for('main.dropbox_connect') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-dropbox me-2"></i> Dropbox
+                                        <span class="ms-auto badge bg-success">Connect to Dropbox</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Browsers -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Specialized Browsers</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="{{ url_for('main.cbioportal_browser') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-virus me-2"></i> cBioPortal Browser
+                                        <span class="ms-auto badge bg-info">Browse cancer genomics data</span>
+                                    </a>
+                                    <a href="{{ url_for('main.dropbox_browser') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-cloud me-2"></i> Dropbox Browser
+                                        <span class="ms-auto badge bg-info">Browse Dropbox files</span>
+                                    </a>
+                                    <a href="{{ url_for('main.isa_browser') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-diagram-3 me-2"></i> ISA Browser
+                                        <span class="ms-auto badge bg-info">Browse ISA metadata</span>
+                                    </a>
+                                    <a href="{{ url_for('main.about') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                        <i class="bi bi-info-circle me-2"></i> About
+                                        <span class="ms-auto badge bg-info">Project information</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mt-4">
     <!-- Metrics -->
     <div class="col-md-12 mb-4">
@@ -20,9 +113,9 @@
                             <div class="card-body text-center">
                                 <h5 class="card-title">{{ metric.title }}</h5>
                                 <h2 class="display-4">{{ metric.value }}</h2>
-                                {% if metric.trend > 0 %}
+                                {% if metric.trend is not none and metric.trend > 0 %}
                                 <span class="text-success">↑ {{ metric.trend }}%</span>
-                                {% elif metric.trend < 0 %}
+                                {% elif metric.trend is not none and metric.trend < 0 %}
                                 <span class="text-danger">↓ {{ metric.trend|abs }}%</span>
                                 {% else %}
                                 <span class="text-muted">No change</span>

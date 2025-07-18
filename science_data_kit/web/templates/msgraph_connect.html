@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}Connect to Microsoft Graph API{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Connect to Microsoft Graph API</h1>
+            
+            <!-- Check if Microsoft Graph SDK is available -->
+            <div id="msgraphAvailability" class="alert alert-danger" style="display: none;">
+                Microsoft Graph SDK is not installed. Please install it with 'pip install msgraph-sdk-python azure-identity'.
+            </div>
+            
+            <!-- Tabs for different sections -->
+            <ul class="nav nav-tabs" id="msgraphTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="configuration-tab" data-bs-toggle="tab" data-bs-target="#configuration" type="button" role="tab" aria-controls="configuration" aria-selected="true">Configuration</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="false">Connection Status</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="help-tab" data-bs-toggle="tab" data-bs-target="#help" type="button" role="tab" aria-controls="help" aria-selected="false">Help</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="msgraphTabsContent">
+                <!-- Configuration Tab -->
+                <div class="tab-pane fade show active" id="configuration" role="tabpanel" aria-labelledby="configuration-tab">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title">Microsoft Graph API Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="configForm">
+                                <div class="mb-3">
+                                    <label for="authMethod" class="form-label">Authentication Method</label>
+                                    <select class="form-select" id="authMethod" name="auth_method">
+                                        <option value="device_code">Device Code Flow</option>
+                                        <option value="client_credentials">Client Credentials Flow</option>
+                                        <option value="interactive">Interactive Flow</option>
+                                    </select>
+                                    <div class="form-text">Select the authentication method to use for Microsoft Graph API.</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="tenantId" class="form-label">Tenant ID</label>
+                                    <input type="text" class="form-control" id="tenantId" name="tenant_id">
+                                    <div class="form-text">The tenant ID for your Microsoft 365 account.</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="clientId" class="form-label">Client ID</label>
+                                    <input type="text" class="form-control" id="clientId" name="client_id">
+                                    <div class="form-text">The client ID for your application.</div>
+                                </div>
+                                
+                                <div class="mb-3" id="clientSecretContainer" style="display: none;">
+                                    <label for="clientSecret" class="form-label">Client Secret</label>
+                                    <input type="password" class="form-control" id="clientSecret" name="client_secret">
+                                    <div class="form-text">The client secret for your application.</div>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="saveConfig" name="save_config">
+                                    <label class="form-check-label" for="saveConfig">Save Configuration</label>
+                                </div>
+                                
+                                <div class="mb-3" id="configFileContainer" style="display: none;">
+                                    <label for="configFile" class="form-label">Configuration File</label>
+                                    <input type="text" class="form-control" id="configFile" name="config_file" value="msgraph_config.json">
+                                    <div class="form-text">The path to save the configuration to.</div>
+                                </div>
+                                
+                                <button type="button" class="btn btn-primary" id="connectButton">Connect to Microsoft Graph API</button>
+                                <div id="connectStatus" class="mt-3"></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Connection Status Tab -->
+                <div class="tab-pane fade" id="status" role="tabpanel" aria-labelledby="status-tab">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title">Connection Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="connectionStatus">
+                                <div class="alert alert-info">Checking connection status...</div>
+                            </div>
+                            
+                            <div id="userInfo" style="display: none;">
+                                <h5>Current User</h5>
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th>Display Name</th>
+                                            <td id="displayName">N/A</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email</th>
+                                            <td id="email">N/A</td>
+                                        </tr>
+                                        <tr>
+                                            <th>User Principal Name</th>
+                                            <td id="userPrincipalName">N/A</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Department</th>
+                                            <td id="department">N/A</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Job Title</th>
+                                            <td id="jobTitle">N/A</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <button type="button" class="btn btn-danger" id="disconnectButton">Disconnect</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Help Tab -->
+                <div class="tab-pane fade" id="help" role="tabpanel" aria-labelledby="help-tab">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title">Help</h5>
+                        </div>
+                        <div class="card-body">
+                            <h5>Authentication Methods</h5>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="card-title">Device Code Flow</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>The device code flow is designed for devices and applications that don't have a web browser or have limited input capabilities. This is the recommended method for command-line tools.</p>
+                                    <ol>
+                                        <li>Enter your Tenant ID and Client ID</li>
+                                        <li>Click "Connect to Microsoft Graph API"</li>
+                                        <li>You will be prompted to visit a URL and enter a code</li>
+                                        <li>After authentication, the connection will be established</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="card-title">Client Credentials Flow</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>The client credentials flow is designed for daemon or service applications that run without user interaction. This method requires a client secret.</p>
+                                    <ol>
+                                        <li>Enter your Tenant ID, Client ID, and Client Secret</li>
+                                        <li>Click "Connect to Microsoft Graph API"</li>
+                                        <li>The connection will be established using the provided credentials</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="card-title">Interactive Flow</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>The interactive flow is designed for web applications that can open a browser window for authentication.</p>
+                                    <ol>
+                                        <li>Enter your Tenant ID and Client ID</li>
+                                        <li>Click "Connect to Microsoft Graph API"</li>
+                                        <li>A browser window will open for authentication</li>
+                                        <li>After authentication, the connection will be established</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <h5>Configuration</h5>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="card-title">Tenant ID</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>The tenant ID is a unique identifier for your Microsoft 365 tenant. You can find it in the Azure Portal under "Azure Active Directory" > "Properties" > "Directory ID".</p>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="card-title">Client ID</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>The client ID is a unique identifier for your application. You can create a new application in the Azure Portal under "Azure Active Directory" > "App registrations" > "New registration".</p>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="card-title">Client Secret</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>The client secret is a password for your application. You can create a new client secret in the Azure Portal under "Azure Active Directory" > "App registrations" > [Your App] > "Certificates & secrets" > "New client secret".</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Microsoft Graph SDK is available
+        fetch('/api/msgraph/status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.msgraph_available === false) {
+                    document.getElementById('msgraphAvailability').style.display = 'block';
+                }
+                
+                updateConnectionStatus();
+            })
+            .catch(error => {
+                console.error('Error checking Microsoft Graph SDK availability:', error);
+            });
+        
+        // Authentication method change handler
+        document.getElementById('authMethod').addEventListener('change', function() {
+            const clientSecretContainer = document.getElementById('clientSecretContainer');
+            if (this.value === 'client_credentials') {
+                clientSecretContainer.style.display = 'block';
+            } else {
+                clientSecretContainer.style.display = 'none';
+            }
+        });
+        
+        // Save configuration change handler
+        document.getElementById('saveConfig').addEventListener('change', function() {
+            const configFileContainer = document.getElementById('configFileContainer');
+            if (this.checked) {
+                configFileContainer.style.display = 'block';
+            } else {
+                configFileContainer.style.display = 'none';
+            }
+        });
+        
+        // Connect button click handler
+        document.getElementById('connectButton').addEventListener('click', function() {
+            const tenantId = document.getElementById('tenantId').value;
+            const clientId = document.getElementById('clientId').value;
+            const authMethod = document.getElementById('authMethod').value;
+            
+            if (!tenantId || !clientId) {
+                document.getElementById('connectStatus').innerHTML = '<div class="alert alert-danger">Tenant ID and Client ID are required</div>';
+                return;
+            }
+            
+            let clientSecret = null;
+            if (authMethod === 'client_credentials') {
+                clientSecret = document.getElementById('clientSecret').value;
+                if (!clientSecret) {
+                    document.getElementById('connectStatus').innerHTML = '<div class="alert alert-danger">Client Secret is required for Client Credentials Flow</div>';
+                    return;
+                }
+            }
+            
+            let configFile = null;
+            if (document.getElementById('saveConfig').checked) {
+                configFile = document.getElementById('configFile').value;
+            }
+            
+            document.getElementById('connectStatus').innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Connecting...';
+            
+            fetch('/api/msgraph/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tenant_id: tenantId,
+                    client_id: clientId,
+                    client_secret: clientSecret,
+                    auth_method: authMethod,
+                    config_file: configFile
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('connectStatus').innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    
+                    // Switch to the Connection Status tab
+                    document.getElementById('status-tab').click();
+                    
+                    // Update connection status
+                    updateConnectionStatus();
+                } else {
+                    document.getElementById('connectStatus').innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('connectStatus').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            });
+        });
+        
+        // Disconnect button click handler
+        document.getElementById('disconnectButton').addEventListener('click', function() {
+            document.getElementById('connectionStatus').innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Disconnecting...';
+            
+            fetch('/api/msgraph/disconnect', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('connectionStatus').innerHTML = '<div class="alert alert-info">Not connected to Microsoft Graph API</div>';
+                    document.getElementById('userInfo').style.display = 'none';
+                } else {
+                    document.getElementById('connectionStatus').innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('connectionStatus').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            });
+        });
+        
+        // Status tab click handler
+        document.getElementById('status-tab').addEventListener('click', function() {
+            updateConnectionStatus();
+        });
+        
+        // Update connection status
+        function updateConnectionStatus() {
+            document.getElementById('connectionStatus').innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Checking connection status...';
+            
+            fetch('/api/msgraph/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.connected) {
+                        document.getElementById('connectionStatus').innerHTML = '<div class="alert alert-success">Connected to Microsoft Graph API</div>';
+                        
+                        // Display user information
+                        if (data.user_info) {
+                            document.getElementById('userInfo').style.display = 'block';
+                            document.getElementById('displayName').textContent = data.user_info.displayName || 'N/A';
+                            document.getElementById('email').textContent = data.user_info.mail || 'N/A';
+                            document.getElementById('userPrincipalName').textContent = data.user_info.userPrincipalName || 'N/A';
+                            document.getElementById('department').textContent = data.user_info.department || 'N/A';
+                            document.getElementById('jobTitle').textContent = data.user_info.jobTitle || 'N/A';
+                        } else {
+                            document.getElementById('userInfo').style.display = 'none';
+                        }
+                    } else {
+                        document.getElementById('connectionStatus').innerHTML = '<div class="alert alert-info">Not connected to Microsoft Graph API</div>';
+                        document.getElementById('userInfo').style.display = 'none';
+                        
+                        if (data.errors && Object.keys(data.errors).length > 0) {
+                            let errorHtml = '<div class="alert alert-danger"><ul>';
+                            for (const [key, value] of Object.entries(data.errors)) {
+                                errorHtml += `<li>${key}: ${value}</li>`;
+                            }
+                            errorHtml += '</ul></div>';
+                            document.getElementById('connectionStatus').innerHTML += errorHtml;
+                        }
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('connectionStatus').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                });
+        }
+    });
+</script>
+{% endblock %}

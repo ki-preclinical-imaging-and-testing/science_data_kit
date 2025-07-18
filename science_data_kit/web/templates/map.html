@@ -1,0 +1,794 @@
+{% extends "base.html" %}
+
+{% block title %}Map Visualization{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Database Connection</h5>
+                </div>
+                <div class="card-body">
+                    <div id="connectionStatus">
+                        <div class="alert alert-warning">Not connected to Neo4j database</div>
+                    </div>
+                    <form id="connectForm">
+                        <div class="mb-3">
+                            <label for="uri" class="form-label">URI</label>
+                            <input type="text" class="form-control" id="uri" name="uri" placeholder="neo4j://localhost:7687">
+                        </div>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="neo4j">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="database" class="form-label">Database</label>
+                            <input type="text" class="form-control" id="database" name="database" placeholder="neo4j">
+                        </div>
+                        <button type="button" class="btn btn-primary" id="connectButton">Connect</button>
+                        <button type="button" class="btn btn-danger" id="disconnectButton">Disconnect</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Load Entities</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="loadEntitiesTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="file-tab" data-bs-toggle="tab" data-bs-target="#file" type="button" role="tab" aria-controls="file" aria-selected="true">From File</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="database-tab" data-bs-toggle="tab" data-bs-target="#database" type="button" role="tab" aria-controls="database" aria-selected="false">From Database</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="loadEntitiesTabsContent">
+                        <div class="tab-pane fade show active" id="file" role="tabpanel" aria-labelledby="file-tab">
+                            <form id="loadFileForm" class="mt-3">
+                                <div class="mb-3">
+                                    <label for="entityFile" class="form-label">Entity File</label>
+                                    <input type="file" class="form-control" id="entityFile" name="file">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="fileType" class="form-label">File Type</label>
+                                    <select class="form-select" id="fileType" name="file_type">
+                                        <option value="csv">CSV</option>
+                                        <option value="excel">Excel</option>
+                                        <option value="json">JSON</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3" id="sheetNameContainer" style="display: none;">
+                                    <label for="sheetName" class="form-label">Sheet Name</label>
+                                    <input type="text" class="form-control" id="sheetName" name="sheet_name">
+                                </div>
+                                <button type="button" class="btn btn-primary" id="loadFileButton">Load Entities</button>
+                            </form>
+                        </div>
+                        <div class="tab-pane fade" id="database" role="tabpanel" aria-labelledby="database-tab">
+                            <form id="loadDatabaseForm" class="mt-3">
+                                <div class="mb-3">
+                                    <label for="nodeLabel" class="form-label">Node Label</label>
+                                    <select class="form-select" id="nodeLabel" name="label">
+                                        <option value="">Select a label</option>
+                                    </select>
+                                </div>
+                                <button type="button" class="btn btn-primary" id="loadDatabaseButton">Load Entities</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Entity Operations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-primary" id="createStructureButton">Create Structure</button>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pushLabel" class="form-label">Label</label>
+                        <select class="form-select" id="pushLabel" name="label">
+                            <option value="">Select a label</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-primary" id="pushEntitiesButton">Push to Neo4j</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Map Visualization</h5>
+                </div>
+                <div class="card-body">
+                    <div id="mapVisualization" style="height: 500px; border: 1px solid #ccc;"></div>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Entities</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="filterColumn" class="form-label">Filter Column</label>
+                        <select class="form-select" id="filterColumn" name="filter_column">
+                            <option value="">Select a column</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="filterOperation" class="form-label">Filter Operation</label>
+                        <select class="form-select" id="filterOperation" name="filter_operation">
+                            <option value="equals">Equals</option>
+                            <option value="contains">Contains</option>
+                            <option value="greater_than">Greater Than</option>
+                            <option value="less_than">Less Than</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="filterValue" class="form-label">Filter Value</label>
+                        <input type="text" class="form-control" id="filterValue" name="filter_value">
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-primary" id="filterEntitiesButton">Filter Entities</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="entitiesTable">
+                            <thead>
+                                <tr>
+                                    <th>Label</th>
+                                    <th>Properties</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Entities will be displayed here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Relationships</h5>
+                </div>
+                <div class="card-body">
+                    <form id="relationshipForm">
+                        <div class="mb-3">
+                            <label for="sourceLabel" class="form-label">Source Label</label>
+                            <select class="form-select" id="sourceLabel" name="source_label">
+                                <option value="">Select a label</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="targetLabel" class="form-label">Target Label</label>
+                            <select class="form-select" id="targetLabel" name="target_label">
+                                <option value="">Select a label</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="relationshipType" class="form-label">Relationship Type</label>
+                            <input type="text" class="form-control" id="relationshipType" name="relationship_type" placeholder="RELATED_TO">
+                        </div>
+                        <div class="mb-3">
+                            <label for="sourceProperty" class="form-label">Source Property</label>
+                            <select class="form-select" id="sourceProperty" name="source_property">
+                                <option value="">Select a property</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="targetProperty" class="form-label">Target Property</label>
+                            <select class="form-select" id="targetProperty" name="target_property">
+                                <option value="">Select a property</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="createRelationshipsButton">Create Relationships</button>
+                    </form>
+                    <div class="mt-3">
+                        <h6>Existing Relationships</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="relationshipsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Source Label</th>
+                                        <th>Target Label</th>
+                                        <th>Relationship Type</th>
+                                        <th>Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Relationships will be displayed here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize variables
+        let entities = [];
+        let relationships = [];
+        let entityLabels = [];
+        let entityStructures = {};
+        let nodeClasses = [];
+        let properties = {};
+        let relationshipTypes = [];
+        
+        // File type change handler
+        document.getElementById('fileType').addEventListener('change', function() {
+            const sheetNameContainer = document.getElementById('sheetNameContainer');
+            if (this.value === 'excel') {
+                sheetNameContainer.style.display = 'block';
+            } else {
+                sheetNameContainer.style.display = 'none';
+            }
+        });
+        
+        // Connect to database
+        document.getElementById('connectButton').addEventListener('click', function() {
+            const uri = document.getElementById('uri').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const database = document.getElementById('database').value;
+            
+            if (!uri || !username || !password || !database) {
+                alert('All fields are required');
+                return;
+            }
+            
+            const connectionStatus = document.getElementById('connectionStatus');
+            connectionStatus.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Connecting...';
+            
+            fetch('/api/map/connect-to-database', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    uri: uri,
+                    username: username,
+                    password: password,
+                    database: database
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    connectionStatus.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    
+                    // Update node labels dropdown
+                    const nodeLabelSelect = document.getElementById('nodeLabel');
+                    nodeLabelSelect.innerHTML = '';
+                    
+                    if (data.node_classes && data.node_classes.length > 0) {
+                        nodeClasses = data.node_classes;
+                        
+                        nodeClasses.forEach(label => {
+                            const option = document.createElement('option');
+                            option.value = label;
+                            option.textContent = label;
+                            nodeLabelSelect.appendChild(option);
+                        });
+                    } else {
+                        nodeLabelSelect.innerHTML = '<option value="">No labels available</option>';
+                    }
+                    
+                    // Update properties
+                    if (data.properties) {
+                        properties = data.properties;
+                    }
+                    
+                    // Update relationship types
+                    if (data.relationship_types) {
+                        relationshipTypes = data.relationship_types;
+                    }
+                    
+                    // Update source and target label dropdowns
+                    updateLabelDropdowns();
+                } else {
+                    connectionStatus.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                connectionStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            });
+        });
+        
+        // Disconnect from database
+        document.getElementById('disconnectButton').addEventListener('click', function() {
+            const connectionStatus = document.getElementById('connectionStatus');
+            connectionStatus.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Disconnecting...';
+            
+            fetch('/api/map/disconnect-from-database', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    connectionStatus.innerHTML = `<div class="alert alert-warning">Not connected to Neo4j database</div>`;
+                    
+                    // Clear node labels dropdown
+                    document.getElementById('nodeLabel').innerHTML = '<option value="">Select a label</option>';
+                    
+                    // Clear properties and relationship types
+                    properties = {};
+                    relationshipTypes = [];
+                    nodeClasses = [];
+                    
+                    // Update source and target label dropdowns
+                    updateLabelDropdowns();
+                } else {
+                    connectionStatus.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                connectionStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            });
+        });
+        
+        // Load entities from file
+        document.getElementById('loadFileButton').addEventListener('click', function() {
+            const fileInput = document.getElementById('entityFile');
+            const fileType = document.getElementById('fileType').value;
+            const sheetName = document.getElementById('sheetName').value;
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Please select a file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('file_type', fileType);
+            if (sheetName) {
+                formData.append('sheet_name', sheetName);
+            }
+            
+            fetch('/api/map/load-entities-from-file', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    
+                    // Update entities
+                    entities = data.entities;
+                    
+                    // Update entity labels
+                    if (data.entity_labels) {
+                        entityLabels = data.entity_labels;
+                        updateLabelDropdowns();
+                    }
+                    
+                    // Update entities table
+                    updateEntitiesTable();
+                    
+                    // Update filter column dropdown
+                    updateFilterColumnDropdown();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        });
+        
+        // Load entities from database
+        document.getElementById('loadDatabaseButton').addEventListener('click', function() {
+            const label = document.getElementById('nodeLabel').value;
+            
+            if (!label) {
+                alert('Please select a label');
+                return;
+            }
+            
+            fetch('/api/map/load-entities-from-database', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    label: label
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    
+                    // Update entities
+                    entities = data.entities;
+                    
+                    // Update entities table
+                    updateEntitiesTable();
+                    
+                    // Update filter column dropdown
+                    updateFilterColumnDropdown();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        });
+        
+        // Create entity structure
+        document.getElementById('createStructureButton').addEventListener('click', function() {
+            if (!entities || entities.length === 0) {
+                alert('No entities loaded');
+                return;
+            }
+            
+            fetch('/api/map/create-entity-structure', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    entity_data: entities
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    
+                    // Update entity structures
+                    entityStructures = data.structures;
+                    
+                    // Update push label dropdown
+                    const pushLabelSelect = document.getElementById('pushLabel');
+                    pushLabelSelect.innerHTML = '';
+                    
+                    Object.keys(entityStructures).forEach(label => {
+                        const option = document.createElement('option');
+                        option.value = label;
+                        option.textContent = label;
+                        pushLabelSelect.appendChild(option);
+                    });
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        });
+        
+        // Push entities to Neo4j
+        document.getElementById('pushEntitiesButton').addEventListener('click', function() {
+            const label = document.getElementById('pushLabel').value;
+            
+            if (!label) {
+                alert('Please select a label');
+                return;
+            }
+            
+            if (!entityStructures[label]) {
+                alert('No structure defined for this label');
+                return;
+            }
+            
+            fetch('/api/map/push-entities-to-neo4j', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    entity_data: entities,
+                    label: label,
+                    structure: entityStructures[label]
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        });
+        
+        // Create relationships
+        document.getElementById('createRelationshipsButton').addEventListener('click', function() {
+            const sourceLabel = document.getElementById('sourceLabel').value;
+            const targetLabel = document.getElementById('targetLabel').value;
+            const relationshipType = document.getElementById('relationshipType').value;
+            const sourceProperty = document.getElementById('sourceProperty').value;
+            const targetProperty = document.getElementById('targetProperty').value;
+            
+            if (!sourceLabel || !targetLabel || !relationshipType || !sourceProperty || !targetProperty) {
+                alert('All fields are required');
+                return;
+            }
+            
+            fetch('/api/map/create-relationships', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    source_label: sourceLabel,
+                    target_label: targetLabel,
+                    relationship_type: relationshipType,
+                    source_property: sourceProperty,
+                    target_property: targetProperty
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    
+                    // Update relationships
+                    if (data.relationship) {
+                        relationships.push(data.relationship);
+                        updateRelationshipsTable();
+                    }
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        });
+        
+        // Filter entities
+        document.getElementById('filterEntitiesButton').addEventListener('click', function() {
+            const filterColumn = document.getElementById('filterColumn').value;
+            const filterOperation = document.getElementById('filterOperation').value;
+            const filterValue = document.getElementById('filterValue').value;
+            
+            if (!filterColumn || !filterOperation || !filterValue) {
+                alert('All filter fields are required');
+                return;
+            }
+            
+            fetch('/api/map/filter-entity-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    entity_data: entities,
+                    filter_column: filterColumn,
+                    filter_operation: filterOperation,
+                    filter_value: filterValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    
+                    // Update entities
+                    entities = data.entities;
+                    
+                    // Update entities table
+                    updateEntitiesTable();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        });
+        
+        // Source label change handler
+        document.getElementById('sourceLabel').addEventListener('change', function() {
+            updateSourcePropertyDropdown();
+        });
+        
+        // Target label change handler
+        document.getElementById('targetLabel').addEventListener('change', function() {
+            updateTargetPropertyDropdown();
+        });
+        
+        // Helper functions
+        function updateLabelDropdowns() {
+            // Update source label dropdown
+            const sourceLabelSelect = document.getElementById('sourceLabel');
+            sourceLabelSelect.innerHTML = '<option value="">Select a label</option>';
+            
+            // Update target label dropdown
+            const targetLabelSelect = document.getElementById('targetLabel');
+            targetLabelSelect.innerHTML = '<option value="">Select a label</option>';
+            
+            // Add node classes from database
+            nodeClasses.forEach(label => {
+                const sourceOption = document.createElement('option');
+                sourceOption.value = label;
+                sourceOption.textContent = label;
+                sourceLabelSelect.appendChild(sourceOption);
+                
+                const targetOption = document.createElement('option');
+                targetOption.value = label;
+                targetOption.textContent = label;
+                targetLabelSelect.appendChild(targetOption);
+            });
+            
+            // Add entity labels from loaded data
+            entityLabels.forEach(label => {
+                if (!nodeClasses.includes(label)) {
+                    const sourceOption = document.createElement('option');
+                    sourceOption.value = label;
+                    sourceOption.textContent = label;
+                    sourceLabelSelect.appendChild(sourceOption);
+                    
+                    const targetOption = document.createElement('option');
+                    targetOption.value = label;
+                    targetOption.textContent = label;
+                    targetLabelSelect.appendChild(targetOption);
+                }
+            });
+        }
+        
+        function updateSourcePropertyDropdown() {
+            const sourceLabel = document.getElementById('sourceLabel').value;
+            const sourcePropertySelect = document.getElementById('sourceProperty');
+            sourcePropertySelect.innerHTML = '<option value="">Select a property</option>';
+            
+            if (sourceLabel && properties[sourceLabel]) {
+                properties[sourceLabel].forEach(prop => {
+                    const option = document.createElement('option');
+                    option.value = prop;
+                    option.textContent = prop;
+                    sourcePropertySelect.appendChild(option);
+                });
+            } else if (sourceLabel && entityStructures[sourceLabel]) {
+                Object.keys(entityStructures[sourceLabel]).forEach(prop => {
+                    const option = document.createElement('option');
+                    option.value = prop;
+                    option.textContent = prop;
+                    sourcePropertySelect.appendChild(option);
+                });
+            }
+        }
+        
+        function updateTargetPropertyDropdown() {
+            const targetLabel = document.getElementById('targetLabel').value;
+            const targetPropertySelect = document.getElementById('targetProperty');
+            targetPropertySelect.innerHTML = '<option value="">Select a property</option>';
+            
+            if (targetLabel && properties[targetLabel]) {
+                properties[targetLabel].forEach(prop => {
+                    const option = document.createElement('option');
+                    option.value = prop;
+                    option.textContent = prop;
+                    targetPropertySelect.appendChild(option);
+                });
+            } else if (targetLabel && entityStructures[targetLabel]) {
+                Object.keys(entityStructures[targetLabel]).forEach(prop => {
+                    const option = document.createElement('option');
+                    option.value = prop;
+                    option.textContent = prop;
+                    targetPropertySelect.appendChild(option);
+                });
+            }
+        }
+        
+        function updateFilterColumnDropdown() {
+            const filterColumnSelect = document.getElementById('filterColumn');
+            filterColumnSelect.innerHTML = '<option value="">Select a column</option>';
+            
+            if (entities && entities.length > 0) {
+                const columns = Object.keys(entities[0]);
+                
+                columns.forEach(column => {
+                    const option = document.createElement('option');
+                    option.value = column;
+                    option.textContent = column;
+                    filterColumnSelect.appendChild(option);
+                });
+            }
+        }
+        
+        function updateEntitiesTable() {
+            const entitiesTableBody = document.getElementById('entitiesTable').querySelector('tbody');
+            entitiesTableBody.innerHTML = '';
+            
+            if (entities && entities.length > 0) {
+                entities.slice(0, 10).forEach(entity => {
+                    const row = document.createElement('tr');
+                    
+                    const labelCell = document.createElement('td');
+                    labelCell.textContent = entity.label || 'N/A';
+                    row.appendChild(labelCell);
+                    
+                    const propertiesCell = document.createElement('td');
+                    const properties = Object.entries(entity)
+                        .filter(([key]) => key !== 'label')
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join(', ');
+                    propertiesCell.textContent = properties;
+                    row.appendChild(propertiesCell);
+                    
+                    entitiesTableBody.appendChild(row);
+                });
+                
+                if (entities.length > 10) {
+                    const row = document.createElement('tr');
+                    const cell = document.createElement('td');
+                    cell.colSpan = 2;
+                    cell.textContent = `... and ${entities.length - 10} more entities`;
+                    row.appendChild(cell);
+                    entitiesTableBody.appendChild(row);
+                }
+            } else {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 2;
+                cell.textContent = 'No entities loaded';
+                row.appendChild(cell);
+                entitiesTableBody.appendChild(row);
+            }
+        }
+        
+        function updateRelationshipsTable() {
+            const relationshipsTableBody = document.getElementById('relationshipsTable').querySelector('tbody');
+            relationshipsTableBody.innerHTML = '';
+            
+            if (relationships && relationships.length > 0) {
+                relationships.forEach(relationship => {
+                    const row = document.createElement('tr');
+                    
+                    const sourceLabelCell = document.createElement('td');
+                    sourceLabelCell.textContent = relationship.source_label;
+                    row.appendChild(sourceLabelCell);
+                    
+                    const targetLabelCell = document.createElement('td');
+                    targetLabelCell.textContent = relationship.target_label;
+                    row.appendChild(targetLabelCell);
+                    
+                    const relationshipTypeCell = document.createElement('td');
+                    relationshipTypeCell.textContent = relationship.relationship_type;
+                    row.appendChild(relationshipTypeCell);
+                    
+                    const countCell = document.createElement('td');
+                    countCell.textContent = relationship.count;
+                    row.appendChild(countCell);
+                    
+                    relationshipsTableBody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 4;
+                cell.textContent = 'No relationships created';
+                row.appendChild(cell);
+                relationshipsTableBody.appendChild(row);
+            }
+        }
+        
+        // Initialize tables
+        updateEntitiesTable();
+        updateRelationshipsTable();
+    });
+</script>
+{% endblock %}

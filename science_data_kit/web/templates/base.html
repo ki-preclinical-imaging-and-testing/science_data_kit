@@ -28,11 +28,27 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.files') }}">Files</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.connect') }}">Connect</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="connectDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Connect
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="connectDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('main.connect') }}">Data Sources</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.plugin_connect') }}">Plugins</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.dropbox_connect') }}">Dropbox</a></li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.explore') }}">Explore</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="browseDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Browse
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="browseDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('main.explore') }}">Explore Data</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.cbioportal_browser') }}">cBioPortal</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.dropbox_browser') }}">Dropbox</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.isa_browser') }}">ISA</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.map') }}">Map</a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.about') }}">About</a>
