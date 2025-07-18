@@ -1,5 +1,7 @@
 # Science Data Kit High Priority Tasks
 
+> **DEPRECATED**: This document is maintained for historical reference only and is no longer actively updated. Please refer to the [roadmaps/index.md](roadmaps/index.md) for current development priorities and plans.
+
 This document provides detailed implementation guidance for the high-priority tasks identified in the roadmap. These tasks are critical for the core functionality of the application and should be addressed first.
 
 ## 1. Map Functionality Debugging and Rebuilding

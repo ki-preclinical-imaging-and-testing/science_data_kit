@@ -331,6 +331,36 @@ The Streamlit to Flask Migration and Design/UX Phase represent critical steps in
 
 By completing these phases, the Science Data Kit will provide a cohesive, intuitive, and reliable experience for scientific users, establishing a solid foundation for future enhancements.
 
+### Future Roadmap: Documentation Maintenance and Long-term Strategy
+
+Following the completion of the current active roadmaps, the Science Data Kit will focus on a comprehensive documentation maintenance strategy to ensure long-term sustainability and ease of use. This roadmap includes:
+
+#### Phase 3: Long-term Documentation Strategy
+
+1. **Content Migration**
+   - Gradually migrate any remaining valuable content from legacy files to the appropriate location in the new structure
+   - Ensure all documentation follows the established standards and organization
+   - Update cross-references to maintain a cohesive documentation system
+
+2. **Documentation Archiving**
+   - Create a `docs/legacy/` directory for historical documentation
+   - Move deprecated files to the legacy directory with clear notices
+   - Maintain an archive index for reference purposes
+
+3. **Automated Documentation Checks**
+   - Implement markdown linting in CI/CD pipelines
+   - Add automated link checking to prevent broken references
+   - Create documentation coverage reports to identify gaps
+   - Implement version consistency checks across documentation files
+
+4. **Documentation Maintenance Automation**
+   - Develop scripts to assist with documentation updates
+   - Create templates for new documentation types
+   - Implement automated documentation generation from code where appropriate
+   - Establish regular documentation review cycles
+
+This long-term strategy will ensure that the Science Data Kit documentation remains accurate, comprehensive, and easy to maintain as the project continues to evolve.
+
 Together, these roadmaps will guide the transformation of the Science Data Kit into a user-friendly, well-tested scientific software platform with a well-organized repository structure and a clear path to advanced capabilities for long-term growth and sustainability.
 
 Note: This file has been updated in place (rather than creating a new version with _v2 suffix) to keep file counts to a minimum.

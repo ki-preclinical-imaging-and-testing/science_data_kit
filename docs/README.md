@@ -1,71 +1,60 @@
 # Science Data Kit - Documentation
 
-This directory contains documentation files for the Science Data Kit project, including development roadmaps, task lists, and implementation guides.
+This directory contains documentation files for the Science Data Kit project, including development roadmaps, implementation guides, and reference materials.
 
-## Documentation Files
+## Documentation Structure
 
-### [tasks.md](tasks.md)
+### Current Documentation
 
-A comprehensive list of actionable improvement tasks for the Science Data Kit project. Tasks are organized by category and include both architectural and code-level improvements.
+#### [roadmaps/](roadmaps/index.md)
+The primary location for project roadmaps and development planning. This directory contains:
+- **Active Roadmaps**: Current development priorities
+- **Future Roadmaps**: Planned but not currently active roadmaps
+- **Archived Roadmaps**: Completed roadmaps
+- **Templates**: For creating new roadmap documents
 
-**Categories:**
-- Architecture Improvements
-- Code Quality Improvements
-- Feature Improvements
-- Performance Improvements
-- Documentation Improvements
-- Deployment Improvements
+The [roadmaps/index.md](roadmaps/index.md) file serves as the master index for all roadmaps and should be the starting point for understanding the project's direction.
 
-Each task has a checkbox that can be checked off when completed, making it easy to track progress.
+#### Topic-Specific Documentation
+- [architecture/](architecture/) - System architecture documentation
+- [guides/](guides/) - User and developer guides
+- [api/](api/) - API documentation
+- [tutorials/](tutorials/) - Step-by-step tutorials
+- [troubleshooting/](troubleshooting/) - Common issues and solutions
+- [workshop/](workshop/) - Workshop materials
 
-### [roadmap.md](roadmap.md)
+### Legacy Documentation (Deprecated)
 
-A strategic view of the project's development, organized by priority level. Tasks are categorized as High, Medium, or Low priority to guide development efforts.
+The following files are maintained for historical reference but are no longer actively updated:
 
-**Priority Levels:**
-- **High Priority** - Critical for core functionality
-- **Medium Priority** - Important for improving the application
-- **Low Priority** - Would enhance the application but can be addressed later
+- [tasks.md](tasks.md) - Historical task list (superseded by roadmaps)
+- [roadmap.md](roadmap.md) - Old roadmap structure (superseded by roadmaps/index.md)
+- [high_priority_tasks.md](high_priority_tasks.md) - Old high-priority tasks (superseded by active roadmaps)
 
-This file helps guide prioritization efforts and provides a clear path forward for the project.
-
-### [high_priority_tasks.md](high_priority_tasks.md)
-
-Detailed implementation guidance for the high-priority tasks identified in the roadmap. For each task, this file provides:
-- A description of the current issues or status
-- Detailed implementation steps with specific code-level guidance
-- Checkmarks for completed subtasks
-
-This file is particularly useful for developers working on the highest-priority tasks, as it provides concrete guidance on what needs to be done and how to do it.
-
-## How These Documents Work Together
-
-These documentation files are designed to work together to provide a comprehensive view of the project's development:
-
-1. **tasks.md** provides a complete inventory of all tasks that need to be addressed.
-2. **roadmap.md** organizes these tasks by priority to guide development efforts.
-3. **high_priority_tasks.md** provides detailed implementation guidance for the highest-priority tasks.
-
-## Using These Documents
-
-- **Project Managers** can use roadmap.md to plan development sprints and allocate resources.
-- **Developers** can use high_priority_tasks.md for detailed implementation guidance on current priorities.
-- **Contributors** can use tasks.md to find areas where they can help improve the project.
+Please refer to the [roadmaps/index.md](roadmaps/index.md) for current development priorities and plans.
 
 ## Contributing to Documentation
 
-When contributing to these documentation files, please follow these guidelines:
+When contributing to documentation:
 
-1. **tasks.md**: Add new tasks with clear, actionable descriptions. Mark completed tasks with a checkmark [✓].
-2. **roadmap.md**: Update priority levels as needed based on project requirements and progress.
-3. **high_priority_tasks.md**: Add detailed implementation guidance for high-priority tasks, including specific code-level instructions.
+1. **For roadmaps**: Follow the guidelines in [roadmaps/organization.md](roadmaps/organization.md)
+2. **For other documentation**: Place files in the appropriate topic-specific directory
+3. **For new documentation types**: Create a new directory with a README.md explaining its purpose
 
-## Future Documentation
+## Documentation Standards
 
-Additional documentation that could be added to this directory includes:
+All documentation should follow the standards outlined in [code_standards.md](code_standards.md) and [module_standards.md](module_standards.md).
 
-- User guides and tutorials
-- API documentation
-- Architecture diagrams
-- Design decisions and rationales
-- Contribution guidelines
+## Science Data Kit Overview
+
+The Science Data Kit (SDK) is an open-source data harmonization platform designed to connect, integrate, and analyze research data across multiple sources and modalities. Built specifically for research facilities facing complex data integration challenges, SDK uses knowledge graph technology and AI-powered tools to bridge the gap between highly standardized data (like genomics) and complex, heterogeneous data (like preclinical imaging).
+
+### Core Value Proposition
+
+SDK provides a unified layer that:
+1. **Connects** to existing data sources without disruption
+2. **Harmonizes** data using AI and knowledge graphs
+3. **Enables** cross-modal queries and discovery
+4. **Empowers** researchers with AI-assisted tools
+
+For a comprehensive overview of the project, including architecture, features, and implementation strategy, please refer to the [index.md](index.md) file.

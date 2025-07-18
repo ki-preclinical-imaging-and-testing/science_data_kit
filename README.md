@@ -10,9 +10,9 @@ The Science Data Kit (SDK) helps researchers manage and make sense of complex, m
 
 The Science Data Kit is currently undergoing significant architectural improvements and reorganization. The project is focused on three active roadmaps:
 
-1. **Repository Reorganization** - Improving the organization of documentation and repository structure
-2. **Knowledge Graph Documentation System** - Implementing an AI-navigable documentation system
-3. **Strategic Enhancements** - Platform maturation and community adoption features
+1. **Design/UX Phase** - Frontend component validation, user experience optimization, and workshop preparation
+2. **Streamlit to Flask Migration** - Transitioning from Streamlit to Flask as the primary UI framework
+3. **Dropbox Extension** - Implementing Dropbox cloud storage integration
 
 For more details on the current development plans and roadmaps, see the [Roadmaps Index](docs/roadmaps/index.md).
 

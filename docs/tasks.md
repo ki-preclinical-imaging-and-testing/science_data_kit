@@ -1,5 +1,7 @@
 # Science Data Kit Improvement Tasks
 
+> **DEPRECATED**: This document is maintained for historical reference only and is no longer actively updated. Please refer to the [roadmaps/index.md](roadmaps/index.md) for current development priorities and plans.
+
 This document contains a prioritized list of actionable improvement tasks for the Science Data Kit project. Tasks are organized by category and include both architectural and code-level improvements.
 
 ## Architecture Improvements

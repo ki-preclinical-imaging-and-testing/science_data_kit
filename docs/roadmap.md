@@ -1,5 +1,7 @@
 # Science Data Kit Development Roadmap
 
+> **DEPRECATED**: This document is maintained for historical reference only and is no longer actively updated. Please refer to the [roadmaps/index.md](roadmaps/index.md) for current development priorities and plans.
+
 This document outlines the development roadmap for the Science Data Kit project, organized by priority level. Tasks are categorized as High, Medium, or Low priority to guide development efforts.
 
 ## High Priority Tasks
