@@ -172,3 +172,26 @@ class AnalyticsDashboardPageData(PageData):
     session_id: Optional[str] = None
     session_start: Optional[float] = None
     session_duration: Optional[float] = None
+
+@dataclass
+class ChatPageData(PageData):
+    """Chat page specific data"""
+    chat_history: List[Dict[str, Any]] = field(default_factory=list)
+    llm_provider: str = "OpenAI"
+    llm_api_key: Optional[str] = None
+    llm_model: str = "gpt-3.5-turbo"
+    llm_temperature: float = 0.7
+    llm_max_tokens: int = 1000
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_auth_enabled: bool = False
+    ollama_username: Optional[str] = None
+    ollama_password: Optional[str] = None
+    ollama_available_models: List[str] = field(default_factory=list)
+    neo4j_uri: Optional[str] = None
+    neo4j_user: Optional[str] = None
+    neo4j_password: Optional[str] = None
+    neo4j_database: Optional[str] = None
+    neo4j_schema: Optional[str] = None
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    graphrag_available: bool = False
