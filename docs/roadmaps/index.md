@@ -24,9 +24,9 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for transitioning the Science Data Kit from its current Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintains both frameworks, this roadmap focuses specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
 
-**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_13.md)
+**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_14.md)
 
-**Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment) and Phase 2 (Flask Implementation Completion), and is now in Phase 3 (User Experience Optimization). Key accomplishments include:
+**Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment) and Phase 2 (Flask Implementation Completion), and has made significant progress in Phase 3 (User Experience Optimization). Key accomplishments include:
 
 1. **Comprehensive Inventory**: A complete inventory of all 23 Streamlit pages and their features has been created.
 2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages, 9 medium-priority features, and 7 low-priority features, all of which have now been fully implemented.
@@ -35,7 +35,7 @@ This roadmap outlines a comprehensive plan for transitioning the Science Data Ki
 5. **Medium-Priority Features Implementation**: All medium-priority features have been implemented: About page, cBioPortal browser, Dropbox integration, ISA browser, Map visualization, Microsoft Graph integration, Microsoft Graph exploration, Ontology browser, and User preferences.
 6. **Low-Priority Features Implementation**: All seven low-priority features have been implemented: Analytics dashboard with comprehensive tracking and visualization capabilities, Chat interface with retrieval-augmented generation capabilities, Feedback collection, Instructor page, Observation page, Survey page, and Workshop page.
 7. **UI Component Enhancements**: Enhanced UI components have been implemented with HTMX for dynamic updates, Alpine.js for client-side interactivity, rich preview capabilities for various file types, and responsive design for all components.
-8. **Testing Implementation**: Unit tests have been created for all implemented API endpoints, end-to-end tests have been implemented for critical paths, and performance benchmarks have been conducted.
+8. **Testing Implementation**: Unit tests have been created for all implemented API endpoints, end-to-end tests have been implemented for critical paths (including File Explorer and Connect page workflows), performance benchmarks have been conducted with visualizations of improvements, and a comprehensive usability testing plan has been created.
 
 The current implementation status shows:
 - 5 high-priority pages have been fully implemented in Flask (connect, dashboard, file browser, explore, plugin connect)
