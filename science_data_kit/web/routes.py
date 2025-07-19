@@ -23,6 +23,7 @@ from science_data_kit.core.pages.msgraph_connect import MSGraphConnectPage
 from science_data_kit.core.pages.msgraph_explore import MSGraphExplorePage
 from science_data_kit.core.pages.ontology import OntologyPage
 from science_data_kit.core.pages.preferences import PreferencesPage
+from science_data_kit.core.pages.analytics_dashboard import AnalyticsDashboardPage
 from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
@@ -1594,6 +1595,173 @@ def clear_isa_terms():
     """Clear all terms."""
     page = IsaBrowserPage()
     return jsonify(page.clear_terms())
+
+@main_bp.route('/analytics')
+@login_required
+def analytics_dashboard():
+    """Analytics dashboard page for viewing usage statistics."""
+    page = AnalyticsDashboardPage()
+    return render_page_html(page, 'analytics_dashboard.html')
+
+@main_bp.route('/api/analytics/data', methods=['GET'])
+@login_required
+def get_analytics_data():
+    """Get analytics data including page views and interactions."""
+    page = AnalyticsDashboardPage()
+
+    # Store session ID and start time in session if not already there
+    if 'analytics_session_id' not in session:
+        session['analytics_session_id'] = page.session_id
+    if 'analytics_session_start' not in session:
+        session['analytics_session_start'] = page.session_start
+
+    # Use session values if available
+    page.session_id = session.get('analytics_session_id', page.session_id)
+    page.session_start = session.get('analytics_session_start', page.session_start)
+
+    # Get page data
+    page_data = page.get_page_data()
+
+    return jsonify({
+        'success': True,
+        'page_views': page_data.page_views,
+        'page_views_summary': page_data.page_views_summary,
+        'interactions': page_data.interactions,
+        'interactions_summary': page_data.interactions_summary,
+        'session_id': page_data.session_id,
+        'session_start': page_data.session_start,
+        'session_duration': page_data.session_duration,
+        'analytics_enabled': page_data.analytics_enabled,
+        'analytics_storage_path': page_data.analytics_storage_path
+    })
+
+@main_bp.route('/api/analytics/toggle', methods=['POST'])
+@login_required
+def toggle_analytics():
+    """Enable or disable analytics tracking."""
+    data = request.json
+    enabled = data.get('enabled', True)
+
+    page = AnalyticsDashboardPage()
+
+    # Use session values if available
+    page.session_id = session.get('analytics_session_id', page.session_id)
+    page.session_start = session.get('analytics_session_start', page.session_start)
+
+    # Toggle analytics
+    result = page.toggle_analytics(enabled)
+
+    # Store analytics enabled state in session
+    session['analytics_enabled'] = enabled
+
+    return jsonify(result)
+
+@main_bp.route('/api/analytics/storage-path', methods=['POST'])
+@login_required
+def update_analytics_storage_path():
+    """Update the analytics storage path."""
+    data = request.json
+    path = data.get('path')
+
+    if not path:
+        return jsonify({'success': False, 'error': 'Storage path is required'}), 400
+
+    page = AnalyticsDashboardPage()
+
+    # Use session values if available
+    page.session_id = session.get('analytics_session_id', page.session_id)
+    page.session_start = session.get('analytics_session_start', page.session_start)
+
+    # Update storage path
+    result = page.update_storage_path(path)
+
+    # Store storage path in session
+    if result.get('success'):
+        session['analytics_storage_path'] = path
+
+    return jsonify(result)
+
+@main_bp.route('/api/analytics/export', methods=['POST'])
+@login_required
+def export_analytics_data():
+    """Export analytics data to CSV or JSON."""
+    data = request.json
+    format = data.get('format', 'csv')
+
+    page = AnalyticsDashboardPage()
+
+    # Use session values if available
+    page.session_id = session.get('analytics_session_id', page.session_id)
+    page.session_start = session.get('analytics_session_start', page.session_start)
+
+    # Export data
+    result = page.export_analytics_data(format)
+
+    return jsonify(result)
+
+@main_bp.route('/api/analytics/clear', methods=['POST'])
+@login_required
+def clear_analytics_data():
+    """Clear all analytics data."""
+    page = AnalyticsDashboardPage()
+
+    # Use session values if available
+    page.session_id = session.get('analytics_session_id', page.session_id)
+    page.session_start = session.get('analytics_session_start', page.session_start)
+
+    # Clear data
+    result = page.clear_analytics_data()
+
+    return jsonify(result)
+
+@main_bp.route('/api/analytics/track-page-view', methods=['POST'])
+@login_required
+def track_page_view():
+    """Track a page view."""
+    data = request.json
+    page_name = data.get('page_name')
+    page_path = data.get('page_path')
+
+    if not page_name:
+        return jsonify({'success': False, 'error': 'Page name is required'}), 400
+
+    page = AnalyticsDashboardPage()
+
+    # Use session values if available
+    page.session_id = session.get('analytics_session_id', page.session_id)
+    page.session_start = session.get('analytics_session_start', page.session_start)
+    page.analytics_enabled = session.get('analytics_enabled', page.analytics_enabled)
+
+    # Track page view
+    result = page.track_page_view(page_name, page_path)
+
+    return jsonify(result)
+
+@main_bp.route('/api/analytics/track-interaction', methods=['POST'])
+@login_required
+def track_interaction():
+    """Track a user interaction."""
+    data = request.json
+    interaction_type = data.get('interaction_type')
+    component_id = data.get('component_id')
+    component_type = data.get('component_type')
+    page_name = data.get('page_name')
+    details = data.get('details')
+
+    if not interaction_type or not component_id or not component_type or not page_name:
+        return jsonify({'success': False, 'error': 'Interaction type, component ID, component type, and page name are required'}), 400
+
+    page = AnalyticsDashboardPage()
+
+    # Use session values if available
+    page.session_id = session.get('analytics_session_id', page.session_id)
+    page.session_start = session.get('analytics_session_start', page.session_start)
+    page.analytics_enabled = session.get('analytics_enabled', page.analytics_enabled)
+
+    # Track interaction
+    result = page.track_interaction(interaction_type, component_id, component_type, page_name, details)
+
+    return jsonify(result)
 
 @main_bp.route('/api/isa/terms', methods=['GET'])
 @login_required

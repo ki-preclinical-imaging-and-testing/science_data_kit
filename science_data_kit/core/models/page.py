@@ -159,3 +159,16 @@ class MSGraphExplorePageData(PageData):
     sample_queries: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     visualization_data: Optional[Dict[str, Any]] = None
     entity_type: str = "unknown"
+
+@dataclass
+class AnalyticsDashboardPageData(PageData):
+    """Analytics dashboard page specific data"""
+    analytics_enabled: bool = True
+    analytics_storage_path: Optional[str] = None
+    page_views: List[Dict[str, Any]] = field(default_factory=list)
+    page_views_summary: Optional[Dict[str, Any]] = None
+    interactions: List[Dict[str, Any]] = field(default_factory=list)
+    interactions_summary: Optional[Dict[str, Any]] = None
+    session_id: Optional[str] = None
+    session_start: Optional[float] = None
+    session_duration: Optional[float] = None

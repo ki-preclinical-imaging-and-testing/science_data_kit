@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Analytics Dashboard</h1>
+    
+    <!-- Analytics Settings -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Analytics Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div id="settingsStatus"></div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="analyticsEnabledCheck" 
+                               {% if page_data.analytics_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="analyticsEnabledCheck">Enable Analytics Tracking</label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="storagePathInput" class="form-label">Analytics Storage Path</label>
+                        <input type="text" class="form-control" id="storagePathInput" 
+                               value="{{ page_data.analytics_storage_path }}">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button id="exportCsvBtn" class="btn btn-outline-primary w-100">Export Data (CSV)</button>
+                        </div>
+                        <div class="col-md-6">
+                            <button id="exportJsonBtn" class="btn btn-outline-primary w-100">Export Data (JSON)</button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button id="clearDataBtn" class="btn btn-danger">Clear Analytics Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page Views -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Page Views</h5>
+                </div>
+                <div class="card-body">
+                    {% if page_data.page_views %}
+                        <h6>Page View Summary</h6>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Page Name</th>
+                                        <th>View Count</th>
+                                        <th>Min Duration (s)</th>
+                                        <th>Max Duration (s)</th>
+                                        <th>Avg Duration (s)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in page_data.page_views_summary %}
+                                    <tr>
+                                        <td>{{ item.page_name }}</td>
+                                        <td>{{ item.view_count }}</td>
+                                        <td>{{ "%.2f"|format(item.min_duration) }}</td>
+                                        <td>{{ "%.2f"|format(item.max_duration) }}</td>
+                                        <td>{{ "%.2f"|format(item.avg_duration) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h6>Page View Timeline</h6>
+                        <div id="pageViewChart" class="mb-4" style="height: 300px;"></div>
+                        
+                        <div class="accordion" id="pageViewsAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="pageViewsHeading">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                            data-bs-target="#pageViewsCollapse" aria-expanded="false" aria-controls="pageViewsCollapse">
+                                        Raw Page View Data
+                                    </button>
+                                </h2>
+                                <div id="pageViewsCollapse" class="accordion-collapse collapse" aria-labelledby="pageViewsHeading">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Timestamp</th>
+                                                        <th>Page Name</th>
+                                                        <th>Page Path</th>
+                                                        <th>Session Duration (s)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for view in page_data.page_views %}
+                                                    <tr>
+                                                        <td>{{ view.formatted_time }}</td>
+                                                        <td>{{ view.page_name }}</td>
+                                                        <td>{{ view.page_path }}</td>
+                                                        <td>{{ "%.2f"|format(view.session_duration) }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">No page view data available</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Interactions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">User Interactions</h5>
+                </div>
+                <div class="card-body">
+                    {% if page_data.interactions %}
+                        <h6>Interaction Summary</h6>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Page Name</th>
+                                        <th>Interaction Type</th>
+                                        <th>Interaction Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in page_data.interactions_summary %}
+                                    <tr>
+                                        <td>{{ item.page_name }}</td>
+                                        <td>{{ item.interaction_type }}</td>
+                                        <td>{{ item.interaction_count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h6>Interaction Types</h6>
+                        <div id="interactionChart" class="mb-4" style="height: 300px;"></div>
+                        
+                        <div class="accordion" id="interactionsAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="interactionsHeading">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                            data-bs-target="#interactionsCollapse" aria-expanded="false" aria-controls="interactionsCollapse">
+                                        Raw Interaction Data
+                                    </button>
+                                </h2>
+                                <div id="interactionsCollapse" class="accordion-collapse collapse" aria-labelledby="interactionsHeading">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Timestamp</th>
+                                                        <th>Page Name</th>
+                                                        <th>Interaction Type</th>
+                                                        <th>Component Type</th>
+                                                        <th>Component ID</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for interaction in page_data.interactions %}
+                                                    <tr>
+                                                        <td>{{ interaction.formatted_time }}</td>
+                                                        <td>{{ interaction.page_name }}</td>
+                                                        <td>{{ interaction.interaction_type }}</td>
+                                                        <td>{{ interaction.component_type }}</td>
+                                                        <td>{{ interaction.component_id }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">No interaction data available</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Session Information -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Session Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Session ID</h6>
+                                    <p class="card-text fs-4">{{ page_data.session_id[:8] }}...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Session Duration</h6>
+                                    <p class="card-text fs-4">{{ "%.1f"|format(page_data.session_duration) }} seconds</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle analytics enabled
+        document.getElementById('analyticsEnabledCheck').addEventListener('change', function() {
+            fetch('/api/analytics/toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    enabled: this.checked
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('settingsStatus', 'success', data.message);
+                } else {
+                    showAlert('settingsStatus', 'danger', data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('settingsStatus', 'danger', 'Error: ' + error);
+            });
+        });
+        
+        // Update storage path
+        document.getElementById('storagePathInput').addEventListener('change', function() {
+            fetch('/api/analytics/storage-path', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    path: this.value
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('settingsStatus', 'success', data.message);
+                } else {
+                    showAlert('settingsStatus', 'danger', data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('settingsStatus', 'danger', 'Error: ' + error);
+            });
+        });
+        
+        // Export data (CSV)
+        document.getElementById('exportCsvBtn').addEventListener('click', function() {
+            fetch('/api/analytics/export', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    format: 'csv'
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('settingsStatus', 'success', data.message);
+                } else {
+                    showAlert('settingsStatus', 'danger', data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('settingsStatus', 'danger', 'Error: ' + error);
+            });
+        });
+        
+        // Export data (JSON)
+        document.getElementById('exportJsonBtn').addEventListener('click', function() {
+            fetch('/api/analytics/export', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    format: 'json'
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('settingsStatus', 'success', data.message);
+                } else {
+                    showAlert('settingsStatus', 'danger', data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('settingsStatus', 'danger', 'Error: ' + error);
+            });
+        });
+        
+        // Clear data
+        document.getElementById('clearDataBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all analytics data? This action cannot be undone.')) {
+                fetch('/api/analytics/clear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('settingsStatus', 'success', data.message);
+                        // Reload the page to reflect the cleared data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        showAlert('settingsStatus', 'danger', data.error);
+                    }
+                })
+                .catch(error => {
+                    showAlert('settingsStatus', 'danger', 'Error: ' + error);
+                });
+            }
+        });
+        
+        // Helper function to show alerts
+        function showAlert(elementId, type, message) {
+            const alertElement = document.getElementById(elementId);
+            alertElement.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+        }
+        
+        // Create charts if data is available
+        {% if page_data.page_views %}
+            // Page view timeline chart
+            const pageViewData = {{ page_data.page_views|tojson }};
+            createPageViewChart(pageViewData);
+        {% endif %}
+        
+        {% if page_data.interactions %}
+            // Interaction types chart
+            const interactionData = {{ page_data.interactions|tojson }};
+            createInteractionChart(interactionData);
+        {% endif %}
+        
+        // Function to create page view timeline chart
+        function createPageViewChart(data) {
+            // Group data by hour
+            const hourCounts = {};
+            data.forEach(view => {
+                const date = new Date(view.timestamp * 1000);
+                const hour = date.toISOString().slice(0, 13) + ':00';
+                hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+            });
+            
+            const labels = Object.keys(hourCounts).sort();
+            const counts = labels.map(hour => hourCounts[hour]);
+            
+            const ctx = document.getElementById('pageViewChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Page Views',
+                        data: counts,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Function to create interaction types chart
+        function createInteractionChart(data) {
+            // Count interaction types
+            const typeCounts = {};
+            data.forEach(interaction => {
+                const type = interaction.interaction_type;
+                typeCounts[type] = (typeCounts[type] || 0) + 1;
+            });
+            
+            const types = Object.keys(typeCounts);
+            const counts = types.map(type => typeCounts[type]);
+            
+            // Generate colors
+            const colors = types.map((_, index) => {
+                const hue = (index * 137) % 360;
+                return `hsla(${hue}, 70%, 60%, 0.7)`;
+            });
+            
+            const ctx = document.getElementById('interactionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: types,
+                    datasets: [{
+                        label: 'Interaction Count',
+                        data: counts,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => color.replace('0.7', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
