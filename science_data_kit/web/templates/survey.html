@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Survey{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>File System Survey</h1>
+            <p class="lead">Scan and analyze file systems, then push the data to Neo4j for visualization and analysis.</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Database Connection</h5>
+                </div>
+                <div class="card-body">
+                    <div id="connectionForm" x-data="{ connected: {{ 'true' if page_data.connection_status.get('neo4j', False) else 'false' }} }">
+                        <div x-show="!connected">
+                            <form id="connectForm" hx-post="/api/survey/connect" hx-target="#connectionStatus" hx-swap="outerHTML">
+                                <div class="mb-3">
+                                    <label for="uri" class="form-label">Neo4j URI</label>
+                                    <input type="text" class="form-control" id="uri" name="uri" value="{{ page_data.neo4j_uri or 'bolt://localhost:7687' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username" value="{{ page_data.neo4j_user or 'neo4j' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="password" name="password" value="{{ page_data.neo4j_password or '' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="database" class="form-label">Database</label>
+                                    <input type="text" class="form-control" id="database" name="database" value="{{ page_data.neo4j_database or 'neo4j' }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="conn_name" class="form-label">Connection Name (Optional)</label>
+                                    <input type="text" class="form-control" id="conn_name" name="conn_name" value="{{ page_data.active_connection or '' }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary" 
+                                        @click="connected = true">
+                                    Connect to Neo4j
+                                </button>
+                            </form>
+                        </div>
+                        <div x-show="connected">
+                            <div class="alert alert-success">
+                                <strong>Connected to Neo4j</strong>
+                                <p>{{ page_data.neo4j_uri }}</p>
+                            </div>
+                            <button class="btn btn-danger" 
+                                    hx-post="/api/survey/disconnect" 
+                                    hx-target="#connectionStatus" 
+                                    hx-swap="outerHTML"
+                                    @click="connected = false">
+                                Disconnect
+                            </button>
+                        </div>
+                    </div>
+                    <div id="connectionStatus" class="mt-3"></div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Scan Settings</h5>
+                </div>
+                <div class="card-body">
+                    <form id="scanForm" hx-post="/api/survey/scan" hx-target="#scanStatus">
+                        <div class="mb-3">
+                            <label for="folderPath" class="form-label">Folder Path</label>
+                            <input type="text" class="form-control" id="folderPath" name="folder_path" value="{{ page_data.folder_path }}" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="useNcdu" name="use_ncdu" value="true">
+                            <label class="form-check-label" for="useNcdu">Use ncdu for scanning (more detailed but slower)</label>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ncduJsonPath" class="form-label">ncdu JSON Output Path (Optional)</label>
+                            <input type="text" class="form-control" id="ncduJsonPath" name="output_json_path" value="{{ page_data.ncdu_json_path }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Scan Directory</button>
+                    </form>
+                    <div id="scanStatus" class="mt-3"></div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Entity Labels</h5>
+                </div>
+                <div class="card-body">
+                    <form id="labelsForm" hx-post="/api/survey/update_labels" hx-target="#labelsStatus">
+                        <div class="mb-3">
+                            <label for="directoryLabel" class="form-label">Directory Label</label>
+                            <input type="text" class="form-control" id="directoryLabel" name="directory_label" value="{{ page_data.directory_label }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fileLabel" class="form-label">File Label</label>
+                            <input type="text" class="form-control" id="fileLabel" name="file_label" value="{{ page_data.file_label }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Labels</button>
+                    </form>
+                    <div id="labelsStatus" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="surveyTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="results-tab" data-bs-toggle="tab" data-bs-target="#results" type="button" role="tab" aria-controls="results" aria-selected="true">Scan Results</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="push-tab" data-bs-toggle="tab" data-bs-target="#push" type="button" role="tab" aria-controls="push" aria-selected="false">Push to Neo4j</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#map" type="button" role="tab" aria-controls="map" aria-selected="false" hx-get="/api/survey/prepare_map" hx-target="#mapData" hx-trigger="click">Map Data</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="surveyTabsContent">
+                        <div class="tab-pane fade show active" id="results" role="tabpanel" aria-labelledby="results-tab">
+                            {% if page_data.scan_completed %}
+                                <div class="alert alert-success">
+                                    <strong>Scan Completed</strong>
+                                    <p>{{ page_data.scanned_files|length }} items found in {{ page_data.folder_path }}</p>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Type</th>
+                                                <th>Size</th>
+                                                <th>Path</th>
+                                                <th>Label</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in page_data.scanned_files.to_dict(orient="records") %}
+                                            <tr>
+                                                <td>{{ item.name }}</td>
+                                                <td>{{ item.type }}</td>
+                                                <td>{{ item.size|filesizeformat }}</td>
+                                                <td>{{ item.path }}</td>
+                                                <td>{{ item.label }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <p>No scan results yet. Use the form on the left to scan a directory.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="tab-pane fade" id="push" role="tabpanel" aria-labelledby="push-tab">
+                            <div class="mb-4">
+                                <h4>Push Scan Results to Neo4j</h4>
+                                <p>Push the scan results to Neo4j for visualization and analysis.</p>
+                                
+                                <form id="pushForm" hx-post="/api/survey/push" hx-target="#pushStatus">
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="includeFiles" name="include_files" value="true">
+                                        <label class="form-check-label" for="includeFiles">Include Files (not just directories)</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" {% if not page_data.scan_completed %}disabled{% endif %}>
+                                        Push to Neo4j
+                                    </button>
+                                </form>
+                                <div id="pushStatus" class="mt-3"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="map" role="tabpanel" aria-labelledby="map-tab">
+                            <div id="mapData">
+                                <p>Click the "Map Data" tab to prepare data for visualization.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

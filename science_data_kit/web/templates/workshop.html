@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+
+{% block title %}Workshop{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>🧪 Science Data Kit Workshop</h1>
+            <p class="lead">Welcome to the Science Data Kit Workshop! This page will guide you through the workshop activities and help you get started with the Science Data Kit.</p>
+            
+            <div class="alert alert-info">
+                <strong>Workshop ID:</strong> {{ page_data.workshop_id }} | <strong>Participant ID:</strong> {{ page_data.participant_id }}
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="workshopTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="getting-started-tab" data-bs-toggle="tab" data-bs-target="#getting-started" type="button" role="tab" aria-controls="getting-started" aria-selected="true">Getting Started</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="challenge-tab" data-bs-toggle="tab" data-bs-target="#challenge" type="button" role="tab" aria-controls="challenge" aria-selected="false">30-Minute Challenge</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab" aria-controls="resources" aria-selected="false">Resources</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="help-tab" data-bs-toggle="tab" data-bs-target="#help" type="button" role="tab" aria-controls="help" aria-selected="false">Help</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="feedback-tab" data-bs-toggle="tab" data-bs-target="#feedback" type="button" role="tab" aria-controls="feedback" aria-selected="false">Feedback</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="workshopTabsContent">
+                <!-- Getting Started Tab -->
+                <div class="tab-pane fade show active" id="getting-started" role="tabpanel" aria-labelledby="getting-started-tab">
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h2>Getting Started</h2>
+                            
+                            <h3>Welcome to the Science Data Kit Workshop!</h3>
+                            <p>
+                                The Science Data Kit (SDK) is a comprehensive tool for scientific data analysis and visualization.
+                                It provides a unified interface for working with various data sources, including Neo4j, SQL databases,
+                                and RESTful APIs.
+                            </p>
+                            
+                            <p>In this workshop, you will:</p>
+                            <ol>
+                                <li>Learn the basics of the Science Data Kit</li>
+                                <li>Explore a realistic preclinical cancer research dataset</li>
+                                <li>Perform data analysis and visualization</li>
+                                <li>Answer research questions using the dataset</li>
+                            </ol>
+                            
+                            <h3>Workshop Environment</h3>
+                            <p>This workshop environment has been pre-configured with:</p>
+                            <ul>
+                                <li>Science Data Kit installed and ready to use</li>
+                                <li>Neo4j database running with sample data</li>
+                                <li>Jupyter Lab for interactive analysis</li>
+                                <li>NeoDash for creating dashboards</li>
+                            </ul>
+                            
+                            <h3>First Steps</h3>
+                            <ol>
+                                <li><strong>Load the preclinical research dataset</strong>: Click the button below to load the dataset into Neo4j</li>
+                                <li><strong>Explore the dataset</strong>: Use the Explore page to run queries and visualize the data</li>
+                                <li><strong>Take the 30-Minute Challenge</strong>: Follow the guided tutorial to analyze the dataset</li>
+                            </ol>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4>Load Preclinical Research Dataset</h4>
+                                            <p>Click the button below to load the preclinical research dataset into Neo4j.</p>
+                                            <button class="btn btn-primary" hx-post="/api/workshop/load_dataset" hx-target="#loadDatasetStatus">
+                                                Load Preclinical Research Dataset
+                                            </button>
+                                            <div id="loadDatasetStatus" class="mt-3"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4>Verify Installation</h4>
+                                            <p>Click the button below to verify that the Science Data Kit is installed correctly.</p>
+                                            <button class="btn btn-primary" hx-post="/api/workshop/verify_installation" hx-target="#verifyInstallationStatus">
+                                                Verify Installation
+                                            </button>
+                                            <div id="verifyInstallationStatus" class="mt-3"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 30-Minute Challenge Tab -->
+                <div class="tab-pane fade" id="challenge" role="tabpanel" aria-labelledby="challenge-tab">
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h2>30-Minute Challenge</h2>
+                            
+                            <h3>Preclinical Research Challenge</h3>
+                            <p>
+                                The 30-Minute Preclinical Research Challenge is a guided tutorial that will help you learn
+                                how to use the Science Data Kit to analyze a realistic preclinical cancer research dataset.
+                            </p>
+                            
+                            <p>The challenge is structured in progressive steps, each building on the previous one:</p>
+                            <ol>
+                                <li><strong>Loading the Dataset</strong>: Load and explore the preclinical research dataset</li>
+                                <li><strong>Analyzing Experiments</strong>: Analyze experimental design and animal groups</li>
+                                <li><strong>Tumor Growth Analysis</strong>: Analyze tumor volume changes over time</li>
+                                <li><strong>Survival Analysis</strong>: Analyze survival outcomes and tumor responses</li>
+                                <li><strong>Answering Research Questions</strong>: Identify the most effective treatment</li>
+                            </ol>
+                            
+                            <h3>Running the Challenge</h3>
+                            <p>You can run the challenge in two ways:</p>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4>Jupyter Notebook</h4>
+                                            <p>Open the challenge notebook in Jupyter Lab:</p>
+                                            <ol>
+                                                <li>Click the button below to open Jupyter Lab</li>
+                                                <li>Navigate to <code>tutorials/preclinical_challenge_tutorial.ipynb</code></li>
+                                                <li>Follow the instructions in the notebook</li>
+                                            </ol>
+                                            <a href="http://localhost:8888/lab" target="_blank" class="btn btn-primary">
+                                                Open Jupyter Lab
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4>Python Script</h4>
+                                            <p>Run the challenge script directly:</p>
+                                            <ol>
+                                                <li>Click the button below to run the challenge script</li>
+                                                <li>Follow the instructions in the terminal</li>
+                                                <li>Use the checkpoint verification script to check your progress</li>
+                                            </ol>
+                                            <button class="btn btn-primary" hx-post="/api/workshop/run_challenge" hx-target="#runChallengeStatus">
+                                                Run Challenge Script
+                                            </button>
+                                            <div id="runChallengeStatus" class="mt-3"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h3 class="mt-4">Checkpoint Verification</h3>
+                            <p>
+                                You can verify your progress through the challenge by running the checkpoint verification script.
+                                This script will check if you have completed each step of the challenge correctly.
+                            </p>
+                            
+                            <form hx-post="/api/workshop/verify_checkpoint" hx-target="#verifyCheckpointStatus">
+                                <div class="mb-3">
+                                    <label for="checkpointSelect" class="form-label">Select checkpoint to verify:</label>
+                                    <select class="form-select" id="checkpointSelect" name="checkpoint_num">
+                                        <option value="0">All checkpoints</option>
+                                        <option value="1">Checkpoint 1: Dataset loading and exploration</option>
+                                        <option value="2">Checkpoint 2: Analyzing experiments and animal groups</option>
+                                        <option value="3">Checkpoint 3: Tumor growth analysis</option>
+                                        <option value="4">Checkpoint 4: Survival analysis</option>
+                                        <option value="5">Checkpoint 5: Answering research questions</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Verify Checkpoint</button>
+                            </form>
+                            <div id="verifyCheckpointStatus" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resources Tab -->
+                <div class="tab-pane fade" id="resources" role="tabpanel" aria-labelledby="resources-tab">
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h2>Resources</h2>
+                            
+                            <h3>Documentation</h3>
+                            <ul>
+                                {% for doc in page_data.resources.documentation %}
+                                <li><a href="{{ doc.url }}" target="_blank">{{ doc.title }}</a></li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <h3>Jupyter Notebook Tutorials</h3>
+                            <p>Interactive Jupyter notebook tutorials that you can run and modify:</p>
+                            <ul>
+                                {% for tutorial in page_data.resources.jupyter_tutorials %}
+                                <li><a href="{{ tutorial.url }}" target="_blank">{{ tutorial.title }}</a> - {{ tutorial.description }}</li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <h3>Python Script Tutorials</h3>
+                            <p>Python script versions of the tutorials:</p>
+                            <ul>
+                                {% for tutorial in page_data.resources.python_tutorials %}
+                                <li><a href="{{ tutorial.url }}" target="_blank">{{ tutorial.title }}</a></li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <h3>Sample Datasets</h3>
+                            <ul>
+                                {% for dataset in page_data.resources.sample_datasets %}
+                                <li><a href="{{ dataset.url }}" target="_blank">{{ dataset.title }}</a></li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <h3>Tools</h3>
+                            <ul>
+                                {% for tool in page_data.resources.tools %}
+                                <li><a href="{{ tool.url }}" target="_blank">{{ tool.title }}</a> - {{ tool.description }}</li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <hr>
+                            
+                            <h3>Video Tutorials</h3>
+                            <div class="row">
+                                {% for video in page_data.video_tutorials %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card">
+                                        <img src="{{ video.thumbnail }}" class="card-img-top" alt="{{ video.title }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ video.title }}</h5>
+                                            <p class="card-text">{{ video.description }}</p>
+                                            <p class="card-text"><small class="text-muted">Duration: {{ video.duration }}</small></p>
+                                            <a href="{{ video.url }}" target="_blank" class="btn btn-primary">Watch Video</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <hr>
+                            
+                            <h3>Demo Videos</h3>
+                            <div class="row">
+                                {% for video in page_data.demo_videos %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <img src="{{ video.thumbnail }}" class="card-img-top" alt="{{ video.title }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ video.title }}</h5>
+                                            <p class="card-text">{{ video.description }}</p>
+                                            <p class="card-text"><small class="text-muted">Duration: {{ video.duration }}</small></p>
+                                            <a href="{{ video.url }}" target="_blank" class="btn btn-primary">Watch Demo</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <hr>
+                            
+                            <h3>Reference Cards</h3>
+                            <div class="row">
+                                {% for card in page_data.reference_cards %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <img src="{{ card.thumbnail }}" class="card-img-top" alt="{{ card.title }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ card.title }}</h5>
+                                            <p class="card-text">{{ card.description }}</p>
+                                            <a href="{{ card.url }}" target="_blank" class="btn btn-primary">View Reference</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <hr>
+                            
+                            <h3>Interactive Demos</h3>
+                            <div class="row">
+                                {% for demo in page_data.interactive_demos %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <img src="{{ demo.thumbnail }}" class="card-img-top" alt="{{ demo.title }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ demo.title }}</h5>
+                                            <p class="card-text">{{ demo.description }}</p>
+                                            <a href="{{ demo.url }}" target="_blank" class="btn btn-primary">Try Demo</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Help Tab -->
+                <div class="tab-pane fade" id="help" role="tabpanel" aria-labelledby="help-tab">
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h2>Help</h2>
+                            
+                            <h3>Common Issues</h3>
+                            
+                            <h4>Database Connection Issues</h4>
+                            <p>If you're having trouble connecting to the Neo4j database:</p>
+                            <ol>
+                                <li>Check that the Neo4j container is running</li>
+                                <li>Verify the connection settings on the Server page</li>
+                                <li>Try restarting the Neo4j container</li>
+                            </ol>
+                            
+                            <h4>Dataset Loading Issues</h4>
+                            <p>If you're having trouble loading the preclinical research dataset:</p>
+                            <ol>
+                                <li>Check that the Neo4j database is running and accessible</li>
+                                <li>Verify that you have the necessary permissions</li>
+                                <li>Try reloading the dataset from the Getting Started tab</li>
+                            </ol>
+                            
+                            <h4>Tutorial Issues</h4>
+                            <p>If you're having trouble with the 30-Minute Challenge:</p>
+                            <ol>
+                                <li>Make sure the preclinical research dataset is loaded</li>
+                                <li>Check that you're running the correct version of the tutorial</li>
+                                <li>Verify your progress using the checkpoint verification script</li>
+                            </ol>
+                            
+                            <h3>Getting Help</h3>
+                            <p>If you're still having issues:</p>
+                            <ol>
+                                <li>Ask a workshop instructor for help</li>
+                                <li>Check the <a href="https://github.com/your-org/science_data_kit" target="_blank">GitHub repository</a> for known issues</li>
+                                <li>Consult the <a href="https://your-org.github.io/science_data_kit/" target="_blank">documentation</a></li>
+                            </ol>
+                            
+                            <h3>Contact Form</h3>
+                            <p>If you need additional help, please fill out this form:</p>
+                            
+                            <form hx-post="/api/workshop/submit_help_request" hx-target="#helpRequestStatus">
+                                <div class="mb-3">
+                                    <label for="helpName" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="helpName" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="helpEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="helpEmail" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="helpIssue" class="form-label">Describe your issue</label>
+                                    <textarea class="form-control" id="helpIssue" name="issue" rows="4" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </form>
+                            <div id="helpRequestStatus" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Feedback Tab -->
+                <div class="tab-pane fade" id="feedback" role="tabpanel" aria-labelledby="feedback-tab">
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h2>Workshop Feedback</h2>
+                            
+                            <h3>Your Feedback Matters</h3>
+                            <p>
+                                We value your feedback on the Science Data Kit Workshop. Your input helps us improve the workshop experience
+                                and the Science Data Kit itself. Please take a moment to share your thoughts and suggestions.
+                            </p>
+                            
+                            <form hx-post="/api/workshop/submit_feedback" hx-target="#feedbackStatus">
+                                <div class="mb-3">
+                                    <label for="overallRating" class="form-label">Overall Workshop Rating</label>
+                                    <select class="form-select" id="overallRating" name="overall_rating" required>
+                                        <option value="">Select a rating</option>
+                                        <option value="5">5 - Excellent</option>
+                                        <option value="4">4 - Very Good</option>
+                                        <option value="3">3 - Good</option>
+                                        <option value="2">2 - Fair</option>
+                                        <option value="1">1 - Poor</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contentRating" class="form-label">Workshop Content Rating</label>
+                                    <select class="form-select" id="contentRating" name="content_rating" required>
+                                        <option value="">Select a rating</option>
+                                        <option value="5">5 - Excellent</option>
+                                        <option value="4">4 - Very Good</option>
+                                        <option value="3">3 - Good</option>
+                                        <option value="2">2 - Fair</option>
+                                        <option value="1">1 - Poor</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="usabilityRating" class="form-label">Science Data Kit Usability Rating</label>
+                                    <select class="form-select" id="usabilityRating" name="usability_rating" required>
+                                        <option value="">Select a rating</option>
+                                        <option value="5">5 - Excellent</option>
+                                        <option value="4">4 - Very Good</option>
+                                        <option value="3">3 - Good</option>
+                                        <option value="2">2 - Fair</option>
+                                        <option value="1">1 - Poor</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="feedbackLiked" class="form-label">What did you like most about the workshop?</label>
+                                    <textarea class="form-control" id="feedbackLiked" name="liked_most" rows="3" required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="feedbackImprove" class="form-label">What could be improved?</label>
+                                    <textarea class="form-control" id="feedbackImprove" name="could_improve" rows="3" required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="feedbackAdditional" class="form-label">Additional comments or suggestions</label>
+                                    <textarea class="form-control" id="feedbackAdditional" name="additional_comments" rows="3"></textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                            </form>
+                            <div id="feedbackStatus" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -195,3 +195,77 @@ class ChatPageData(PageData):
     connection_status: Dict[str, bool] = field(default_factory=dict)
     connection_errors: Dict[str, str] = field(default_factory=dict)
     graphrag_available: bool = False
+
+@dataclass
+class FeedbackPageData(PageData):
+    """Feedback page specific data"""
+    feedback_db_path: Optional[str] = None
+    feedback_data: List[Dict[str, Any]] = field(default_factory=list)
+    feedback_summary: Optional[Dict[str, Any]] = None
+    feedback_categories: List[str] = field(default_factory=list)
+    feedback_tags: List[str] = field(default_factory=list)
+    feedback_types: List[str] = field(default_factory=list)
+    workshop_ids: List[str] = field(default_factory=list)
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+
+@dataclass
+class InstructorPageData(PageData):
+    """Instructor page specific data"""
+    notes: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    sections: List[Dict[str, str]] = field(default_factory=list)
+    selected_section: Optional[str] = None
+    notes_path: Optional[str] = None
+
+@dataclass
+class ObservationPageData(PageData):
+    """Observation page specific data"""
+    observation_enabled: bool = False
+    observation_session_id: Optional[str] = None
+    observation_start_time: Optional[float] = None
+    observation_end_time: Optional[float] = None
+    observations: List[Dict[str, Any]] = field(default_factory=list)
+    observation_events: List[Dict[str, Any]] = field(default_factory=list)
+    observation_protocol_template: Dict[str, Any] = field(default_factory=dict)
+    observation_storage_path: Optional[str] = None
+    participant_id: Optional[str] = None
+    observer_name: Optional[str] = None
+    observation_summary: Optional[Dict[str, Any]] = None
+
+@dataclass
+class SurveyPageData(PageData):
+    """Survey page specific data for scanning and analyzing file systems"""
+    folder_path: str = ""
+    scan_results: Optional[Any] = None
+    selected_files: List[str] = field(default_factory=list)
+    entity_labels: Dict[str, str] = field(default_factory=dict)
+    ncdu_json_path: str = ""
+    scan_completed: bool = False
+    ncdu_output: str = ""
+    scanned_files: Optional[Any] = None
+    directory_label: str = "Folder"
+    file_label: str = "File"
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    neo4j_uri: Optional[str] = None
+    neo4j_user: Optional[str] = None
+    neo4j_password: Optional[str] = None
+    neo4j_database: Optional[str] = None
+    active_connection: Optional[str] = None
+
+@dataclass
+class WorkshopPageData(PageData):
+    """Workshop page specific data"""
+    workshop_id: Optional[str] = None
+    participant_id: Optional[str] = None
+    dataset_loaded: bool = False
+    installation_verified: bool = False
+    challenge_completed: bool = False
+    checkpoints_passed: List[int] = field(default_factory=list)
+    feedback_submitted: bool = False
+    help_requests: List[Dict[str, Any]] = field(default_factory=list)
+    resources: Dict[str, List[Dict[str, str]]] = field(default_factory=dict)
+    video_tutorials: List[Dict[str, Any]] = field(default_factory=list)
+    demo_videos: List[Dict[str, Any]] = field(default_factory=list)
+    reference_cards: List[Dict[str, Any]] = field(default_factory=list)
+    interactive_demos: List[Dict[str, Any]] = field(default_factory=list)

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Instructor Notes - Science Data Kit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Workshop Instructor Notes</h1>
+    <p class="lead">
+        This page provides instructions and tips for facilitating the Science Data Kit workshop.
+    </p>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Navigation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group" id="sectionList">
+                        {% for section in page_data.sections %}
+                        <button type="button" class="list-group-item list-group-item-action section-item" data-section-key="{{ section.key }}">
+                            {{ section.title }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary" id="exportMarkdownBtn">Export as Markdown</button>
+                        <button type="button" class="btn btn-outline-primary" id="exportPdfBtn">Export as PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0" id="sectionTitle">
+                        {% if page_data.selected_section %}
+                            {{ page_data.notes[page_data.selected_section].title }}
+                        {% else %}
+                            {{ page_data.sections[0].title }}
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="sectionContent">
+                        {% if page_data.selected_section %}
+                            {{ page_data.notes[page_data.selected_section].content | markdown }}
+                        {% else %}
+                            {{ page_data.sections[0].content | markdown }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle section selection
+        const sectionItems = document.querySelectorAll('.section-item');
+        sectionItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const sectionKey = this.getAttribute('data-section-key');
+                
+                // Update active state
+                sectionItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Set selected section via API
+                fetch('/api/instructor/set_section', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        section_key: sectionKey
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Get section content
+                        fetch(`/api/instructor/get_section?section_key=${sectionKey}`)
+                            .then(response => response.json())
+                            .then(sectionData => {
+                                if (sectionData.success) {
+                                    // Update section title and content
+                                    document.getElementById('sectionTitle').textContent = sectionData.section.title;
+                                    document.getElementById('sectionContent').innerHTML = marked.parse(sectionData.section.content);
+                                } else {
+                                    alert(`Error getting section: ${sectionData.error}`);
+                                }
+                            })
+                            .catch(error => {
+                                alert(`Error getting section: ${error}`);
+                            });
+                    } else {
+                        alert(`Error setting section: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`Error setting section: ${error}`);
+                });
+            });
+        });
+        
+        // Set the first section as active by default
+        if (sectionItems.length > 0) {
+            sectionItems[0].classList.add('active');
+        }
+        
+        // Handle export as Markdown
+        document.getElementById('exportMarkdownBtn').addEventListener('click', function() {
+            fetch('/api/instructor/export?format=markdown')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Instructor notes exported to: ${data.path}`);
+                    } else {
+                        alert(`Error exporting notes: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`Error exporting notes: ${error}`);
+                });
+        });
+        
+        // Handle export as PDF
+        document.getElementById('exportPdfBtn').addEventListener('click', function() {
+            fetch('/api/instructor/export?format=pdf')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Instructor notes exported to: ${data.path}`);
+                    } else {
+                        alert(`Error exporting notes: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`Error exporting notes: ${error}`);
+                });
+        });
+    });
+</script>
+{% endblock %}

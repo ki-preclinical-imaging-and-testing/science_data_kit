@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback - Science Data Kit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Feedback</h1>
+    <p class="lead">
+        Submit feedback about the Science Data Kit or view feedback from other users.
+    </p>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" id="feedbackTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">Dashboard</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="submit-tab" data-bs-toggle="tab" data-bs-target="#submit" type="button" role="tab" aria-controls="submit" aria-selected="false">Submit Feedback</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">Settings</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="feedbackTabsContent">
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Feedback Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="feedbackTypeFilter" class="form-label">Feedback Type</label>
+                                        <select class="form-select" id="feedbackTypeFilter">
+                                            <option value="">All</option>
+                                            {% for type in page_data.feedback_types %}
+                                            <option value="{{ type }}">{{ type }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="workshopIdFilter" class="form-label">Workshop ID</label>
+                                        <select class="form-select" id="workshopIdFilter">
+                                            <option value="">All</option>
+                                            {% for workshop_id in page_data.workshop_ids %}
+                                            <option value="{{ workshop_id }}">{{ workshop_id }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>By Feedback Type</h6>
+                                    <div id="feedbackByTypeTable">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Type</th>
+                                                    <th>Count</th>
+                                                    <th>Avg Rating</th>
+                                                    <th>Min Rating</th>
+                                                    <th>Max Rating</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="feedbackByTypeBody">
+                                                {% if page_data.feedback_summary and page_data.feedback_summary.by_type %}
+                                                    {% for item in page_data.feedback_summary.by_type %}
+                                                    <tr>
+                                                        <td>{{ item.feedback_type }}</td>
+                                                        <td>{{ item.count }}</td>
+                                                        <td>{{ "%.1f"|format(item.avg_rating) }}</td>
+                                                        <td>{{ item.min_rating }}</td>
+                                                        <td>{{ item.max_rating }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <tr>
+                                                        <td colspan="5" class="text-center">No feedback data available</td>
+                                                    </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>By Workshop</h6>
+                                    <div id="feedbackByWorkshopTable">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Workshop</th>
+                                                    <th>Count</th>
+                                                    <th>Avg Rating</th>
+                                                    <th>Min Rating</th>
+                                                    <th>Max Rating</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="feedbackByWorkshopBody">
+                                                {% if page_data.feedback_summary and page_data.feedback_summary.by_workshop %}
+                                                    {% for item in page_data.feedback_summary.by_workshop %}
+                                                    <tr>
+                                                        <td>{{ item.workshop_id }}</td>
+                                                        <td>{{ item.count }}</td>
+                                                        <td>{{ "%.1f"|format(item.avg_rating) }}</td>
+                                                        <td>{{ item.min_rating }}</td>
+                                                        <td>{{ item.max_rating }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <tr>
+                                                        <td colspan="5" class="text-center">No feedback data available</td>
+                                                    </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Feedback Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="feedbackDetails">
+                                {% if page_data.feedback_data %}
+                                    {% for feedback in page_data.feedback_data %}
+                                    <div class="card mb-3 feedback-item" data-feedback-type="{{ feedback.feedback_type }}" data-workshop-id="{{ feedback.workshop_id }}">
+                                        <div class="card-header">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">{{ feedback.feedback_type }} Feedback</h6>
+                                                <span class="text-muted">{{ feedback.formatted_time }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p><strong>Participant:</strong> {{ feedback.participant_id }}</p>
+                                                    <p><strong>Workshop:</strong> {{ feedback.workshop_id }}</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    {% if feedback.rating %}
+                                                    <p><strong>Rating:</strong> {{ feedback.rating }}/5</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if feedback.categories %}
+                                                    <p><strong>Categories:</strong> {{ feedback.categories|join(', ') }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if feedback.tags %}
+                                                    <p><strong>Tags:</strong> {{ feedback.tags|join(', ') }}</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            
+                                            {% if feedback.comments %}
+                                            <div class="mt-3">
+                                                <h6>Comments</h6>
+                                                <p>{{ feedback.comments }}</p>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if feedback.metadata %}
+                                            <div class="mt-3">
+                                                <h6>Additional Data</h6>
+                                                <pre class="bg-light p-2">{{ feedback.metadata|tojson(indent=2) }}</pre>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="alert alert-info">No feedback data available</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Feedback Tab -->
+                <div class="tab-pane fade" id="submit" role="tabpanel" aria-labelledby="submit-tab">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Submit Feedback</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="feedbackForm">
+                                <div class="mb-3">
+                                    <label for="participantId" class="form-label">Participant ID (optional)</label>
+                                    <input type="text" class="form-control" id="participantId">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="workshopId" class="form-label">Workshop ID</label>
+                                    <input type="text" class="form-control" id="workshopId" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="feedbackType" class="form-label">Feedback Type</label>
+                                    <select class="form-select" id="feedbackType" required>
+                                        <option value="workshop">Workshop</option>
+                                        <option value="feature">Feature</option>
+                                        <option value="tutorial">Tutorial</option>
+                                        <option value="general">General</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="rating" class="form-label">Overall Rating</label>
+                                    <div class="range-container">
+                                        <input type="range" class="form-range" id="rating" min="1" max="5" value="3">
+                                        <div class="range-labels d-flex justify-content-between">
+                                            <span>1</span>
+                                            <span>2</span>
+                                            <span>3</span>
+                                            <span>4</span>
+                                            <span>5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="comments" class="form-label">Comments</label>
+                                    <textarea class="form-control" id="comments" rows="4"></textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="categories" class="form-label">Categories (comma-separated)</label>
+                                            <input type="text" class="form-control" id="categories">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="tags" class="form-label">Tags (comma-separated)</label>
+                                            <input type="text" class="form-control" id="tags">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Additional Information</label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="contentRating" class="form-label">Content Quality</label>
+                                                <input type="range" class="form-range" id="contentRating" min="1" max="5" value="3">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="usabilityRating" class="form-label">Usability</label>
+                                                <input type="range" class="form-range" id="usabilityRating" min="1" max="5" value="3">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="mostUseful" class="form-label">Most Useful Features</label>
+                                                <textarea class="form-control" id="mostUseful" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="leastUseful" class="form-label">Areas for Improvement</label>
+                                                <textarea class="form-control" id="leastUseful" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" id="submitFeedbackBtn" class="btn btn-primary">Submit Feedback</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Feedback Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="feedbackSettingsStatus"></div>
+                            
+                            <form id="feedbackSettingsForm">
+                                <div class="mb-3">
+                                    <label for="feedbackDbPath" class="form-label">Feedback Database Path</label>
+                                    <input type="text" class="form-control" id="feedbackDbPath" value="{{ page_data.feedback_db_path }}">
+                                </div>
+                                
+                                <button type="button" id="updateDbPathBtn" class="btn btn-primary">Update Path</button>
+                            </form>
+                            
+                            <hr>
+                            
+                            <h6>Export Feedback Data</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="button" id="exportCsvBtn" class="btn btn-outline-primary">Export as CSV</button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="button" id="exportJsonBtn" class="btn btn-outline-primary">Export as JSON</button>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <h6>Clear Feedback Data</h6>
+                            <p class="text-danger">Warning: This action cannot be undone.</p>
+                            <button type="button" id="clearFeedbackBtn" class="btn btn-danger">Clear All Feedback Data</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter feedback items based on selected type and workshop
+        function filterFeedbackItems() {
+            const typeFilter = document.getElementById('feedbackTypeFilter').value;
+            const workshopFilter = document.getElementById('workshopIdFilter').value;
+            
+            const items = document.querySelectorAll('.feedback-item');
+            
+            items.forEach(item => {
+                const itemType = item.getAttribute('data-feedback-type');
+                const itemWorkshop = item.getAttribute('data-workshop-id');
+                
+                const typeMatch = !typeFilter || itemType === typeFilter;
+                const workshopMatch = !workshopFilter || itemWorkshop === workshopFilter;
+                
+                if (typeMatch && workshopMatch) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        // Add event listeners for filters
+        document.getElementById('feedbackTypeFilter').addEventListener('change', filterFeedbackItems);
+        document.getElementById('workshopIdFilter').addEventListener('change', filterFeedbackItems);
+        
+        // Submit feedback
+        document.getElementById('submitFeedbackBtn').addEventListener('click', function() {
+            const participantId = document.getElementById('participantId').value || 'anonymous';
+            const workshopId = document.getElementById('workshopId').value;
+            const feedbackType = document.getElementById('feedbackType').value;
+            const rating = parseInt(document.getElementById('rating').value);
+            const comments = document.getElementById('comments').value;
+            const categories = document.getElementById('categories').value.split(',').map(c => c.trim()).filter(c => c);
+            const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t);
+            
+            // Additional metadata
+            const metadata = {
+                content_rating: parseInt(document.getElementById('contentRating').value),
+                usability_rating: parseInt(document.getElementById('usabilityRating').value),
+                most_useful: document.getElementById('mostUseful').value,
+                least_useful: document.getElementById('leastUseful').value
+            };
+            
+            // Validate required fields
+            if (!workshopId) {
+                alert('Workshop ID is required');
+                return;
+            }
+            
+            // Submit feedback via API
+            fetch('/api/feedback/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    participant_id: participantId,
+                    workshop_id: workshopId,
+                    feedback_type: feedbackType,
+                    rating: rating,
+                    comments: comments,
+                    categories: categories,
+                    tags: tags,
+                    metadata: metadata
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Feedback submitted successfully');
+                    // Reset form
+                    document.getElementById('feedbackForm').reset();
+                    // Reload page to show new feedback
+                    window.location.reload();
+                } else {
+                    alert('Error submitting feedback: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error submitting feedback: ' + error);
+            });
+        });
+        
+        // Update database path
+        document.getElementById('updateDbPathBtn').addEventListener('click', function() {
+            const path = document.getElementById('feedbackDbPath').value;
+            
+            fetch('/api/feedback/update_db_path', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    path: path
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const statusElement = document.getElementById('feedbackSettingsStatus');
+                
+                if (data.success) {
+                    statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                } else {
+                    statusElement.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                }
+            })
+            .catch(error => {
+                const statusElement = document.getElementById('feedbackSettingsStatus');
+                statusElement.innerHTML = `<div class="alert alert-danger">Error updating database path: ${error}</div>`;
+            });
+        });
+        
+        // Export as CSV
+        document.getElementById('exportCsvBtn').addEventListener('click', function() {
+            fetch('/api/feedback/export?format=csv')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Data exported to: ${data.path}`);
+                    } else {
+                        alert(`Error exporting data: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`Error exporting data: ${error}`);
+                });
+        });
+        
+        // Export as JSON
+        document.getElementById('exportJsonBtn').addEventListener('click', function() {
+            fetch('/api/feedback/export?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Data exported to: ${data.path}`);
+                    } else {
+                        alert(`Error exporting data: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`Error exporting data: ${error}`);
+                });
+        });
+        
+        // Clear feedback data
+        document.getElementById('clearFeedbackBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all feedback data? This action cannot be undone.')) {
+                fetch('/api/feedback/clear', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Feedback data cleared successfully');
+                        // Reload page to show empty feedback
+                        window.location.reload();
+                    } else {
+                        alert(`Error clearing feedback data: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`Error clearing feedback data: ${error}`);
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

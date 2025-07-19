@@ -25,6 +25,10 @@ from science_data_kit.core.pages.ontology import OntologyPage
 from science_data_kit.core.pages.preferences import PreferencesPage
 from science_data_kit.core.pages.analytics_dashboard import AnalyticsDashboardPage
 from science_data_kit.core.pages.chat import ChatPage
+from science_data_kit.core.pages.feedback import FeedbackPage
+from science_data_kit.core.pages.instructor import InstructorPage
+from science_data_kit.core.pages.observation import ObservationPage
+from science_data_kit.core.pages.survey import SurveyPage
 from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
@@ -2413,3 +2417,816 @@ def clear_chat_history():
         return jsonify(result)
     except Exception as e:
         return jsonify({'success': False, 'error': f'Error clearing chat history: {str(e)}'}), 500
+
+@main_bp.route('/feedback')
+@login_required
+def feedback():
+    """Feedback page for collecting and viewing user feedback."""
+    page = FeedbackPage()
+    return render_page_html(page, 'feedback.html')
+
+@main_bp.route('/api/feedback/add', methods=['POST'])
+@login_required
+def add_feedback():
+    """Add feedback to the database."""
+    try:
+        data = request.json
+        participant_id = data.get('participant_id')
+        workshop_id = data.get('workshop_id')
+        feedback_type = data.get('feedback_type')
+        rating = data.get('rating')
+        comments = data.get('comments')
+        categories = data.get('categories')
+        tags = data.get('tags')
+        metadata = data.get('metadata')
+
+        if not workshop_id or not feedback_type:
+            return jsonify({'success': False, 'error': 'Workshop ID and feedback type are required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'feedback_page' in session:
+            page = session['feedback_page']
+        else:
+            page = FeedbackPage()
+            session['feedback_page'] = page
+
+        # Add feedback
+        result = page.add_feedback(
+            participant_id=participant_id,
+            workshop_id=workshop_id,
+            feedback_type=feedback_type,
+            rating=rating,
+            comments=comments,
+            categories=categories,
+            tags=tags,
+            metadata=metadata
+        )
+
+        # Store updated page in session
+        session['feedback_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error adding feedback: {str(e)}'}), 500
+
+@main_bp.route('/api/feedback/get', methods=['GET'])
+@login_required
+def get_feedback():
+    """Get feedback from the database with optional filters."""
+    try:
+        feedback_id = request.args.get('feedback_id')
+        participant_id = request.args.get('participant_id')
+        workshop_id = request.args.get('workshop_id')
+        feedback_type = request.args.get('feedback_type')
+        category = request.args.get('category')
+        tag = request.args.get('tag')
+        min_rating = request.args.get('min_rating')
+        max_rating = request.args.get('max_rating')
+
+        # Convert rating parameters to integers if provided
+        if min_rating:
+            min_rating = int(min_rating)
+        if max_rating:
+            max_rating = int(max_rating)
+
+        # Get page from session if available, otherwise create new
+        if 'feedback_page' in session:
+            page = session['feedback_page']
+        else:
+            page = FeedbackPage()
+            session['feedback_page'] = page
+
+        # Get feedback
+        feedback_data = page.get_feedback(
+            feedback_id=feedback_id,
+            participant_id=participant_id,
+            workshop_id=workshop_id,
+            feedback_type=feedback_type,
+            category=category,
+            tag=tag,
+            min_rating=min_rating,
+            max_rating=max_rating
+        )
+
+        return jsonify({
+            'success': True,
+            'feedback_data': feedback_data
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error getting feedback: {str(e)}'}), 500
+
+@main_bp.route('/api/feedback/summary', methods=['GET'])
+@login_required
+def get_feedback_summary():
+    """Get a summary of feedback data."""
+    try:
+        group_by = request.args.get('group_by')
+        feedback_type = request.args.get('feedback_type')
+        workshop_id = request.args.get('workshop_id')
+
+        # Get page from session if available, otherwise create new
+        if 'feedback_page' in session:
+            page = session['feedback_page']
+        else:
+            page = FeedbackPage()
+            session['feedback_page'] = page
+
+        # Get feedback summary
+        summary = page.get_feedback_summary(
+            group_by=group_by,
+            feedback_type=feedback_type,
+            workshop_id=workshop_id
+        )
+
+        return jsonify({
+            'success': True,
+            'summary': summary
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error getting feedback summary: {str(e)}'}), 500
+
+@main_bp.route('/api/feedback/update_db_path', methods=['POST'])
+@login_required
+def update_feedback_db_path():
+    """Update the feedback database path."""
+    try:
+        data = request.json
+        path = data.get('path')
+
+        if not path:
+            return jsonify({'success': False, 'error': 'Path is required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'feedback_page' in session:
+            page = session['feedback_page']
+        else:
+            page = FeedbackPage()
+            session['feedback_page'] = page
+
+        # Update database path
+        result = page.update_feedback_db_path(path)
+
+        # Store updated page in session
+        session['feedback_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error updating feedback database path: {str(e)}'}), 500
+
+@main_bp.route('/api/feedback/export', methods=['GET'])
+@login_required
+def export_feedback_data():
+    """Export feedback data to CSV or JSON."""
+    try:
+        format = request.args.get('format', 'csv')
+        path = request.args.get('path')
+
+        # Get page from session if available, otherwise create new
+        if 'feedback_page' in session:
+            page = session['feedback_page']
+        else:
+            page = FeedbackPage()
+            session['feedback_page'] = page
+
+        # Export feedback data
+        result = page.export_feedback_data(format=format, path=path)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error exporting feedback data: {str(e)}'}), 500
+
+@main_bp.route('/api/feedback/clear', methods=['POST'])
+@login_required
+def clear_feedback_data():
+    """Clear all feedback data from the database."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'feedback_page' in session:
+            page = session['feedback_page']
+        else:
+            page = FeedbackPage()
+            session['feedback_page'] = page
+
+        # Clear feedback data
+        result = page.clear_feedback_data()
+
+        # Store updated page in session
+        session['feedback_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error clearing feedback data: {str(e)}'}), 500
+
+@main_bp.route('/instructor')
+@login_required
+def instructor():
+    """Instructor notes page for workshop facilitators."""
+    page = InstructorPage()
+    return render_page_html(page, 'instructor.html')
+
+@main_bp.route('/api/instructor/get_section', methods=['GET'])
+@login_required
+def get_instructor_section():
+    """Get a specific section of the instructor notes."""
+    try:
+        section_key = request.args.get('section_key')
+
+        if not section_key:
+            return jsonify({'success': False, 'error': 'Section key is required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'instructor_page' in session:
+            page = session['instructor_page']
+        else:
+            page = InstructorPage()
+            session['instructor_page'] = page
+
+        # Get section
+        section = page.get_section(section_key)
+
+        return jsonify({
+            'success': True,
+            'section': section
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error getting section: {str(e)}'}), 500
+
+@main_bp.route('/api/instructor/set_section', methods=['POST'])
+@login_required
+def set_instructor_section():
+    """Set the selected section of the instructor notes."""
+    try:
+        data = request.json
+        section_key = data.get('section_key')
+
+        if not section_key:
+            return jsonify({'success': False, 'error': 'Section key is required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'instructor_page' in session:
+            page = session['instructor_page']
+        else:
+            page = InstructorPage()
+            session['instructor_page'] = page
+
+        # Set selected section
+        result = page.set_selected_section(section_key)
+
+        # Store updated page in session
+        session['instructor_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error setting section: {str(e)}'}), 500
+
+@main_bp.route('/api/instructor/export', methods=['GET'])
+@login_required
+def export_instructor_notes():
+    """Export instructor notes to a file."""
+    try:
+        format = request.args.get('format', 'markdown')
+        path = request.args.get('path')
+
+        # Get page from session if available, otherwise create new
+        if 'instructor_page' in session:
+            page = session['instructor_page']
+        else:
+            page = InstructorPage()
+            session['instructor_page'] = page
+
+        # Export notes
+        result = page.export_notes(format=format, path=path)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error exporting notes: {str(e)}'}), 500
+
+@main_bp.route('/observation')
+@login_required
+def observation():
+    """Observation page for workshop instructors."""
+    page = ObservationPage()
+    return render_page_html(page, 'observation.html')
+
+@main_bp.route('/api/observation/start', methods=['POST'])
+@login_required
+def start_observation_session():
+    """Start an observation session."""
+    try:
+        participant_id = request.form.get('participant_id')
+        observer_name = request.form.get('observer_name')
+
+        if not participant_id or not observer_name:
+            return jsonify({'success': False, 'error': 'Participant ID and observer name are required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'observation_page' in session:
+            page = session['observation_page']
+        else:
+            page = ObservationPage()
+            session['observation_page'] = page
+
+        # Start observation session
+        result = page.start_observation_session(participant_id, observer_name)
+
+        # Store updated page in session
+        session['observation_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error starting observation session: {str(e)}'}), 500
+
+@main_bp.route('/api/observation/end', methods=['POST'])
+@login_required
+def end_observation_session():
+    """End the current observation session."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'observation_page' in session:
+            page = session['observation_page']
+        else:
+            page = ObservationPage()
+            session['observation_page'] = page
+
+        # End observation session
+        result = page.end_observation_session()
+
+        # Store updated page in session
+        session['observation_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error ending observation session: {str(e)}'}), 500
+
+@main_bp.route('/api/observation/record', methods=['POST'])
+@login_required
+def record_observation():
+    """Record an observation."""
+    try:
+        section = request.form.get('section')
+        observation_point = request.form.get('observation_point')
+        notes = request.form.get('notes')
+        rating = request.form.get('rating')
+
+        if not section or not observation_point or not notes:
+            return jsonify({'success': False, 'error': 'Section, observation point, and notes are required'}), 400
+
+        # Convert rating to integer if provided
+        if rating:
+            try:
+                rating = int(rating)
+            except ValueError:
+                return jsonify({'success': False, 'error': 'Rating must be a number'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'observation_page' in session:
+            page = session['observation_page']
+        else:
+            page = ObservationPage()
+            session['observation_page'] = page
+
+        # Record observation
+        result = page.record_observation(section, observation_point, notes, rating)
+
+        # Store updated page in session
+        session['observation_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error recording observation: {str(e)}'}), 500
+
+@main_bp.route('/api/observation/get', methods=['GET'])
+@login_required
+def get_observations():
+    """Get all recorded observations."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'observation_page' in session:
+            page = session['observation_page']
+        else:
+            page = ObservationPage()
+            session['observation_page'] = page
+
+        # Get observations
+        observations = page.get_observations()
+
+        return jsonify({
+            'success': True,
+            'observations': observations
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error getting observations: {str(e)}'}), 500
+
+@main_bp.route('/api/observation/summary', methods=['GET'])
+@login_required
+def get_observation_summary():
+    """Get a summary of the observation data."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'observation_page' in session:
+            page = session['observation_page']
+        else:
+            page = ObservationPage()
+            session['observation_page'] = page
+
+        # Get observation summary
+        summary = page.get_observation_summary()
+
+        return jsonify({
+            'success': True,
+            'summary': summary
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error getting observation summary: {str(e)}'}), 500
+
+@main_bp.route('/api/observation/export', methods=['GET'])
+@login_required
+def export_observation_data():
+    """Export observation data to a file."""
+    try:
+        format = request.args.get('format', 'csv')
+        path = request.args.get('path')
+
+        # Get page from session if available, otherwise create new
+        if 'observation_page' in session:
+            page = session['observation_page']
+        else:
+            page = ObservationPage()
+            session['observation_page'] = page
+
+        # Export observation data
+        result = page.export_observation_data(format=format, path=path)
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error exporting observation data: {str(e)}'}), 500
+
+@main_bp.route('/api/observation/clear', methods=['POST'])
+@login_required
+def clear_observation_data():
+    """Clear all observation data."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'observation_page' in session:
+            page = session['observation_page']
+        else:
+            page = ObservationPage()
+            session['observation_page'] = page
+
+        # Clear observation data
+        result = page.clear_observation_data()
+
+        # Store updated page in session
+        session['observation_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error clearing observation data: {str(e)}'}), 500
+
+@main_bp.route('/api/observation/update_storage_path', methods=['POST'])
+@login_required
+def update_observation_storage_path():
+    """Update the observation storage path."""
+    try:
+        path = request.form.get('path')
+
+        if not path:
+            return jsonify({'success': False, 'error': 'Path is required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'observation_page' in session:
+            page = session['observation_page']
+        else:
+            page = ObservationPage()
+            session['observation_page'] = page
+
+        # Update storage path
+        result = page.update_observation_storage_path(path)
+
+        # Store updated page in session
+        session['observation_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error updating observation storage path: {str(e)}'}), 500
+
+@main_bp.route('/survey')
+@login_required
+def survey():
+    """Survey page for scanning and analyzing file systems."""
+    page = SurveyPage()
+    return render_page_html(page, 'survey.html')
+
+@main_bp.route('/api/survey/connect', methods=['POST'])
+@login_required
+def connect_survey_database():
+    """Connect to a Neo4j database for the survey page."""
+    try:
+        uri = request.form.get('uri')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        database = request.form.get('database')
+        conn_name = request.form.get('conn_name')
+
+        if not uri or not username or not password or not database:
+            return jsonify({'success': False, 'error': 'URI, username, password, and database are required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'survey_page' in session:
+            page = session['survey_page']
+        else:
+            page = SurveyPage()
+            session['survey_page'] = page
+
+        # Connect to database
+        result = page.connect_to_database(uri, username, password, database, conn_name)
+
+        # Store updated page in session
+        session['survey_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error connecting to database: {str(e)}'}), 500
+
+@main_bp.route('/api/survey/disconnect', methods=['POST'])
+@login_required
+def disconnect_survey_database():
+    """Disconnect from the Neo4j database for the survey page."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'survey_page' in session:
+            page = session['survey_page']
+        else:
+            page = SurveyPage()
+            session['survey_page'] = page
+
+        # Disconnect from database
+        result = page.disconnect_from_database()
+
+        # Store updated page in session
+        session['survey_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error disconnecting from database: {str(e)}'}), 500
+
+@main_bp.route('/api/survey/scan', methods=['POST'])
+@login_required
+def scan_survey_directory():
+    """Scan a directory for the survey page."""
+    try:
+        folder_path = request.form.get('folder_path')
+        use_ncdu = request.form.get('use_ncdu') == 'true'
+        output_json_path = request.form.get('output_json_path')
+
+        if not folder_path:
+            return jsonify({'success': False, 'error': 'Folder path is required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'survey_page' in session:
+            page = session['survey_page']
+        else:
+            page = SurveyPage()
+            session['survey_page'] = page
+
+        # Scan directory
+        if use_ncdu:
+            result = page.run_ncdu_scan(folder_path, output_json_path)
+        else:
+            result = page.scan_directory(folder_path)
+
+        # Store updated page in session
+        session['survey_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error scanning directory: {str(e)}'}), 500
+
+@main_bp.route('/api/survey/push', methods=['POST'])
+@login_required
+def push_survey_to_neo4j():
+    """Push survey data to Neo4j."""
+    try:
+        include_files = request.form.get('include_files') == 'true'
+
+        # Get page from session if available, otherwise create new
+        if 'survey_page' in session:
+            page = session['survey_page']
+        else:
+            page = SurveyPage()
+            session['survey_page'] = page
+
+        # Push to Neo4j
+        result = page.push_to_neo4j(include_files)
+
+        # Store updated page in session
+        session['survey_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error pushing to Neo4j: {str(e)}'}), 500
+
+@main_bp.route('/api/survey/update_labels', methods=['POST'])
+@login_required
+def update_survey_labels():
+    """Update entity labels for the survey page."""
+    try:
+        directory_label = request.form.get('directory_label')
+        file_label = request.form.get('file_label')
+
+        if not directory_label or not file_label:
+            return jsonify({'success': False, 'error': 'Directory label and file label are required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'survey_page' in session:
+            page = session['survey_page']
+        else:
+            page = SurveyPage()
+            session['survey_page'] = page
+
+        # Update entity labels
+        result = page.update_entity_labels(directory_label, file_label)
+
+        # Store updated page in session
+        session['survey_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error updating entity labels: {str(e)}'}), 500
+
+@main_bp.route('/api/survey/prepare_map', methods=['GET'])
+@login_required
+def prepare_survey_map():
+    """Prepare data for the map page."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'survey_page' in session:
+            page = session['survey_page']
+        else:
+            page = SurveyPage()
+            session['survey_page'] = page
+
+        # Prepare for map page
+        result = page.prepare_for_map_page()
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error preparing for map page: {str(e)}'}), 500
+
+@main_bp.route('/workshop')
+@login_required
+def workshop():
+    """Workshop page for Science Data Kit."""
+    page = WorkshopPage()
+    return render_page_html(page, 'workshop.html')
+
+@main_bp.route('/api/workshop/load_dataset', methods=['POST'])
+@login_required
+def load_workshop_dataset():
+    """Load the preclinical research dataset."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'workshop_page' in session:
+            page = session['workshop_page']
+        else:
+            page = WorkshopPage()
+            session['workshop_page'] = page
+
+        # Load the dataset
+        result = page.load_preclinical_dataset()
+
+        # Store updated page in session
+        session['workshop_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error loading dataset: {str(e)}'}), 500
+
+@main_bp.route('/api/workshop/verify_installation', methods=['POST'])
+@login_required
+def verify_workshop_installation():
+    """Verify the Science Data Kit installation."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'workshop_page' in session:
+            page = session['workshop_page']
+        else:
+            page = WorkshopPage()
+            session['workshop_page'] = page
+
+        # Verify installation
+        result = page.verify_installation()
+
+        # Store updated page in session
+        session['workshop_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error verifying installation: {str(e)}'}), 500
+
+@main_bp.route('/api/workshop/run_challenge', methods=['POST'])
+@login_required
+def run_workshop_challenge():
+    """Run the challenge script."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'workshop_page' in session:
+            page = session['workshop_page']
+        else:
+            page = WorkshopPage()
+            session['workshop_page'] = page
+
+        # Run challenge script
+        result = page.run_challenge_script()
+
+        # Store updated page in session
+        session['workshop_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error running challenge script: {str(e)}'}), 500
+
+@main_bp.route('/api/workshop/verify_checkpoint', methods=['POST'])
+@login_required
+def verify_workshop_checkpoint():
+    """Verify a checkpoint in the challenge."""
+    try:
+        checkpoint_num = request.form.get('checkpoint_num', '0')
+
+        try:
+            checkpoint_num = int(checkpoint_num)
+        except ValueError:
+            return jsonify({'success': False, 'error': 'Checkpoint number must be an integer'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'workshop_page' in session:
+            page = session['workshop_page']
+        else:
+            page = WorkshopPage()
+            session['workshop_page'] = page
+
+        # Verify checkpoint
+        result = page.verify_checkpoint(checkpoint_num)
+
+        # Store updated page in session
+        session['workshop_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error verifying checkpoint: {str(e)}'}), 500
+
+@main_bp.route('/api/workshop/submit_help_request', methods=['POST'])
+@login_required
+def submit_workshop_help_request():
+    """Submit a help request."""
+    try:
+        name = request.form.get('name')
+        email = request.form.get('email')
+        issue = request.form.get('issue')
+
+        if not name or not email or not issue:
+            return jsonify({'success': False, 'error': 'Name, email, and issue are required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'workshop_page' in session:
+            page = session['workshop_page']
+        else:
+            page = WorkshopPage()
+            session['workshop_page'] = page
+
+        # Submit help request
+        result = page.submit_help_request(name, email, issue)
+
+        # Store updated page in session
+        session['workshop_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error submitting help request: {str(e)}'}), 500
+
+@main_bp.route('/api/workshop/submit_feedback', methods=['POST'])
+@login_required
+def submit_workshop_feedback():
+    """Submit workshop feedback."""
+    try:
+        # Get all form data
+        feedback_data = {}
+        for key in request.form:
+            feedback_data[key] = request.form.get(key)
+
+        # Get page from session if available, otherwise create new
+        if 'workshop_page' in session:
+            page = session['workshop_page']
+        else:
+            page = WorkshopPage()
+            session['workshop_page'] = page
+
+        # Submit feedback
+        result = page.submit_feedback(feedback_data)
+
+        # Store updated page in session
+        session['workshop_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error submitting feedback: {str(e)}'}), 500
