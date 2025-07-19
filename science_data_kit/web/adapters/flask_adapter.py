@@ -18,18 +18,25 @@ from science_data_kit.core.models.page import (
     PluginConnectPageData
 )
 
-def render_page_html(page_instance: BasePage) -> str:
+def render_page_html(page_instance: BasePage, template_name: str = None) -> str:
     """
     Render a page instance as HTML using Flask templates.
 
     Args:
         page_instance: An instance of a BasePage subclass.
+        template_name: Optional template name to use. If not provided, the template
+                      will be determined based on the page data type.
 
     Returns:
         A rendered HTML template.
     """
     page_data = page_instance.get_page_data()
 
+    # If a template name is provided, use it directly
+    if template_name:
+        return render_template(template_name, page_data=page_data)
+
+    # Otherwise, determine the template based on the page data type
     if isinstance(page_data, DashboardPageData):
         return _render_dashboard_html(page_data)
     elif isinstance(page_data, FileExplorerPageData):
