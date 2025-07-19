@@ -2256,8 +2256,8 @@ def chat():
 
 @main_bp.route('/api/chat/connect-neo4j', methods=['POST'])
 @login_required
-def connect_to_neo4j():
-    """Connect to Neo4j database."""
+def chat_connect_to_neo4j():
+    """Connect to Neo4j database for chat functionality."""
     try:
         data = request.json
         uri = data.get('uri')
