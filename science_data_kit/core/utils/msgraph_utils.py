@@ -249,3 +249,89 @@ def extract_message_data(message_data: Dict[str, Any]) -> Dict[str, Any]:
         'received_datetime': message_data.get('receivedDateTime', ''),
         'has_attachments': message_data.get('hasAttachments', False)
     }
+
+
+def msgraph_to_dataframe(response: Dict[str, Any]) -> pd.DataFrame:
+    """
+    Convert Microsoft Graph API response to a pandas DataFrame.
+
+    This function provides a more sophisticated conversion than the simple
+    pd.DataFrame constructor, handling nested structures and special fields
+    based on the entity type.
+
+    Args:
+        response: The response data from Microsoft Graph API.
+
+    Returns:
+        A pandas DataFrame representing the data.
+    """
+    # Check if the response contains a 'value' field (collection)
+    if 'value' in response and isinstance(response['value'], list):
+        items = response['value']
+    else:
+        # Single entity response
+        items = [response]
+
+    # If there are no items, return an empty DataFrame
+    if not items:
+        return pd.DataFrame()
+
+    # Determine the entity type based on the response content
+    entity_type = "unknown"
+    sample_item = items[0]
+
+    if '@odata.type' in sample_item:
+        odata_type = sample_item['@odata.type']
+        if '#microsoft.graph.user' in odata_type:
+            entity_type = "users"
+        elif '#microsoft.graph.group' in odata_type:
+            entity_type = "groups"
+        elif '#microsoft.graph.message' in odata_type:
+            entity_type = "messages"
+        elif '#microsoft.graph.event' in odata_type:
+            entity_type = "events"
+        elif '#microsoft.graph.driveItem' in odata_type:
+            entity_type = "drive"
+    else:
+        # Try to infer type from fields
+        if 'userPrincipalName' in sample_item:
+            entity_type = "users"
+        elif 'groupTypes' in sample_item:
+            entity_type = "groups"
+        elif 'subject' in sample_item and ('from' in sample_item or 'sender' in sample_item):
+            entity_type = "messages"
+        elif 'subject' in sample_item and ('start' in sample_item or 'end' in sample_item):
+            entity_type = "events"
+        elif 'name' in sample_item and ('file' in sample_item or 'folder' in sample_item):
+            entity_type = "drive"
+
+    # Process items based on entity type
+    processed_items = []
+
+    for item in items:
+        if entity_type == "users":
+            processed_items.append(extract_user_data(item))
+        elif entity_type == "groups":
+            processed_items.append(extract_group_data(item))
+        elif entity_type == "messages":
+            processed_items.append(extract_message_data(item))
+        else:
+            # For other types or unknown types, flatten one level of nested dictionaries
+            processed_item = {}
+            for key, value in item.items():
+                if isinstance(value, dict) and not key.startswith('@'):
+                    for sub_key, sub_value in value.items():
+                        processed_item[f"{key}_{sub_key}"] = sub_value
+                else:
+                    processed_item[key] = value
+            processed_items.append(processed_item)
+
+    # Convert to DataFrame
+    df = pd.DataFrame(processed_items)
+
+    # Handle list columns by converting them to string representations
+    for col in df.columns:
+        if df[col].apply(lambda x: isinstance(x, list)).any():
+            df[col] = df[col].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
+
+    return df
