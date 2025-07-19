@@ -11,20 +11,20 @@ import yaml
 import os
 import json
 
-from science_data_kit.core.pages.base_page import BasePage
+from science_data_kit.core.pages.base import BasePage
 
 class PreferencesPage(BasePage):
     """
     Core functionality for the User preferences page.
-    
+
     This class provides the backend functionality for managing user preferences,
     including saving and loading preferences, and applying them to the application.
     """
-    
+
     def __init__(self):
         """Initialize the User preferences page."""
         super().__init__(title="User Preferences", icon="⚙️")
-        
+
         # Initialize default preferences
         self.default_preferences = {
             "theme": "light",
@@ -48,14 +48,14 @@ class PreferencesPage(BasePage):
                 "container_background": "rgba(240, 242, 246, 0.5)"
             }
         }
-        
+
         # Initialize user preferences with defaults
         self.user_preferences = self.default_preferences.copy()
-        
+
     def get_preferences_path(self) -> Path:
         """
         Get the path to the user preferences file.
-        
+
         Returns:
             Path to the user preferences file.
         """
@@ -63,47 +63,47 @@ class PreferencesPage(BasePage):
         preferences_dir = Path.home() / ".science_data_kit"
         preferences_dir.mkdir(parents=True, exist_ok=True)
         return preferences_dir / "user_preferences.yaml"
-    
+
     def save_preferences(self, preferences: Dict[str, Any]) -> Dict[str, Any]:
         """
         Save user preferences to a file.
-        
+
         Args:
             preferences: The preferences to save.
-            
+
         Returns:
             A dictionary with the result of the operation.
         """
         preferences_path = self.get_preferences_path()
-        
+
         try:
             # Save preferences to file
             with open(preferences_path, 'w') as file:
                 yaml.dump({"user_preferences": preferences}, file)
-            
+
             # Update instance preferences
             self.user_preferences = preferences
-            
+
             return {"success": True, "message": "Preferences saved successfully!"}
         except Exception as e:
             return {"success": False, "error": str(e)}
-    
+
     def load_preferences(self) -> Dict[str, Any]:
         """
         Load user preferences from a file.
-        
+
         Returns:
             A dictionary with the loaded preferences or the result of the operation.
         """
         preferences_path = self.get_preferences_path()
-        
+
         if not preferences_path.exists():
             return {"success": True, "preferences": self.default_preferences, "message": "Using default preferences."}
-        
+
         try:
             with open(preferences_path, 'r') as file:
                 data = yaml.safe_load(file)
-            
+
             if data and "user_preferences" in data:
                 self.user_preferences = data["user_preferences"]
                 return {"success": True, "preferences": self.user_preferences, "message": "Preferences loaded successfully!"}
@@ -111,11 +111,11 @@ class PreferencesPage(BasePage):
                 return {"success": False, "error": "Invalid preferences file format."}
         except Exception as e:
             return {"success": False, "error": str(e)}
-    
+
     def reset_preferences(self) -> Dict[str, Any]:
         """
         Reset preferences to defaults.
-        
+
         Returns:
             A dictionary with the result of the operation.
         """
@@ -124,15 +124,15 @@ class PreferencesPage(BasePage):
             return {"success": True, "preferences": self.user_preferences, "message": "Preferences reset to defaults!"}
         except Exception as e:
             return {"success": False, "error": str(e)}
-    
+
     def update_preference(self, key: str, value: Any) -> Dict[str, Any]:
         """
         Update a specific preference.
-        
+
         Args:
             key: The preference key to update.
             value: The new value for the preference.
-            
+
         Returns:
             A dictionary with the result of the operation.
         """
@@ -142,40 +142,40 @@ class PreferencesPage(BasePage):
                 parts = key.split('.')
                 parent_key = parts[0]
                 child_key = parts[1]
-                
+
                 if parent_key in self.user_preferences and isinstance(self.user_preferences[parent_key], dict):
                     self.user_preferences[parent_key][child_key] = value
                 else:
                     return {"success": False, "error": f"Invalid preference key: {key}"}
             else:
                 self.user_preferences[key] = value
-            
+
             # Auto-save if enabled
             if self.user_preferences.get("auto_save", True):
                 return self.save_preferences(self.user_preferences)
-            
+
             return {"success": True, "message": f"Preference {key} updated."}
         except Exception as e:
             return {"success": False, "error": str(e)}
-    
+
     def get_preferences(self) -> Dict[str, Any]:
         """
         Get the current user preferences.
-        
+
         Returns:
             A dictionary with the current user preferences.
         """
         return {"success": True, "preferences": self.user_preferences}
-    
+
     def get_theme_colors(self) -> Dict[str, Any]:
         """
         Get the color palette for the current theme.
-        
+
         Returns:
             A dictionary with the color palette for the current theme.
         """
         theme = self.user_preferences.get("theme", "light")
-        
+
         # Define theme color palettes
         theme_colors = {
             "light": {
@@ -219,24 +219,24 @@ class PreferencesPage(BasePage):
                 "container_background": "rgba(225, 190, 231, 0.5)"
             }
         }
-        
+
         # Get colors for the selected theme or use custom colors
         if theme == "custom" and "custom_colors" in self.user_preferences:
             colors = self.user_preferences["custom_colors"]
         else:
             colors = theme_colors.get(theme, theme_colors["light"])
-        
+
         return {"success": True, "colors": colors}
-    
+
     def get_font_sizes(self) -> Dict[str, Any]:
         """
         Get the font sizes for the current font size preference.
-        
+
         Returns:
             A dictionary with the font sizes for the current font size preference.
         """
         font_size = self.user_preferences.get("font_size", "medium")
-        
+
         font_sizes = {
             "small": {
                 "base": "0.8rem",
@@ -257,15 +257,15 @@ class PreferencesPage(BasePage):
                 "h3": "1.5rem"
             }
         }
-        
+
         sizes = font_sizes.get(font_size, font_sizes["medium"])
-        
+
         return {"success": True, "sizes": sizes}
-    
+
     def get_language_names(self) -> Dict[str, Any]:
         """
         Get the names of available languages.
-        
+
         Returns:
             A dictionary with the names of available languages.
         """
@@ -276,5 +276,5 @@ class PreferencesPage(BasePage):
             "de": "Deutsch (German)",
             "zh": "中文 (Chinese)"
         }
-        
+
         return {"success": True, "language_names": language_names}
