@@ -24,16 +24,16 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for transitioning the Science Data Kit from its current Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintains both frameworks, this roadmap focuses specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
 
-**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_10.md)
+**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_11.md)
 
 **Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment) and is making significant progress in Phase 2 (Flask Implementation Completion). Key accomplishments include:
 
 1. **Comprehensive Inventory**: A complete inventory of all 23 Streamlit pages and their features has been created.
-2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages that have been implemented and 13 pages that still need to be implemented.
+2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages that have been implemented and 5 low-priority features that still need to be implemented.
 3. **Detailed Migration Plan**: A detailed migration plan has been created with effort estimates, dependencies, and specific tasks for each feature.
 4. **High-Priority Pages Implementation**: All high-priority pages (connect, dashboard, file browser, explore, plugin connect) have been implemented with full API support and comprehensive functionality.
 5. **Medium-Priority Features Implementation**: All medium-priority features have been implemented: About page, cBioPortal browser, Dropbox integration, ISA browser, Map visualization, Microsoft Graph integration, Microsoft Graph exploration, Ontology browser, and User preferences.
-6. **Low-Priority Features Implementation**: The Analytics dashboard has been implemented with comprehensive tracking and visualization capabilities.
+6. **Low-Priority Features Implementation**: Two low-priority features have been implemented: Analytics dashboard with comprehensive tracking and visualization capabilities, and Chat interface with retrieval-augmented generation capabilities.
 7. **UI Component Enhancements**: Enhanced UI components have been implemented with HTMX for dynamic updates, Alpine.js for client-side interactivity, rich preview capabilities for various file types, and responsive design for all components.
 8. **Testing Implementation**: Unit tests have been created for all implemented API endpoints, end-to-end tests have been implemented for critical paths, and performance benchmarks have been conducted.
 
@@ -41,8 +41,8 @@ The current implementation status shows:
 - 5 high-priority pages have been fully implemented in Flask (connect, dashboard, file browser, explore, plugin connect)
 - All high-priority pages now have full API support with comprehensive functionality
 - All 9 medium-priority features have been implemented (About page, cBioPortal browser, Dropbox integration, ISA browser, Map visualization, Microsoft Graph integration, Microsoft Graph exploration, Ontology browser, and User preferences)
-- 1 low-priority feature has been implemented (Analytics dashboard)
-- 6 low-priority features still need to be implemented (Chat interface, Feedback collection, Instructor page, Observation page, Survey page, Workshop page)
+- 2 low-priority features have been implemented (Analytics dashboard, Chat interface)
+- 5 low-priority features still need to be implemented (Feedback collection, Instructor page, Observation page, Survey page, Workshop page)
 - Core architecture and Flask foundation are in place
 - Enhanced UI components have been implemented with HTMX, Alpine.js, rich preview capabilities, and responsive design
 - Comprehensive testing has been implemented, including unit tests, end-to-end tests, and performance benchmarks

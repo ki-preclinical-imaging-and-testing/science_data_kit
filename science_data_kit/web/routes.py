@@ -24,6 +24,7 @@ from science_data_kit.core.pages.msgraph_explore import MSGraphExplorePage
 from science_data_kit.core.pages.ontology import OntologyPage
 from science_data_kit.core.pages.preferences import PreferencesPage
 from science_data_kit.core.pages.analytics_dashboard import AnalyticsDashboardPage
+from science_data_kit.core.pages.chat import ChatPage
 from science_data_kit.web.adapters.flask_adapter import render_page_html, render_page_api
 
 # Create a blueprint for the main routes
@@ -2245,3 +2246,170 @@ def get_msgraph_sample_queries():
             "success": False,
             "message": f"Error getting sample queries: {str(e)}"
         })
+
+@main_bp.route('/chat')
+@login_required
+def chat():
+    """Chat page for interacting with data using retrieval-augmented generation."""
+    page = ChatPage()
+    return render_page_html(page, 'chat.html')
+
+@main_bp.route('/api/chat/connect-neo4j', methods=['POST'])
+@login_required
+def connect_to_neo4j():
+    """Connect to Neo4j database."""
+    try:
+        data = request.json
+        uri = data.get('uri')
+        user = data.get('user')
+        password = data.get('password')
+        database = data.get('database')
+
+        if not uri or not user or not password or not database:
+            return jsonify({'success': False, 'error': 'All connection parameters are required'}), 400
+
+        page = ChatPage()
+
+        # Store page in session if needed for future requests
+        if 'chat_page' not in session:
+            session['chat_page'] = page
+
+        result = page.connect_to_neo4j(uri, user, password, database)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error connecting to Neo4j: {str(e)}'}), 500
+
+@main_bp.route('/api/chat/initialize-graph-rag', methods=['POST'])
+@login_required
+def initialize_graph_rag():
+    """Initialize GraphRAG with current settings."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'chat_page' in session:
+            page = session['chat_page']
+        else:
+            page = ChatPage()
+            session['chat_page'] = page
+
+        result = page.initialize_graph_rag()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error initializing GraphRAG: {str(e)}'}), 500
+
+@main_bp.route('/api/chat/settings', methods=['POST'])
+@login_required
+def update_chat_settings():
+    """Update LLM settings."""
+    try:
+        data = request.json
+        provider = data.get('provider')
+        api_key = data.get('api_key')
+        model = data.get('model')
+        temperature = data.get('temperature')
+        max_tokens = data.get('max_tokens')
+
+        # Get page from session if available, otherwise create new
+        if 'chat_page' in session:
+            page = session['chat_page']
+        else:
+            page = ChatPage()
+            session['chat_page'] = page
+
+        # Update LLM settings
+        result = page.update_llm_settings(provider, api_key, model, temperature, max_tokens)
+
+        # If Ollama settings are provided, update them too
+        if provider == 'Ollama':
+            ollama_base_url = data.get('ollama_base_url')
+            ollama_auth_enabled = data.get('ollama_auth_enabled')
+            ollama_username = data.get('ollama_username')
+            ollama_password = data.get('ollama_password')
+
+            if ollama_base_url:
+                page.update_ollama_settings(ollama_base_url, ollama_auth_enabled, ollama_username, ollama_password)
+
+        # Store updated page in session
+        session['chat_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error updating settings: {str(e)}'}), 500
+
+@main_bp.route('/api/chat/refresh-ollama-models', methods=['POST'])
+@login_required
+def refresh_ollama_models():
+    """Refresh the list of available Ollama models."""
+    try:
+        data = request.json
+        base_url = data.get('base_url')
+
+        # Get page from session if available, otherwise create new
+        if 'chat_page' in session:
+            page = session['chat_page']
+        else:
+            page = ChatPage()
+            session['chat_page'] = page
+
+        # Update Ollama base URL if provided
+        if base_url:
+            page.ollama_base_url = base_url
+
+        # Refresh models
+        result = page.refresh_ollama_models()
+
+        # Store updated page in session
+        session['chat_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error refreshing Ollama models: {str(e)}'}), 500
+
+@main_bp.route('/api/chat/send-message', methods=['POST'])
+@login_required
+def send_chat_message():
+    """Send a message to the chat and get a response."""
+    try:
+        data = request.json
+        message = data.get('message')
+
+        if not message:
+            return jsonify({'success': False, 'error': 'Message is required'}), 400
+
+        # Get page from session if available, otherwise create new
+        if 'chat_page' in session:
+            page = session['chat_page']
+        else:
+            page = ChatPage()
+            session['chat_page'] = page
+
+        # Send message
+        result = page.send_message(message)
+
+        # Store updated page in session
+        session['chat_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error sending message: {str(e)}'}), 500
+
+@main_bp.route('/api/chat/clear-history', methods=['POST'])
+@login_required
+def clear_chat_history():
+    """Clear the chat history."""
+    try:
+        # Get page from session if available, otherwise create new
+        if 'chat_page' in session:
+            page = session['chat_page']
+        else:
+            page = ChatPage()
+            session['chat_page'] = page
+
+        # Clear chat history
+        result = page.clear_chat_history()
+
+        # Store updated page in session
+        session['chat_page'] = page
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error clearing chat history: {str(e)}'}), 500

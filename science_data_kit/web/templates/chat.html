@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+
+{% block title %}Chat with your data{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Chat with your data</h1>
+    <p class="lead">
+        Ask a retrieval-augmented generator questions about your dataset. 
+        Connect your trusted LLM provider in the settings panel below.
+    </p>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">LLM Connection</h5>
+                </div>
+                <div class="card-body">
+                    <div id="llmSettingsStatus"></div>
+                    
+                    <form id="llmSettingsForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="llmProvider" class="form-label">LLM Provider</label>
+                                    <select class="form-select" id="llmProvider">
+                                        <option value="OpenAI">OpenAI</option>
+                                        <option value="Anthropic">Anthropic</option>
+                                        <option value="Ollama">Ollama</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="apiKeySection" class="mb-3">
+                                    <label for="llmApiKey" class="form-label">API Key</label>
+                                    <input type="password" class="form-control" id="llmApiKey" value="{{ page_data.llm_api_key }}">
+                                </div>
+                                
+                                <div id="ollamaSettingsSection" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="ollamaBaseUrl" class="form-label">Ollama Base URL</label>
+                                        <input type="text" class="form-control" id="ollamaBaseUrl" value="{{ page_data.ollama_base_url }}">
+                                    </div>
+                                    
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="ollamaAuthEnabled">
+                                        <label class="form-check-label" for="ollamaAuthEnabled">Enable Authentication</label>
+                                    </div>
+                                    
+                                    <div id="ollamaAuthSection" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="ollamaUsername" class="form-label">Username</label>
+                                            <input type="text" class="form-control" id="ollamaUsername" value="{{ page_data.ollama_username }}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="ollamaPassword" class="form-label">Password</label>
+                                            <input type="password" class="form-control" id="ollamaPassword" value="{{ page_data.ollama_password }}">
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="button" id="refreshModelsBtn" class="btn btn-outline-primary mb-3">Refresh Models</button>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="llmModel" class="form-label">Model</label>
+                                    <select class="form-select" id="llmModel">
+                                        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                                        <option value="gpt-4">gpt-4</option>
+                                        <option value="gpt-4-turbo">gpt-4-turbo</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="llmTemperature" class="form-label">Temperature: <span id="temperatureValue">{{ page_data.llm_temperature }}</span></label>
+                                    <input type="range" class="form-range" id="llmTemperature" min="0" max="1" step="0.1" value="{{ page_data.llm_temperature }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="llmMaxTokens" class="form-label">Max Tokens</label>
+                                    <input type="number" class="form-control" id="llmMaxTokens" min="100" max="4000" step="100" value="{{ page_data.llm_max_tokens }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="saveLlmSettingsBtn" class="btn btn-primary">Save Settings</button>
+                    </form>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <p class="mb-0">
+                                    <strong>Supported LLM Providers:</strong>
+                                </p>
+                                <ul class="mb-0">
+                                    <li><strong>OpenAI</strong>: Requires API key</li>
+                                    <li><strong>Anthropic</strong>: Requires API key</li>
+                                    <li><strong>Ollama</strong>: Local LLM, supports any available model</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <p class="mb-0">
+                                    <strong>Ollama Features:</strong>
+                                </p>
+                                <ul class="mb-0">
+                                    <li>Automatically detects available models</li>
+                                    <li>Optional authentication support</li>
+                                    <li>Customizable base URL for remote instances</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Neo4j Connection</h5>
+                </div>
+                <div class="card-body">
+                    <div id="neo4jConnectionStatus"></div>
+                    
+                    <form id="neo4jConnectionForm">
+                        <div class="mb-3">
+                            <label for="neo4jUri" class="form-label">Neo4j URI</label>
+                            <input type="text" class="form-control" id="neo4jUri" value="{{ page_data.neo4j_uri or 'bolt://localhost:7687' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="neo4jUser" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="neo4jUser" value="{{ page_data.neo4j_user or 'neo4j' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="neo4jPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="neo4jPassword" value="{{ page_data.neo4j_password }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="neo4jDatabase" class="form-label">Database</label>
+                            <input type="text" class="form-control" id="neo4jDatabase" value="{{ page_data.neo4j_database or 'neo4j' }}">
+                        </div>
+                        
+                        <button type="button" id="connectNeo4jBtn" class="btn btn-primary">Connect to Neo4j</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Chat</h5>
+                </div>
+                <div class="card-body">
+                    <div id="chatContainer" class="border rounded p-3 mb-3" style="height: 400px; overflow-y: auto;">
+                        {% if page_data.chat_history %}
+                            {% for message in page_data.chat_history %}
+                                {% if message.role == "user" %}
+                                    <div class="d-flex justify-content-end mb-3">
+                                        <div class="card bg-primary text-white" style="max-width: 80%;">
+                                            <div class="card-body py-2 px-3">
+                                                <p class="mb-0">{{ message.content }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="d-flex justify-content-start mb-3">
+                                        <div class="card bg-light" style="max-width: 80%;">
+                                            <div class="card-body py-2 px-3">
+                                                <p class="mb-0">{{ message.content }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-5">
+                                <p>No messages yet. Start a conversation!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <form id="chatForm">
+                        <div class="mb-3">
+                            <label for="messageInput" class="form-label">Your message</label>
+                            <textarea class="form-control" id="messageInput" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" id="sendMessageBtn" class="btn btn-primary">Send</button>
+                            <button type="button" id="clearChatBtn" class="btn btn-outline-danger">Clear Chat</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">How It Works</h5>
+                </div>
+                <div class="card-body">
+                    <p>This implementation uses <strong>Text2Cypher to convert your natural language questions into Cypher queries</strong> that are executed against your Neo4j database. The results are then used to generate a response.</p>
+                    
+                    <div class="alert alert-warning">
+                        <p class="mb-0"><strong>This is experimental, so here's what you need to do:</strong></p>
+                        <ol class="mb-0">
+                            <li>Your <strong>database must be connected</strong></li>
+                            <li>Choose your preferred LLM provider:
+                                <ul>
+                                    <li><strong>OpenAI/Anthropic</strong>: Provide your API key</li>
+                                    <li><strong>Ollama</strong>: Configure base URL and optional authentication</li>
+                                </ul>
+                            </li>
+                            <li>For Ollama, click "Refresh Models" to see all available models</li>
+                            <li>Ask questions about the data in your database</li>
+                        </ol>
+                    </div>
+                    
+                    {% if not page_data.graphrag_available %}
+                        <div class="alert alert-danger mt-3">
+                            <p class="mb-0"><strong>GraphRAG is not available.</strong> Please install the required packages to enable full functionality.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set initial values based on page data
+        document.getElementById('llmProvider').value = "{{ page_data.llm_provider }}";
+        document.getElementById('llmModel').value = "{{ page_data.llm_model }}";
+        document.getElementById('ollamaAuthEnabled').checked = {{ 'true' if page_data.ollama_auth_enabled else 'false' }};
+        
+        // Initialize UI based on provider
+        updateUIForProvider();
+        
+        // Update UI when provider changes
+        document.getElementById('llmProvider').addEventListener('change', function() {
+            updateUIForProvider();
+        });
+        
+        // Toggle Ollama auth section
+        document.getElementById('ollamaAuthEnabled').addEventListener('change', function() {
+            document.getElementById('ollamaAuthSection').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Update temperature value display
+        document.getElementById('llmTemperature').addEventListener('input', function() {
+            document.getElementById('temperatureValue').textContent = this.value;
+        });
+        
+        // Save LLM settings
+        document.getElementById('saveLlmSettingsBtn').addEventListener('click', function() {
+            const provider = document.getElementById('llmProvider').value;
+            const apiKey = document.getElementById('llmApiKey').value;
+            const model = document.getElementById('llmModel').value;
+            const temperature = parseFloat(document.getElementById('llmTemperature').value);
+            const maxTokens = parseInt(document.getElementById('llmMaxTokens').value);
+            
+            // Ollama-specific settings
+            const ollamaBaseUrl = document.getElementById('ollamaBaseUrl').value;
+            const ollamaAuthEnabled = document.getElementById('ollamaAuthEnabled').checked;
+            const ollamaUsername = document.getElementById('ollamaUsername').value;
+            const ollamaPassword = document.getElementById('ollamaPassword').value;
+            
+            // Prepare data based on provider
+            let data = {
+                provider: provider,
+                model: model,
+                temperature: temperature,
+                max_tokens: maxTokens
+            };
+            
+            if (provider !== 'Ollama') {
+                data.api_key = apiKey;
+            } else {
+                data.ollama_base_url = ollamaBaseUrl;
+                data.ollama_auth_enabled = ollamaAuthEnabled;
+                if (ollamaAuthEnabled) {
+                    data.ollama_username = ollamaUsername;
+                    data.ollama_password = ollamaPassword;
+                }
+            }
+            
+            // Send request to update settings
+            fetch('/api/chat/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('llmSettingsStatus', 'success', data.message);
+                    
+                    // Reinitialize GraphRAG if Neo4j is connected
+                    if (document.getElementById('neo4jUri').value && 
+                        document.getElementById('neo4jUser').value && 
+                        document.getElementById('neo4jPassword').value) {
+                        initializeGraphRAG();
+                    }
+                } else {
+                    showAlert('llmSettingsStatus', 'danger', data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('llmSettingsStatus', 'danger', 'Error: ' + error);
+            });
+        });
+        
+        // Refresh Ollama models
+        document.getElementById('refreshModelsBtn').addEventListener('click', function() {
+            const ollamaBaseUrl = document.getElementById('ollamaBaseUrl').value;
+            
+            fetch('/api/chat/refresh-ollama-models', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    base_url: ollamaBaseUrl
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('llmSettingsStatus', 'success', data.message);
+                    
+                    // Update model select options
+                    const modelSelect = document.getElementById('llmModel');
+                    modelSelect.innerHTML = '';
+                    
+                    data.models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model;
+                        option.textContent = model;
+                        modelSelect.appendChild(option);
+                    });
+                } else {
+                    showAlert('llmSettingsStatus', 'danger', data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('llmSettingsStatus', 'danger', 'Error: ' + error);
+            });
+        });
+        
+        // Connect to Neo4j
+        document.getElementById('connectNeo4jBtn').addEventListener('click', function() {
+            const uri = document.getElementById('neo4jUri').value;
+            const user = document.getElementById('neo4jUser').value;
+            const password = document.getElementById('neo4jPassword').value;
+            const database = document.getElementById('neo4jDatabase').value;
+            
+            fetch('/api/chat/connect-neo4j', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    uri: uri,
+                    user: user,
+                    password: password,
+                    database: database
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('neo4jConnectionStatus', 'success', data.message);
+                    
+                    // Initialize GraphRAG
+                    initializeGraphRAG();
+                } else {
+                    showAlert('neo4jConnectionStatus', 'danger', data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('neo4jConnectionStatus', 'danger', 'Error: ' + error);
+            });
+        });
+        
+        // Initialize GraphRAG
+        function initializeGraphRAG() {
+            fetch('/api/chat/initialize-graph-rag', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('neo4jConnectionStatus', 'success', data.message);
+                } else {
+                    showAlert('neo4jConnectionStatus', 'danger', data.error);
+                }
+            })
+            .catch(error => {
+                showAlert('neo4jConnectionStatus', 'danger', 'Error: ' + error);
+            });
+        }
+        
+        // Send message
+        document.getElementById('sendMessageBtn').addEventListener('click', function() {
+            const message = document.getElementById('messageInput').value.trim();
+            
+            if (!message) {
+                return;
+            }
+            
+            // Disable send button and show loading indicator
+            const sendBtn = document.getElementById('sendMessageBtn');
+            const originalText = sendBtn.textContent;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+            
+            // Add user message to chat
+            addMessageToChat('user', message);
+            
+            // Clear input
+            document.getElementById('messageInput').value = '';
+            
+            // Send message to server
+            fetch('/api/chat/send-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add response to chat
+                    addMessageToChat('assistant', data.response);
+                } else {
+                    // Add error message to chat
+                    addMessageToChat('assistant', 'Error: ' + data.error);
+                }
+                
+                // Re-enable send button
+                sendBtn.disabled = false;
+                sendBtn.textContent = originalText;
+            })
+            .catch(error => {
+                // Add error message to chat
+                addMessageToChat('assistant', 'Error: ' + error);
+                
+                // Re-enable send button
+                sendBtn.disabled = false;
+                sendBtn.textContent = originalText;
+            });
+        });
+        
+        // Clear chat
+        document.getElementById('clearChatBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear the chat history?')) {
+                fetch('/api/chat/clear-history', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear chat container
+                        const chatContainer = document.getElementById('chatContainer');
+                        chatContainer.innerHTML = `
+                            <div class="text-center text-muted py-5">
+                                <p>No messages yet. Start a conversation!</p>
+                            </div>
+                        `;
+                    } else {
+                        showAlert('chatContainer', 'danger', data.error);
+                    }
+                })
+                .catch(error => {
+                    showAlert('chatContainer', 'danger', 'Error: ' + error);
+                });
+            }
+        });
+        
+        // Helper function to update UI based on provider
+        function updateUIForProvider() {
+            const provider = document.getElementById('llmProvider').value;
+            const apiKeySection = document.getElementById('apiKeySection');
+            const ollamaSettingsSection = document.getElementById('ollamaSettingsSection');
+            const modelSelect = document.getElementById('llmModel');
+            
+            // Show/hide API key section
+            apiKeySection.style.display = provider !== 'Ollama' ? 'block' : 'none';
+            
+            // Show/hide Ollama settings section
+            ollamaSettingsSection.style.display = provider === 'Ollama' ? 'block' : 'none';
+            
+            // Update model options based on provider
+            modelSelect.innerHTML = '';
+            
+            if (provider === 'OpenAI') {
+                const models = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'];
+                models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    modelSelect.appendChild(option);
+                });
+            } else if (provider === 'Anthropic') {
+                const models = ['claude-2', 'claude-instant-1', 'claude-3-opus', 'claude-3-sonnet'];
+                models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    modelSelect.appendChild(option);
+                });
+            } else if (provider === 'Ollama') {
+                // Use available models from page data
+                const ollamaModels = {{ page_data.ollama_available_models|tojson }};
+                ollamaModels.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    modelSelect.appendChild(option);
+                });
+            } else {
+                const option = document.createElement('option');
+                option.value = 'custom-model';
+                option.textContent = 'custom-model';
+                modelSelect.appendChild(option);
+            }
+        }
+        
+        // Helper function to add message to chat
+        function addMessageToChat(role, content) {
+            const chatContainer = document.getElementById('chatContainer');
+            
+            // Remove placeholder if present
+            const placeholder = chatContainer.querySelector('.text-center.text-muted.py-5');
+            if (placeholder) {
+                chatContainer.removeChild(placeholder);
+            }
+            
+            // Create message element
+            const messageDiv = document.createElement('div');
+            messageDiv.className = role === 'user' ? 'd-flex justify-content-end mb-3' : 'd-flex justify-content-start mb-3';
+            
+            const cardDiv = document.createElement('div');
+            cardDiv.className = role === 'user' ? 'card bg-primary text-white' : 'card bg-light';
+            cardDiv.style.maxWidth = '80%';
+            
+            const cardBodyDiv = document.createElement('div');
+            cardBodyDiv.className = 'card-body py-2 px-3';
+            
+            const messagePara = document.createElement('p');
+            messagePara.className = 'mb-0';
+            messagePara.textContent = content;
+            
+            cardBodyDiv.appendChild(messagePara);
+            cardDiv.appendChild(cardBodyDiv);
+            messageDiv.appendChild(cardDiv);
+            
+            chatContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Helper function to show alerts
+        function showAlert(elementId, type, message) {
+            const alertElement = document.getElementById(elementId);
+            alertElement.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+        }
+        
+        // Allow sending message with Enter key
+        document.getElementById('messageInput').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                document.getElementById('sendMessageBtn').click();
+            }
+        });
+    });
+</script>
+{% endblock %}
