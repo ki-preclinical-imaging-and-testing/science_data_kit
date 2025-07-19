@@ -251,6 +251,39 @@ def extract_message_data(message_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def create_msgraph_config(tenant_id: str, client_id: str, client_secret: Optional[str] = None,
+                    auth_method: str = "device_code", output_file: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Create a Microsoft Graph API configuration.
+
+    Args:
+        tenant_id: The tenant ID for the Microsoft 365 account.
+        client_id: The client ID for the application.
+        client_secret: The client secret for the application (only for client_credentials).
+        auth_method: The authentication method to use (device_code, client_credentials, or interactive).
+        output_file: Optional path to save the configuration to.
+
+    Returns:
+        A dictionary with the configuration.
+    """
+    config = {
+        "tenant_id": tenant_id,
+        "client_id": client_id,
+        "client_secret": client_secret if auth_method == "client_credentials" else None,
+        "auth_method": auth_method
+    }
+
+    # Save configuration to file if requested
+    if output_file:
+        try:
+            with open(output_file, 'w') as f:
+                json.dump(config, f, indent=4)
+        except Exception as e:
+            raise IOError(f"Error saving Microsoft Graph API configuration to file: {str(e)}")
+
+    return config
+
+
 def msgraph_to_dataframe(response: Dict[str, Any]) -> pd.DataFrame:
     """
     Convert Microsoft Graph API response to a pandas DataFrame.
