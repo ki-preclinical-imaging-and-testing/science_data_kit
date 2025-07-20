@@ -340,9 +340,9 @@ The Extensions and Specialized File Handling implementation is currently in prog
      - ⟳ Phase 2 (Advanced Features) is planned for future implementation
 
 2. **Specialized File Handling**:
-   - ✓ Plugin Interface Design has been completed with the creation of FileInterpreterPlugin and MetadataExtractorPlugin base classes
-   - ✓ Plugin Discovery and Registration has been implemented with directory structures and registry updates
-   - ✓ Testing and Documentation has been partially completed with unit tests for plugin interfaces and integration tests for plugin discovery
+   - ✓ Plugin Interface Design has been completed with the creation of FileInterpreterPlugin and MetadataExtractorPlugin base classes, capability mixins, and configuration schema
+   - ✓ Plugin Discovery and Registration has been implemented with directory structures, registry updates, MIME type mapping, and plugin selection logic
+   - ✓ Testing and Documentation has been partially completed with unit tests for plugin interfaces, integration tests for plugin discovery, and comprehensive tests for capability mixins and plugin selection
    - ⟳ Core Integration is in progress
    - ⟳ Core Interpreters development is planned to start after the foundation is fully established
    - ⟳ UI Integration is planned for future implementation

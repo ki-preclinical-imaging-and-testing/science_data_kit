@@ -16,7 +16,9 @@ making it easier to add new integrations and manage existing ones.
 
 import importlib
 import inspect
+import json
 import logging
+import mimetypes
 import os
 import pkgutil
 import sys
@@ -47,6 +49,18 @@ class PluginCategory(Enum):
     OTHER = "other"
 
 
+class FileInterpreterCapability(Enum):
+    """Capabilities that can be provided by file interpreter plugins."""
+    TEXT_EXTRACTION = "text_extraction"
+    PREVIEW_GENERATION = "preview_generation"
+    METADATA_EXTRACTION = "metadata_extraction"
+    CONTENT_ANALYSIS = "content_analysis"
+    THUMBNAIL_GENERATION = "thumbnail_generation"
+    STRUCTURED_DATA_EXTRACTION = "structured_data_extraction"
+    FULL_TEXT_SEARCH = "full_text_search"
+    CONTENT_TRANSFORMATION = "content_transformation"
+
+
 @dataclass
 class PluginMetadata:
     """Metadata for a plugin."""
@@ -59,6 +73,8 @@ class PluginMetadata:
     website: Optional[str] = None
     tags: List[str] = field(default_factory=list)
     enabled: bool = True
+    config_schema: Optional[Dict[str, Any]] = None
+    capabilities: List[str] = field(default_factory=list)
 
 
 class PluginBase(ABC):
@@ -290,6 +306,165 @@ class PlatformPlugin(PluginBase):
         pass
 
 
+# File Interpreter Capability Mixins
+
+class TextExtractionCapability:
+    """
+    Mixin for file interpreters that can extract text content from files.
+
+    This capability allows plugins to extract plain text from various file formats,
+    enabling features like full-text search and content analysis.
+    """
+
+    def extract_text(self, file_path: str, **kwargs) -> Optional[str]:
+        """
+        Extract text content from the file.
+
+        Args:
+            file_path: Path to the file to extract text from.
+            **kwargs: Additional parameters for text extraction.
+
+        Returns:
+            Extracted text content, or None if extraction failed.
+        """
+        raise NotImplementedError("Text extraction not implemented")
+
+    def get_text_extraction_options(self) -> Dict[str, Any]:
+        """
+        Get available options for text extraction.
+
+        Returns:
+            Dictionary of option names and their possible values.
+        """
+        return {}
+
+
+class PreviewGenerationCapability:
+    """
+    Mixin for file interpreters that can generate previews for files.
+
+    This capability allows plugins to create visual previews of files,
+    such as thumbnails for images, rendered views for documents, etc.
+    """
+
+    def generate_preview(self, file_path: str, output_path: Optional[str] = None, 
+                         width: Optional[int] = None, height: Optional[int] = None,
+                         **kwargs) -> Any:
+        """
+        Generate a preview for the file.
+
+        Args:
+            file_path: Path to the file to generate a preview for.
+            output_path: Optional path to save the preview to.
+            width: Optional width for the preview.
+            height: Optional height for the preview.
+            **kwargs: Additional parameters for preview generation.
+
+        Returns:
+            Preview data or path to the generated preview.
+        """
+        raise NotImplementedError("Preview generation not implemented")
+
+    def get_preview_formats(self) -> List[str]:
+        """
+        Get a list of preview formats supported by this interpreter.
+
+        Returns:
+            List of supported preview formats (e.g., ['image/png', 'image/jpeg']).
+        """
+        return []
+
+
+class ThumbnailGenerationCapability:
+    """
+    Mixin for file interpreters that can generate thumbnails for files.
+
+    This capability allows plugins to create small thumbnail images for files,
+    which can be used in file browsers and other UI components.
+    """
+
+    def generate_thumbnail(self, file_path: str, output_path: Optional[str] = None,
+                          width: int = 128, height: int = 128, **kwargs) -> Any:
+        """
+        Generate a thumbnail for the file.
+
+        Args:
+            file_path: Path to the file to generate a thumbnail for.
+            output_path: Optional path to save the thumbnail to.
+            width: Width for the thumbnail (default: 128).
+            height: Height for the thumbnail (default: 128).
+            **kwargs: Additional parameters for thumbnail generation.
+
+        Returns:
+            Thumbnail data or path to the generated thumbnail.
+        """
+        raise NotImplementedError("Thumbnail generation not implemented")
+
+
+class ContentAnalysisCapability:
+    """
+    Mixin for file interpreters that can analyze file content.
+
+    This capability allows plugins to perform various analyses on file content,
+    such as keyword extraction, sentiment analysis, entity recognition, etc.
+    """
+
+    def analyze_content(self, file_path: str, analysis_type: str, **kwargs) -> Dict[str, Any]:
+        """
+        Analyze the content of the file.
+
+        Args:
+            file_path: Path to the file to analyze.
+            analysis_type: Type of analysis to perform.
+            **kwargs: Additional parameters for the analysis.
+
+        Returns:
+            Dictionary containing analysis results.
+        """
+        raise NotImplementedError("Content analysis not implemented")
+
+    def get_available_analyses(self) -> List[str]:
+        """
+        Get a list of available content analysis types.
+
+        Returns:
+            List of supported analysis types.
+        """
+        return []
+
+
+class StructuredDataExtractionCapability:
+    """
+    Mixin for file interpreters that can extract structured data from files.
+
+    This capability allows plugins to extract structured data like tables,
+    charts, forms, etc. from various file formats.
+    """
+
+    def extract_structured_data(self, file_path: str, data_type: str, **kwargs) -> Any:
+        """
+        Extract structured data from the file.
+
+        Args:
+            file_path: Path to the file to extract data from.
+            data_type: Type of data to extract (e.g., 'table', 'chart').
+            **kwargs: Additional parameters for data extraction.
+
+        Returns:
+            Extracted structured data.
+        """
+        raise NotImplementedError("Structured data extraction not implemented")
+
+    def get_supported_data_types(self) -> List[str]:
+        """
+        Get a list of structured data types supported by this interpreter.
+
+        Returns:
+            List of supported data types.
+        """
+        return []
+
+
 class FileInterpreterPlugin(PluginBase):
     """
     Base class for file interpreter plugins.
@@ -503,6 +678,9 @@ class PluginRegistry:
         self._categories: Dict[PluginCategory, Set[str]] = {
             category: set() for category in PluginCategory
         }
+        self._capabilities: Dict[str, Set[str]] = {}  # Map capability to plugin names
+        self._mime_types: Dict[str, Set[str]] = {}    # Map MIME type to plugin names
+        self._file_extensions: Dict[str, Set[str]] = {}  # Map file extension to plugin names
         self._initialized = False
 
     def register_plugin(self, plugin_class: Type[PluginBase]) -> bool:
@@ -528,6 +706,36 @@ class PluginRegistry:
             # Register the plugin
             self._plugins[metadata.name] = plugin_class
             self._categories[metadata.category].add(metadata.name)
+
+            # Register capabilities if provided
+            if hasattr(metadata, 'capabilities') and metadata.capabilities:
+                for capability in metadata.capabilities:
+                    if capability not in self._capabilities:
+                        self._capabilities[capability] = set()
+                    self._capabilities[capability].add(metadata.name)
+
+            # Register MIME types and file extensions for file interpreter plugins
+            if metadata.category == PluginCategory.FILE_INTERPRETER:
+                try:
+                    # Get supported MIME types
+                    mime_types = temp_instance.get_supported_mime_types()
+                    for mime_type in mime_types:
+                        if mime_type not in self._mime_types:
+                            self._mime_types[mime_type] = set()
+                        self._mime_types[mime_type].add(metadata.name)
+
+                    # Get supported file extensions
+                    extensions = temp_instance.get_supported_extensions()
+                    for ext in extensions:
+                        # Ensure extension starts with a dot
+                        if not ext.startswith('.'):
+                            ext = f'.{ext}'
+
+                        if ext not in self._file_extensions:
+                            self._file_extensions[ext] = set()
+                        self._file_extensions[ext].add(metadata.name)
+                except Exception as e:
+                    logger.warning(f"Failed to register MIME types or extensions for plugin '{metadata.name}': {str(e)}")
 
             logger.info(f"Registered plugin '{metadata.name}' (version {metadata.version})")
             return True
@@ -642,6 +850,46 @@ class PluginRegistry:
         """
         return list(self._plugins.keys())
 
+    def get_plugins_by_capability(self, capability: str) -> List[str]:
+        """
+        Get a list of plugin names that provide a specific capability.
+
+        Args:
+            capability: The capability to get plugins for.
+
+        Returns:
+            List of plugin names.
+        """
+        return list(self._capabilities.get(capability, set()))
+
+    def get_plugins_by_mime_type(self, mime_type: str) -> List[str]:
+        """
+        Get a list of file interpreter plugin names that support a specific MIME type.
+
+        Args:
+            mime_type: The MIME type to get plugins for.
+
+        Returns:
+            List of plugin names.
+        """
+        return list(self._mime_types.get(mime_type, set()))
+
+    def get_plugins_by_extension(self, extension: str) -> List[str]:
+        """
+        Get a list of file interpreter plugin names that support a specific file extension.
+
+        Args:
+            extension: The file extension to get plugins for (with or without leading dot).
+
+        Returns:
+            List of plugin names.
+        """
+        # Ensure extension starts with a dot
+        if extension and not extension.startswith('.'):
+            extension = f'.{extension}'
+
+        return list(self._file_extensions.get(extension, set()))
+
     def get_plugin_metadata(self, name: str) -> Optional[PluginMetadata]:
         """
         Get metadata for a plugin.
@@ -735,6 +983,44 @@ class PluginRegistry:
         self._initialized = success
         return success
 
+    def get_file_interpreter_for_file(self, file_path: str, initialize: bool = True) -> Optional[FileInterpreterPlugin]:
+        """
+        Get a file interpreter plugin instance that can interpret the given file.
+
+        This method tries to find a suitable interpreter based on file extension and MIME type.
+        If multiple interpreters are available, it returns the first one that can interpret the file.
+
+        Args:
+            file_path: Path to the file to interpret.
+            initialize: Whether to initialize the plugin if it's not already instantiated.
+
+        Returns:
+            A file interpreter plugin instance, or None if no suitable interpreter is found.
+        """
+        # Get file extension and MIME type
+        extension = os.path.splitext(file_path)[1].lower()
+        mime_type = get_mime_type(file_path)
+
+        # Try to find a plugin by extension
+        plugin_names = self.get_plugins_by_extension(extension)
+
+        # If no plugin found by extension, try by MIME type
+        if not plugin_names:
+            plugin_names = self.get_plugins_by_mime_type(mime_type)
+
+        # If still no plugin found, try all file interpreter plugins
+        if not plugin_names:
+            plugin_names = self.get_plugins_by_category(PluginCategory.FILE_INTERPRETER)
+
+        # Try each plugin until we find one that can interpret the file
+        for name in plugin_names:
+            plugin = self.get_plugin_instance(name, initialize)
+            if plugin and isinstance(plugin, FileInterpreterPlugin) and plugin.can_interpret(file_path, mime_type):
+                return cast(FileInterpreterPlugin, plugin)
+
+        logger.warning(f"No suitable file interpreter found for file: {file_path} (MIME type: {mime_type})")
+        return None
+
     def shutdown_all(self) -> bool:
         """
         Shut down all plugin instances.
@@ -761,6 +1047,63 @@ class PluginRegistry:
 
         self._initialized = False
         return success
+
+
+# MIME type mapping utilities
+
+def get_mime_type(file_path: str) -> str:
+    """
+    Get the MIME type for a file based on its extension.
+
+    Args:
+        file_path: Path to the file.
+
+    Returns:
+        MIME type string, or 'application/octet-stream' if unknown.
+    """
+    # Initialize mimetypes if not already done
+    if not mimetypes.inited:
+        mimetypes.init()
+
+    # Add additional MIME types for scientific formats
+    additional_types = {
+        '.nc': 'application/x-netcdf',
+        '.hdf5': 'application/x-hdf5',
+        '.h5': 'application/x-hdf5',
+        '.fits': 'application/fits',
+        '.fts': 'application/fits',
+        '.fit': 'application/fits',
+        '.nii': 'application/x-nifti',
+        '.nii.gz': 'application/x-nifti',
+        '.fasta': 'application/fasta',
+        '.fa': 'application/fasta',
+        '.fastq': 'application/fastq',
+        '.fq': 'application/fastq',
+        '.gff': 'application/gff',
+        '.gtf': 'application/gtf',
+        '.bed': 'application/bed',
+        '.vcf': 'application/vcf',
+        '.bam': 'application/bam',
+        '.sam': 'application/sam',
+        '.cif': 'chemical/x-cif',
+        '.pdb': 'chemical/x-pdb',
+        '.mol': 'chemical/x-mdl-molfile',
+        '.mol2': 'chemical/x-mol2',
+        '.sdf': 'chemical/x-mdl-sdfile',
+        '.xyz': 'chemical/x-xyz',
+    }
+
+    for ext, mime_type in additional_types.items():
+        mimetypes.add_type(mime_type, ext)
+
+    # Get MIME type from file extension
+    mime_type, _ = mimetypes.guess_type(file_path)
+
+    # Default to binary if unknown
+    if mime_type is None:
+        mime_type = 'application/octet-stream'
+
+    return mime_type
 
 
 # Create a global plugin registry instance
@@ -816,6 +1159,61 @@ def get_all_plugins() -> List[str]:
         List of plugin names.
     """
     return plugin_registry.get_all_plugins()
+
+
+def get_plugins_by_capability(capability: str) -> List[str]:
+    """
+    Get a list of plugin names that provide a specific capability from the global registry.
+
+    Args:
+        capability: The capability to get plugins for.
+
+    Returns:
+        List of plugin names.
+    """
+    return plugin_registry.get_plugins_by_capability(capability)
+
+
+def get_plugins_by_mime_type(mime_type: str) -> List[str]:
+    """
+    Get a list of file interpreter plugin names that support a specific MIME type from the global registry.
+
+    Args:
+        mime_type: The MIME type to get plugins for.
+
+    Returns:
+        List of plugin names.
+    """
+    return plugin_registry.get_plugins_by_mime_type(mime_type)
+
+
+def get_plugins_by_extension(extension: str) -> List[str]:
+    """
+    Get a list of file interpreter plugin names that support a specific file extension from the global registry.
+
+    Args:
+        extension: The file extension to get plugins for (with or without leading dot).
+
+    Returns:
+        List of plugin names.
+    """
+    return plugin_registry.get_plugins_by_extension(extension)
+
+
+def get_file_interpreter_for_file(file_path: str) -> Optional[FileInterpreterPlugin]:
+    """
+    Get a file interpreter plugin instance that can interpret the given file from the global registry.
+
+    This function tries to find a suitable interpreter based on file extension and MIME type.
+    If multiple interpreters are available, it returns the first one that can interpret the file.
+
+    Args:
+        file_path: Path to the file to interpret.
+
+    Returns:
+        A file interpreter plugin instance, or None if no suitable interpreter is found.
+    """
+    return plugin_registry.get_file_interpreter_for_file(file_path)
 
 
 def discover_plugins(package_name: str = "science_data_kit.core.integrations") -> int:
