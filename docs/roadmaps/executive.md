@@ -76,11 +76,11 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Add screen reader support
 
 ### Phase 4: Streamlit Deprecation and Removal (2-3 weeks)
-- Create a deprecation plan
-- Update documentation
-- Implement transition helpers
-- Remove Streamlit dependencies
-- Clean up codebase
+- ✓ Create a deprecation plan with timeline and user communication strategy
+- ✓ Update documentation to reflect the transition to Flask
+- ✓ Implement transition helpers for users
+- ✓ Begin removing Streamlit dependencies
+- ✓ Clean up Streamlit-specific code
 
 ### Phase 5: Containerization and Deployment (2-3 weeks)
 - Create optimized Docker configuration
