@@ -5,6 +5,7 @@ This module provides a factory function for creating a Flask application instanc
 It sets up the application with the necessary configuration, blueprints, and extensions.
 """
 
+import atexit
 from flask import Flask, render_template
 from flask_session import Session
 from flask_wtf.csrf import CSRFProtect
@@ -48,6 +49,13 @@ def create_app(config_class=Config):
 
     # Import WebSocket events (this registers the event handlers)
     import science_data_kit.web.events
+
+    # Start dashboard updates when the app starts
+    from science_data_kit.web.events import start_dashboard_updates, stop_dashboard_updates
+    start_dashboard_updates()
+
+    # Register function to stop dashboard updates when the app stops
+    atexit.register(stop_dashboard_updates)
 
     # Register error handlers
     @app.errorhandler(404)

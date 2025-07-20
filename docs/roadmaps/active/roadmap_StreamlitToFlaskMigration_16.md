@@ -1,4 +1,4 @@
-# Science Data Kit (SDK) Streamlit to Flask Migration Roadmap - Version 15
+# Science Data Kit (SDK) Streamlit to Flask Migration Roadmap - Version 16
 
 ## Overview
 This roadmap outlines a comprehensive plan for transitioning the Science Data Kit from its current Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintains both frameworks, this roadmap focuses specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
@@ -22,6 +22,7 @@ This roadmap outlines a comprehensive plan for transitioning the Science Data Ki
 | 13 | 2025-11-02 | Updated roadmap to reflect current status and next steps for Phase 3 (User Experience Optimization) |
 | 14 | 2025-11-09 | Implemented end-to-end tests for common workflows, performance benchmarking, and usability testing plan |
 | 15 | 2025-11-16 | Developed UI/UX improvement proposals, prepared accessibility improvements plan, and created Flask-specific enhancements plan |
+| 16 | 2025-11-23 | Implemented WebSocket support for real-time dashboard updates |
 
 ## Background
 The Science Data Kit currently uses Streamlit as its primary UI framework. While Streamlit has served well for rapid prototyping and development, the project has evolved to require more sophisticated UI capabilities, better deployment options, and improved performance characteristics. The existing Framework-Agnostic Architecture roadmap outlines a path to support multiple frameworks simultaneously, but analysis has shown that maintaining multiple UI frameworks increases complexity and development overhead. This roadmap focuses on a more direct approach: completing the transition to Flask and removing the Streamlit implementation entirely.
@@ -40,13 +41,14 @@ The Science Data Kit has already begun implementing a framework-agnostic archite
 
 Phase 2 (Flask Implementation Completion) has been completed, and significant progress has been made in Phase 3 (User Experience Optimization). End-to-end tests have been implemented for common workflows, including the File Explorer and Connect page workflows. Performance benchmarking has been implemented to measure page load times and API response times, and compare them with the Streamlit version. A comprehensive usability testing plan has been created to guide the User Experience Optimization phase.
 
-In the latest development cycle, three key planning documents have been created to guide the remaining work in Phase 3:
+In the latest development cycle, WebSocket support for real-time dashboard updates has been implemented. This enhancement allows for dynamic updates to the dashboard without requiring page refreshes, providing a more responsive and interactive user experience. The implementation includes:
 
-1. **UI/UX Improvement Proposals**: A comprehensive document outlining specific improvements for navigation, visual design, error handling, and performance optimization.
-2. **Accessibility Improvements Plan**: A detailed plan for ensuring WCAG 2.1 compliance, implementing keyboard navigation, adding screen reader support, and creating a high-contrast mode.
-3. **Flask-Specific Enhancements Plan**: A technical specification for implementing WebSocket support, client-side caching, enhanced file preview capabilities, and drag-and-drop functionality.
+1. **Background Task Management**: A thread-based system for periodically fetching and pushing dashboard updates to connected clients.
+2. **Client Tracking**: Mechanisms to track clients connected to the dashboard and manage resources efficiently.
+3. **Configurable Update Intervals**: Configuration options to control the frequency of dashboard updates.
+4. **Graceful Shutdown**: Proper cleanup of resources when clients disconnect or the application stops.
 
-These planning documents provide a clear roadmap for the remaining work in Phase 3 and set the stage for successful implementation of these enhancements.
+These planning documents and implementations provide a clear roadmap for the remaining work in Phase 3 and set the stage for successful implementation of these enhancements.
 
 The following components have been implemented:
 
@@ -109,6 +111,7 @@ The following components have been implemented:
    - UI/UX improvement proposals
    - Accessibility improvements plan
    - Flask-specific enhancements plan
+   - WebSocket support for real-time dashboard updates
 
 ### Streamlit Pages Inventory and Flask Implementation Status
 
@@ -314,7 +317,7 @@ The following components have been implemented:
 
 The next steps in the Streamlit to Flask Migration roadmap are:
 
-1. **Implement UI/UX improvements based on proposals**:
+1. **Continue implementing UI/UX improvements based on proposals**:
    - Begin with high-priority improvements (Unified Navigation System, Comprehensive Error System, Design System Implementation, Lazy Loading Implementation)
    - Create prototypes for key components
    - Conduct usability testing with the prototypes
@@ -326,9 +329,8 @@ The next steps in the Streamlit to Flask Migration roadmap are:
    - Address critical accessibility issues
    - Implement proper heading structure and landmarks
 
-3. **Implement high-priority Flask-specific enhancements**:
-   - Start with WebSocket support for dashboard updates
-   - Implement browser storage strategy for client-side caching
+3. **Implement remaining high-priority Flask-specific enhancements**:
+   - Implement client-side caching for improved performance
    - Create advanced document preview capabilities
    - Add file explorer drag-and-drop enhancements
 
@@ -349,6 +351,38 @@ The success of the Streamlit to Flask migration will be measured by:
 6. **Accessibility Compliance**: WCAG 2.1 AA level compliance for all pages
 
 ## Implementation Details
+
+### WebSocket Support for Real-Time Dashboard Updates
+
+WebSocket support has been implemented for real-time dashboard updates, providing a more responsive and interactive user experience. The implementation includes:
+
+1. **Background Task Management**:
+   - A thread-based system for periodically fetching and pushing dashboard updates
+   - Proper thread lifecycle management (creation, execution, cleanup)
+   - Graceful shutdown when the application stops or when no clients are connected
+
+2. **Client Tracking**:
+   - Mechanisms to track clients connected to the dashboard
+   - Room-based client management using Flask-SocketIO
+   - Automatic resource cleanup when clients disconnect
+
+3. **Configurable Update Intervals**:
+   - Configuration option in Flask application config (`DASHBOARD_UPDATE_INTERVAL`)
+   - Environment variable support for deployment flexibility
+   - Default value of 10 seconds with ability to customize
+
+4. **Implementation Details**:
+   - WebSocket event handlers in `events.py` for client connection, disconnection, and dashboard room management
+   - Background task function for periodic dashboard updates
+   - Integration with the existing dashboard page data model
+   - Client-side JavaScript for receiving and processing updates
+
+5. **Performance Considerations**:
+   - Efficient update mechanism that only sends data when clients are connected
+   - Resource management to prevent memory leaks
+   - Configurable update frequency to balance responsiveness and server load
+
+This implementation provides a foundation for adding real-time updates to other parts of the application in the future.
 
 ### UI/UX Improvement Proposals
 
@@ -437,6 +471,8 @@ The specification includes code examples for key components and a prioritization
 
 The Streamlit to Flask Migration roadmap has made significant progress, with the completion of Phase 1 (Feature Parity Assessment) and Phase 2 (Flask Implementation Completion), and substantial progress in Phase 3 (User Experience Optimization). All high-priority, medium-priority, and low-priority features have been implemented in the Flask version, and comprehensive testing has been implemented to ensure functionality and performance.
 
-The development of detailed plans for UI/UX improvements, accessibility enhancements, and Flask-specific features represents a significant milestone in the migration process. These plans provide a clear roadmap for the remaining work in Phase 3 and set the stage for successful implementation of these enhancements.
+The implementation of WebSocket support for real-time dashboard updates represents a significant milestone in enhancing the user experience of the Flask version. This feature provides a more responsive and interactive dashboard that updates automatically without requiring page refreshes, demonstrating the advantages of the Flask framework over Streamlit for creating modern web applications.
 
-The next steps focus on implementing the high-priority improvements outlined in these plans, conducting usability testing, and preparing for the Streamlit Deprecation and Removal phase. By following this roadmap, the Science Data Kit will provide a more responsive, accessible, and user-friendly experience that exceeds the capabilities of the original Streamlit implementation.
+The development of detailed plans for UI/UX improvements, accessibility enhancements, and Flask-specific features, along with the implementation of WebSocket support, provides a clear roadmap for the remaining work in Phase 3 and sets the stage for successful implementation of these enhancements.
+
+The next steps focus on implementing the remaining high-priority improvements outlined in these plans, conducting usability testing, and preparing for the Streamlit Deprecation and Removal phase. By following this roadmap, the Science Data Kit will provide a more responsive, accessible, and user-friendly experience that exceeds the capabilities of the original Streamlit implementation.

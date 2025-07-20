@@ -24,9 +24,9 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for transitioning the Science Data Kit from its current Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintains both frameworks, this roadmap focuses specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
 
-**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_15.md)
+**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_16.md)
 
-**Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment) and Phase 2 (Flask Implementation Completion), and has made significant progress in Phase 3 (User Experience Optimization). Key accomplishments include:
+**Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment) and Phase 2 (Flask Implementation Completion), and has made significant progress in Phase 3 (User Experience Optimization). The latest milestone is the implementation of WebSocket support for real-time dashboard updates, providing a more responsive and interactive user experience. Key accomplishments include:
 
 1. **Comprehensive Inventory**: A complete inventory of all 23 Streamlit pages and their features has been created.
 2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages, 9 medium-priority features, and 7 low-priority features, all of which have now been fully implemented.
@@ -195,8 +195,8 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 
 ### Streamlit to Flask Migration
 **Implementation Status**: In Progress - Phase 3: User Experience Optimization
-**Testing Status**: Active - Comprehensive unit tests implemented for all API endpoints, end-to-end tests implemented for critical paths, planning documents created for UI/UX improvements, accessibility, and Flask-specific enhancements
-**Next Testing Steps**: Implement automated accessibility testing, test prototypes for UI/UX improvements, and validate Flask-specific enhancements
+**Testing Status**: Active - Comprehensive unit tests implemented for all API endpoints, end-to-end tests implemented for critical paths, planning documents created for UI/UX improvements, accessibility, and Flask-specific enhancements, WebSocket support implemented for real-time dashboard updates
+**Next Testing Steps**: Test WebSocket implementation under load, implement automated accessibility testing, test prototypes for UI/UX improvements, and validate remaining Flask-specific enhancements
 **Recommended Testing**: Use prompts #19 for quality assessment, #21 for code analysis, #23 for performance validation, #17 for accessibility testing
 **Quality Gates**: Feature Parity Assessment before Flask Implementation Completion, User Experience Optimization before Streamlit Deprecation
 
