@@ -39,9 +39,9 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files.
 
-**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_07.md)
+**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_08.md)
 
-**Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase and has completed several key components of the core interpreters phase and UI integration phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. The capability mixins, configuration schema, MIME type mapping, and plugin selection logic have been implemented. Plugin validation has been added to ensure plugins implement all required methods and capabilities, and comprehensive documentation has been created for plugin interfaces. Core integration with the file browser has been completed, including file details view with metadata and file preview component. The plugin priority system and plugin dependency resolution have been implemented, and several file interpreters have been created, including image, PDF, DOCX, NetCDF, HDF5, MP3, MP4, and XLSX interpreters. UI components for file previews have been implemented, including image preview component, document preview component, and metadata grouping. Key completed tasks include:
+**Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase and has completed several key components of the core interpreters phase and UI integration phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. The capability mixins, configuration schema, MIME type mapping, and plugin selection logic have been implemented. Plugin validation has been added to ensure plugins implement all required methods and capabilities, and comprehensive documentation has been created for plugin interfaces. Core integration with the file browser has been completed, including file details view with metadata and file preview component. The plugin priority system and plugin dependency resolution have been implemented, and several file interpreters have been created, including image, PDF, DOCX, NetCDF, HDF5, MP3, MP4, XLSX, FITS, and CSV/TSV interpreters. UI components for file previews have been implemented, including image preview component, document preview component, and metadata grouping. Key completed tasks include:
 
 1. Added new plugin categories to the PluginCategory enum
 2. Created the FileInterpreterPlugin and MetadataExtractorPlugin base classes
@@ -74,6 +74,9 @@ This roadmap outlines a comprehensive plan for implementing specialized file han
 29. Implemented document preview component for displaying document files (PDF, DOCX, XLSX) with metadata
 30. Created metadata grouping functionality to organize metadata into logical groups for display
 31. Updated file browser to use the new file preview components
+32. Implemented FITS file interpreter with metadata extraction, data visualization, and structured data extraction
+33. Created CSV/TSV file interpreter with metadata extraction, text extraction, and structured data extraction
+34. Added comprehensive tests for FITS and CSV/TSV file interpreters to ensure proper registration and functionality
 
 The roadmap is divided into four phases:
 

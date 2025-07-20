@@ -43,7 +43,8 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Document File Interpreters (PDF, DOCX, XLSX metadata and previews)
   - ✓ Scientific Data File Interpreters (NetCDF, HDF5)
   - ✓ Media File Interpreters (MP3, MP4 metadata and previews)
-  - ⟳ Additional Scientific Data File Interpreters (FITS, CSV/TSV, GeoTIFF)
+  - ✓ Additional Scientific Data File Interpreters (FITS, CSV/TSV)
+    - ⟳ Additional Scientific Data File Interpreters (GeoTIFF)
 - Enhance UI Integration
   - ✓ File Preview Components (framework, image/document viewers)
   - ✓ Metadata Visualization (metadata panel, grouping)
