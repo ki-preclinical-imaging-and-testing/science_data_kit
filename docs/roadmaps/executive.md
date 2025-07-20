@@ -54,6 +54,7 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Search and Discovery (metadata-based search, advanced filters)
   - ✓ Search and Discovery (✓ faceted search, ✓ saved searches)
 - Implement Advanced Features
+  - ✓ Metadata Export (export metadata in JSON, YAML, CSV, Excel formats)
   - ⟳ Content Extraction (text extraction, OCR, table extraction)
   - ⟳ Similarity Analysis (file similarity metrics, duplicate detection)
   - ⟳ Automated Tagging (keyword extraction, topic modeling, entity recognition)

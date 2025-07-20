@@ -517,13 +517,7 @@ def delete_saved_search():
 @login_required
 def export_metadata():
     """Endpoint for exporting file metadata in various formats."""
-    from science_data_kit.core.integrations.plugin_architecture import get_file_interpreter_for_file
-    import json
-    import csv
-    import yaml
-    from io import StringIO
-    import pandas as pd
-    from datetime import datetime
+    from io import StringIO, BytesIO
 
     file_path = request.args.get('path', '')
     export_format = request.args.get('format', 'json')
@@ -531,113 +525,70 @@ def export_metadata():
     if not os.path.isfile(file_path):
         return jsonify({'error': 'File not found'}), 404
 
-    # Try to get a file interpreter for this file
-    interpreter = get_file_interpreter_for_file(file_path)
+    # Create a FileBrowserPage instance
+    page = FileBrowserPage()
 
-    # Initialize metadata dictionary
-    all_metadata = {}
-
-    # Get basic file info
+    # Export metadata using the FileBrowserPage.export_metadata method
     try:
-        stat_info = os.stat(file_path)
-        all_metadata.update({
-            'name': os.path.basename(file_path),
-            'path': file_path,
-            'size': stat_info.st_size,
-            'extension': os.path.splitext(file_path)[1],
-            'created': datetime.fromtimestamp(stat_info.st_ctime).isoformat(),
-            'modified': datetime.fromtimestamp(stat_info.st_mtime).isoformat(),
-            'accessed': datetime.fromtimestamp(stat_info.st_atime).isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': f'Error getting basic file info: {str(e)}'}), 500
+        result = page.export_metadata(file_path, export_format)
 
-    # If an interpreter is available, extract specialized metadata
-    if interpreter:
-        try:
-            specialized_metadata = interpreter.extract_metadata(file_path)
-            all_metadata['specialized'] = specialized_metadata
-        except Exception as e:
-            # If metadata extraction fails, log the error but continue with basic metadata
-            print(f"Error extracting specialized metadata from {file_path}: {str(e)}")
+        if result is None:
+            return jsonify({'error': 'Failed to export metadata'}), 500
 
-    # Export metadata in the requested format
-    try:
-        if export_format == 'json':
-            # JSON format
-            response = make_response(json.dumps(all_metadata, indent=2))
-            response.headers['Content-Type'] = 'application/json'
+        # Create appropriate response based on the format
+        if export_format.lower() == 'json':
+            if isinstance(result, dict):
+                response = make_response(json.dumps(result, indent=2))
+                response.headers['Content-Type'] = 'application/json'
+            else:
+                # If result is a file path, read the file
+                with open(result, 'r') as f:
+                    response = make_response(f.read())
+                response.headers['Content-Type'] = 'application/json'
             response.headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}_metadata.json"'
-            return response
 
-        elif export_format == 'csv':
-            # CSV format - flatten nested structures
-            csv_data = StringIO()
-            csv_writer = csv.writer(csv_data)
-            csv_writer.writerow(['Key', 'Value'])
-
-            # Helper function to flatten nested dictionaries
-            def flatten_dict(d, parent_key=''):
-                items = []
-                for k, v in d.items():
-                    new_key = f"{parent_key}.{k}" if parent_key else k
-                    if isinstance(v, dict):
-                        items.extend(flatten_dict(v, new_key).items())
-                    elif isinstance(v, list):
-                        items.append((new_key, json.dumps(v)))
-                    else:
-                        items.append((new_key, v))
-                return dict(items)
-
-            # Flatten and write to CSV
-            flattened = flatten_dict(all_metadata)
-            for key, value in flattened.items():
-                csv_writer.writerow([key, value])
-
-            response = make_response(csv_data.getvalue())
-            response.headers['Content-Type'] = 'text/csv'
-            response.headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}_metadata.csv"'
-            return response
-
-        elif export_format == 'yaml':
-            # YAML format
-            response = make_response(yaml.dump(all_metadata, default_flow_style=False))
+        elif export_format.lower() == 'yaml':
+            if isinstance(result, str) and not os.path.isfile(result):
+                # Result is already YAML string
+                response = make_response(result)
+            else:
+                # If result is a file path, read the file
+                with open(result, 'r') as f:
+                    response = make_response(f.read())
             response.headers['Content-Type'] = 'application/x-yaml'
             response.headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}_metadata.yaml"'
-            return response
 
-        elif export_format == 'excel':
-            # Excel format - flatten nested structures
-            output = StringIO()
+        elif export_format.lower() == 'csv':
+            if isinstance(result, dict):
+                # Convert dictionary to CSV
+                csv_data = StringIO()
+                csv_writer = csv.writer(csv_data)
+                csv_writer.writerow(['Key', 'Value'])
+                for key, value in result.items():
+                    csv_writer.writerow([key, value])
+                response = make_response(csv_data.getvalue())
+            else:
+                # If result is a file path, read the file
+                with open(result, 'r') as f:
+                    response = make_response(f.read())
+            response.headers['Content-Type'] = 'text/csv'
+            response.headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}_metadata.csv"'
 
-            # Helper function to flatten nested dictionaries
-            def flatten_dict(d, parent_key=''):
-                items = []
-                for k, v in d.items():
-                    new_key = f"{parent_key}.{k}" if parent_key else k
-                    if isinstance(v, dict):
-                        items.extend(flatten_dict(v, new_key).items())
-                    elif isinstance(v, list):
-                        items.append((new_key, json.dumps(v)))
-                    else:
-                        items.append((new_key, v))
-                return dict(items)
-
-            # Flatten and create DataFrame
-            flattened = flatten_dict(all_metadata)
-            df = pd.DataFrame(list(flattened.items()), columns=['Key', 'Value'])
-
-            # Create Excel file
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                df.to_excel(writer, sheet_name='Metadata', index=False)
-
-            response = make_response(output.getvalue())
+        elif export_format.lower() == 'excel':
+            if isinstance(result, BytesIO):
+                # Result is already an Excel file in memory
+                response = make_response(result.getvalue())
+            else:
+                # If result is a file path, read the file
+                with open(result, 'rb') as f:
+                    response = make_response(f.read())
             response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             response.headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}_metadata.xlsx"'
-            return response
 
         else:
             return jsonify({'error': f'Unsupported export format: {export_format}'}), 400
+
+        return response
 
     except Exception as e:
         return jsonify({'error': f'Error exporting metadata: {str(e)}'}), 500

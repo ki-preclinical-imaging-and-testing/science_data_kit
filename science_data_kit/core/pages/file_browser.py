@@ -5,18 +5,27 @@ This module provides the framework-independent implementation of the file browse
 It defines the core functionality for browsing files and directories.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union, TextIO, BinaryIO
 import os
 import pathlib
 import tempfile
 import yaml
 import json
+import csv
 from datetime import datetime
+from io import StringIO, BytesIO
 
 from science_data_kit.core.pages.base import BasePage
 from science_data_kit.core.models.page import FileExplorerPageData
 from science_data_kit.core.integrations.plugin_architecture import get_file_interpreter_for_file
 from science_data_kit.core.db.db_manager import Neo4jManager
+
+# Import pandas conditionally to avoid hard dependency
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
 
 class FileBrowserPage(BasePage):
     """
@@ -707,6 +716,154 @@ class FileBrowserPage(BasePage):
 
         if file_types:
             self.facets["File Types"] = {"type": file_types}
+
+    def export_metadata(self, file_path: str, export_format: str = 'json', output_path: Optional[str] = None) -> Union[Dict[str, Any], str, BytesIO, None]:
+        """
+        Export metadata from a file to a specified format.
+
+        This method extracts metadata from a file using a file interpreter and
+        exports it to the specified format (json, yaml, csv, or excel).
+
+        Args:
+            file_path: The path of the file to extract metadata from.
+            export_format: The format to export to ('json', 'yaml', 'csv', or 'excel').
+            output_path: Optional path to save the exported metadata. If not provided,
+                         the metadata is returned in the specified format for further processing.
+
+        Returns:
+            If output_path is provided: The path to the exported metadata file, or None if export failed.
+            If output_path is not provided: 
+                - For JSON: The metadata dictionary
+                - For YAML: A string containing the YAML representation
+                - For CSV: A dictionary with flattened metadata
+                - For Excel: A BytesIO object containing the Excel file
+                - None if export failed
+        """
+        # Extract metadata using a file interpreter
+        metadata = self.extract_metadata(file_path)
+        if not metadata:
+            self.logger.warning(f"No metadata could be extracted from {file_path}")
+            return None
+
+        # Add basic file info if not already present
+        if 'name' not in metadata:
+            try:
+                stat_info = os.stat(file_path)
+                basic_info = {
+                    'name': os.path.basename(file_path),
+                    'path': file_path,
+                    'size': stat_info.st_size,
+                    'extension': os.path.splitext(file_path)[1],
+                    'created': datetime.fromtimestamp(stat_info.st_ctime).isoformat(),
+                    'modified': datetime.fromtimestamp(stat_info.st_mtime).isoformat(),
+                    'accessed': datetime.fromtimestamp(stat_info.st_atime).isoformat()
+                }
+                metadata.update(basic_info)
+            except Exception as e:
+                self.logger.error(f"Error getting basic file info: {str(e)}")
+
+        try:
+            # If output_path is provided, save to file
+            if output_path:
+                # Determine file extension based on format if not specified in output_path
+                if not os.path.splitext(output_path)[1]:
+                    output_path = f"{output_path}.{export_format}"
+
+                # Export based on format
+                if export_format.lower() == 'json':
+                    with open(output_path, 'w') as f:
+                        json.dump(metadata, f, indent=2)
+                elif export_format.lower() == 'yaml':
+                    with open(output_path, 'w') as f:
+                        yaml.dump(metadata, f, sort_keys=False)
+                elif export_format.lower() == 'csv':
+                    # Flatten the metadata for CSV export
+                    flattened_data = self._flatten_metadata(metadata)
+
+                    with open(output_path, 'w', newline='') as f:
+                        writer = csv.writer(f)
+                        # Write header
+                        writer.writerow(['Key', 'Value'])
+                        # Write data
+                        for key, value in flattened_data.items():
+                            writer.writerow([key, value])
+                elif export_format.lower() == 'excel':
+                    if not PANDAS_AVAILABLE:
+                        self.logger.error("Pandas is required for Excel export but is not available")
+                        return None
+
+                    # Flatten the metadata for Excel export
+                    flattened_data = self._flatten_metadata(metadata)
+
+                    # Create DataFrame and save to Excel
+                    df = pd.DataFrame(list(flattened_data.items()), columns=['Key', 'Value'])
+                    df.to_excel(output_path, sheet_name='Metadata', index=False)
+                else:
+                    self.logger.error(f"Unsupported export format: {export_format}")
+                    return None
+
+                self.logger.info(f"Metadata exported to {output_path}")
+                return output_path
+
+            # If no output_path, return the formatted metadata
+            else:
+                if export_format.lower() == 'json':
+                    return metadata
+                elif export_format.lower() == 'yaml':
+                    return yaml.dump(metadata, sort_keys=False)
+                elif export_format.lower() == 'csv':
+                    # Flatten the metadata for CSV export
+                    return self._flatten_metadata(metadata)
+                elif export_format.lower() == 'excel':
+                    if not PANDAS_AVAILABLE:
+                        self.logger.error("Pandas is required for Excel export but is not available")
+                        return None
+
+                    # Flatten the metadata for Excel export
+                    flattened_data = self._flatten_metadata(metadata)
+
+                    # Create DataFrame and save to BytesIO
+                    df = pd.DataFrame(list(flattened_data.items()), columns=['Key', 'Value'])
+                    output = BytesIO()
+                    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                        df.to_excel(writer, sheet_name='Metadata', index=False)
+
+                    output.seek(0)
+                    return output
+                else:
+                    self.logger.error(f"Unsupported export format: {export_format}")
+                    return None
+
+        except Exception as e:
+            self.logger.error(f"Error exporting metadata: {str(e)}")
+            return None
+
+    def _flatten_metadata(self, metadata: Dict[str, Any], parent_key: str = '') -> Dict[str, str]:
+        """
+        Flatten nested metadata dictionary for CSV export.
+
+        Args:
+            metadata: The metadata dictionary to flatten.
+            parent_key: The parent key for nested dictionaries.
+
+        Returns:
+            A flattened dictionary with dot-notation keys.
+        """
+        flattened = {}
+        for key, value in metadata.items():
+            new_key = f"{parent_key}.{key}" if parent_key else key
+
+            if isinstance(value, dict):
+                # Recursively flatten nested dictionaries
+                flattened.update(self._flatten_metadata(value, new_key))
+            elif isinstance(value, (list, tuple)):
+                # Convert lists to strings
+                flattened[new_key] = ', '.join(str(item) for item in value)
+            else:
+                # Convert value to string
+                flattened[new_key] = str(value) if value is not None else ''
+
+        return flattened
 
     def update_knowledge_graph_with_metadata(self, file_path: str) -> bool:
         """
