@@ -42,6 +42,8 @@ class PluginCategory(Enum):
     IMPORT = "import"
     PLATFORM = "platform"
     UTILITY = "utility"
+    FILE_INTERPRETER = "file_interpreter"
+    METADATA_EXTRACTOR = "metadata_extractor"
     OTHER = "other"
 
 
@@ -62,40 +64,40 @@ class PluginMetadata:
 class PluginBase(ABC):
     """
     Base class for all integration plugins.
-    
+
     All plugins must inherit from this class and implement its abstract methods.
     """
-    
+
     @property
     @abstractmethod
     def metadata(self) -> PluginMetadata:
         """Get the plugin metadata."""
         pass
-    
+
     @abstractmethod
     def initialize(self) -> bool:
         """
         Initialize the plugin.
-        
+
         Returns:
             True if initialization was successful, False otherwise.
         """
         pass
-    
+
     @abstractmethod
     def shutdown(self) -> bool:
         """
         Shut down the plugin and release any resources.
-        
+
         Returns:
             True if shutdown was successful, False otherwise.
         """
         pass
-    
+
     def is_compatible(self) -> bool:
         """
         Check if the plugin is compatible with the current environment.
-        
+
         Returns:
             True if the plugin is compatible, False otherwise.
         """
@@ -106,53 +108,53 @@ class PluginBase(ABC):
 class DataSourcePlugin(PluginBase):
     """
     Base class for data source integration plugins.
-    
+
     Data source plugins provide access to external data sources like APIs,
     databases, file systems, etc.
     """
-    
+
     @abstractmethod
     def connect(self, **kwargs) -> bool:
         """
         Connect to the data source.
-        
+
         Args:
             **kwargs: Connection parameters specific to the data source.
-            
+
         Returns:
             True if connection was successful, False otherwise.
         """
         pass
-    
+
     @abstractmethod
     def disconnect(self) -> bool:
         """
         Disconnect from the data source.
-        
+
         Returns:
             True if disconnection was successful, False otherwise.
         """
         pass
-    
+
     @abstractmethod
     def is_connected(self) -> bool:
         """
         Check if the plugin is currently connected to the data source.
-        
+
         Returns:
             True if connected, False otherwise.
         """
         pass
-    
+
     @abstractmethod
     def get_data(self, query: Any, **kwargs) -> Any:
         """
         Get data from the data source.
-        
+
         Args:
             query: The query to execute.
             **kwargs: Additional parameters for the query.
-            
+
         Returns:
             The retrieved data.
         """
@@ -162,31 +164,31 @@ class DataSourcePlugin(PluginBase):
 class AnalysisToolPlugin(PluginBase):
     """
     Base class for analysis tool integration plugins.
-    
+
     Analysis tool plugins provide integration with data analysis libraries
     and tools like pandas, scikit-learn, etc.
     """
-    
+
     @abstractmethod
     def analyze(self, data: Any, method: str, **kwargs) -> Any:
         """
         Analyze data using the tool.
-        
+
         Args:
             data: The data to analyze.
             method: The analysis method to use.
             **kwargs: Additional parameters for the analysis.
-            
+
         Returns:
             The analysis results.
         """
         pass
-    
+
     @abstractmethod
     def get_available_methods(self) -> List[str]:
         """
         Get a list of available analysis methods.
-        
+
         Returns:
             List of method names.
         """
@@ -196,46 +198,46 @@ class AnalysisToolPlugin(PluginBase):
 class VisualizationPlugin(PluginBase):
     """
     Base class for visualization integration plugins.
-    
+
     Visualization plugins provide integration with data visualization libraries
     and tools like matplotlib, plotly, etc.
     """
-    
+
     @abstractmethod
     def visualize(self, data: Any, visualization_type: str, **kwargs) -> Any:
         """
         Visualize data.
-        
+
         Args:
             data: The data to visualize.
             visualization_type: The type of visualization to create.
             **kwargs: Additional parameters for the visualization.
-            
+
         Returns:
             The visualization object.
         """
         pass
-    
+
     @abstractmethod
     def get_available_visualizations(self) -> List[str]:
         """
         Get a list of available visualization types.
-        
+
         Returns:
             List of visualization type names.
         """
         pass
-    
+
     @abstractmethod
     def save_visualization(self, visualization: Any, path: str, **kwargs) -> bool:
         """
         Save a visualization to a file.
-        
+
         Args:
             visualization: The visualization to save.
             path: The path to save the visualization to.
             **kwargs: Additional parameters for saving.
-            
+
         Returns:
             True if saving was successful, False otherwise.
         """
@@ -245,57 +247,255 @@ class VisualizationPlugin(PluginBase):
 class PlatformPlugin(PluginBase):
     """
     Base class for platform integration plugins.
-    
+
     Platform plugins provide integration with external platforms and services
     like ISA Tools, NC3Rs EDA, etc.
     """
-    
+
     @abstractmethod
     def authenticate(self, **kwargs) -> bool:
         """
         Authenticate with the platform.
-        
+
         Args:
             **kwargs: Authentication parameters.
-            
+
         Returns:
             True if authentication was successful, False otherwise.
         """
         pass
-    
+
     @abstractmethod
     def is_authenticated(self) -> bool:
         """
         Check if the plugin is currently authenticated with the platform.
-        
+
         Returns:
             True if authenticated, False otherwise.
         """
         pass
-    
+
     @abstractmethod
     def get_resources(self, resource_type: str, **kwargs) -> Any:
         """
         Get resources from the platform.
-        
+
         Args:
             resource_type: The type of resources to get.
             **kwargs: Additional parameters for the request.
-            
+
         Returns:
             The retrieved resources.
         """
         pass
 
 
+class FileInterpreterPlugin(PluginBase):
+    """
+    Base class for file interpreter plugins.
+
+    File interpreter plugins provide capabilities for interpreting different file types,
+    extracting metadata, and generating previews. These plugins enable the system to
+    work with specialized scientific file formats, document types, and media files.
+    """
+
+    @abstractmethod
+    def can_interpret(self, file_path: str, mime_type: Optional[str] = None) -> bool:
+        """
+        Check if this plugin can interpret the given file.
+
+        Args:
+            file_path: Path to the file to check.
+            mime_type: Optional MIME type of the file, if known.
+
+        Returns:
+            True if the plugin can interpret the file, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def get_supported_extensions(self) -> List[str]:
+        """
+        Get a list of file extensions supported by this interpreter.
+
+        Returns:
+            List of supported file extensions (e.g., ['.pdf', '.docx']).
+        """
+        pass
+
+    @abstractmethod
+    def get_supported_mime_types(self) -> List[str]:
+        """
+        Get a list of MIME types supported by this interpreter.
+
+        Returns:
+            List of supported MIME types (e.g., ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']).
+        """
+        pass
+
+    @abstractmethod
+    def extract_metadata(self, file_path: str) -> Dict[str, Any]:
+        """
+        Extract metadata from the file.
+
+        Args:
+            file_path: Path to the file to extract metadata from.
+
+        Returns:
+            Dictionary of metadata key-value pairs.
+        """
+        pass
+
+    @abstractmethod
+    def generate_preview(self, file_path: str, output_path: Optional[str] = None, **kwargs) -> Any:
+        """
+        Generate a preview for the file.
+
+        Args:
+            file_path: Path to the file to generate a preview for.
+            output_path: Optional path to save the preview to.
+            **kwargs: Additional parameters for preview generation.
+
+        Returns:
+            Preview data or path to the generated preview.
+        """
+        pass
+
+    def extract_text(self, file_path: str) -> Optional[str]:
+        """
+        Extract text content from the file, if applicable.
+
+        This method is optional and may be implemented by interpreters
+        that can extract text content from files.
+
+        Args:
+            file_path: Path to the file to extract text from.
+
+        Returns:
+            Extracted text content, or None if text extraction is not supported.
+        """
+        return None
+
+    def get_file_info(self, file_path: str) -> Dict[str, Any]:
+        """
+        Get basic information about the file.
+
+        This method provides a standard set of file information that is
+        common across all file types, such as size, creation date, etc.
+
+        Args:
+            file_path: Path to the file to get information for.
+
+        Returns:
+            Dictionary of file information.
+        """
+        path = Path(file_path)
+        stat = path.stat()
+
+        return {
+            'name': path.name,
+            'extension': path.suffix.lower(),
+            'size': stat.st_size,
+            'created': stat.st_ctime,
+            'modified': stat.st_mtime,
+            'accessed': stat.st_atime,
+            'is_directory': path.is_dir(),
+        }
+
+
+class MetadataExtractorPlugin(PluginBase):
+    """
+    Base class for metadata extractor plugins.
+
+    Metadata extractor plugins provide specialized capabilities for extracting
+    metadata from specific file types or from file content. These plugins can
+    be used independently or in conjunction with file interpreters to provide
+    enhanced metadata extraction capabilities.
+    """
+
+    @abstractmethod
+    def can_extract(self, file_path: str, mime_type: Optional[str] = None) -> bool:
+        """
+        Check if this plugin can extract metadata from the given file.
+
+        Args:
+            file_path: Path to the file to check.
+            mime_type: Optional MIME type of the file, if known.
+
+        Returns:
+            True if the plugin can extract metadata from the file, False otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def get_supported_extensions(self) -> List[str]:
+        """
+        Get a list of file extensions supported by this extractor.
+
+        Returns:
+            List of supported file extensions (e.g., ['.jpg', '.tiff']).
+        """
+        pass
+
+    @abstractmethod
+    def get_supported_mime_types(self) -> List[str]:
+        """
+        Get a list of MIME types supported by this extractor.
+
+        Returns:
+            List of supported MIME types (e.g., ['image/jpeg', 'image/tiff']).
+        """
+        pass
+
+    @abstractmethod
+    def extract_metadata(self, file_path: str, **kwargs) -> Dict[str, Any]:
+        """
+        Extract metadata from the file.
+
+        Args:
+            file_path: Path to the file to extract metadata from.
+            **kwargs: Additional parameters for metadata extraction.
+
+        Returns:
+            Dictionary of metadata key-value pairs.
+        """
+        pass
+
+    def get_metadata_schema(self) -> Dict[str, Any]:
+        """
+        Get the schema for the metadata extracted by this plugin.
+
+        This method provides information about the structure and types of
+        metadata that this extractor can provide. This can be used for
+        validation and documentation purposes.
+
+        Returns:
+            Dictionary describing the metadata schema.
+        """
+        # Default implementation returns an empty schema
+        return {}
+
+    def get_extraction_capabilities(self) -> List[str]:
+        """
+        Get a list of metadata extraction capabilities provided by this plugin.
+
+        This method allows the plugin to advertise specific extraction capabilities
+        that it provides, such as "EXIF extraction", "geolocation", etc.
+
+        Returns:
+            List of capability identifiers.
+        """
+        return []
+
+
 class PluginRegistry:
     """
     Registry for managing integration plugins.
-    
+
     This class provides methods for registering, discovering, loading,
     and managing plugins.
     """
-    
+
     def __init__(self):
         """Initialize the plugin registry."""
         self._plugins: Dict[str, Type[PluginBase]] = {}
@@ -304,14 +504,14 @@ class PluginRegistry:
             category: set() for category in PluginCategory
         }
         self._initialized = False
-    
+
     def register_plugin(self, plugin_class: Type[PluginBase]) -> bool:
         """
         Register a plugin class.
-        
+
         Args:
             plugin_class: The plugin class to register.
-            
+
         Returns:
             True if registration was successful, False otherwise.
         """
@@ -319,36 +519,36 @@ class PluginRegistry:
             # Create a temporary instance to get metadata
             temp_instance = plugin_class()
             metadata = temp_instance.metadata
-            
+
             # Check if a plugin with this name is already registered
             if metadata.name in self._plugins:
                 logger.warning(f"Plugin '{metadata.name}' is already registered")
                 return False
-            
+
             # Register the plugin
             self._plugins[metadata.name] = plugin_class
             self._categories[metadata.category].add(metadata.name)
-            
+
             logger.info(f"Registered plugin '{metadata.name}' (version {metadata.version})")
             return True
         except Exception as e:
             logger.error(f"Failed to register plugin: {str(e)}")
             return False
-    
+
     def unregister_plugin(self, name: str) -> bool:
         """
         Unregister a plugin.
-        
+
         Args:
             name: The name of the plugin to unregister.
-            
+
         Returns:
             True if unregistration was successful, False otherwise.
         """
         if name not in self._plugins:
             logger.warning(f"Plugin '{name}' is not registered")
             return False
-        
+
         # Shutdown the plugin instance if it exists
         if name in self._instances:
             try:
@@ -356,106 +556,106 @@ class PluginRegistry:
                 del self._instances[name]
             except Exception as e:
                 logger.error(f"Failed to shutdown plugin '{name}': {str(e)}")
-        
+
         # Get the category and remove the plugin from it
         for category, plugins in self._categories.items():
             if name in plugins:
                 plugins.remove(name)
                 break
-        
+
         # Remove the plugin from the registry
         del self._plugins[name]
-        
+
         logger.info(f"Unregistered plugin '{name}'")
         return True
-    
+
     def get_plugin_class(self, name: str) -> Optional[Type[PluginBase]]:
         """
         Get a plugin class by name.
-        
+
         Args:
             name: The name of the plugin.
-            
+
         Returns:
             The plugin class if found, None otherwise.
         """
         return self._plugins.get(name)
-    
+
     def get_plugin_instance(self, name: str, initialize: bool = True) -> Optional[PluginBase]:
         """
         Get a plugin instance by name.
-        
+
         If the plugin is not already instantiated, it will be instantiated and initialized.
-        
+
         Args:
             name: The name of the plugin.
             initialize: Whether to initialize the plugin if it's not already instantiated.
-            
+
         Returns:
             The plugin instance if found and successfully instantiated, None otherwise.
         """
         # Return existing instance if available
         if name in self._instances:
             return self._instances[name]
-        
+
         # Get the plugin class
         plugin_class = self.get_plugin_class(name)
         if not plugin_class:
             logger.warning(f"Plugin '{name}' not found")
             return None
-        
+
         # Create a new instance
         try:
             instance = plugin_class()
-            
+
             # Initialize the plugin if requested
             if initialize and not instance.initialize():
                 logger.error(f"Failed to initialize plugin '{name}'")
                 return None
-            
+
             # Store the instance
             self._instances[name] = instance
-            
+
             return instance
         except Exception as e:
             logger.error(f"Failed to instantiate plugin '{name}': {str(e)}")
             return None
-    
+
     def get_plugins_by_category(self, category: PluginCategory) -> List[str]:
         """
         Get a list of plugin names in a specific category.
-        
+
         Args:
             category: The category to get plugins for.
-            
+
         Returns:
             List of plugin names.
         """
         return list(self._categories.get(category, set()))
-    
+
     def get_all_plugins(self) -> List[str]:
         """
         Get a list of all registered plugin names.
-        
+
         Returns:
             List of plugin names.
         """
         return list(self._plugins.keys())
-    
+
     def get_plugin_metadata(self, name: str) -> Optional[PluginMetadata]:
         """
         Get metadata for a plugin.
-        
+
         Args:
             name: The name of the plugin.
-            
+
         Returns:
             The plugin metadata if found, None otherwise.
         """
         plugin_class = self.get_plugin_class(name)
         if not plugin_class:
             return None
-        
+
         try:
             # Create a temporary instance to get metadata
             temp_instance = plugin_class()
@@ -463,36 +663,36 @@ class PluginRegistry:
         except Exception as e:
             logger.error(f"Failed to get metadata for plugin '{name}': {str(e)}")
             return None
-    
+
     def discover_plugins(self, package_name: str) -> int:
         """
         Discover plugins in a package.
-        
+
         This method recursively searches for plugin classes in the specified package
         and its subpackages, and registers them.
-        
+
         Args:
             package_name: The name of the package to search in.
-            
+
         Returns:
             The number of plugins discovered and registered.
         """
         count = 0
-        
+
         try:
             package = importlib.import_module(package_name)
             package_path = getattr(package, '__path__', [])
-            
+
             for _, name, is_pkg in pkgutil.iter_modules(package_path):
                 full_name = f"{package_name}.{name}"
-                
+
                 try:
                     module = importlib.import_module(full_name)
-                    
+
                     # If it's a package, recursively discover plugins
                     if is_pkg:
                         count += self.discover_plugins(full_name)
-                    
+
                     # Find plugin classes in the module
                     for item_name, item in inspect.getmembers(module, inspect.isclass):
                         if (issubclass(item, PluginBase) and 
@@ -500,63 +700,65 @@ class PluginRegistry:
                             item is not DataSourcePlugin and 
                             item is not AnalysisToolPlugin and 
                             item is not VisualizationPlugin and 
-                            item is not PlatformPlugin):
-                            
+                            item is not PlatformPlugin and
+                            item is not FileInterpreterPlugin and
+                            item is not MetadataExtractorPlugin):
+
                             if self.register_plugin(item):
                                 count += 1
-                
+
                 except Exception as e:
                     logger.error(f"Failed to import module '{full_name}': {str(e)}")
-        
+
         except Exception as e:
             logger.error(f"Failed to discover plugins in package '{package_name}': {str(e)}")
-        
+
         return count
-    
+
     def initialize_all(self) -> bool:
         """
         Initialize all registered plugins.
-        
+
         Returns:
             True if all plugins were successfully initialized, False otherwise.
         """
         if self._initialized:
             logger.warning("Plugins are already initialized")
             return True
-        
+
         success = True
-        
+
         for name in self.get_all_plugins():
             if not self.get_plugin_instance(name):
                 success = False
-        
+
         self._initialized = success
         return success
-    
+
     def shutdown_all(self) -> bool:
         """
         Shut down all plugin instances.
-        
+
         Returns:
             True if all plugins were successfully shut down, False otherwise.
         """
         if not self._initialized:
             logger.warning("Plugins are not initialized")
             return True
-        
+
         success = True
-        
+
         for name, instance in list(self._instances.items()):
             try:
                 if not instance.shutdown():
                     logger.error(f"Failed to shutdown plugin '{name}'")
                     success = False
-                
+
                 del self._instances[name]
             except Exception as e:
                 logger.error(f"Error shutting down plugin '{name}': {str(e)}")
                 success = False
-        
+
         self._initialized = False
         return success
 
@@ -568,12 +770,12 @@ plugin_registry = PluginRegistry()
 def register_plugin(plugin_class: Type[PluginBase]) -> bool:
     """
     Register a plugin class with the global registry.
-    
+
     This function can be used as a decorator.
-    
+
     Args:
         plugin_class: The plugin class to register.
-        
+
     Returns:
         True if registration was successful, False otherwise.
     """
@@ -583,10 +785,10 @@ def register_plugin(plugin_class: Type[PluginBase]) -> bool:
 def get_plugin(name: str) -> Optional[PluginBase]:
     """
     Get a plugin instance by name from the global registry.
-    
+
     Args:
         name: The name of the plugin.
-        
+
     Returns:
         The plugin instance if found, None otherwise.
     """
@@ -596,10 +798,10 @@ def get_plugin(name: str) -> Optional[PluginBase]:
 def get_plugins_by_category(category: PluginCategory) -> List[str]:
     """
     Get a list of plugin names in a specific category from the global registry.
-    
+
     Args:
         category: The category to get plugins for.
-        
+
     Returns:
         List of plugin names.
     """
@@ -609,7 +811,7 @@ def get_plugins_by_category(category: PluginCategory) -> List[str]:
 def get_all_plugins() -> List[str]:
     """
     Get a list of all registered plugin names from the global registry.
-    
+
     Returns:
         List of plugin names.
     """
@@ -619,10 +821,10 @@ def get_all_plugins() -> List[str]:
 def discover_plugins(package_name: str = "science_data_kit.core.integrations") -> int:
     """
     Discover plugins in a package using the global registry.
-    
+
     Args:
         package_name: The name of the package to search in.
-        
+
     Returns:
         The number of plugins discovered and registered.
     """
@@ -632,7 +834,7 @@ def discover_plugins(package_name: str = "science_data_kit.core.integrations") -
 def initialize_plugins() -> bool:
     """
     Initialize all registered plugins using the global registry.
-    
+
     Returns:
         True if all plugins were successfully initialized, False otherwise.
     """
@@ -642,7 +844,7 @@ def initialize_plugins() -> bool:
 def shutdown_plugins() -> bool:
     """
     Shut down all plugin instances using the global registry.
-    
+
     Returns:
         True if all plugins were successfully shut down, False otherwise.
     """

@@ -39,9 +39,17 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files.
 
-**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_00.md)
+**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_01.md)
 
-**Status**: Planning - The Specialized File Handling roadmap has been defined and is divided into four phases:
+**Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. Key completed tasks include:
+
+1. Added new plugin categories to the PluginCategory enum
+2. Created the FileInterpreterPlugin and MetadataExtractorPlugin base classes
+3. Extended the plugin registry to support the new plugin types
+4. Created the directory structure for file interpreter and metadata extractor plugins
+5. Implemented unit tests for the plugin interfaces and integration tests for plugin discovery
+
+The roadmap is divided into four phases:
 
 1. **Phase 1: Foundation** - Create plugin interfaces for file interpreters and metadata extractors, implement plugin discovery and registration, and integrate with existing systems.
 2. **Phase 2: Core Interpreters** - Implement interpreters for common file types including images, documents, scientific data, and media files.
