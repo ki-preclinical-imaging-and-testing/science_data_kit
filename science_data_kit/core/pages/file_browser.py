@@ -13,6 +13,7 @@ import tempfile
 from science_data_kit.core.pages.base import BasePage
 from science_data_kit.core.models.page import FileExplorerPageData
 from science_data_kit.core.integrations.plugin_architecture import get_file_interpreter_for_file
+from science_data_kit.core.db.db_manager import Neo4jManager
 
 class FileBrowserPage(BasePage):
     """
@@ -329,13 +330,14 @@ class FileBrowserPage(BasePage):
             self.current_path = parent
             self.selected_files = []
 
-    def select_file(self, file_path: str, multi_select: bool = False) -> None:
+    def select_file(self, file_path: str, multi_select: bool = False, update_graph: bool = True) -> None:
         """
         Select a file.
 
         Args:
             file_path: The path of the file to select.
             multi_select: Whether to allow multiple selection.
+            update_graph: Whether to update the knowledge graph with file metadata.
         """
         if not multi_select:
             self.selected_files = [file_path]
@@ -344,6 +346,17 @@ class FileBrowserPage(BasePage):
                 self.selected_files.remove(file_path)
             else:
                 self.selected_files.append(file_path)
+
+        # Update knowledge graph with file metadata if requested and file is selected
+        if update_graph and file_path in self.selected_files and os.path.isfile(file_path):
+            # Check if a file interpreter is available for this file
+            interpreter = get_file_interpreter_for_file(file_path)
+            if interpreter:
+                # Update the knowledge graph in the background to avoid blocking the UI
+                try:
+                    self.update_knowledge_graph_with_metadata(file_path)
+                except Exception as e:
+                    self.logger.error(f"Error updating knowledge graph: {str(e)}")
 
     def extract_metadata(self, file_path: str) -> Optional[Dict[str, Any]]:
         """
@@ -457,3 +470,88 @@ class FileBrowserPage(BasePage):
         Clear all metadata filters.
         """
         self.metadata_filters = []
+
+    def update_knowledge_graph_with_metadata(self, file_path: str) -> bool:
+        """
+        Update the knowledge graph with specialized metadata for a file.
+
+        This method extracts metadata from a file using a file interpreter and
+        updates or creates a file node in the knowledge graph with this metadata.
+
+        Args:
+            file_path: The path of the file to extract metadata from and update in the graph.
+
+        Returns:
+            True if the update was successful, False otherwise.
+        """
+        # Check if we have a database connection
+        if not self.db_connection:
+            self.logger.warning("No database connection available for knowledge graph update")
+            return False
+
+        # Get a Neo4j manager instance
+        try:
+            neo4j_manager = Neo4jManager()
+            if not neo4j_manager.is_connected():
+                self.logger.warning("Neo4j manager is not connected to a database")
+                return False
+        except Exception as e:
+            self.logger.error(f"Error creating Neo4j manager: {str(e)}")
+            return False
+
+        # Extract metadata using a file interpreter
+        metadata = self.extract_metadata(file_path)
+        if not metadata:
+            self.logger.warning(f"No metadata could be extracted from {file_path}")
+            return False
+
+        # Prepare metadata for Neo4j (convert non-primitive types to strings)
+        processed_metadata = {}
+        for key, value in metadata.items():
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                processed_metadata[key] = value
+            else:
+                processed_metadata[key] = str(value)
+
+        # Check if a file node exists for this path
+        query = """
+        MATCH (f:File {path: $path})
+        RETURN count(f) as count
+        """
+        result = neo4j_manager.execute_query(query, {"path": file_path})
+
+        if result and result[0]["count"] > 0:
+            # Update existing file node
+            update_query = """
+            MATCH (f:File {path: $path})
+            SET f += $metadata
+            RETURN f
+            """
+            try:
+                neo4j_manager.execute_query(update_query, {
+                    "path": file_path,
+                    "metadata": processed_metadata
+                })
+                self.logger.info(f"Updated file node for {file_path} with specialized metadata")
+                return True
+            except Exception as e:
+                self.logger.error(f"Error updating file node: {str(e)}")
+                return False
+        else:
+            # Create new file node
+            create_query = """
+            CREATE (f:File $metadata)
+            RETURN f
+            """
+            try:
+                # Ensure path is included in metadata
+                processed_metadata["path"] = file_path
+
+                neo4j_manager.execute_query(create_query, {
+                    "metadata": processed_metadata
+                })
+                self.logger.info(f"Created new file node for {file_path} with specialized metadata")
+                return True
+            except Exception as e:
+                self.logger.error(f"Error creating file node: {str(e)}")
+                return False

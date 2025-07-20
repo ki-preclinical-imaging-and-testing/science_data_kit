@@ -64,7 +64,7 @@ The following roadmap outlines the key steps for implementing the strategic visi
 A critical component of the strategic focus is integrating the Extensions and Specialized File Handling capabilities with the existing architecture:
 
 1. **Plugin Architecture Leverage**: Build on the existing plugin architecture for both cloud extensions and file interpreters
-2. **Knowledge Graph Integration**: Enhance file nodes with specialized metadata from file interpreters
+2. **Knowledge Graph Integration**: ✓ Enhance file nodes with specialized metadata from file interpreters
 3. **UI Component Reuse**: Leverage existing UI components for file browsing and preview
 4. **Consistent User Experience**: Ensure consistent interaction patterns across different file types and cloud services
 5. **Extensibility Framework**: Create a framework that makes it easy to add new file interpreters and cloud connectors
