@@ -36,6 +36,9 @@ class FileExplorerPageData(PageData):
     sort_by: str = "name"
     sort_order: str = "ascending"
     filter_pattern: Optional[str] = None
+    selected_file_metadata: Optional[Dict[str, Any]] = None
+    selected_file_preview: Optional[Any] = None
+    has_file_interpreter: bool = False
 
 @dataclass
 class ConnectPageData(PageData):

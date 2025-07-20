@@ -39,9 +39,9 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files.
 
-**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_03.md)
+**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_04.md)
 
-**Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. The capability mixins, configuration schema, MIME type mapping, plugin selection logic, plugin validation, and comprehensive documentation have been implemented. Key completed tasks include:
+**Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. The capability mixins, configuration schema, MIME type mapping, plugin selection logic, plugin validation, and comprehensive documentation have been implemented. Core integration with the file browser has been completed, including file details view with metadata and file preview component. Key completed tasks include:
 
 1. Added new plugin categories to the PluginCategory enum
 2. Created the FileInterpreterPlugin and MetadataExtractorPlugin base classes
@@ -56,6 +56,9 @@ This roadmap outlines a comprehensive plan for implementing specialized file han
 11. Implemented plugin validation to ensure plugins implement required methods and capabilities
 12. Created detailed documentation for plugin interfaces, including examples and guidelines for creating custom plugins
 13. Added tests for plugin validation to ensure validation functions work correctly
+14. Integrated with file browser to display file metadata and previews
+15. Implemented file details view with metadata extracted by file interpreters
+16. Created file preview component that uses file interpreters to generate previews
 
 The roadmap is divided into four phases:
 

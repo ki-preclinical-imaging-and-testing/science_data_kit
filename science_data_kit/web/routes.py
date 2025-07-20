@@ -209,10 +209,41 @@ def filter_files():
 @login_required
 def preview_file():
     """HTMX endpoint for previewing a file."""
+    from science_data_kit.core.integrations.plugin_architecture import get_file_interpreter_for_file
+
     file_path = request.args.get('path', '')
     if not os.path.isfile(file_path):
         return jsonify({'error': 'File not found'}), 404
 
+    # Try to get a file interpreter for this file
+    interpreter = get_file_interpreter_for_file(file_path)
+
+    if interpreter:
+        # We have a file interpreter, use it to extract metadata and generate a preview
+        try:
+            # Extract metadata
+            basic_info = interpreter.get_file_info(file_path)
+            specialized_metadata = interpreter.extract_metadata(file_path)
+
+            # Generate preview
+            preview = None
+            try:
+                preview = interpreter.generate_preview(file_path)
+            except Exception as e:
+                # If preview generation fails, log the error but continue
+                print(f"Error generating preview for {file_path}: {str(e)}")
+
+            # Render the metadata template
+            return render_template('partials/preview_metadata.html', 
+                                  file_path=file_path,
+                                  metadata=basic_info,
+                                  specialized_metadata=specialized_metadata,
+                                  preview=preview)
+        except Exception as e:
+            # If metadata extraction fails, fall back to standard preview
+            print(f"Error extracting metadata from {file_path}: {str(e)}")
+
+    # If no interpreter is available or metadata extraction failed, fall back to standard preview
     file_type = os.path.splitext(file_path)[1].lower()
 
     # Read the first 100KB of the file for preview
@@ -235,6 +266,12 @@ def preview_file():
 
         pdf_file_extensions = ['.pdf']
 
+        scientific_file_extensions = [
+            '.nc', '.hdf5', '.h5', '.fits', '.fts', '.fit', 
+            '.nii', '.nii.gz', '.fasta', '.fa', '.fastq', '.fq',
+            '.gff', '.gtf', '.bed', '.vcf', '.bam', '.sam'
+        ]
+
         if file_type in text_file_extensions:
             # Text files
             try:
@@ -248,6 +285,9 @@ def preview_file():
         elif file_type in pdf_file_extensions:
             # PDF files
             return render_template('partials/preview_pdf.html', file_path=file_path)
+        elif file_type in scientific_file_extensions:
+            # Scientific data files
+            return render_template('partials/preview_binary.html', file_path=file_path, file_type="Scientific Data File")
         else:
             # Binary files
             return render_template('partials/preview_binary.html', file_path=file_path)

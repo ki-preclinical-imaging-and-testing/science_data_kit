@@ -345,8 +345,8 @@ The Extensions and Specialized File Handling implementation is currently in prog
    - ✓ Plugin Validation has been implemented to ensure plugins implement required methods and capabilities
    - ✓ Documentation has been created for plugin interfaces, including detailed examples and guidelines for creating custom plugins
    - ✓ Testing has been enhanced with comprehensive tests for plugin validation, capability mixins, and plugin selection logic
-   - ⟳ Core Integration is in progress
-   - ⟳ Core Interpreters development is planned to start after the foundation is fully established
+   - ✓ Core Integration has been completed with file browser integration, file details view with metadata, and file preview component
+   - ⟳ Core Interpreters development is in progress
    - ⟳ UI Integration is planned for future implementation
    - ⟳ Advanced Features are planned for future implementation
 

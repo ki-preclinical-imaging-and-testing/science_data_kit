@@ -1,0 +1,90 @@
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">File Metadata: {{ file_path }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        <div class="metadata-container">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Basic Information</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Name</th>
+                                <td>{{ metadata.name }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Size</th>
+                                <td>{{ metadata.size | filesizeformat }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Type</th>
+                                <td>{{ metadata.extension }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Created</th>
+                                <td>{{ metadata.created | datetime }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Modified</th>
+                                <td>{{ metadata.modified | datetime }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Accessed</th>
+                                <td>{{ metadata.accessed | datetime }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            {% if specialized_metadata %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Specialized Metadata</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            {% for key, value in specialized_metadata.items() %}
+                            <tr>
+                                <th scope="row">{{ key }}</th>
+                                <td>
+                                    {% if value is mapping %}
+                                        <pre>{{ value | tojson(indent=2) }}</pre>
+                                    {% elif value is iterable and value is not string %}
+                                        <pre>{{ value | tojson(indent=2) }}</pre>
+                                    {% else %}
+                                        {{ value }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if preview %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Preview</h6>
+                </div>
+                <div class="card-body">
+                    <div class="preview-container">
+                        {{ preview | safe }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <a href="/api/files/download?path={{ file_path }}" class="btn btn-primary">Download</a>
+    </div>
+</div>
