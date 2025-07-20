@@ -38,6 +38,7 @@ class FileBrowserPage(BasePage):
         self.sort_by = "name"
         self.sort_order = "ascending"
         self.filter_pattern = None
+        self.metadata_filters = []  # List of metadata filter criteria
 
     def get_page_data(self) -> FileExplorerPageData:
         """
@@ -119,9 +120,82 @@ class FileBrowserPage(BasePage):
         # Apply sorting
         files = self._sort_items(files)
 
-        # Apply filtering
+        # Apply name filtering
         if self.filter_pattern:
             files = [f for f in files if self.filter_pattern.lower() in f["name"].lower()]
+
+        # Apply metadata filtering
+        if self.metadata_filters:
+            filtered_files = []
+            for file in files:
+                # Extract metadata for the file
+                metadata = self.extract_metadata(file["path"])
+                if metadata:
+                    # Check if the file passes all metadata filters
+                    passes_all_filters = True
+                    for filter_criterion in self.metadata_filters:
+                        field = filter_criterion["field"]
+                        operator = filter_criterion["operator"]
+                        filter_value = filter_criterion["value"]
+
+                        # Handle nested fields (e.g., 'crs.epsg')
+                        field_parts = field.split('.')
+                        field_value = metadata
+                        for part in field_parts:
+                            if isinstance(field_value, dict) and part in field_value:
+                                field_value = field_value[part]
+                            else:
+                                field_value = None
+                                break
+
+                        # Skip this filter if the field doesn't exist
+                        if field_value is None:
+                            passes_all_filters = False
+                            break
+
+                        # Apply the operator
+                        if operator == '=':
+                            if field_value != filter_value:
+                                passes_all_filters = False
+                                break
+                        elif operator == '!=':
+                            if field_value == filter_value:
+                                passes_all_filters = False
+                                break
+                        elif operator == '>':
+                            if not (isinstance(field_value, (int, float)) and field_value > filter_value):
+                                passes_all_filters = False
+                                break
+                        elif operator == '<':
+                            if not (isinstance(field_value, (int, float)) and field_value < filter_value):
+                                passes_all_filters = False
+                                break
+                        elif operator == '>=':
+                            if not (isinstance(field_value, (int, float)) and field_value >= filter_value):
+                                passes_all_filters = False
+                                break
+                        elif operator == '<=':
+                            if not (isinstance(field_value, (int, float)) and field_value <= filter_value):
+                                passes_all_filters = False
+                                break
+                        elif operator == 'contains':
+                            if not (isinstance(field_value, str) and filter_value.lower() in field_value.lower()):
+                                passes_all_filters = False
+                                break
+                        elif operator == 'startswith':
+                            if not (isinstance(field_value, str) and field_value.lower().startswith(filter_value.lower())):
+                                passes_all_filters = False
+                                break
+                        elif operator == 'endswith':
+                            if not (isinstance(field_value, str) and field_value.lower().endswith(filter_value.lower())):
+                                passes_all_filters = False
+                                break
+
+                    # Add the file to the filtered list if it passes all filters
+                    if passes_all_filters:
+                        filtered_files.append(file)
+
+            files = filtered_files
 
         return files
 
@@ -362,3 +436,24 @@ class FileBrowserPage(BasePage):
             pattern: The pattern to filter by.
         """
         self.filter_pattern = pattern
+
+    def set_metadata_filter(self, field: str, operator: str, value: Any) -> None:
+        """
+        Add a metadata filter criterion.
+
+        Args:
+            field: The metadata field to filter by (e.g., 'width', 'height', 'crs.epsg').
+            operator: The operator to use ('=', '!=', '>', '<', '>=', '<=', 'contains', 'startswith', 'endswith').
+            value: The value to compare against.
+        """
+        self.metadata_filters.append({
+            'field': field,
+            'operator': operator,
+            'value': value
+        })
+
+    def clear_metadata_filters(self) -> None:
+        """
+        Clear all metadata filters.
+        """
+        self.metadata_filters = []

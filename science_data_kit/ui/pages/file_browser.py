@@ -209,6 +209,87 @@ class FileBrowserPage(BasePage):
         with col3:
             st.write(f"Current path: {st.session_state['current_path']}")
 
+        # Add search and filter options
+        with st.expander("Search and Filter Options", expanded=False):
+            # Simple filename filter
+            st.text_input("Filter by filename", key="filename_filter", 
+                          on_change=self._apply_filename_filter)
+
+            # Metadata-based filtering
+            st.subheader("Metadata Filters")
+
+            # Initialize session state for metadata filters if not exists
+            if "metadata_filters" not in st.session_state:
+                st.session_state.metadata_filters = []
+
+            # Display active metadata filters
+            if st.session_state.metadata_filters:
+                st.write("Active Metadata Filters:")
+                for i, filter_item in enumerate(st.session_state.metadata_filters):
+                    col1, col2 = st.columns([4, 1])
+                    with col1:
+                        st.write(f"{filter_item['field']} {filter_item['operator']} {filter_item['value']}")
+                    with col2:
+                        if st.button("Remove", key=f"remove_filter_{i}"):
+                            st.session_state.metadata_filters.pop(i)
+                            # Apply the updated filters
+                            self._apply_metadata_filters()
+                            st.rerun()
+
+                if st.button("Clear All Filters"):
+                    st.session_state.metadata_filters = []
+                    # Apply the updated filters (which is now empty)
+                    self._apply_metadata_filters()
+                    st.rerun()
+
+            # Add new metadata filter
+            st.subheader("Add Metadata Filter")
+
+            # Common metadata fields for different file types
+            common_fields = [
+                "Select a field...",
+                "width", "height", "format", "mode",  # Image fields
+                "crs.epsg", "resolution.x", "resolution.y",  # GeoTIFF fields
+                "count", "driver",  # Raster fields
+                "astronomical_metadata.TELESCOP", "astronomical_metadata.INSTRUME",  # FITS fields
+                "dimensions", "variables",  # NetCDF fields
+                "groups", "datasets",  # HDF5 fields
+                "id3.title", "id3.artist", "id3.album",  # MP3 fields
+                "length", "bitrate", "sample_rate", "channels"  # Media fields
+            ]
+
+            # Allow custom field input
+            field_option = st.selectbox("Field", common_fields)
+            custom_field = st.text_input("Or enter custom field (use dots for nested fields, e.g., 'crs.epsg')")
+
+            field = custom_field if custom_field else field_option
+
+            # Only proceed if a valid field is selected
+            if field and field != "Select a field...":
+                # Operator selection
+                operators = ["=", "!=", ">", "<", ">=", "<=", "contains", "startswith", "endswith"]
+                operator = st.selectbox("Operator", operators)
+
+                # Value input
+                value_type = st.selectbox("Value Type", ["Text", "Number"])
+                if value_type == "Text":
+                    value = st.text_input("Value")
+                else:
+                    value = st.number_input("Value", value=0)
+
+                # Add filter button
+                if st.button("Add Filter"):
+                    if field and operator and value is not None:
+                        # Add the filter to session state
+                        st.session_state.metadata_filters.append({
+                            "field": field,
+                            "operator": operator,
+                            "value": value
+                        })
+                        # Apply the filters
+                        self._apply_metadata_filters()
+                        st.rerun()
+
         # Display current directory contents
         current_path = st.session_state["current_path"]
         if current_path:
@@ -307,6 +388,44 @@ class FileBrowserPage(BasePage):
                         st.error(f"Error previewing file as spreadsheet: {preview['error']}")
                 except Exception as e:
                     st.error(f"Error viewing as spreadsheet: {str(e)}")
+
+    def _apply_filename_filter(self):
+        """Apply the filename filter to the file browser."""
+        # Get the filter pattern from session state
+        filter_pattern = st.session_state.get("filename_filter", "")
+
+        # Get the core page instance
+        from science_data_kit.core.pages.file_browser import FileBrowserPage
+        core_page = FileBrowserPage()
+
+        # Set the current path
+        core_page.current_path = st.session_state.get("current_path", "")
+
+        # Apply the filter
+        core_page.set_filter(filter_pattern)
+
+    def _apply_metadata_filters(self):
+        """Apply metadata filters to the file browser."""
+        # Get the metadata filters from session state
+        metadata_filters = st.session_state.get("metadata_filters", [])
+
+        # Get the core page instance
+        from science_data_kit.core.pages.file_browser import FileBrowserPage
+        core_page = FileBrowserPage()
+
+        # Set the current path
+        core_page.current_path = st.session_state.get("current_path", "")
+
+        # Clear existing metadata filters
+        core_page.clear_metadata_filters()
+
+        # Apply each metadata filter
+        for filter_item in metadata_filters:
+            core_page.set_metadata_filter(
+                filter_item["field"],
+                filter_item["operator"],
+                filter_item["value"]
+            )
 
     def render_content(self) -> None:
         """Render the File Browser page content."""
