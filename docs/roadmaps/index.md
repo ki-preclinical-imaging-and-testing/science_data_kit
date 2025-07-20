@@ -20,40 +20,6 @@ The roadmap is divided into four phases:
 3. **Phase 3: User Experience Optimization** - Improving interface consistency, navigation flow, error handling, accessibility, and mobile responsiveness.
 4. **Phase 4: Workshop Readiness** - Preparing documentation, training materials, feedback collection mechanisms, and demo scenarios.
 
-### Streamlit to Flask Migration
-
-This roadmap outlines a comprehensive plan for transitioning the Science Data Kit from its current Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintains both frameworks, this roadmap focuses specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
-
-**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_21.md)
-
-**Status**: Completed - The Streamlit to Flask Migration roadmap has completed all phases: Phase 1 (Feature Parity Assessment), Phase 2 (Flask Implementation Completion), Phase 3 (User Experience Optimization), Phase 4 (Streamlit Deprecation and Removal), and Phase 5 (Containerization and Deployment). The latest milestone is the completion of Phase 5, including the creation of optimized Docker configuration, Docker Compose setup, Singularity definition files, deployment automation scripts, and comprehensive deployment documentation. Key accomplishments include:
-
-1. **Comprehensive Inventory**: A complete inventory of all 23 Streamlit pages and their features has been created.
-2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages, 9 medium-priority features, and 7 low-priority features, all of which have now been fully implemented.
-3. **Detailed Migration Plan**: A detailed migration plan has been created with effort estimates, dependencies, and specific tasks for each feature.
-4. **High-Priority Pages Implementation**: All high-priority pages (connect, dashboard, file browser, explore, plugin connect) have been implemented with full API support and comprehensive functionality.
-5. **Medium-Priority Features Implementation**: All medium-priority features have been implemented: About page, cBioPortal browser, Dropbox integration, ISA browser, Map visualization, Microsoft Graph integration, Microsoft Graph exploration, Ontology browser, and User preferences.
-6. **Low-Priority Features Implementation**: All seven low-priority features have been implemented: Analytics dashboard with comprehensive tracking and visualization capabilities, Chat interface with retrieval-augmented generation capabilities, Feedback collection, Instructor page, Observation page, Survey page, and Workshop page.
-7. **UI Component Enhancements**: Enhanced UI components have been implemented with HTMX for dynamic updates, Alpine.js for client-side interactivity, rich preview capabilities for various file types, and responsive design for all components.
-8. **Testing Implementation**: Unit tests have been created for all implemented API endpoints, end-to-end tests have been implemented for critical paths (including File Explorer and Connect page workflows), performance benchmarks have been conducted with visualizations of improvements, and a comprehensive usability testing plan has been created.
-
-The current implementation status shows:
-- 5 high-priority pages have been fully implemented in Flask (connect, dashboard, file browser, explore, plugin connect)
-- All high-priority pages now have full API support with comprehensive functionality
-- All 9 medium-priority features have been implemented (About page, cBioPortal browser, Dropbox integration, ISA browser, Map visualization, Microsoft Graph integration, Microsoft Graph exploration, Ontology browser, and User preferences)
-- All 7 low-priority features have been implemented (Analytics dashboard, Chat interface, Feedback collection, Instructor page, Observation page, Survey page, and Workshop page)
-- Core architecture and Flask foundation are in place
-- Enhanced UI components have been implemented with HTMX, Alpine.js, rich preview capabilities, and responsive design
-- Comprehensive testing has been implemented, including unit tests, end-to-end tests, and performance benchmarks
-
-The roadmap was divided into five phases, all of which have now been successfully completed:
-
-1. **Phase 1: Feature Parity Assessment** (COMPLETED) - Conducted a comprehensive assessment of all features in the Streamlit version and their implementation status in the Flask version.
-2. **Phase 2: Flask Implementation Completion** (COMPLETED) - Completed the implementation of all features in the Flask version to achieve full feature parity with the Streamlit version.
-3. **Phase 3: User Experience Optimization** (COMPLETED) - Enhanced the user experience of the Flask version to exceed the capabilities of the Streamlit version.
-4. **Phase 4: Streamlit Deprecation and Removal** (COMPLETED) - Gradually deprecated and removed the Streamlit implementation while ensuring a smooth transition for users.
-5. **Phase 5: Containerization and Deployment** (COMPLETED) - Optimized deployment of the Flask application through containerization and deployment automation.
-
 ### Dropbox Extension
 
 This roadmap outlines a comprehensive plan for implementing the Dropbox extension for the Science Data Kit. The extension will enable integration with Dropbox cloud storage, including file access and synchronization, team folder management, and file sharing metadata extraction.
@@ -68,6 +34,44 @@ The roadmap is divided into four phases:
 2. **Phase 2: Advanced Features** - Real-time sync capabilities, team folder management, file sharing and collaboration metadata extraction, and error handling/retry logic.
 3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
 4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated sync, advanced security and permissions handling, and performance optimization.
+
+## Completed Roadmaps
+
+The following roadmaps have been successfully completed and archived:
+
+### Streamlit to Flask Migration
+
+This roadmap outlined a comprehensive plan for transitioning the Science Data Kit from its Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintained both frameworks, this roadmap focused specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
+
+**Latest Version**: [Streamlit to Flask Migration Roadmap](archive/roadmap_StreamlitToFlaskMigration_21.md)
+
+**Status**: Completed - The Streamlit to Flask Migration roadmap has completed all phases: Phase 1 (Feature Parity Assessment), Phase 2 (Flask Implementation Completion), Phase 3 (User Experience Optimization), Phase 4 (Streamlit Deprecation and Removal), and Phase 5 (Containerization and Deployment). The latest milestone is the completion of Phase 5, including the creation of optimized Docker configuration, Docker Compose setup, Singularity definition files, deployment automation scripts, and comprehensive deployment documentation. Key accomplishments include:
+
+1. **Comprehensive Inventory**: A complete inventory of all 23 Streamlit pages and their features has been created.
+2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages, 9 medium-priority features, and 7 low-priority features, all of which have now been fully implemented.
+3. **Detailed Migration Plan**: A detailed migration plan has been created with effort estimates, dependencies, and specific tasks for each feature.
+4. **High-Priority Pages Implementation**: All high-priority pages (connect, dashboard, file browser, explore, plugin connect) have been implemented with full API support and comprehensive functionality.
+5. **Medium-Priority Features Implementation**: All medium-priority features have been implemented: About page, cBioPortal browser, Dropbox integration, ISA browser, Map visualization, Microsoft Graph integration, Microsoft Graph exploration, Ontology browser, and User preferences.
+6. **Low-Priority Features Implementation**: All seven low-priority features have been implemented: Analytics dashboard with comprehensive tracking and visualization capabilities, Chat interface with retrieval-augmented generation capabilities, Feedback collection, Instructor page, Observation page, Survey page, and Workshop page.
+7. **UI Component Enhancements**: Enhanced UI components have been implemented with HTMX for dynamic updates, Alpine.js for client-side interactivity, rich preview capabilities for various file types, and responsive design for all components.
+8. **Testing Implementation**: Unit tests have been created for all implemented API endpoints, end-to-end tests have been implemented for critical paths (including File Explorer and Connect page workflows), performance benchmarks have been conducted with visualizations of improvements, and a comprehensive usability testing plan has been created.
+
+The roadmap was divided into five phases, all of which have now been successfully completed:
+
+1. **Phase 1: Feature Parity Assessment** (COMPLETED) - Conducted a comprehensive assessment of all features in the Streamlit version and their implementation status in the Flask version.
+2. **Phase 2: Flask Implementation Completion** (COMPLETED) - Completed the implementation of all features in the Flask version to achieve full feature parity with the Streamlit version.
+3. **Phase 3: User Experience Optimization** (COMPLETED) - Enhanced the user experience of the Flask version to exceed the capabilities of the Streamlit version.
+4. **Phase 4: Streamlit Deprecation and Removal** (COMPLETED) - Gradually deprecated and removed the Streamlit implementation while ensuring a smooth transition for users.
+5. **Phase 5: Containerization and Deployment** (COMPLETED) - Optimized deployment of the Flask application through containerization and deployment automation.
+
+### Related Completed Documents
+
+The following documents related to the Streamlit to Flask Migration have also been completed and archived:
+
+1. [Streamlit Deprecation Plan](archive/streamlit_deprecation_plan.md) - A comprehensive plan for deprecating the Streamlit implementation and transitioning users to the Flask implementation.
+2. [Accessibility Improvements Plan](archive/accessibility_improvements_plan.md) - A plan for improving the accessibility of the Flask implementation, including WCAG 2.1 compliance, keyboard navigation, and screen reader support.
+3. [Flask-Specific Enhancements](archive/flask_specific_enhancements.md) - A plan for implementing Flask-specific enhancements, including WebSocket support, client-side caching, and enhanced file preview capabilities.
+4. [UI/UX Improvement Proposals](archive/ui_ux_improvement_proposals.md) - Proposals for improving the user interface and experience of the Flask implementation.
 
 ## Future Roadmaps
 

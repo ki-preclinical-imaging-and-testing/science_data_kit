@@ -54,6 +54,20 @@
                             <li><a class="dropdown-item" href="{{ url_for('main.map') }}">Map</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+                            Tools
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('main.chat') }}">Chat</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.feedback') }}">Feedback</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.instructor') }}">Instructor</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.observation') }}">Observation</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.survey') }}">Survey</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.workshop') }}">Workshop</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('main.analytics_dashboard') }}">Analytics</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.about') }}" aria-label="About">About</a>
                     </li>
@@ -117,7 +131,8 @@
                                         <li><kbd>Alt</kbd> + <kbd>2</kbd> - Files</li>
                                         <li><kbd>Alt</kbd> + <kbd>3</kbd> - Connect</li>
                                         <li><kbd>Alt</kbd> + <kbd>4</kbd> - Browse</li>
-                                        <li><kbd>Alt</kbd> + <kbd>5</kbd> - About</li>
+                                        <li><kbd>Alt</kbd> + <kbd>5</kbd> - Tools</li>
+                                        <li><kbd>Alt</kbd> + <kbd>6</kbd> - About</li>
                                     </ul>
                                 </div>
                                 <div class="col-md-6">
@@ -126,6 +141,9 @@
                                         <li><kbd>Alt</kbd> + <kbd>S</kbd> - Search</li>
                                         <li><kbd>Alt</kbd> + <kbd>H</kbd> - Help</li>
                                         <li><kbd>Alt</kbd> + <kbd>P</kbd> - Preferences</li>
+                                        <li><kbd>Alt</kbd> + <kbd>C</kbd> - Chat</li>
+                                        <li><kbd>Alt</kbd> + <kbd>F</kbd> - Feedback</li>
+                                        <li><kbd>Alt</kbd> + <kbd>A</kbd> - Analytics</li>
                                         <li><kbd>Esc</kbd> - Close dialogs</li>
                                     </ul>
                                 </div>
@@ -188,6 +206,14 @@
                         window.location.href = "{{ url_for('main.explore') }}";
                         break;
                     case '5':
+                        // Open Tools dropdown
+                        const toolsDropdown = document.getElementById('toolsDropdown');
+                        if (toolsDropdown) {
+                            toolsDropdown.click();
+                            e.preventDefault();
+                        }
+                        break;
+                    case '6':
                         window.location.href = "{{ url_for('main.about') }}";
                         break;
                     case 's':
@@ -208,6 +234,18 @@
                     case 'p':
                     case 'P':
                         window.location.href = "{{ url_for('main.preferences') }}";
+                        break;
+                    case 'c':
+                    case 'C':
+                        window.location.href = "{{ url_for('main.chat') }}";
+                        break;
+                    case 'f':
+                    case 'F':
+                        window.location.href = "{{ url_for('main.feedback') }}";
+                        break;
+                    case 'a':
+                    case 'A':
+                        window.location.href = "{{ url_for('main.analytics_dashboard') }}";
                         break;
                 }
             }
