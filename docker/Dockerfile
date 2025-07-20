@@ -10,8 +10,8 @@ LABEL description="Science Data Kit - A comprehensive tool for scientific data a
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    STREAMLIT_SERVER_HEADLESS=true \
-    STREAMLIT_SERVER_ENABLE_CORS=false
+    FLASK_APP=science_data_kit.web.app \
+    FLASK_ENV=production
 
 # Set working directory
 WORKDIR /app
@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     libpq-dev \
+    netcat-traditional \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,17 +39,17 @@ COPY . .
 # Install the package in development mode
 RUN pip install -e .
 
-# Expose the port Streamlit runs on
-EXPOSE 8501
+# Expose the port Flask runs on
+EXPOSE 5001
 
 # Set up entrypoint
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Run the application
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["streamlit", "run", "science_data_kit/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["python", "run_flask.py"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+    CMD curl --fail http://localhost:5001/health || exit 1
