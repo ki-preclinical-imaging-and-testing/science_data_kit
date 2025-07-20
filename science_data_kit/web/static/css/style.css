@@ -310,10 +310,76 @@ body {
     border-width: 0;
 }
 
+/* Skip link for keyboard navigation */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #0d6efd;
+    color: white;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
 /* Focus indicators for keyboard navigation */
 a:focus, button:focus, input:focus, select:focus, textarea:focus {
-    outline: 2px solid #0d6efd;
+    outline: 3px solid #0d6efd;
     outline-offset: 2px;
+}
+
+/* High contrast mode */
+body.high-contrast {
+    color: #ffffff;
+    background-color: #000000;
+}
+
+body.high-contrast .card,
+body.high-contrast .navbar,
+body.high-contrast .footer {
+    background-color: #000000;
+    border-color: #ffffff;
+}
+
+body.high-contrast a {
+    color: #ffff00;
+}
+
+body.high-contrast .btn-primary {
+    background-color: #ffff00;
+    color: #000000;
+    border-color: #ffffff;
+}
+
+/* Reduced motion */
+body.reduced-motion * {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Text spacing for improved readability */
+body.text-spacing {
+    line-height: 1.5;
+    letter-spacing: 0.12em;
+    word-spacing: 0.16em;
+}
+
+body.text-spacing p {
+    margin-bottom: 2em;
+}
+
+body.text-spacing h1, 
+body.text-spacing h2, 
+body.text-spacing h3, 
+body.text-spacing h4, 
+body.text-spacing h5, 
+body.text-spacing h6 {
+    margin-top: 1.5em;
+    margin-bottom: 1em;
 }
 
 /* File grid layout */

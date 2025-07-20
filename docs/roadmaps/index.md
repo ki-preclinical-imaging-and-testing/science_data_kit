@@ -24,9 +24,9 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for transitioning the Science Data Kit from its current Streamlit implementation to a Flask-based web application. Unlike the Framework-Agnostic Architecture roadmap which maintains both frameworks, this roadmap focuses specifically on removing the Streamlit version and fully developing the Flask version as the primary UI.
 
-**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_17.md)
+**Latest Version**: [Streamlit to Flask Migration Roadmap](active/roadmap_StreamlitToFlaskMigration_18.md)
 
-**Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment), Phase 2 (Flask Implementation Completion), and Phase 3 (User Experience Optimization). The latest milestone is the completion of all UI/UX improvements and Flask-specific enhancements, including test scenarios for common workflows, streamlined navigation and workflows, enhanced visual design and consistency, improved error handling and user feedback, client-side caching for improved performance, and enhanced file preview capabilities. Key accomplishments include:
+**Status**: In Progress - The Streamlit to Flask Migration roadmap has completed Phase 1 (Feature Parity Assessment), Phase 2 (Flask Implementation Completion), and Phase 3 (User Experience Optimization). The latest milestone is the completion of all accessibility improvements, including WCAG 2.1 compliance, keyboard navigation, and screen reader support. Key accomplishments include:
 
 1. **Comprehensive Inventory**: A complete inventory of all 23 Streamlit pages and their features has been created.
 2. **Implementation Status Assessment**: The implementation status of each feature in the Flask version has been assessed, identifying 5 high-priority pages, 9 medium-priority features, and 7 low-priority features, all of which have now been fully implemented.
@@ -195,10 +195,10 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 
 ### Streamlit to Flask Migration
 **Implementation Status**: In Progress - Phase 4: Streamlit Deprecation and Removal (preparing)
-**Testing Status**: Active - Comprehensive unit tests implemented for all API endpoints, end-to-end tests implemented for critical paths, test scenarios created for common workflows, UI/UX improvements implemented, client-side caching and enhanced file preview capabilities added
-**Next Testing Steps**: Test accessibility implementations, verify cross-browser compatibility, conduct performance testing under load, gather user feedback on UI/UX improvements
-**Recommended Testing**: Use prompts #19 for quality assessment, #21 for code analysis, #23 for performance validation, #17 for accessibility testing
-**Quality Gates**: User Experience Optimization before Streamlit Deprecation, Accessibility Compliance before Containerization
+**Testing Status**: Active - Comprehensive unit tests implemented for all API endpoints, end-to-end tests implemented for critical paths, test scenarios created for common workflows, UI/UX improvements implemented, client-side caching and enhanced file preview capabilities added, accessibility features implemented and tested
+**Next Testing Steps**: Verify cross-browser compatibility, conduct performance testing under load, gather user feedback on UI/UX improvements, create deprecation plan for Streamlit
+**Recommended Testing**: Use prompts #19 for quality assessment, #21 for code analysis, #23 for performance validation
+**Quality Gates**: Accessibility Compliance achieved, proceeding to Streamlit Deprecation and Containerization
 
 ### Dropbox Extension
 **Implementation Status**: In Progress - Phase 3: UI Integration

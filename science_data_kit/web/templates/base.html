@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Science Data Kit - A comprehensive tool for scientific data analysis and visualization">
     <title>{% block title %}Science Data Kit{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -13,23 +14,26 @@
     <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
     {% block head %}{% endblock %}
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<body class="{% if session.get('high_contrast') %}high-contrast{% endif %} {% if session.get('reduced_motion') %}reduced-motion{% endif %} {% if session.get('text_spacing') %}text-spacing{% endif %}">
+    <!-- Skip link for keyboard navigation -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" role="navigation" aria-label="Main navigation">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">Science Data Kit</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}" aria-label="Dashboard">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.files') }}">Files</a>
+                        <a class="nav-link" href="{{ url_for('main.files') }}" aria-label="Files">Files</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="connectDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="connectDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
                             Connect
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="connectDropdown">
@@ -39,7 +43,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="browseDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="browseDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
                             Browse
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="browseDropdown">
@@ -51,20 +55,20 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.about') }}">About</a>
+                        <a class="nav-link" href="{{ url_for('main.about') }}" aria-label="About">About</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
                     {% if session.get('logged_in') %}
                     <li class="nav-item">
-                        <span class="nav-link">Welcome, {{ session.get('username') }}</span>
+                        <span class="nav-link" aria-label="User greeting">Welcome, {{ session.get('username') }}</span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.logout') }}">Logout</a>
+                        <a class="nav-link" href="{{ url_for('main.logout') }}" aria-label="Logout">Logout</a>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.login') }}">Login</a>
+                        <a class="nav-link" href="{{ url_for('main.login') }}" aria-label="Login">Login</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -72,26 +76,164 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div id="main-content" class="container mt-4" tabindex="-1">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
+                <div class="alert-container" role="alert" aria-live="polite">
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }}">{{ message }}</div>
                 {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}
     </div>
 
-    <footer class="footer mt-5 py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">Science Data Kit &copy; 2025</span>
+    <footer class="footer mt-5 py-3 bg-light" role="contentinfo">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <span class="text-muted">Science Data Kit &copy; 2025</span>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <button class="btn btn-sm btn-outline-secondary" id="keyboard-shortcuts-btn" aria-expanded="false" aria-controls="keyboard-shortcuts">
+                        Keyboard Shortcuts
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-3 d-none" id="keyboard-shortcuts">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Keyboard Shortcuts</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Navigation</h6>
+                                    <ul class="list-unstyled">
+                                        <li><kbd>Alt</kbd> + <kbd>1</kbd> - Dashboard</li>
+                                        <li><kbd>Alt</kbd> + <kbd>2</kbd> - Files</li>
+                                        <li><kbd>Alt</kbd> + <kbd>3</kbd> - Connect</li>
+                                        <li><kbd>Alt</kbd> + <kbd>4</kbd> - Browse</li>
+                                        <li><kbd>Alt</kbd> + <kbd>5</kbd> - About</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Actions</h6>
+                                    <ul class="list-unstyled">
+                                        <li><kbd>Alt</kbd> + <kbd>S</kbd> - Search</li>
+                                        <li><kbd>Alt</kbd> + <kbd>H</kbd> - Help</li>
+                                        <li><kbd>Alt</kbd> + <kbd>P</kbd> - Preferences</li>
+                                        <li><kbd>Esc</kbd> - Close dialogs</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- Accessibility JavaScript -->
+    <script>
+        // Toggle keyboard shortcuts panel
+        document.getElementById('keyboard-shortcuts-btn').addEventListener('click', function() {
+            const shortcutsPanel = document.getElementById('keyboard-shortcuts');
+            const isHidden = shortcutsPanel.classList.contains('d-none');
+
+            if (isHidden) {
+                shortcutsPanel.classList.remove('d-none');
+                this.setAttribute('aria-expanded', 'true');
+                // Announce to screen readers
+                const announcement = document.createElement('div');
+                announcement.setAttribute('aria-live', 'polite');
+                announcement.classList.add('sr-only');
+                announcement.textContent = 'Keyboard shortcuts panel opened';
+                document.body.appendChild(announcement);
+                setTimeout(() => document.body.removeChild(announcement), 1000);
+            } else {
+                shortcutsPanel.classList.add('d-none');
+                this.setAttribute('aria-expanded', 'false');
+                // Announce to screen readers
+                const announcement = document.createElement('div');
+                announcement.setAttribute('aria-live', 'polite');
+                announcement.classList.add('sr-only');
+                announcement.textContent = 'Keyboard shortcuts panel closed';
+                document.body.appendChild(announcement);
+                setTimeout(() => document.body.removeChild(announcement), 1000);
+            }
+        });
+
+        // Implement keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Only process if Alt key is pressed
+            if (e.altKey) {
+                switch(e.key) {
+                    case '1':
+                        window.location.href = "{{ url_for('main.dashboard') }}";
+                        break;
+                    case '2':
+                        window.location.href = "{{ url_for('main.files') }}";
+                        break;
+                    case '3':
+                        window.location.href = "{{ url_for('main.connect') }}";
+                        break;
+                    case '4':
+                        window.location.href = "{{ url_for('main.explore') }}";
+                        break;
+                    case '5':
+                        window.location.href = "{{ url_for('main.about') }}";
+                        break;
+                    case 's':
+                    case 'S':
+                        // Focus on search input if available
+                        const searchInput = document.querySelector('input[type="search"]');
+                        if (searchInput) {
+                            searchInput.focus();
+                            e.preventDefault();
+                        }
+                        break;
+                    case 'h':
+                    case 'H':
+                        // Toggle keyboard shortcuts
+                        document.getElementById('keyboard-shortcuts-btn').click();
+                        e.preventDefault();
+                        break;
+                    case 'p':
+                    case 'P':
+                        window.location.href = "{{ url_for('main.preferences') }}";
+                        break;
+                }
+            }
+
+            // Handle Escape key for dialogs
+            if (e.key === 'Escape') {
+                // Close any open modals
+                const openModals = document.querySelectorAll('.modal.show');
+                if (openModals.length > 0) {
+                    for (const modal of openModals) {
+                        const closeBtn = modal.querySelector('[data-bs-dismiss="modal"]');
+                        if (closeBtn) closeBtn.click();
+                    }
+                    e.preventDefault();
+                }
+
+                // Close keyboard shortcuts panel if open
+                const shortcutsPanel = document.getElementById('keyboard-shortcuts');
+                if (!shortcutsPanel.classList.contains('d-none')) {
+                    document.getElementById('keyboard-shortcuts-btn').click();
+                    e.preventDefault();
+                }
+            }
+        });
+    </script>
+
     {% block scripts %}{% endblock %}
 </body>
 </html>
