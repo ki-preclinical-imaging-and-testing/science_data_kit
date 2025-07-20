@@ -199,80 +199,165 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-12">
-                    <h6>Metadata Filters</h6>
+            <ul class="nav nav-tabs mb-3" id="searchFilterTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="metadata-filters-tab" data-bs-toggle="tab" data-bs-target="#metadata-filters" type="button" role="tab" aria-controls="metadata-filters" aria-selected="true">Metadata Filters</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="faceted-search-tab" data-bs-toggle="tab" data-bs-target="#faceted-search" type="button" role="tab" aria-controls="faceted-search" aria-selected="false">Faceted Search</button>
+                </li>
+            </ul>
 
-                    <!-- Active Metadata Filters -->
-                    <div class="mb-3" x-show="metadataFilters.length > 0">
-                        <h6 class="text-muted">Active Filters:</h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            <template x-for="(filter, index) in metadataFilters" :key="index">
-                                <div class="badge bg-light text-dark p-2 d-flex align-items-center">
-                                    <span x-text="`${filter.field} ${filter.operator} ${filter.value}`"></span>
-                                    <button type="button" class="btn-close ms-2" @click="removeFilter(index)" aria-label="Remove filter"></button>
+            <div class="tab-content" id="searchFilterTabsContent">
+                <!-- Metadata Filters Tab -->
+                <div class="tab-pane fade show active" id="metadata-filters" role="tabpanel" aria-labelledby="metadata-filters-tab">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6>Metadata Filters</h6>
+
+                            <!-- Active Metadata Filters -->
+                            <div class="mb-3" x-show="metadataFilters.length > 0">
+                                <h6 class="text-muted">Active Filters:</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <template x-for="(filter, index) in metadataFilters" :key="index">
+                                        <div class="badge bg-light text-dark p-2 d-flex align-items-center">
+                                            <span x-text="`${filter.field} ${filter.operator} ${filter.value}`"></span>
+                                            <button type="button" class="btn-close ms-2" @click="removeFilter(index)" aria-label="Remove filter"></button>
+                                        </div>
+                                    </template>
                                 </div>
-                            </template>
-                        </div>
-                        <button class="btn btn-sm btn-outline-secondary mt-2" @click="clearAllFilters">
-                            Clear All Filters
-                        </button>
-                    </div>
+                                <button class="btn btn-sm btn-outline-secondary mt-2" @click="clearAllFilters">
+                                    Clear All Filters
+                                </button>
+                            </div>
 
-                    <!-- Add New Metadata Filter -->
-                    <form @submit.prevent="addMetadataFilter" class="row g-3">
-                        <div class="col-md-4">
-                            <label for="filterField" class="form-label">Field</label>
-                            <select class="form-select" id="filterField" x-model="newFilter.field">
-                                <option value="">Select a field...</option>
-                                <optgroup label="Image Properties">
-                                    <option value="width">Width</option>
-                                    <option value="height">Height</option>
-                                    <option value="format">Format</option>
-                                    <option value="mode">Mode</option>
-                                </optgroup>
-                                <optgroup label="Geospatial Properties">
-                                    <option value="crs.epsg">CRS EPSG Code</option>
-                                    <option value="resolution.x">X Resolution</option>
-                                    <option value="resolution.y">Y Resolution</option>
-                                </optgroup>
-                                <optgroup label="Scientific Data">
-                                    <option value="dimensions">Dimensions</option>
-                                    <option value="variables">Variables</option>
-                                    <option value="groups">Groups</option>
-                                    <option value="datasets">Datasets</option>
-                                </optgroup>
-                                <optgroup label="Media Properties">
-                                    <option value="id3.title">Title</option>
-                                    <option value="id3.artist">Artist</option>
-                                    <option value="id3.album">Album</option>
-                                    <option value="length">Length</option>
-                                    <option value="bitrate">Bitrate</option>
-                                </optgroup>
-                            </select>
+                            <!-- Add New Metadata Filter -->
+                            <form @submit.prevent="addMetadataFilter" class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="filterField" class="form-label">Field</label>
+                                    <select class="form-select" id="filterField" x-model="newFilter.field">
+                                        <option value="">Select a field...</option>
+                                        <optgroup label="Image Properties">
+                                            <option value="width">Width</option>
+                                            <option value="height">Height</option>
+                                            <option value="format">Format</option>
+                                            <option value="mode">Mode</option>
+                                        </optgroup>
+                                        <optgroup label="Geospatial Properties">
+                                            <option value="crs.epsg">CRS EPSG Code</option>
+                                            <option value="resolution.x">X Resolution</option>
+                                            <option value="resolution.y">Y Resolution</option>
+                                        </optgroup>
+                                        <optgroup label="Scientific Data">
+                                            <option value="dimensions">Dimensions</option>
+                                            <option value="variables">Variables</option>
+                                            <option value="groups">Groups</option>
+                                            <option value="datasets">Datasets</option>
+                                        </optgroup>
+                                        <optgroup label="Media Properties">
+                                            <option value="id3.title">Title</option>
+                                            <option value="id3.artist">Artist</option>
+                                            <option value="id3.album">Album</option>
+                                            <option value="length">Length</option>
+                                            <option value="bitrate">Bitrate</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="filterOperator" class="form-label">Operator</label>
+                                    <select class="form-select" id="filterOperator" x-model="newFilter.operator">
+                                        <option value="=">=</option>
+                                        <option value="!=">!=</option>
+                                        <option value=">">></option>
+                                        <option value="<"><</option>
+                                        <option value=">=">>=</option>
+                                        <option value="<="><=</option>
+                                        <option value="contains">Contains</option>
+                                        <option value="startswith">Starts with</option>
+                                        <option value="endswith">Ends with</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="filterValue" class="form-label">Value</label>
+                                    <input type="text" class="form-control" id="filterValue" x-model="newFilter.value">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100">Add Filter</button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="col-md-3">
-                            <label for="filterOperator" class="form-label">Operator</label>
-                            <select class="form-select" id="filterOperator" x-model="newFilter.operator">
-                                <option value="=">=</option>
-                                <option value="!=">!=</option>
-                                <option value=">">></option>
-                                <option value="<"><</option>
-                                <option value=">=">>=</option>
-                                <option value="<="><=</option>
-                                <option value="contains">Contains</option>
-                                <option value="startswith">Starts with</option>
-                                <option value="endswith">Ends with</option>
-                            </select>
+                    </div>
+                </div>
+
+                <!-- Faceted Search Tab -->
+                <div class="tab-pane fade" id="faceted-search" role="tabpanel" aria-labelledby="faceted-search-tab" x-data="facetedSearch">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6>Faceted Search</h6>
+
+                            <!-- Loading indicator -->
+                            <div class="text-center mb-3" x-show="loading">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading facets...</span>
+                                </div>
+                                <p class="text-muted">Loading facets...</p>
+                            </div>
+
+                            <!-- Active Facet Filters -->
+                            <div class="mb-3" x-show="activeFacets.length > 0">
+                                <h6 class="text-muted">Active Facet Filters:</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <template x-for="(facet, index) in activeFacets" :key="index">
+                                        <div class="badge bg-light text-dark p-2 d-flex align-items-center">
+                                            <span x-text="`${facet.category}: ${facet.field} = ${facet.value}`"></span>
+                                            <button type="button" class="btn-close ms-2" @click="removeFacet(index)" aria-label="Remove facet filter"></button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary mt-2" @click="clearAllFacets">
+                                    Clear All Facet Filters
+                                </button>
+                            </div>
+
+                            <!-- No Facets Message -->
+                            <div class="alert alert-info" x-show="!loading && Object.keys(facets).length === 0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No facets available for the current directory. Facets are generated based on the metadata of files in the current view.
+                            </div>
+
+                            <!-- Facet Categories -->
+                            <div class="accordion" id="facetAccordion" x-show="!loading && Object.keys(facets).length > 0">
+                                <template x-for="(categoryFacets, category) in facets" :key="category">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" :id="'heading-' + category.replace(/\s+/g, '-').toLowerCase()">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                    :data-bs-target="'#collapse-' + category.replace(/\s+/g, '-').toLowerCase()"
+                                                    aria-expanded="false" :aria-controls="'collapse-' + category.replace(/\s+/g, '-').toLowerCase()">
+                                                <span x-text="category"></span>
+                                            </button>
+                                        </h2>
+                                        <div :id="'collapse-' + category.replace(/\s+/g, '-').toLowerCase()" class="accordion-collapse collapse"
+                                             :aria-labelledby="'heading-' + category.replace(/\s+/g, '-').toLowerCase()" data-bs-parent="#facetAccordion">
+                                            <div class="accordion-body">
+                                                <template x-for="(values, field) in categoryFacets" :key="field">
+                                                    <div class="mb-3">
+                                                        <h6 x-text="field"></h6>
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            <template x-for="(count, value) in values" :key="value">
+                                                                <button class="btn btn-sm btn-outline-secondary" 
+                                                                        @click="applyFacet(category, field, value)"
+                                                                        x-text="`${value} (${count})`"></button>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label for="filterValue" class="form-label">Value</label>
-                            <input type="text" class="form-control" id="filterValue" x-model="newFilter.value">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">Add Filter</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -561,6 +646,108 @@
             showUploadForm: false,
             showNewFolderForm: false,
             showRenameForm: false
+        });
+
+        Alpine.data('facetedSearch', function() {
+            return {
+                facets: {},
+                activeFacets: [],
+                loading: true,
+
+                init() {
+                    // Load facets when component initializes
+                    this.loadFacets();
+
+                    // Listen for tab show event to reload facets
+                    document.getElementById('faceted-search-tab').addEventListener('shown.bs.tab', () => {
+                        this.loadFacets();
+                    });
+                },
+
+                loadFacets() {
+                    this.loading = true;
+
+                    // Fetch facets from the server
+                    fetch(`/api/files/facets?path={{ current_path }}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.facets = data.facets;
+                            } else {
+                                console.error('Error loading facets:', data.error);
+                            }
+                            this.loading = false;
+                        })
+                        .catch(error => {
+                            console.error('Error loading facets:', error);
+                            this.loading = false;
+                        });
+                },
+
+                applyFacet(category, field, value) {
+                    // Add to active facets
+                    this.activeFacets.push({
+                        category: category,
+                        field: field,
+                        value: value
+                    });
+
+                    // Apply the facet filter
+                    const formData = new FormData();
+                    formData.append('path', '{{ current_path }}');
+                    formData.append('view_mode', '{{ view_mode }}');
+                    formData.append('category', category);
+                    formData.append('field', field);
+                    formData.append('value', value);
+
+                    // Apply filter using HTMX
+                    htmx.ajax('POST', '/api/files/apply-facet', {
+                        target: '#file-listing-container',
+                        swap: 'innerHTML',
+                        values: formData
+                    });
+                },
+
+                removeFacet(index) {
+                    // Remove the facet from active facets
+                    this.activeFacets.splice(index, 1);
+
+                    // If there are no more active facets, reload the file listing
+                    if (this.activeFacets.length === 0) {
+                        const formData = new FormData();
+                        formData.append('path', '{{ current_path }}');
+                        formData.append('view_mode', '{{ view_mode }}');
+
+                        // Clear filters using HTMX
+                        htmx.ajax('POST', '/api/files/clear-metadata-filters', {
+                            target: '#file-listing-container',
+                            swap: 'innerHTML',
+                            values: formData
+                        });
+                    } else {
+                        // Otherwise, apply the remaining facets
+                        // For simplicity, we'll just apply the last facet
+                        const lastFacet = this.activeFacets[this.activeFacets.length - 1];
+                        this.applyFacet(lastFacet.category, lastFacet.field, lastFacet.value);
+                    }
+                },
+
+                clearAllFacets() {
+                    // Clear all facets
+                    this.activeFacets = [];
+
+                    const formData = new FormData();
+                    formData.append('path', '{{ current_path }}');
+                    formData.append('view_mode', '{{ view_mode }}');
+
+                    // Clear filters using HTMX
+                    htmx.ajax('POST', '/api/files/clear-metadata-filters', {
+                        target: '#file-listing-container',
+                        swap: 'innerHTML',
+                        values: formData
+                    });
+                }
+            };
         });
 
         Alpine.data('advancedSearch', function() {

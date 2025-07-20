@@ -392,6 +392,60 @@ def get_saved_searches():
 
     return jsonify({"success": True, "saved_searches": saved_searches})
 
+@main_bp.route('/api/files/facets', methods=['GET'])
+@login_required
+def get_facets():
+    """Get facets for the current directory."""
+    path = request.args.get('path', str(pathlib.Path.home()))
+
+    # Create file browser page with the specified path
+    page = FileBrowserPage(initial_path=path)
+
+    # Generate facets
+    page.generate_facets()
+
+    return jsonify({
+        "success": True,
+        "facets": page.facets
+    })
+
+@main_bp.route('/api/files/apply-facet', methods=['POST'])
+@login_required
+def apply_facet_filter():
+    """Apply a facet filter to the file listing."""
+    path = request.form.get('path', str(pathlib.Path.home()))
+    view_mode = request.form.get('view_mode', 'list')
+    category = request.form.get('category')
+    field = request.form.get('field')
+    value = request.form.get('value')
+
+    if not all([category, field, value]):
+        return jsonify({
+            "success": False,
+            "error": "Missing required parameters: category, field, value"
+        }), 400
+
+    # Create file browser page with the specified path
+    page = FileBrowserPage(initial_path=path)
+
+    # Set the view mode
+    page.view_mode = view_mode
+
+    # Apply the facet filter as a metadata filter
+    # For facets, we use the '=' operator to match exact values
+    page.set_metadata_filter(field, '=', value)
+
+    # Get the updated page data
+    page_data = page.get_page_data()
+
+    # Render the file listing with the updated data
+    return render_template('partials/file_listing.html', 
+                          current_path=page_data.current_path,
+                          files=page_data.files,
+                          directories=page_data.directories,
+                          view_mode=page_data.view_mode,
+                          selected_files=page_data.selected_files)
+
 @main_bp.route('/api/files/save-search', methods=['POST'])
 @login_required
 def save_search():

@@ -39,6 +39,7 @@ class FileExplorerPageData(PageData):
     selected_file_metadata: Optional[Dict[str, Any]] = None
     selected_file_preview: Optional[Any] = None
     has_file_interpreter: bool = False
+    facets: Dict[str, Dict[str, Dict[str, int]]] = field(default_factory=dict)
 
 @dataclass
 class ConnectPageData(PageData):

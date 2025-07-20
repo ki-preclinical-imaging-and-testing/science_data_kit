@@ -44,6 +44,7 @@ class FileBrowserPage(BasePage):
         self.filter_pattern = None
         self.metadata_filters = []  # List of metadata filter criteria
         self.saved_searches = {}  # Dictionary of saved searches
+        self.facets = {}  # Dictionary of metadata facets
 
     def get_page_data(self) -> FileExplorerPageData:
         """
@@ -75,6 +76,9 @@ class FileBrowserPage(BasePage):
                 if selected_file_metadata:
                     selected_file_preview = self.generate_preview(selected_file_path)
 
+        # Generate facets from files in the current directory
+        self.generate_facets()
+
         return FileExplorerPageData(
             title="File Browser",
             current_path=self.current_path,
@@ -87,7 +91,8 @@ class FileBrowserPage(BasePage):
             filter_pattern=self.filter_pattern,
             selected_file_metadata=selected_file_metadata,
             selected_file_preview=selected_file_preview,
-            has_file_interpreter=has_file_interpreter
+            has_file_interpreter=has_file_interpreter,
+            facets=self.facets
         )
 
     def _get_files(self) -> List[Dict[str, Any]]:
@@ -620,6 +625,88 @@ class FileBrowserPage(BasePage):
             "metadata_filters": self.metadata_filters,
             "current_path": self.current_path
         }
+
+    def generate_facets(self) -> None:
+        """
+        Generate facets from the files in the current directory.
+
+        This method extracts metadata from files in the current directory and
+        generates facets based on common metadata fields and their values.
+        The facets are stored in the self.facets dictionary.
+        """
+        # Reset facets
+        self.facets = {}
+
+        # Get all files in the current directory
+        files = self._get_files()
+        if not files:
+            return
+
+        # Extract metadata from each file
+        all_metadata = []
+        for file in files:
+            metadata = self.extract_metadata(file["path"])
+            if metadata:
+                all_metadata.append(metadata)
+
+        if not all_metadata:
+            return
+
+        # Define common facet categories and their fields
+        facet_categories = {
+            "Image Properties": ["width", "height", "format", "mode"],
+            "Geospatial Properties": ["crs.epsg", "resolution.x", "resolution.y"],
+            "Scientific Data": ["dimensions", "variables", "groups", "datasets"],
+            "Media Properties": ["id3.title", "id3.artist", "id3.album", "length", "bitrate"],
+            "Document Properties": ["author", "title", "subject", "keywords", "created", "modified"]
+        }
+
+        # Generate facets for each category
+        for category, fields in facet_categories.items():
+            category_facets = {}
+
+            for field in fields:
+                field_values = {}
+                field_parts = field.split('.')
+
+                # Count occurrences of each value for this field
+                for metadata in all_metadata:
+                    # Handle nested fields (e.g., 'crs.epsg')
+                    field_value = metadata
+                    for part in field_parts:
+                        if isinstance(field_value, dict) and part in field_value:
+                            field_value = field_value[part]
+                        else:
+                            field_value = None
+                            break
+
+                    if field_value is not None:
+                        # Convert to string for consistency
+                        str_value = str(field_value)
+                        if str_value in field_values:
+                            field_values[str_value] += 1
+                        else:
+                            field_values[str_value] = 1
+
+                # Add field to category facets if it has values
+                if field_values:
+                    category_facets[field] = field_values
+
+            # Add category to facets if it has fields
+            if category_facets:
+                self.facets[category] = category_facets
+
+        # Add file type facet
+        file_types = {}
+        for file in files:
+            file_type = file.get("type", "other")
+            if file_type in file_types:
+                file_types[file_type] += 1
+            else:
+                file_types[file_type] = 1
+
+        if file_types:
+            self.facets["File Types"] = {"type": file_types}
 
     def update_knowledge_graph_with_metadata(self, file_path: str) -> bool:
         """
