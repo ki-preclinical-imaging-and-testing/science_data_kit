@@ -75,6 +75,7 @@ class PluginMetadata:
     enabled: bool = True
     config_schema: Optional[Dict[str, Any]] = None
     capabilities: List[str] = field(default_factory=list)
+    priority: int = 0  # Higher values indicate higher priority
 
 
 class PluginBase(ABC):
@@ -807,15 +808,18 @@ class PluginRegistry:
         """
         return self._plugins.get(name)
 
-    def get_plugin_instance(self, name: str, initialize: bool = True) -> Optional[PluginBase]:
+    def get_plugin_instance(self, name: str, initialize: bool = True, _dependency_chain: Optional[List[str]] = None) -> Optional[PluginBase]:
         """
         Get a plugin instance by name.
 
         If the plugin is not already instantiated, it will be instantiated and initialized.
+        This method also handles plugin dependencies, ensuring that all dependencies are
+        instantiated and initialized before the requested plugin.
 
         Args:
             name: The name of the plugin.
             initialize: Whether to initialize the plugin if it's not already instantiated.
+            _dependency_chain: Internal parameter to track dependency chains and detect circular dependencies.
 
         Returns:
             The plugin instance if found and successfully instantiated, None otherwise.
@@ -824,11 +828,45 @@ class PluginRegistry:
         if name in self._instances:
             return self._instances[name]
 
+        # Initialize dependency chain tracking
+        if _dependency_chain is None:
+            _dependency_chain = []
+
+        # Check for circular dependencies
+        if name in _dependency_chain:
+            logger.error(f"Circular dependency detected: {' -> '.join(_dependency_chain)} -> {name}")
+            return None
+
+        # Add current plugin to dependency chain
+        _dependency_chain = _dependency_chain + [name]
+
         # Get the plugin class
         plugin_class = self.get_plugin_class(name)
         if not plugin_class:
             logger.warning(f"Plugin '{name}' not found")
             return None
+
+        # Get plugin metadata
+        metadata = self.get_plugin_metadata(name)
+        if not metadata:
+            logger.warning(f"Metadata for plugin '{name}' not found")
+            return None
+
+        # Check and load dependencies
+        if metadata.dependencies:
+            for dependency in metadata.dependencies:
+                # Skip if dependency is already instantiated
+                if dependency in self._instances:
+                    continue
+
+                # Try to instantiate the dependency
+                dependency_instance = self.get_plugin_instance(
+                    dependency, initialize, _dependency_chain
+                )
+
+                if not dependency_instance:
+                    logger.error(f"Failed to load dependency '{dependency}' for plugin '{name}'")
+                    return None
 
         # Create a new instance
         try:
@@ -867,6 +905,51 @@ class PluginRegistry:
             List of plugin names.
         """
         return list(self._plugins.keys())
+
+    def check_dependencies(self, name: str) -> bool:
+        """
+        Check if all dependencies for a plugin are available.
+
+        Args:
+            name: The name of the plugin.
+
+        Returns:
+            True if all dependencies are available, False otherwise.
+        """
+        metadata = self.get_plugin_metadata(name)
+        if not metadata:
+            logger.warning(f"Metadata for plugin '{name}' not found")
+            return False
+
+        for dependency in metadata.dependencies:
+            if not self.has_plugin(dependency):
+                logger.warning(f"Dependency '{dependency}' for plugin '{name}' not found")
+                return False
+
+        return True
+
+    def get_missing_dependencies(self, name: str) -> List[str]:
+        """
+        Get a list of missing dependencies for a plugin.
+
+        Args:
+            name: The name of the plugin.
+
+        Returns:
+            List of missing dependency names.
+        """
+        missing = []
+
+        metadata = self.get_plugin_metadata(name)
+        if not metadata:
+            logger.warning(f"Metadata for plugin '{name}' not found")
+            return missing
+
+        for dependency in metadata.dependencies:
+            if not self.has_plugin(dependency):
+                missing.append(dependency)
+
+        return missing
 
     def get_plugins_by_capability(self, capability: str) -> List[str]:
         """
@@ -1006,7 +1089,8 @@ class PluginRegistry:
         Get a file interpreter plugin instance that can interpret the given file.
 
         This method tries to find a suitable interpreter based on file extension and MIME type.
-        If multiple interpreters are available, it returns the first one that can interpret the file.
+        If multiple interpreters are available, it returns the one with the highest priority
+        that can interpret the file.
 
         Args:
             file_path: Path to the file to interpret.
@@ -1030,8 +1114,18 @@ class PluginRegistry:
         if not plugin_names:
             plugin_names = self.get_plugins_by_category(PluginCategory.FILE_INTERPRETER)
 
-        # Try each plugin until we find one that can interpret the file
+        # Sort plugins by priority (higher priority first)
+        plugin_names_with_priority = []
         for name in plugin_names:
+            plugin_metadata = self.get_plugin_metadata(name)
+            if plugin_metadata:
+                plugin_names_with_priority.append((name, plugin_metadata.priority))
+
+        # Sort by priority (descending)
+        plugin_names_with_priority.sort(key=lambda x: x[1], reverse=True)
+
+        # Try each plugin in priority order until we find one that can interpret the file
+        for name, _ in plugin_names_with_priority:
             plugin = self.get_plugin_instance(name, initialize)
             if plugin and isinstance(plugin, FileInterpreterPlugin) and plugin.can_interpret(file_path, mime_type):
                 return cast(FileInterpreterPlugin, plugin)
