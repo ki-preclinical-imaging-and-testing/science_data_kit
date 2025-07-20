@@ -159,25 +159,8 @@
                     <input type="hidden" id="connectionId" name="connectionId">
                     <input type="hidden" id="connectionType" name="connectionType">
 
-                    <div class="mb-3">
-                        <label for="connectionHost" class="form-label">Host</label>
-                        <input type="text" class="form-control" id="connectionHost" name="host" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="connectionPort" class="form-label">Port</label>
-                        <input type="number" class="form-control" id="connectionPort" name="port">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="connectionUsername" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="connectionUsername" name="username">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="connectionPassword" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="connectionPassword" name="password">
-                    </div>
+                    <!-- Dynamic form fields will be inserted here -->
+                    <div id="dynamicFormFields"></div>
 
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="saveCredentials" name="saveCredentials">
@@ -212,40 +195,12 @@
                         <label for="newConnectionType" class="form-label">Connection Type</label>
                         <select class="form-select" id="newConnectionType" name="type" required>
                             <option value="">Select a type...</option>
-                            <option value="database">Database</option>
-                            <option value="api">REST API</option>
-                            <option value="file">File System</option>
-                            <option value="cloud">Cloud Service</option>
+                            <!-- Connection types will be populated dynamically -->
                         </select>
                     </div>
 
-                    <div id="databaseOptions" class="connection-options" style="display: none;">
-                        <div class="mb-3">
-                            <label for="dbType" class="form-label">Database Type</label>
-                            <select class="form-select" id="dbType" name="dbType">
-                                <option value="postgresql">PostgreSQL</option>
-                                <option value="mysql">MySQL</option>
-                                <option value="sqlite">SQLite</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="apiOptions" class="connection-options" style="display: none;">
-                        <div class="mb-3">
-                            <label for="apiAuthType" class="form-label">Authentication Type</label>
-                            <select class="form-select" id="apiAuthType" name="apiAuthType">
-                                <option value="none">None</option>
-                                <option value="basic">Basic Auth</option>
-                                <option value="oauth">OAuth</option>
-                                <option value="apikey">API Key</option>
-                            </select>
-                        </div>
-
-                        <div id="oauthOptions" class="connection-options" style="display: none;">
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i> OAuth authentication requires additional steps. After creating the connection, you'll be redirected to the service provider to authorize access.
-                            </div>
-                        </div>
+                    <div id="connectionTypeOptions" class="connection-options" style="display: none;">
+                        <!-- Dynamic form fields for the selected connection type will be inserted here -->
                     </div>
                 </form>
             </div>
@@ -261,6 +216,8 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Populate connection types in the new connection form
+        populateConnectionTypes();
         // Handle connection modal
         const connectionModal = document.getElementById('connectionModal');
         connectionModal.addEventListener('show.bs.modal', function(event) {
@@ -272,36 +229,63 @@
             document.getElementById('connectionName').textContent = connectionName;
             document.getElementById('connectionId').value = connectionId;
             document.getElementById('connectionType').value = connectionType;
+
+            // Get the connection type from the available connections
+            fetch('/api/connect/available')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const connections = data.connections;
+                        const connection = connections.find(conn => conn.id === connectionType);
+
+                        if (connection) {
+                            // Generate form fields based on connection type
+                            generateFormFields(connection);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching connection types:', error);
+                    showToast('Error loading connection form: ' + error.message, 'error');
+                });
         });
 
         // Handle new connection type selection
         document.getElementById('newConnectionType').addEventListener('change', function() {
             const connectionType = this.value;
 
-            // Hide all connection options
-            document.querySelectorAll('.connection-options').forEach(function(element) {
-                element.style.display = 'none';
-            });
-
-            // Show options for selected type
-            if (connectionType === 'database') {
-                document.getElementById('databaseOptions').style.display = 'block';
-            } else if (connectionType === 'api') {
-                document.getElementById('apiOptions').style.display = 'block';
+            if (!connectionType) {
+                document.getElementById('connectionTypeOptions').style.display = 'none';
+                return;
             }
-        });
 
-        // Handle API auth type selection
-        document.getElementById('apiAuthType').addEventListener('change', function() {
-            const authType = this.value;
+            // Fetch available connections to get the config fields for this type
+            fetch('/api/connect/available')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const connections = data.connections;
+                        const connection = connections.find(conn => conn.id === connectionType);
 
-            // Hide OAuth options
-            document.getElementById('oauthOptions').style.display = 'none';
+                        if (connection) {
+                            // Show the options container
+                            document.getElementById('connectionTypeOptions').style.display = 'block';
 
-            // Show options for selected auth type
-            if (authType === 'oauth') {
-                document.getElementById('oauthOptions').style.display = 'block';
-            }
+                            // Generate form fields for this connection type
+                            const optionsContainer = document.getElementById('connectionTypeOptions');
+                            optionsContainer.innerHTML = '';
+
+                            // Add connection type specific fields
+                            generateFormFields(connection, optionsContainer);
+                        } else {
+                            document.getElementById('connectionTypeOptions').style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching connection types:', error);
+                    showToast('Error loading connection options: ' + error.message, 'error');
+                });
         });
 
         // Handle connect button click
@@ -310,21 +294,16 @@
             const connectionType = document.getElementById('connectionType').value;
             const connectionName = document.getElementById('connectionName').textContent;
 
-            // Get form values
-            const host = document.getElementById('connectionHost').value;
-            const port = document.getElementById('connectionPort').value;
-            const username = document.getElementById('connectionUsername').value;
-            const password = document.getElementById('connectionPassword').value;
+            // Get form values from dynamic fields
+            const config = {};
             const saveCredentials = document.getElementById('saveCredentials').checked;
+            config.saveCredentials = saveCredentials;
 
-            // Create config object
-            const config = {
-                host: host,
-                port: port,
-                username: username,
-                password: password,
-                saveCredentials: saveCredentials
-            };
+            // Get all input fields in the form
+            const formFields = document.querySelectorAll('#dynamicFormFields input, #dynamicFormFields select');
+            formFields.forEach(field => {
+                config[field.name] = field.value;
+            });
 
             // Show loading state
             this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Connecting...';
@@ -388,6 +367,15 @@
             let config = {};
             let isOAuth = false;
 
+            // Get all input fields in the form
+            const formFields = document.querySelectorAll('#newConnectionForm input, #newConnectionForm select');
+            formFields.forEach(field => {
+                if (field.name !== 'name' && field.name !== 'type') {
+                    config[field.name] = field.value;
+                }
+            });
+
+            // Check if this is an OAuth connection type
             if (type === 'database') {
                 config.dbType = document.getElementById('dbType').value;
             } else if (type === 'api') {
@@ -397,26 +385,6 @@
             } else if (type === 'msgraph' || type === 'google_drive' || type === 'github' || type === 'dropbox') {
                 // These are known OAuth connection types
                 isOAuth = true;
-
-                // Add client ID and secret if provided
-                const clientIdField = document.querySelector(`input[name="${type}_client_id"]`);
-                const clientSecretField = document.querySelector(`input[name="${type}_client_secret"]`);
-
-                if (clientIdField) {
-                    config.client_id = clientIdField.value;
-                }
-
-                if (clientSecretField) {
-                    config.client_secret = clientSecretField.value;
-                }
-
-                // Add tenant ID for Microsoft Graph API
-                if (type === 'msgraph') {
-                    const tenantIdField = document.querySelector('input[name="msgraph_tenant_id"]');
-                    if (tenantIdField) {
-                        config.tenant_id = tenantIdField.value;
-                    }
-                }
             }
 
             // Show loading state
@@ -618,6 +586,331 @@
                 // Show error message
                 showToast('Error: ' + error.message, 'error');
             });
+        }
+
+        // Function to generate form fields based on connection type
+        function generateFormFields(connection, container = null) {
+            const formFieldsContainer = container || document.getElementById('dynamicFormFields');
+            formFieldsContainer.innerHTML = '';
+
+            // Add a description if available
+            if (connection.description) {
+                const descriptionDiv = document.createElement('div');
+                descriptionDiv.className = 'alert alert-info mb-3';
+                descriptionDiv.innerHTML = `<i class="bi bi-info-circle"></i> ${connection.description}`;
+                formFieldsContainer.appendChild(descriptionDiv);
+            }
+
+            // Generate form fields based on connection type
+            if (connection.config_fields && connection.config_fields.length > 0) {
+                connection.config_fields.forEach(field => {
+                    const fieldDiv = document.createElement('div');
+                    fieldDiv.className = 'mb-3';
+
+                    const label = document.createElement('label');
+                    label.className = 'form-label';
+                    label.setAttribute('for', `connection_${field.name}`);
+                    label.textContent = field.label || field.name;
+
+                    let input;
+                    if (field.type === 'password') {
+                        input = document.createElement('input');
+                        input.type = 'password';
+                    } else if (field.type === 'number') {
+                        input = document.createElement('input');
+                        input.type = 'number';
+                    } else if (field.type === 'select' && field.options) {
+                        input = document.createElement('select');
+                        field.options.forEach(option => {
+                            const optionEl = document.createElement('option');
+                            optionEl.value = option.value;
+                            optionEl.textContent = option.label;
+                            input.appendChild(optionEl);
+                        });
+                    } else {
+                        input = document.createElement('input');
+                        input.type = 'text';
+                    }
+
+                    input.className = 'form-control';
+                    input.id = `connection_${field.name}`;
+                    input.name = field.name;
+
+                    if (field.required) {
+                        input.required = true;
+                    }
+
+                    if (field.placeholder) {
+                        input.placeholder = field.placeholder;
+                    }
+
+                    fieldDiv.appendChild(label);
+                    fieldDiv.appendChild(input);
+                    formFieldsContainer.appendChild(fieldDiv);
+                });
+            }
+
+            // Add special UI elements for specific connection types
+            if (connection.id === 'dropbox') {
+                const helpDiv = document.createElement('div');
+                helpDiv.className = 'alert alert-info mb-3';
+                helpDiv.innerHTML = `
+                    <h6>Dropbox Connection</h6>
+                    <p>To connect to Dropbox, you need to create an app in the <a href="https://www.dropbox.com/developers/apps" target="_blank">Dropbox App Console</a>.</p>
+                    <ol>
+                        <li>Go to <a href="https://www.dropbox.com/developers/apps" target="_blank">Dropbox App Console</a> and sign in</li>
+                        <li>Click "Create app"</li>
+                        <li>Choose "Scoped access" API</li>
+                        <li>Choose "Full Dropbox" access type (or "App folder" for limited access)</li>
+                        <li>Name your app and click "Create app"</li>
+                        <li>In the app settings, add the following redirect URI:</li>
+                    </ol>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="${window.location.origin}/api/connect/oauth/callback" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText('${window.location.origin}/api/connect/oauth/callback')">Copy</button>
+                    </div>
+                    <p>Find your App key and App secret in the app settings page under "App key" and "App secret".</p>
+                    <p><a href="https://www.dropbox.com/developers/documentation" target="_blank">Dropbox API Documentation</a></p>
+                `;
+                formFieldsContainer.appendChild(helpDiv);
+
+                // Add placeholders for Dropbox fields
+                const clientIdField = formFieldsContainer.querySelector('input[name="client_id"]');
+                const clientSecretField = formFieldsContainer.querySelector('input[name="client_secret"]');
+
+                if (clientIdField) {
+                    clientIdField.placeholder = "e.g., abcd1234efgh5678";
+                }
+
+                if (clientSecretField) {
+                    clientSecretField.placeholder = "e.g., 1234abcd5678efgh";
+                }
+            } else if (connection.id === 'google_drive') {
+                const helpDiv = document.createElement('div');
+                helpDiv.className = 'alert alert-info mb-3';
+                helpDiv.innerHTML = `
+                    <h6>Google Drive Connection</h6>
+                    <p>To connect to Google Drive, you need to create a project in the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>.</p>
+                    <ol>
+                        <li>Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> and sign in</li>
+                        <li>Create a new project or select an existing one</li>
+                        <li>Enable the Google Drive API for your project</li>
+                        <li>Go to "Credentials" and create an OAuth 2.0 Client ID</li>
+                        <li>Set up the OAuth consent screen with necessary scopes</li>
+                        <li>Add the following authorized redirect URI:</li>
+                    </ol>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="${window.location.origin}/api/connect/oauth/callback" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText('${window.location.origin}/api/connect/oauth/callback')">Copy</button>
+                    </div>
+                    <p>Find your Client ID and Client Secret in the credentials page.</p>
+                    <p><a href="https://developers.google.com/drive/api/guides/about-sdk" target="_blank">Google Drive API Documentation</a></p>
+                `;
+                formFieldsContainer.appendChild(helpDiv);
+
+                // Add placeholders for Google Drive fields
+                const clientIdField = formFieldsContainer.querySelector('input[name="client_id"]');
+                const clientSecretField = formFieldsContainer.querySelector('input[name="client_secret"]');
+
+                if (clientIdField) {
+                    clientIdField.placeholder = "e.g., 123456789012-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com";
+                }
+
+                if (clientSecretField) {
+                    clientSecretField.placeholder = "e.g., GOCSPX-abcdefghijklmnopqrstuvwxyz";
+                }
+            } else if (connection.id === 'github') {
+                const helpDiv = document.createElement('div');
+                helpDiv.className = 'alert alert-info mb-3';
+                helpDiv.innerHTML = `
+                    <h6>GitHub Connection</h6>
+                    <p>To connect to GitHub, you need to create an OAuth App in your <a href="https://github.com/settings/developers" target="_blank">GitHub Developer Settings</a>.</p>
+                    <ol>
+                        <li>Go to <a href="https://github.com/settings/developers" target="_blank">GitHub Developer Settings</a> and sign in</li>
+                        <li>Click "New OAuth App" (or "Register a new application")</li>
+                        <li>Fill in the application name and homepage URL</li>
+                        <li>Add the following authorization callback URL:</li>
+                    </ol>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="${window.location.origin}/api/connect/oauth/callback" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText('${window.location.origin}/api/connect/oauth/callback')">Copy</button>
+                    </div>
+                    <p>After registering, you'll receive a Client ID and can generate a Client Secret.</p>
+                    <p><a href="https://docs.github.com/en/rest" target="_blank">GitHub API Documentation</a></p>
+                `;
+                formFieldsContainer.appendChild(helpDiv);
+
+                // Add placeholders for GitHub fields
+                const clientIdField = formFieldsContainer.querySelector('input[name="client_id"]');
+                const clientSecretField = formFieldsContainer.querySelector('input[name="client_secret"]');
+
+                if (clientIdField) {
+                    clientIdField.placeholder = "e.g., Iv1.1234567890abcdef";
+                }
+
+                if (clientSecretField) {
+                    clientSecretField.placeholder = "e.g., abcdef1234567890abcdef1234567890abcdef12";
+                }
+            } else if (connection.id === 'msgraph') {
+                const helpDiv = document.createElement('div');
+                helpDiv.className = 'alert alert-info mb-3';
+                helpDiv.innerHTML = `
+                    <h6>Microsoft Graph API Connection</h6>
+                    <p>To connect to Microsoft Graph API, you need to register an app in the <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank">Azure Portal</a>.</p>
+                    <ol>
+                        <li>Go to <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank">Azure Portal App Registrations</a> and sign in</li>
+                        <li>Click "New registration"</li>
+                        <li>Enter a name for your application</li>
+                        <li>Select the appropriate account type (Single tenant, Multi-tenant, etc.)</li>
+                        <li>Add the following redirect URI (type: Web):</li>
+                    </ol>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="${window.location.origin}/api/connect/oauth/callback" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText('${window.location.origin}/api/connect/oauth/callback')">Copy</button>
+                    </div>
+                    <p>After registration, find your Application (client) ID and Directory (tenant) ID on the Overview page.</p>
+                    <p>Create a client secret under "Certificates & secrets".</p>
+                    <p>Add necessary API permissions under "API permissions" (e.g., Files.Read, Files.ReadWrite).</p>
+                    <p><a href="https://learn.microsoft.com/en-us/graph/overview" target="_blank">Microsoft Graph API Documentation</a></p>
+                `;
+                formFieldsContainer.appendChild(helpDiv);
+
+                // Add placeholders for Microsoft Graph fields
+                const clientIdField = formFieldsContainer.querySelector('input[name="client_id"]');
+                const tenantIdField = formFieldsContainer.querySelector('input[name="tenant_id"]');
+                const clientSecretField = formFieldsContainer.querySelector('input[name="client_secret"]');
+
+                if (clientIdField) {
+                    clientIdField.placeholder = "e.g., 12345678-1234-1234-1234-123456789012";
+                }
+
+                if (tenantIdField) {
+                    tenantIdField.placeholder = "e.g., 12345678-1234-1234-1234-123456789012 or common";
+                }
+
+                if (clientSecretField) {
+                    clientSecretField.placeholder = "e.g., ~AB1_abcdefghijklmnopqrstuvwxyz.123456";
+                }
+            } else if (connection.id === 'database') {
+                const helpDiv = document.createElement('div');
+                helpDiv.className = 'alert alert-info mb-3';
+                helpDiv.innerHTML = `
+                    <h6>Database Connection</h6>
+                    <p>Connect to SQL databases like PostgreSQL, MySQL, or SQLite.</p>
+                    <p>URI format examples:</p>
+                    <ul>
+                        <li>PostgreSQL: <code>postgresql://hostname:5432</code></li>
+                        <li>MySQL: <code>mysql://hostname:3306</code></li>
+                        <li>SQLite: <code>sqlite:///path/to/database.db</code></li>
+                    </ul>
+                    <p>For more information, see the documentation for your specific database:</p>
+                    <ul>
+                        <li><a href="https://www.postgresql.org/docs/" target="_blank">PostgreSQL Documentation</a></li>
+                        <li><a href="https://dev.mysql.com/doc/" target="_blank">MySQL Documentation</a></li>
+                        <li><a href="https://www.sqlite.org/docs.html" target="_blank">SQLite Documentation</a></li>
+                    </ul>
+                `;
+                formFieldsContainer.appendChild(helpDiv);
+
+                // Add placeholders for Database fields
+                const uriField = formFieldsContainer.querySelector('input[name="uri"]');
+                const usernameField = formFieldsContainer.querySelector('input[name="username"]');
+                const passwordField = formFieldsContainer.querySelector('input[name="password"]');
+                const databaseField = formFieldsContainer.querySelector('input[name="database"]');
+
+                if (uriField) {
+                    uriField.placeholder = "e.g., postgresql://hostname:5432";
+                }
+
+                if (usernameField) {
+                    usernameField.placeholder = "e.g., db_user";
+                }
+
+                if (passwordField) {
+                    passwordField.placeholder = "Your database password";
+                }
+
+                if (databaseField) {
+                    databaseField.placeholder = "e.g., my_database";
+                }
+            } else if (connection.id === 'neo4j') {
+                const helpDiv = document.createElement('div');
+                helpDiv.className = 'alert alert-info mb-3';
+                helpDiv.innerHTML = `
+                    <h6>Neo4j Connection</h6>
+                    <p>Connect to Neo4j graph databases.</p>
+                    <p>URI format: <code>bolt://hostname:7687</code> or <code>neo4j://hostname:7687</code></p>
+                    <p>For Neo4j Aura, you can find connection details in your database dashboard.</p>
+                    <p><a href="https://neo4j.com/docs/" target="_blank">Neo4j Documentation</a></p>
+                `;
+                formFieldsContainer.appendChild(helpDiv);
+
+                // Add placeholders for Neo4j fields
+                const uriField = formFieldsContainer.querySelector('input[name="uri"]');
+                const usernameField = formFieldsContainer.querySelector('input[name="username"]');
+                const passwordField = formFieldsContainer.querySelector('input[name="password"]');
+
+                if (uriField) {
+                    uriField.placeholder = "e.g., bolt://localhost:7687";
+                }
+
+                if (usernameField) {
+                    usernameField.placeholder = "e.g., neo4j";
+                }
+
+                if (passwordField) {
+                    passwordField.placeholder = "Your Neo4j password";
+                }
+            } else if (connection.id === 'local_fs') {
+                const helpDiv = document.createElement('div');
+                helpDiv.className = 'alert alert-info mb-3';
+                helpDiv.innerHTML = `
+                    <h6>Local Filesystem Connection</h6>
+                    <p>Enter the path to the directory you want to access. This must be a path that is accessible to the server.</p>
+                    <p>Examples:</p>
+                    <ul>
+                        <li>Linux/macOS: <code>/path/to/data</code></li>
+                        <li>Windows: <code>C:\\path\\to\\data</code> or <code>/mnt/c/path/to/data</code> (WSL)</li>
+                    </ul>
+                    <p>Note: The server process must have read/write permissions for this directory.</p>
+                `;
+                formFieldsContainer.appendChild(helpDiv);
+
+                // Add placeholder for Local Filesystem field
+                const pathField = formFieldsContainer.querySelector('input[name="path"]');
+
+                if (pathField) {
+                    pathField.placeholder = "e.g., /path/to/data";
+                }
+            }
+        }
+
+        // Function to populate connection types in the dropdown
+        function populateConnectionTypes() {
+            const connectionTypeSelect = document.getElementById('newConnectionType');
+
+            // Fetch available connections
+            fetch('/api/connect/available')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.connections) {
+                        // Clear existing options except the first one
+                        while (connectionTypeSelect.options.length > 1) {
+                            connectionTypeSelect.remove(1);
+                        }
+
+                        // Add options for each connection type
+                        data.connections.forEach(connection => {
+                            const option = document.createElement('option');
+                            option.value = connection.id;
+                            option.textContent = connection.name;
+                            connectionTypeSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching connection types:', error);
+                });
         }
 
         // Function to show toast notifications
