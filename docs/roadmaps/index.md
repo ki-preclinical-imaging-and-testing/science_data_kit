@@ -26,13 +26,56 @@ This roadmap outlines a comprehensive plan for implementing the Dropbox extensio
 
 **Latest Version**: [Dropbox Extension Roadmap](active/roadmap_DropboxExtension_08.md)
 
-**Status**: Progressing in Phase 3 - The Dropbox extension implementation has completed Phase 1 (Foundation) and Phase 2 (Advanced Features). Phase 3 (UI Integration) is now well underway with the implementation of both the Dropbox connection management page and the file browser component.
+**Status**: Progressing in Phase 3 - The Dropbox extension implementation has completed Phase 1 (Foundation) and Phase 2 (Advanced Features). Phase 3 (UI Integration) is now well underway with the implementation of both the Dropbox connection management page and the file browser component. File preview capabilities have been significantly enhanced with support for PDF, Excel, HTML, XML, Python, JavaScript, and improved Markdown rendering.
 
 The roadmap is divided into four phases:
 
 1. **Phase 1: Foundation** - Authentication and connection setup, basic file/folder operations, core integration with entity schemas, and Neo4j knowledge graph integration.
 2. **Phase 2: Advanced Features** - Real-time sync capabilities, team folder management, file sharing and collaboration metadata extraction, and error handling/retry logic.
-3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
+3. **Phase 3: UI Integration** - Flask page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
+4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated sync, advanced security and permissions handling, and performance optimization.
+
+### Specialized File Handling
+
+This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files.
+
+**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_00.md)
+
+**Status**: Planning - The Specialized File Handling roadmap has been defined and is divided into four phases:
+
+1. **Phase 1: Foundation** - Create plugin interfaces for file interpreters and metadata extractors, implement plugin discovery and registration, and integrate with existing systems.
+2. **Phase 2: Core Interpreters** - Implement interpreters for common file types including images, documents, scientific data, and media files.
+3. **Phase 3: UI Integration** - Enhance the user interface to support specialized file handling, including previews, metadata visualization, and search capabilities.
+4. **Phase 4: Advanced Features** - Add advanced features such as content extraction, similarity search, and automated tagging.
+
+### Microsoft Graph Extension
+
+This roadmap outlines a comprehensive plan for enhancing the Microsoft Graph extension for the Science Data Kit. The extension enables integration with Microsoft 365 services including SharePoint, OneDrive, Teams, and Excel through the Microsoft Graph API.
+
+**Latest Version**: [Microsoft Graph Extension Roadmap](active/roadmap_MSGraphExtension_00.md)
+
+**Status**: In Progress - The Microsoft Graph extension is partially implemented, with basic functionality for connecting to Microsoft Graph API and accessing some Microsoft 365 services. Phase 1 (Foundation) is currently in progress with authentication and connection setup being implemented.
+
+The roadmap is divided into four phases:
+
+1. **Phase 1: Foundation** - Enhanced authentication and connection setup, SharePoint integration, core integration with entity schemas, and Neo4j knowledge graph integration.
+2. **Phase 2: Advanced Features** - OneDrive file management, Teams conversation analysis, Excel file processing, and error handling/retry logic.
+3. **Phase 3: UI Integration** - Flask page components for cloud connection management, progress monitoring for operations, and cloud data visualization.
+4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated operations, advanced security and permissions handling, and performance optimization.
+
+### Google Drive/Workspace Extension
+
+This roadmap outlines a comprehensive plan for implementing the Google Drive/Workspace extension for the Science Data Kit. The extension will enable integration with Google's cloud services, including Google Drive for file access and synchronization, Google Sheets for spreadsheet parsing, and Google Docs for metadata extraction.
+
+**Latest Version**: [Google Drive/Workspace Extension Roadmap](active/roadmap_GoogleExtension_00.md)
+
+**Status**: Planning - The Google Drive/Workspace extension roadmap has been defined and is scheduled to begin implementation after the Microsoft Graph Extension reaches Phase 2. Initial research and architecture planning are underway.
+
+The roadmap is divided into four phases:
+
+1. **Phase 1: Foundation** - Authentication and connection setup, basic file/folder operations, core integration with entity schemas, and Neo4j knowledge graph integration.
+2. **Phase 2: Advanced Features** - Real-time sync capabilities, spreadsheet/document parsing, collaboration metadata extraction, and error handling/retry logic.
+3. **Phase 3: UI Integration** - Flask page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
 4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated sync, advanced security and permissions handling, and performance optimization.
 
 ## Completed Roadmaps
@@ -95,33 +138,7 @@ This roadmap outlines a comprehensive plan for implementing a containerized Flas
 
 ### Cloud Extensions
 
-The Science Data Kit is expanding its cloud integration capabilities with the following extension roadmaps:
-
-#### Google Drive/Workspace Extension
-
-This roadmap outlines a comprehensive plan for implementing the Google Drive/Workspace extension for the Science Data Kit. The extension will enable integration with Google's cloud services, including Google Drive for file access and synchronization, Google Sheets for spreadsheet parsing, and Google Docs for metadata extraction.
-
-**Latest Version**: [Google Drive/Workspace Extension Roadmap](future/roadmap_GoogleExtension_00.md)
-
-**Status**: Planning - The Google Drive/Workspace extension roadmap has been defined but not started yet. The roadmap is divided into four phases:
-
-1. **Phase 1: Foundation** - Authentication and connection setup, basic file/folder operations, core integration with entity schemas, and Neo4j knowledge graph integration.
-2. **Phase 2: Advanced Features** - Real-time sync capabilities, spreadsheet/document parsing, collaboration metadata extraction, and error handling/retry logic.
-3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for sync operations, and cloud data visualization.
-4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated sync, advanced security and permissions handling, and performance optimization.
-
-#### Enhanced Microsoft Graph Extension
-
-This roadmap outlines a comprehensive plan for enhancing the Microsoft Graph extension for the Science Data Kit. The extension enables integration with Microsoft 365 services including SharePoint, OneDrive, Teams, and Excel through the Microsoft Graph API.
-
-**Latest Version**: [Microsoft Graph Extension Roadmap](future/roadmap_MSGraphExtension_00.md)
-
-**Status**: In Progress - The Microsoft Graph extension is partially implemented, with basic functionality for connecting to Microsoft Graph API and accessing some Microsoft 365 services. The roadmap is divided into four phases:
-
-1. **Phase 1: Foundation** - Enhanced authentication and connection setup, SharePoint integration, core integration with entity schemas, and Neo4j knowledge graph integration.
-2. **Phase 2: Advanced Features** - OneDrive file management, Teams conversation analysis, Excel file processing, and error handling/retry logic.
-3. **Phase 3: UI Integration** - Streamlit page components for cloud connection management, progress monitoring for operations, and cloud data visualization.
-4. **Phase 4: Enterprise Features** - Batch processing for large datasets, scheduling and automated operations, advanced security and permissions handling, and performance optimization.
+The Science Data Kit is expanding its cloud integration capabilities with additional extension roadmaps planned for the future.
 
 ### Conversational Pipeline Builder
 
@@ -206,10 +223,31 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 
 ### Dropbox Extension
 **Implementation Status**: In Progress - Phase 3: UI Integration
-**Testing Status**: Active - Testing UI components
-**Next Testing Steps**: Test Dropbox connection management and file browser components
+**Testing Status**: Active - Testing UI components and file preview capabilities
+**Next Testing Steps**: Test team folder management and shared link management components
 **Recommended Testing**: Use prompts #19 for quality assessment, #21 for code analysis, #24 for real data testing
 **Quality Gates**: UI Integration before Enterprise Features
+
+### Specialized File Handling
+**Implementation Status**: Planning - Initial architecture design
+**Testing Status**: Preparing test framework
+**Next Testing Steps**: Create unit tests for plugin interfaces and base classes
+**Recommended Testing**: Use prompts #21 for code analysis, #19 for quality assessment, #24 for file format testing
+**Quality Gates**: Foundation implementation before Core Interpreters
+
+### Microsoft Graph Extension
+**Implementation Status**: In Progress - Phase 1: Foundation
+**Testing Status**: Active - Testing authentication and connection setup
+**Next Testing Steps**: Test SharePoint integration and file operations
+**Recommended Testing**: Use prompts #19 for quality assessment, #21 for code analysis, #24 for real data testing
+**Quality Gates**: Foundation completion before Advanced Features
+
+### Google Drive/Workspace Extension
+**Implementation Status**: Planning - Architecture design
+**Testing Status**: Preparing test framework
+**Next Testing Steps**: Create unit tests for authentication and file operations
+**Recommended Testing**: Use prompts #21 for code analysis, #19 for quality assessment
+**Quality Gates**: Microsoft Graph Extension Phase 2 before starting implementation
 
 ### Future Roadmaps
 
@@ -312,31 +350,33 @@ The Science Data Kit project has successfully achieved its goal of becoming a co
 
 ### Roadmap Reorganization and Prioritization
 
-The project has undergone a strategic reorganization to focus on fundamental frontend/backend integration work and user experience optimization. This reorganization includes:
+The project has undergone a strategic reorganization to focus on enhancing capabilities for scientific data analysis through cloud storage extensions and specialized file handling. This reorganization includes:
 
-1. **Active Roadmaps**: Focusing on core platform stability and user experience
-   - The **Repository Reorganization** roadmap, which has made significant progress with most tasks now completed
-   - The new **Design/UX Phase** roadmap, which focuses on frontend component validation, user experience optimization, backend validation through the user interface, and workshop preparation
-   - The **Streamlit to Flask Migration** roadmap, which focuses on transitioning from Streamlit to Flask as the primary UI framework
+1. **Active Roadmaps**: Focusing on data source connectivity and specialized file format support
+   - The **Design/UX Phase** roadmap, which continues to ensure a solid foundation for user experience
+   - The **Dropbox Extension** roadmap, which is progressing well with UI Integration in Phase 3
+   - The new **Specialized File Handling** roadmap, which will enable rich metadata extraction and content interpretation
+   - The **Microsoft Graph Extension** roadmap, which has been moved from future to active development
+   - The **Google Drive/Workspace Extension** roadmap, which has been moved from future to active planning
 
-2. **Future Roadmaps**: Advanced features temporarily deprioritized
-   - The **Conversational Pipeline Builder** roadmap, which outlines a future vision for a natural language interface (planning phase only)
+2. **Future Roadmaps**: Advanced features scheduled for future implementation
+   - The **Conversational Pipeline Builder** roadmap, which outlines a future vision for a natural language interface
    - The **Knowledge Graph Documentation System** roadmap, which represents a fundamental shift toward "AI-native software architecture"
    - The **Strategic Enhancements** roadmap, which focuses on platform maturation, community adoption, and long-term sustainability
 
-This reorganization ensures that the Science Data Kit establishes a solid foundation of frontend-backend integration and user experience optimization before implementing advanced features. By focusing on these fundamental aspects first, the project will create a more stable, user-friendly platform that can better support the advanced features planned for future development.
+This reorganization ensures that the Science Data Kit establishes robust capabilities for working with specialized scientific data formats and cloud storage services. By focusing on these critical research tools first, the project will create a more powerful platform for scientific data analysis that can better support the advanced features planned for future development.
 
-### Current Focus: Streamlit to Flask Migration and Design/UX Phase
+### Current Focus: Extensions and Specialized File Handling
 
-The Streamlit to Flask Migration and Design/UX Phase represent critical steps in the evolution of the Science Data Kit, shifting focus from backend architecture to user-facing components and interactions. These phases will:
+The Extensions and Specialized File Handling roadmaps represent a significant advancement in the Science Data Kit's capabilities for scientific data analysis. This strategic focus will:
 
-1. Systematically validate all frontend components and their integration with backend systems
-2. Optimize user experience through interface consistency, navigation flow, and error handling improvements
-3. Validate backend functionality through comprehensive frontend testing
-4. Prepare for workshops by refining documentation, training materials, and demo scenarios
-5. Complete the transition from Streamlit to Flask as the primary UI framework
+1. Expand data source connectivity through robust cloud storage extensions (Dropbox, Microsoft 365, Google Workspace)
+2. Enhance scientific data analysis with specialized file format support (NetCDF, HDF5, FITS, etc.)
+3. Improve metadata extraction for better knowledge graph integration and data discovery
+4. Enable rich file previews for various scientific and document formats
+5. Streamline research workflows by reducing manual data handling and format conversion
 
-By completing these phases, the Science Data Kit will provide a cohesive, intuitive, and reliable experience for scientific users, establishing a solid foundation for future enhancements.
+By implementing these roadmaps, the Science Data Kit will provide researchers with powerful tools for working with specialized scientific data formats and cloud storage services, enabling more efficient and effective research workflows.
 
 ### Future Roadmap: Documentation Maintenance and Long-term Strategy
 

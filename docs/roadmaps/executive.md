@@ -3,149 +3,117 @@
 ## Overview
 This document provides a high-level strategic roadmap for the Science Data Kit project, outlining the key initiatives, their relationships, and the overall direction of the project. It serves as a guide for stakeholders to understand the project's priorities and progress at a glance.
 
-## Current Strategic Focus: Streamlit to Flask Migration
+## Current Strategic Focus: Extensions and Specialized File Handling
 
-The Science Data Kit is currently focused on transitioning from Streamlit to Flask as the primary UI framework. This strategic shift will:
+The Science Data Kit is now focused on enhancing its capabilities for working with specialized file formats and cloud storage services. This strategic shift will:
 
-1. **Reduce codebase complexity** by focusing on a single UI framework
-2. **Improve maintainability** through focused development
-3. **Enhance user experience** by leveraging Flask's capabilities
-4. **Simplify deployment** through containerization
-5. **Preserve all existing functionality** while enabling new capabilities
+1. **Expand data source connectivity** through robust cloud storage extensions
+2. **Enhance scientific data analysis** with specialized file format support
+3. **Improve metadata extraction** for better knowledge graph integration
+4. **Enable rich file previews** for various scientific and document formats
+5. **Streamline research workflows** by reducing manual data handling
 
 ## Implementation Roadmap
 
 The following roadmap outlines the key steps for implementing the strategic vision:
 
-### Phase 1: Feature Parity Assessment (1-2 weeks) - COMPLETED
-- ✓ Create a complete inventory of all Streamlit pages and features
-- ✓ Assess the implementation status of each feature in the Flask version
-- ✓ Create a detailed migration plan for each feature
+### Phase 1: Cloud Storage Extensions (4-6 weeks)
+- Complete Dropbox Extension
+  - ✓ Phase 1: Foundation (authentication, file operations, core integration, Neo4j integration)
+  - ✓ Phase 2: Advanced Features (real-time sync, team folders, file sharing metadata, error handling)
+  - ⟳ Phase 3: UI Integration (connection management, file browser, team folder management)
+  - ⟳ Phase 4: Enterprise Features (batch processing, scheduled sync, advanced security)
+- Enhance Microsoft Graph Extension
+  - ⟳ Phase 1: Foundation (authentication, SharePoint integration, core integration)
+  - ⟳ Phase 2: Advanced Features (OneDrive management, Teams analysis, Excel processing)
+- Implement Google Drive/Workspace Extension
+  - ⟳ Phase 1: Foundation (authentication, file operations, core integration)
+  - ⟳ Phase 2: Advanced Features (real-time sync, spreadsheet/document parsing)
 
-### Phase 2: Flask Implementation Completion (4-6 weeks) - COMPLETED
-- Implement high-priority features
-  - ✓ Plugin connection management with improved UI
-  - ✓ Complete any missing functionality in existing pages (connect, dashboard, file browser, explore)
-  - ✓ Ensure all core functionality is available in the Flask version
-- Implement medium-priority features
-  - ✓ About page with project information
-  - ✓ cBioPortal browser for ontology term management
-  - ✓ Dropbox integration (browser and connection management)
-  - ✓ ISA browser
-  - ✓ Map visualization
-  - ✓ Microsoft Graph integration (connection)
-  - ✓ Microsoft Graph exploration
-  - ✓ Ontology browser
-  - ✓ User preferences
-- Implement low-priority features
-  - ✓ Analytics dashboard with comprehensive tracking and visualization
-  - ✓ Chat interface with retrieval-augmented generation capabilities
-  - ✓ Feedback collection
-  - ✓ Instructor page
-  - ✓ Observation page
-  - ✓ Survey page
-  - ✓ Workshop page
-- Enhance UI components with Flask-specific capabilities
-  - ✓ Implement HTMX for dynamic updates
-  - ✓ Add Alpine.js for client-side interactivity
-  - ✓ Create rich preview capabilities for various file types
-  - ✓ Implement responsive design for all components
-  - ✓ Unit tests for API endpoints
-  - ✓ End-to-end tests for critical paths
-  - ✓ Performance benchmarks
+### Phase 2: Specialized File Handling (6-8 weeks)
+- Implement Foundation
+  - ⟳ Plugin Interface Design (base classes, capability mixins, configuration schema)
+  - ⟳ Plugin Discovery and Registration (directory structure, registry updates, MIME type mapping)
+  - ⟳ Core Integration (file browser integration, metadata display, preview component)
+  - ⟳ Testing and Documentation (unit tests, integration tests, documentation)
+- Develop Core Interpreters
+  - ⟳ Image File Interpreters (EXIF metadata, previews, dimension extraction)
+  - ⟳ Document File Interpreters (PDF, DOCX, XLSX metadata and previews)
+  - ⟳ Scientific Data File Interpreters (NetCDF, HDF5, FITS, CSV/TSV)
+  - ⟳ Media File Interpreters (MP3, MP4 metadata and previews)
+- Enhance UI Integration
+  - ⟳ File Preview Components (framework, image/document/data viewers)
+  - ⟳ Metadata Visualization (metadata panel, grouping, filtering, search)
+  - ⟳ File Browser Integration (file type icons, details sidebar, preview modal)
+  - ⟳ Search and Discovery (metadata-based search, advanced filters, faceted search)
+- Implement Advanced Features
+  - ⟳ Content Extraction (text extraction, OCR, table extraction)
+  - ⟳ Similarity Analysis (file similarity metrics, duplicate detection)
+  - ⟳ Automated Tagging (keyword extraction, topic modeling, entity recognition)
+  - ⟳ AI Service Integration (image/text analysis, speech recognition)
 
-### Phase 3: User Experience Optimization (2-3 weeks) - COMPLETED
-- Conduct usability testing
-  - ✓ Create usability testing plan
-  - ✓ Identify key workflows for optimization
-  - ✓ Test scenarios for common workflows
-- Implement UI/UX improvements
-  - ✓ Develop UI/UX improvement proposals
-  - ✓ Streamline navigation and workflows
-  - ✓ Enhance visual design and consistency
-  - ✓ Improve error handling and user feedback
-- Add Flask-specific enhancements
-  - ✓ Create Flask-specific enhancements plan
-  - ✓ Implement WebSocket support for real-time updates
-  - ✓ Add client-side caching for improved performance
-  - ✓ Create enhanced file preview capabilities
-- Improve accessibility
-  - ✓ Prepare accessibility improvements plan
-  - ✓ Ensure WCAG 2.1 compliance
-  - ✓ Implement keyboard navigation
-  - ✓ Add screen reader support
+## Extension and File Handling Integration
 
-### Phase 4: Streamlit Deprecation and Removal (2-3 weeks) - COMPLETED
-- ✓ Create a deprecation plan with timeline and user communication strategy
-- ✓ Update documentation to reflect the transition to Flask
-- ✓ Implement transition helpers for users
-- ✓ Begin removing Streamlit dependencies
-- ✓ Clean up Streamlit-specific code
+A critical component of the strategic focus is integrating the Extensions and Specialized File Handling capabilities with the existing architecture:
 
-### Phase 5: Containerization and Deployment (2-3 weeks) - COMPLETED
-- ✓ Create optimized Docker configuration
-- ✓ Implement Docker Compose setup
-- ✓ Create Singularity definition files
-- ✓ Implement deployment automation
-- ✓ Create deployment documentation
-
-## Plugin Architecture UI Integration
-
-A critical component of the migration is integrating the Plugin Architecture UI components into the Flask version:
-
-1. **Connection UI Generator**: Adapt the UI generator to work with Flask templates and forms
-2. **Dynamic Forms**: Implement Flask-based dynamic form generation
-3. **Capability-Based Feature Display**: Create Flask templates for different UI components
-4. **Connection Status Indicators**: Implement connection status indicators in Flask
-5. **Plugin Management UI**: Adapt the plugin management UI for Flask
-6. **Documentation Updates**: Update UI integration documentation
+1. **Plugin Architecture Leverage**: Build on the existing plugin architecture for both cloud extensions and file interpreters
+2. **Knowledge Graph Integration**: Enhance file nodes with specialized metadata from file interpreters
+3. **UI Component Reuse**: Leverage existing UI components for file browsing and preview
+4. **Consistent User Experience**: Ensure consistent interaction patterns across different file types and cloud services
+5. **Extensibility Framework**: Create a framework that makes it easy to add new file interpreters and cloud connectors
+6. **Documentation Standards**: Establish documentation standards for extensions and file interpreters
 
 ## Design/UX Integration
 
-The Design/UX Phase roadmap will be adapted to support the Flask migration:
+The Design/UX Phase roadmap will be adapted to support the Extensions and Specialized File Handling:
 
-1. **Component Validation**: Validate all UI components in the Flask implementation
-2. **Integration Testing**: Test user workflows and cross-component integration
-3. **User Experience Optimization**: Improve interface consistency and navigation flow
-4. **Workshop Readiness**: Prepare documentation and training materials
+1. **Component Validation**: Validate UI components for file preview and metadata display
+2. **Integration Testing**: Test workflows involving cloud storage and specialized file types
+3. **User Experience Optimization**: Improve interface for working with specialized scientific formats
+4. **Workshop Readiness**: Prepare documentation and training materials for scientific file handling
 
 ## Effective Implementation Prompts
 
 The following prompts provide a structured approach to implementing the roadmap:
 
-### Initial Assessment and Planning
-1. "Analyze the current status of the Streamlit to Flask Migration roadmap and create a detailed implementation plan for Phase 1 (Feature Parity Assessment)."
-2. "Review the Design/UX Phase roadmap and identify which completed UI components need to be adapted for the Flask implementation."
-3. "Extract the Plugin Architecture UI components from the archived roadmap and create a specific task list for integrating them into the Flask version."
+### Cloud Storage Extensions
+1. "Analyze the current status of the Dropbox Extension and create a detailed implementation plan for completing Phase 3 (UI Integration)."
+2. "Review the Microsoft Graph Extension roadmap and identify the key components needed for Phase 1 (Foundation)."
+3. "Create a detailed implementation plan for the Google Drive/Workspace Extension, focusing on authentication and basic file operations."
 
-### Implementation
-4. "For each Streamlit page in the application, create a Flask implementation plan with component mapping and data flow diagrams."
-5. "Design the Flask templates and routes needed to implement the connection management functionality, incorporating the Plugin Architecture UI patterns."
-6. "Create a testing strategy for validating feature parity between Streamlit and Flask implementations of [specific feature]."
+### Specialized File Handling
+4. "Design the base classes and interfaces for file interpreters and metadata extractors, ensuring compatibility with the existing plugin architecture."
+5. "Create a plugin discovery and registration system for file interpreters that integrates with the existing plugin registry."
+6. "Implement a file preview component that can dynamically load appropriate interpreters based on file type."
+7. "Design a metadata extraction framework that can be extended for different file types and integrates with the knowledge graph."
 
 ### Progress Tracking
-7. "Update the Streamlit to Flask Migration roadmap with current progress, challenges, and next steps after implementing [specific component]."
-8. "Review the Testing and Quality Status section of index.md and update it based on recent implementation work."
+8. "Update the Extensions and Specialized File Handling roadmap with current progress, challenges, and next steps after implementing [specific component]."
+9. "Review the Testing and Quality Status section of index.md and update it based on recent implementation work."
 
 ### Integration
-9. "Analyze how the Dropbox Extension's UI components should be adapted for the Flask implementation."
-10. "Create an integration plan for connecting the Flask implementation with the existing plugin system."
+10. "Create an integration plan for connecting file interpreters with the existing file browser component."
+11. "Design a metadata visualization component that can display extracted metadata from various file types."
+12. "Implement a search system that can query based on extracted file metadata across different storage providers."
 
 ### Quality Assurance
-11. "Apply testing prompt #21 (Pre-Review Code Analysis) to the Flask implementation of [specific component] and address any issues."
-12. "Create a comprehensive test suite for the Flask implementation of [specific feature], including unit tests, integration tests, and end-to-end tests."
+13. "Apply testing prompt #21 (Pre-Review Code Analysis) to the file interpreter implementation and address any issues."
+14. "Create a comprehensive test suite for file interpreters, including unit tests for different file types and integration tests with the file browser."
+15. "Develop performance benchmarks for file processing and metadata extraction to ensure scalability with large files."
 
 ### User Experience
-13. "Design an improved user experience for [specific feature] in the Flask implementation, leveraging Flask-specific capabilities."
-14. "Create a user migration guide explaining how to transition from the Streamlit to the Flask version of the application."
+16. "Design an intuitive interface for displaying specialized scientific file formats, focusing on researcher workflows."
+17. "Create a consistent interaction pattern for working with files across different cloud storage providers."
+18. "Implement progressive enhancement for file previews, ensuring basic functionality works even without specialized interpreters."
 
 ### Documentation
-15. "Update the project documentation to reflect the transition from Streamlit to Flask, including updated installation instructions and API references."
-16. "Create a developer guide for contributing to the Flask version of the application, including architecture overview and coding standards."
+19. "Create a developer guide for implementing new file interpreters, including best practices and examples."
+20. "Document the metadata extraction framework, including schema definitions and knowledge graph integration."
+21. "Update the user documentation to explain how to work with specialized scientific file formats in the Science Data Kit."
 
 ### Milestone Review
-17. "Conduct a comprehensive review of Phase 1 (Feature Parity Assessment) deliverables and update the roadmap with findings before proceeding to Phase 2."
-18. "Evaluate the current state of the Flask implementation against the success metrics defined in the roadmap and identify areas for improvement."
+22. "Conduct a comprehensive review of Phase 1 (Cloud Storage Extensions) deliverables and update the roadmap with findings before proceeding to Phase 2."
+23. "Evaluate the current state of the Specialized File Handling implementation against the success metrics defined in the roadmap and identify areas for improvement."
 
 ## Implementation Details
 
@@ -317,237 +285,238 @@ Responsive design has been implemented for all components:
 
 ## Future Directions
 
-All planned phases and tasks in the Streamlit to Flask Migration roadmap have been successfully completed. The project now shifts focus to the following future directions:
+After completing the Extensions and Specialized File Handling roadmap, the project will focus on the following future directions:
 
-1. **User Feedback and Continuous Improvement**:
-   - Collect feedback from users on the Flask implementation
-   - Identify any remaining issues or areas for improvement
-   - Prioritize enhancements based on user feedback
-   - Implement iterative improvements based on real-world usage
+1. **Knowledge Graph Documentation System**:
+   - Implement AI-navigable documentation system
+   - Create structured markup for automatic knowledge graph generation
+   - Enable AI agents to query the graph to understand codebase structure
+   - Develop tools for human interaction with the knowledge graph
+   - Implement automatic rebuilding of the graph when files change
 
-2. **Performance Optimization**:
-   - Conduct additional performance testing under load
-   - Optimize database queries and API endpoints
-   - Implement caching strategies for frequently accessed data
-   - Profile and optimize critical code paths
-   - Enhance real-time update capabilities
+2. **Conversational Pipeline Builder**:
+   - Create a natural language interface for scientific pipeline creation
+   - Implement AI-assisted discovery of relevant analysis components
+   - Develop visual representation of pipelines with editing capabilities
+   - Enable cross-UI integration for pipeline visibility
+   - Implement validation and testing of generated pipelines
 
-3. **Advanced Features Development**:
-   - Implement advanced features that were not possible with Streamlit
-   - Explore integration with additional data sources and services
-   - Develop new visualization capabilities
-   - Enhance the plugin system with additional capabilities
-   - Implement advanced data processing features
+3. **Strategic Enhancements**:
+   - Implement documentation automation for better maintainability
+   - Create workshop feedback integration for continuous improvement
+   - Develop domain branch templates for specialized scientific fields
+   - Implement performance monitoring for scientific workflows
+   - Create community contribution frameworks for extensions and interpreters
 
 ## Success Metrics
 
-The success of the Streamlit to Flask migration has been measured by:
+The success of the Extensions and Specialized File Handling implementation will be measured by:
 
-1. **Feature Completeness**: 100% of Streamlit features implemented in Flask - ACHIEVED
-2. **Performance Improvements**: Page load times reduced by at least 30% - ACHIEVED
-3. **User Satisfaction**: Positive feedback from user testing - ACHIEVED
-4. **Code Quality**: Reduced codebase size and improved test coverage - ACHIEVED
-5. **Deployment Flexibility**: Successful deployment in container environments - ACHIEVED
+1. **Extension Coverage**: Implementation of all planned cloud storage extensions (Dropbox, Microsoft Graph, Google Drive)
+2. **File Format Support**: Support for key scientific file formats (NetCDF, HDF5, FITS) and common document formats
+3. **Metadata Extraction**: Comprehensive metadata extraction from supported file types
+4. **Knowledge Graph Integration**: Enhanced file nodes with specialized metadata in the knowledge graph
+5. **User Experience**: Intuitive interfaces for working with specialized file formats
+6. **Performance**: Efficient processing of large scientific datasets
+7. **Extensibility**: Ease of adding new file interpreters and cloud storage connectors
 
 ## Current Status and Progress
 
-The Streamlit to Flask Migration has been successfully completed:
+The Extensions and Specialized File Handling implementation is currently in progress:
 
-1. **Phase 1 (Feature Parity Assessment)** has been completed:
-   - ✓ A comprehensive inventory of all 23 Streamlit pages has been created
-   - ✓ The implementation status of each feature in the Flask version has been assessed
-   - ✓ A detailed migration plan with effort estimates, dependencies, and specific tasks has been created
+1. **Cloud Storage Extensions**:
+   - **Dropbox Extension**:
+     - ✓ Phase 1 (Foundation) has been completed with authentication, file operations, core integration, and Neo4j integration
+     - ✓ Phase 2 (Advanced Features) has been completed with real-time sync, team folders, file sharing metadata, and error handling
+     - ⟳ Phase 3 (UI Integration) is in progress with connection management and file browser components implemented
+     - ⟳ Phase 4 (Enterprise Features) is planned for future implementation
 
-2. **Phase 2 (Flask Implementation Completion)** has been completed:
-   - ✓ All 5 high-priority pages have been implemented in Flask (connect, dashboard, file browser, explore, plugin connect)
-   - ✓ All high-priority pages now have full API support with comprehensive functionality
-   - ✓ All 9 medium-priority pages have been implemented (About page, cBioPortal browser, Dropbox integration, ISA browser, Map visualization, Microsoft Graph integration, Microsoft Graph exploration, Ontology browser, and User preferences)
-   - ✓ All 7 low-priority features have been implemented (Analytics dashboard, Chat interface, Feedback collection, Instructor page, Observation page, Survey page, Workshop page)
-   - ✓ Core architecture and Flask foundation are in place
-   - ✓ Plugin connection management has been implemented with improved UI and API endpoints
-   - ✓ Unit tests have been created for all implemented API endpoints
-   - ✓ Enhanced UI components have been implemented with HTMX, Alpine.js, rich preview capabilities, and responsive design
+   - **Microsoft Graph Extension**:
+     - ⟳ Phase 1 (Foundation) is in progress with basic authentication and connection setup
+     - ⟳ Phase 2 (Advanced Features) is planned for future implementation
 
-3. **Phase 3 (User Experience Optimization)** has been completed:
-   - ✓ Comprehensive usability testing has been conducted
-   - ✓ UI/UX improvements have been implemented
-   - ✓ Flask-specific enhancements have been added
-   - ✓ Accessibility improvements have been implemented
+   - **Google Drive/Workspace Extension**:
+     - ⟳ Phase 1 (Foundation) is planned for implementation after Microsoft Graph Extension
+     - ⟳ Phase 2 (Advanced Features) is planned for future implementation
 
-4. **Phase 4 (Streamlit Deprecation and Removal)** has been completed:
-   - ✓ A comprehensive deprecation plan has been created with timeline and user communication strategy
-   - ✓ Documentation has been updated to reflect the transition to Flask
-   - ✓ Transition helpers have been implemented for users
-   - ✓ Streamlit dependencies have been removed
-   - ✓ Streamlit-specific code has been cleaned up
+2. **Specialized File Handling**:
+   - ⟳ Plugin Interface Design is in the planning stage
+   - ⟳ Plugin Discovery and Registration is in the planning stage
+   - ⟳ Core Integration is in the planning stage
+   - ⟳ Core Interpreters development is planned to start after the foundation is established
+   - ⟳ UI Integration is planned for future implementation
+   - ⟳ Advanced Features are planned for future implementation
 
-5. **Phase 5 (Containerization and Deployment)** has been completed:
-   - ✓ Optimized Docker configuration has been created
-   - ✓ Docker Compose setup has been implemented
-   - ✓ Singularity definition files have been created
-   - ✓ Deployment automation has been implemented
-   - ✓ Comprehensive deployment documentation has been created
+3. **Integration with Existing Systems**:
+   - ✓ Plugin Architecture has been completed and provides a foundation for extensions
+   - ✓ File Browser UI components are in place and ready for integration with specialized file handling
+   - ✓ Knowledge Graph infrastructure is in place for metadata integration
+   - ⟳ UI Component updates for specialized file preview and metadata display are planned
 
-6. **Future Directions**:
-   - Gather user feedback on the complete Flask implementation
-   - Conduct additional performance testing under load
-   - Optimize database queries and API endpoints
-   - Implement caching strategies for frequently accessed data
-   - Explore advanced features that were not possible with Streamlit
-   - Integrate with additional data sources and services
-   - Develop new visualization capabilities
+4. **Next Steps**:
+   - Complete Dropbox Extension Phase 3 (UI Integration)
+   - Advance Microsoft Graph Extension Phase 1 (Foundation)
+   - Begin implementation of Specialized File Handling foundation
+   - Create initial file interpreter plugins for common scientific formats
+   - Enhance knowledge graph integration for specialized file metadata
+   - Develop comprehensive testing framework for file interpreters
 
 ## Implementation Details
 
-### High-Priority Pages
+### Cloud Storage Extensions
 
-The following high-priority pages have been fully implemented in Flask with comprehensive API support:
+#### Dropbox Extension
 
-1. **Connect Page**:
-   - Core functionality for managing connections to various data sources
-   - API endpoints for getting available and active connections
-   - API endpoints for connecting to and disconnecting from data sources
-   - API endpoints for testing connections
-   - OAuth authentication flow for cloud services
+The Dropbox Extension has been implemented with the following components:
 
-2. **Dashboard Page**:
-   - Core functionality for displaying metrics, charts, tables, and status items
-   - API endpoints for getting dashboard data
-   - API endpoints for connecting to and disconnecting from databases
-   - Real-time updates via WebSockets (foundation)
+1. **Core Architecture**:
+   - **DropboxConnector**: Handles authentication, token management, and API access
+   - **DropboxFileManager**: Provides file and folder operations
+   - **DropboxEntity**: Extends core entity schemas for Dropbox-specific metadata
+   - **Neo4j Integration**: Maps Dropbox files and folders to knowledge graph nodes
 
-3. **File Browser Page**:
-   - Comprehensive file management capabilities
-   - API endpoints for navigating directories, filtering files, and previewing files
-   - API endpoints for downloading, uploading, creating, deleting, and renaming files
-   - Rich preview capabilities for various file types
-   - HTMX integration for dynamic updates
-   - Alpine.js integration for client-side interactivity
-   - Responsive design for all screen sizes
+2. **Authentication and Connection**:
+   - OAuth2 authentication flow with support for both web and desktop applications
+   - Secure token storage and automatic refresh
+   - Connection status tracking and error handling
+   - Configuration options for API credentials and root path
 
-4. **Explore Page**:
-   - Core functionality for exploring and visualizing data from various sources
-   - API endpoints for getting available data sources
-   - API endpoints for setting the current data source
-   - API endpoints for executing queries and getting schema information
-   - Automatic visualization generation based on query results
+3. **File Operations**:
+   - File listing with metadata extraction
+   - Folder navigation with path handling
+   - File download and upload
+   - Search functionality with filtering
+   - Team folder access and management
+   - File sharing metadata extraction
 
-5. **Plugin Connect Page**:
-   - Core functionality for managing plugin connections
-   - API endpoints for getting plugin information and configuration schemas
-   - API endpoints for connecting to and disconnecting from plugins
-   - API endpoints for testing plugin connections
-   - Dynamic form generation based on plugin configuration schemas
+4. **UI Components**:
+   - Connection management page with OAuth flow
+   - File browser with navigation and search
+   - File preview for various formats
+   - Metadata display panel
+   - Team folder management interface
 
-### Medium-Priority Pages
+5. **Advanced Features**:
+   - Real-time synchronization using webhooks
+   - Conflict resolution for concurrent edits
+   - Selective synchronization for large repositories
+   - File request management
+   - Comment and version history tracking
 
-The following medium-priority pages have been implemented in Flask:
+#### Microsoft Graph Extension
 
-1. **About Page**:
-   - Core functionality for providing information about the Science Data Kit
-   - Resources and educational materials about the toolkit, knowledge graphs, and FAIR data practices
-   - Links to documentation, tutorials, community resources, and video tutorials
-   - Responsive design with Bootstrap cards for different sections
+The Microsoft Graph Extension is currently in development with the following components:
 
-2. **cBioPortal Browser**:
-   - Core functionality for browsing and managing ontology terms from cBioPortal and OncoTree
-   - API endpoints for fetching cancer types, tumor types, and studies
-   - API endpoints for adding terms from various sources
-   - API endpoints for managing terms (adding manually, clearing)
-   - Responsive design with Bootstrap cards and dynamic content loading
+1. **Core Architecture**:
+   - **MSGraphConnector**: Handles authentication and API access
+   - **SharePointManager**: Provides access to SharePoint sites and lists
+   - **OneDriveManager**: Manages OneDrive files and folders
+   - **TeamsManager**: Accesses Teams conversations and files
 
-3. **Dropbox Integration**:
-   - **Dropbox Connection Management**:
-     - Core functionality for connecting to Dropbox API using OAuth2 authentication
-     - API endpoints for connecting, completing authentication, disconnecting, and checking status
-     - Configuration management with save/load functionality
-     - Account information display with connection status
-     - Responsive design with tabbed interface for configuration, status, and help
-   - **Dropbox File Browser**:
-     - Core functionality for browsing Dropbox files and folders
-     - API endpoints for listing directories, getting file details, downloading files, and searching
-     - File preview capabilities for various file types (images, PDF, text, code, etc.)
-     - Breadcrumb navigation and folder browsing
-     - Search functionality with filtering by path and file extensions
-     - Responsive design with sidebar for navigation and search
+2. **Authentication and Connection**:
+   - Multiple authentication methods (client credentials, device code, interactive)
+   - Azure AD integration for enterprise deployments
+   - Permission management for different scopes
+   - Tenant configuration for multi-tenant applications
 
-4. **Analytics Dashboard**:
-   - **Core Functionality**:
-     - Tracking page views and user interactions
-     - Storing analytics data with configurable storage path
-     - Visualizing analytics data with charts and tables
-     - Exporting analytics data to CSV or JSON
-     - Enabling/disabling analytics tracking
-     - Session management for tracking user sessions
-   - **Implementation Details**:
-     - Core page class in `core/pages/analytics_dashboard.py`
-     - Data model in `core/models/page.py` (AnalyticsDashboardPageData)
-     - HTML template in `web/templates/analytics_dashboard.html`
-     - API routes for getting analytics data, toggling tracking, updating storage path, exporting data, clearing data, tracking page views, and tracking interactions
-     - Integration with Flask sessions for persistent tracking across page loads
-     - Chart.js for visualizing analytics data
-   - **User Interface**:
-     - Analytics settings section with toggle for enabling/disabling tracking, storage path configuration, and export/clear buttons
-     - Page views section with summary table, timeline chart, and raw data table
-     - User interactions section with summary table, interaction types chart, and raw data table
-     - Session information section with session ID and duration
-     - Responsive design for all screen sizes
-   - **Testing and Performance**:
-     - Comprehensive unit tests for all API endpoints
-     - End-to-end tests for critical paths
-     - Performance benchmarks showing 30-50% faster response times compared to Streamlit
+3. **Planned Features**:
+   - SharePoint site and list access
+   - OneDrive file management
+   - Teams conversation analysis
+   - Excel file processing
+   - Outlook integration for email and calendar data
 
-5. **Chat Interface**:
-   - **Core Functionality**:
-     - Chatting with data using retrieval-augmented generation (GraphRAG)
-     - Connecting to Neo4j for knowledge graph access
-     - Supporting multiple LLM providers (OpenAI, Anthropic, Ollama)
-     - Configurable LLM settings (model, temperature, max tokens)
-     - Ollama integration for local LLM usage
-     - Chat history management
-   - **Implementation Details**:
-     - Core page class in `core/pages/chat.py`
-     - Data model in `core/models/page.py` (ChatPageData)
-     - HTML template in `web/templates/chat.html`
-     - API routes for connecting to Neo4j, initializing GraphRAG, updating LLM settings, updating Ollama settings, refreshing Ollama models, sending messages, and clearing chat history
-     - Integration with Neo4j for knowledge graph access
-     - Integration with GraphRAG for retrieval-augmented generation
-   - **User Interface**:
-     - LLM connection settings with support for multiple providers
-     - Neo4j connection settings
-     - Chat interface with message history
-     - Responsive design for all screen sizes
-     - Real-time feedback during message processing
+#### Google Drive/Workspace Extension
+
+The Google Drive/Workspace Extension is planned with the following components:
+
+1. **Core Architecture**:
+   - **GoogleDriveConnector**: Handles authentication and API access
+   - **GoogleDriveFileManager**: Provides file and folder operations
+   - **GoogleSheetsManager**: Accesses and processes spreadsheet data
+   - **GoogleDocsManager**: Handles document processing
+
+2. **Authentication and Connection**:
+   - OAuth2 authentication flow
+   - Service account support for headless operation
+   - Scope management for different API access levels
+
+3. **Planned Features**:
+   - File and folder management
+   - Spreadsheet data access and processing
+   - Document content extraction
+   - Real-time collaboration metadata
+   - Shared drive management
+
+### Specialized File Handling
+
+The Specialized File Handling system is being designed with the following architecture:
+
+1. **Plugin Architecture**:
+   - **FileInterpreterPlugin**: Base class for file interpreter plugins
+   - **MetadataExtractorPlugin**: Base class for metadata extractor plugins
+   - **Plugin Discovery**: Automatic discovery and registration of plugins
+   - **Plugin Selection**: Selection of appropriate interpreter based on file type
+
+2. **Core Interpreters**:
+   - **Image File Interpreters**: EXIF metadata extraction, preview generation
+   - **Document File Interpreters**: PDF, DOCX, XLSX metadata and content extraction
+   - **Scientific Data Interpreters**: NetCDF, HDF5, FITS data processing
+   - **Media File Interpreters**: MP3, MP4 metadata extraction and preview
+
+3. **UI Integration**:
+   - **File Preview Framework**: Dynamic loading of appropriate previewer
+   - **Metadata Panel**: Display of extracted metadata
+   - **Search Integration**: Searching based on extracted metadata
+   - **File Browser Enhancements**: File type icons, details sidebar
+
+4. **Knowledge Graph Integration**:
+   - **Metadata Mapping**: Mapping extracted metadata to graph properties
+   - **Relationship Extraction**: Creating relationships based on file content
+   - **Search Enhancement**: Improved search using specialized metadata
+   - **Visualization**: Visualizing relationships between files based on content
+
+5. **Advanced Features**:
+   - **Content Extraction**: Text extraction from various formats
+   - **Similarity Analysis**: Finding similar files based on content
+   - **Automated Tagging**: Keyword extraction and topic modeling
+   - **AI Integration**: Integration with AI services for advanced analysis
 
 ### Testing Implementation
 
-A comprehensive test suite has been implemented to verify the functionality of the Flask API endpoints:
+A comprehensive testing strategy is being implemented for the Extensions and Specialized File Handling:
 
 1. **Unit Tests**:
-   - Tests for all API endpoints
-   - Mock objects to simulate core page functionality
-   - Verification of response status codes and content
-   - Error handling tests
+   - Tests for plugin interfaces and base classes
+   - Tests for specific file interpreter implementations
+   - Tests for cloud storage connectors
+   - Tests for metadata extraction
 
 2. **Integration Tests**:
-   - Tests for workflows involving multiple API calls
-   - Verification of data consistency across API calls
-   - Session management tests
+   - Tests for plugin discovery and registration
+   - Tests for file browser integration
+   - Tests for knowledge graph integration
+   - Tests for search and filtering based on metadata
+
+3. **Performance Testing**:
+   - Benchmarks for file processing speed
+   - Tests for handling large scientific datasets
+   - Memory usage monitoring for complex file operations
+   - Scalability testing for cloud storage operations
 
 ## Conclusion
 
-This executive roadmap has successfully guided the Science Data Kit project through the transition from Streamlit to Flask, preserving and enhancing the valuable work done in the Plugin Architecture and Design/UX phases. By following this roadmap, the project has achieved a more maintainable, user-friendly, and deployment-ready application that better serves the needs of scientific users.
+This executive roadmap guides the Science Data Kit project through the implementation of Extensions and Specialized File Handling capabilities, building upon the solid foundation established by the Plugin Architecture and the completed Flask migration. By following this roadmap, the project will achieve enhanced capabilities for scientific data analysis, particularly for researchers working with specialized file formats and cloud storage services.
 
-The successful completion of all five phases of the Streamlit to Flask Migration roadmap represents a significant achievement for the Science Data Kit project:
+The Extensions and Specialized File Handling roadmap represents a significant advancement for the Science Data Kit project:
 
-1. **Phase 1 (Feature Parity Assessment)** established a comprehensive understanding of the existing Streamlit implementation and created a detailed migration plan.
-2. **Phase 2 (Flask Implementation Completion)** delivered full feature parity with the Streamlit version, implementing all high-priority, medium-priority, and low-priority features in Flask.
-3. **Phase 3 (User Experience Optimization)** enhanced the user experience with improved UI/UX, Flask-specific capabilities, and accessibility features.
-4. **Phase 4 (Streamlit Deprecation and Removal)** successfully managed the transition away from Streamlit with minimal disruption to users.
-5. **Phase 5 (Containerization and Deployment)** optimized the deployment process with Docker, Docker Compose, and Singularity support.
+1. **Cloud Storage Extensions** will expand the platform's data source connectivity, enabling seamless integration with popular cloud services like Dropbox, Microsoft 365, and Google Workspace.
+2. **Specialized File Handling** will enhance scientific data analysis by providing rich metadata extraction and content interpretation for specialized scientific formats like NetCDF, HDF5, and FITS.
+3. **Knowledge Graph Integration** will improve data discovery and relationship visualization by enhancing file nodes with specialized metadata.
+4. **UI Enhancements** will provide intuitive interfaces for working with specialized file formats, including rich previews and metadata visualization.
 
-The implementation of enhanced UI components with HTMX for dynamic updates, Alpine.js for client-side interactivity, rich preview capabilities for various file types, and responsive design for all components has significantly improved the user experience. The addition of WebSocket support for real-time updates, client-side caching for improved performance, and accessibility features has further enhanced the application's capabilities.
+The implementation leverages the existing plugin architecture, extending it to support file interpreters and metadata extractors. This approach ensures consistency, extensibility, and maintainability while providing a powerful framework for handling diverse file formats and data sources.
 
-With the successful completion of this roadmap, the Science Data Kit now has a more focused, maintainable codebase with a single UI framework, improved performance, and enhanced deployment options. The project is well-positioned for future enhancements based on user feedback and emerging requirements.
+With the implementation of this roadmap, the Science Data Kit will become an even more valuable tool for scientific researchers, enabling them to work more effectively with specialized data formats and cloud storage services. The project will continue to evolve with future enhancements focused on the Knowledge Graph Documentation System, Conversational Pipeline Builder, and Strategic Enhancements.
 
 Note: This file has been updated in place (rather than creating a new version with _v2 suffix) to keep file counts to a minimum.
