@@ -40,7 +40,7 @@
                     </table>
                 </div>
             </div>
-            
+
             {% if specialized_metadata %}
             <div class="card">
                 <div class="card-header">
@@ -68,7 +68,7 @@
                 </div>
             </div>
             {% endif %}
-            
+
             {% if preview %}
             <div class="card mt-3">
                 <div class="card-header">
@@ -85,6 +85,24 @@
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <a href="/api/files/download?path={{ file_path }}" class="btn btn-primary">Download</a>
+
+        <!-- Export Metadata Dropdown -->
+        <div class="dropdown d-inline-block me-2">
+            <button class="btn btn-info dropdown-toggle" type="button" id="exportMetadataDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download me-1"></i> Export Metadata
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="exportMetadataDropdown">
+                <li><a class="dropdown-item" href="/api/files/export-metadata?path={{ file_path }}&format=json" target="_blank">JSON Format</a></li>
+                <li><a class="dropdown-item" href="/api/files/export-metadata?path={{ file_path }}&format=csv" target="_blank">CSV Format</a></li>
+                <li><a class="dropdown-item" href="/api/files/export-metadata?path={{ file_path }}&format=yaml" target="_blank">YAML Format</a></li>
+                <li><a class="dropdown-item" href="/api/files/export-metadata?path={{ file_path }}&format=excel" target="_blank">Excel Format</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><span class="dropdown-item-text small text-muted">Export file metadata in various formats</span></li>
+            </ul>
+        </div>
+
+        <a href="/api/files/download?path={{ file_path }}" class="btn btn-primary">
+            <i class="bi bi-file-earmark-arrow-down me-1"></i> Download File
+        </a>
     </div>
 </div>

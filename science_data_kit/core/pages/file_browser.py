@@ -9,6 +9,9 @@ from typing import List, Dict, Any, Optional
 import os
 import pathlib
 import tempfile
+import yaml
+import json
+from datetime import datetime
 
 from science_data_kit.core.pages.base import BasePage
 from science_data_kit.core.models.page import FileExplorerPageData
@@ -40,6 +43,7 @@ class FileBrowserPage(BasePage):
         self.sort_order = "ascending"
         self.filter_pattern = None
         self.metadata_filters = []  # List of metadata filter criteria
+        self.saved_searches = {}  # Dictionary of saved searches
 
     def get_page_data(self) -> FileExplorerPageData:
         """
@@ -470,6 +474,152 @@ class FileBrowserPage(BasePage):
         Clear all metadata filters.
         """
         self.metadata_filters = []
+
+    def get_saved_searches_path(self) -> pathlib.Path:
+        """
+        Get the path to the saved searches file.
+
+        Returns:
+            Path to the saved searches file.
+        """
+        # Create saved searches directory in user's home directory
+        saved_searches_dir = pathlib.Path.home() / ".science_data_kit"
+        saved_searches_dir.mkdir(parents=True, exist_ok=True)
+        return saved_searches_dir / "saved_searches.yaml"
+
+    def save_search(self, name: str) -> Dict[str, Any]:
+        """
+        Save the current search criteria with the given name.
+
+        Args:
+            name: The name to save the search as.
+
+        Returns:
+            A dictionary with the result of the operation.
+        """
+        if not name:
+            return {"success": False, "error": "Search name is required"}
+
+        # Create search object
+        search = {
+            "name": name,
+            "filter_pattern": self.filter_pattern,
+            "metadata_filters": self.metadata_filters,
+            "created_at": datetime.now().isoformat(),
+            "path": self.current_path
+        }
+
+        # Load existing saved searches
+        saved_searches = self.load_saved_searches()
+
+        # Add or update the search
+        saved_searches[name] = search
+
+        # Save to file
+        try:
+            with open(self.get_saved_searches_path(), 'w') as file:
+                yaml.dump({"saved_searches": saved_searches}, file)
+
+            # Update instance variable
+            self.saved_searches = saved_searches
+
+            return {"success": True, "message": f"Search '{name}' saved successfully!"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def load_saved_searches(self) -> Dict[str, Any]:
+        """
+        Load saved searches from file.
+
+        Returns:
+            A dictionary of saved searches.
+        """
+        saved_searches_path = self.get_saved_searches_path()
+
+        if not saved_searches_path.exists():
+            return {}
+
+        try:
+            with open(saved_searches_path, 'r') as file:
+                data = yaml.safe_load(file)
+
+            if data and "saved_searches" in data:
+                self.saved_searches = data["saved_searches"]
+                return self.saved_searches
+            else:
+                return {}
+        except Exception as e:
+            self.logger.error(f"Error loading saved searches: {str(e)}")
+            return {}
+
+    def delete_saved_search(self, name: str) -> Dict[str, Any]:
+        """
+        Delete a saved search.
+
+        Args:
+            name: The name of the search to delete.
+
+        Returns:
+            A dictionary with the result of the operation.
+        """
+        # Load existing saved searches
+        saved_searches = self.load_saved_searches()
+
+        # Check if the search exists
+        if name not in saved_searches:
+            return {"success": False, "error": f"Search '{name}' not found"}
+
+        # Remove the search
+        del saved_searches[name]
+
+        # Save to file
+        try:
+            with open(self.get_saved_searches_path(), 'w') as file:
+                yaml.dump({"saved_searches": saved_searches}, file)
+
+            # Update instance variable
+            self.saved_searches = saved_searches
+
+            return {"success": True, "message": f"Search '{name}' deleted successfully!"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def apply_saved_search(self, name: str) -> Dict[str, Any]:
+        """
+        Apply a saved search.
+
+        Args:
+            name: The name of the search to apply.
+
+        Returns:
+            A dictionary with the result of the operation.
+        """
+        # Load existing saved searches
+        saved_searches = self.load_saved_searches()
+
+        # Check if the search exists
+        if name not in saved_searches:
+            return {"success": False, "error": f"Search '{name}' not found"}
+
+        # Get the search
+        search = saved_searches[name]
+
+        # Apply the search criteria
+        self.filter_pattern = search.get("filter_pattern")
+        self.metadata_filters = search.get("metadata_filters", [])
+
+        # Navigate to the saved path if it exists
+        saved_path = search.get("path")
+        if saved_path and os.path.isdir(saved_path):
+            self.current_path = saved_path
+
+        return {
+            "success": True, 
+            "message": f"Search '{name}' applied successfully!",
+            "filter_pattern": self.filter_pattern,
+            "metadata_filters": self.metadata_filters,
+            "current_path": self.current_path
+        }
 
     def update_knowledge_graph_with_metadata(self, file_path: str) -> bool:
         """

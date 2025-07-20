@@ -173,6 +173,189 @@
                     hx-target="#file-listing-container"
                     hx-indicator=".htmx-indicator"
                     @click="filterValue = ''">Clear</button>
+            <button class="btn btn-outline-info" type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#advancedSearchCollapse" 
+                    aria-expanded="false" 
+                    aria-controls="advancedSearchCollapse">
+                <i class="bi bi-funnel me-1"></i>Advanced
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Search and Filter Options -->
+<div class="collapse mb-4" id="advancedSearchCollapse" x-data="advancedSearch">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Advanced Search and Filter</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" @click="showSaveSearchModal = true">
+                    <i class="bi bi-save me-1"></i>Save Search
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" @click="showLoadSearchModal = true">
+                    <i class="bi bi-folder2-open me-1"></i>Load Search
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <h6>Metadata Filters</h6>
+
+                    <!-- Active Metadata Filters -->
+                    <div class="mb-3" x-show="metadataFilters.length > 0">
+                        <h6 class="text-muted">Active Filters:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <template x-for="(filter, index) in metadataFilters" :key="index">
+                                <div class="badge bg-light text-dark p-2 d-flex align-items-center">
+                                    <span x-text="`${filter.field} ${filter.operator} ${filter.value}`"></span>
+                                    <button type="button" class="btn-close ms-2" @click="removeFilter(index)" aria-label="Remove filter"></button>
+                                </div>
+                            </template>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary mt-2" @click="clearAllFilters">
+                            Clear All Filters
+                        </button>
+                    </div>
+
+                    <!-- Add New Metadata Filter -->
+                    <form @submit.prevent="addMetadataFilter" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="filterField" class="form-label">Field</label>
+                            <select class="form-select" id="filterField" x-model="newFilter.field">
+                                <option value="">Select a field...</option>
+                                <optgroup label="Image Properties">
+                                    <option value="width">Width</option>
+                                    <option value="height">Height</option>
+                                    <option value="format">Format</option>
+                                    <option value="mode">Mode</option>
+                                </optgroup>
+                                <optgroup label="Geospatial Properties">
+                                    <option value="crs.epsg">CRS EPSG Code</option>
+                                    <option value="resolution.x">X Resolution</option>
+                                    <option value="resolution.y">Y Resolution</option>
+                                </optgroup>
+                                <optgroup label="Scientific Data">
+                                    <option value="dimensions">Dimensions</option>
+                                    <option value="variables">Variables</option>
+                                    <option value="groups">Groups</option>
+                                    <option value="datasets">Datasets</option>
+                                </optgroup>
+                                <optgroup label="Media Properties">
+                                    <option value="id3.title">Title</option>
+                                    <option value="id3.artist">Artist</option>
+                                    <option value="id3.album">Album</option>
+                                    <option value="length">Length</option>
+                                    <option value="bitrate">Bitrate</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filterOperator" class="form-label">Operator</label>
+                            <select class="form-select" id="filterOperator" x-model="newFilter.operator">
+                                <option value="=">=</option>
+                                <option value="!=">!=</option>
+                                <option value=">">></option>
+                                <option value="<"><</option>
+                                <option value=">=">>=</option>
+                                <option value="<="><=</option>
+                                <option value="contains">Contains</option>
+                                <option value="startswith">Starts with</option>
+                                <option value="endswith">Ends with</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filterValue" class="form-label">Value</label>
+                            <input type="text" class="form-control" id="filterValue" x-model="newFilter.value">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Add Filter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Save Search Modal -->
+<div class="modal fade" id="saveSearchModal" tabindex="-1" aria-labelledby="saveSearchModalLabel" aria-hidden="true" x-show="showSaveSearchModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="saveSearchModalLabel">Save Current Search</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="saveSearchForm" @submit.prevent="saveSearch">
+                    <div class="mb-3">
+                        <label for="searchName" class="form-label">Search Name</label>
+                        <input type="text" class="form-control" id="searchName" x-model="searchName" required>
+                    </div>
+                    <div class="mb-3">
+                        <p><strong>Current Search Criteria:</strong></p>
+                        <ul class="list-group">
+                            <li class="list-group-item" x-show="filterValue">
+                                <strong>Filename Filter:</strong> <span x-text="filterValue"></span>
+                            </li>
+                            <template x-for="(filter, index) in metadataFilters" :key="index">
+                                <li class="list-group-item">
+                                    <strong>Metadata Filter:</strong> <span x-text="`${filter.field} ${filter.operator} ${filter.value}`"></span>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" @click="saveSearch">Save Search</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load Search Modal -->
+<div class="modal fade" id="loadSearchModal" tabindex="-1" aria-labelledby="loadSearchModalLabel" aria-hidden="true" x-show="showLoadSearchModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loadSearchModalLabel">Load Saved Search</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3" x-show="Object.keys(savedSearches).length === 0">
+                    <p class="text-muted">No saved searches found.</p>
+                </div>
+                <div class="list-group" x-show="Object.keys(savedSearches).length > 0">
+                    <template x-for="(search, name) in savedSearches" :key="name">
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1" x-text="name"></h6>
+                                <small class="text-muted" x-text="'Created: ' + formatDate(search.created_at)"></small>
+                                <p class="mb-1 small" x-show="search.filter_pattern">
+                                    <strong>Filename Filter:</strong> <span x-text="search.filter_pattern"></span>
+                                </p>
+                                <p class="mb-1 small" x-show="search.metadata_filters && search.metadata_filters.length > 0">
+                                    <strong>Metadata Filters:</strong> <span x-text="search.metadata_filters.length"></span> filters
+                                </p>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-primary me-2" @click="applySearch(name)" data-bs-dismiss="modal">
+                                    Apply
+                                </button>
+                                <button class="btn btn-sm btn-danger" @click="deleteSearch(name)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -380,6 +563,229 @@
             showRenameForm: false
         });
 
+        Alpine.data('advancedSearch', function() {
+            return {
+                metadataFilters: [],
+                newFilter: {
+                    field: '',
+                    operator: '=',
+                    value: ''
+                },
+                savedSearches: {},
+                searchName: '',
+                showSaveSearchModal: false,
+                showLoadSearchModal: false,
+
+                init() {
+                    // Load saved searches when component initializes
+                    this.loadSavedSearches();
+
+                    // Initialize Bootstrap modals
+                    this.$watch('showSaveSearchModal', value => {
+                        const modal = new bootstrap.Modal(document.getElementById('saveSearchModal'));
+                        if (value) modal.show();
+                    });
+
+                    this.$watch('showLoadSearchModal', value => {
+                        const modal = new bootstrap.Modal(document.getElementById('loadSearchModal'));
+                        if (value) {
+                            this.loadSavedSearches();
+                            modal.show();
+                        }
+                    });
+
+                    // Close modal handlers
+                    document.getElementById('saveSearchModal').addEventListener('hidden.bs.modal', () => {
+                        this.showSaveSearchModal = false;
+                    });
+
+                    document.getElementById('loadSearchModal').addEventListener('hidden.bs.modal', () => {
+                        this.showLoadSearchModal = false;
+                    });
+                },
+
+                addMetadataFilter() {
+                    if (!this.newFilter.field || !this.newFilter.operator || this.newFilter.value === '') {
+                        return;
+                    }
+
+                    // Add the filter to the list
+                    this.metadataFilters.push({...this.newFilter});
+
+                    // Apply the filter
+                    const formData = new FormData();
+                    formData.append('path', '{{ current_path }}');
+                    formData.append('view_mode', '{{ view_mode }}');
+                    formData.append('field', this.newFilter.field);
+                    formData.append('operator', this.newFilter.operator);
+                    formData.append('value', this.newFilter.value);
+
+                    // Reset the form
+                    this.newFilter = {
+                        field: '',
+                        operator: '=',
+                        value: ''
+                    };
+
+                    // Apply the filter using HTMX
+                    htmx.ajax('POST', '/api/files/metadata-filter', {
+                        target: '#file-listing-container',
+                        swap: 'innerHTML',
+                        values: formData
+                    });
+                },
+
+                removeFilter(index) {
+                    // Remove the filter from the list
+                    this.metadataFilters.splice(index, 1);
+
+                    // Apply the remaining filters
+                    this.applyFilters();
+                },
+
+                clearAllFilters() {
+                    // Clear all filters
+                    this.metadataFilters = [];
+
+                    const formData = new FormData();
+                    formData.append('path', '{{ current_path }}');
+                    formData.append('view_mode', '{{ view_mode }}');
+
+                    // Clear filters using HTMX
+                    htmx.ajax('POST', '/api/files/clear-metadata-filters', {
+                        target: '#file-listing-container',
+                        swap: 'innerHTML',
+                        values: formData
+                    });
+                },
+
+                applyFilters() {
+                    // Apply all current filters
+                    const formData = new FormData();
+                    formData.append('path', '{{ current_path }}');
+                    formData.append('view_mode', '{{ view_mode }}');
+                    formData.append('metadata_filters', JSON.stringify(this.metadataFilters));
+
+                    // Apply filters using HTMX
+                    htmx.ajax('GET', '/api/files/filter', {
+                        target: '#file-listing-container',
+                        swap: 'innerHTML',
+                        values: formData
+                    });
+                },
+
+                saveSearch() {
+                    if (!this.searchName) {
+                        alert('Please enter a name for this search');
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('name', this.searchName);
+                    formData.append('path', '{{ current_path }}');
+                    formData.append('filter_pattern', document.querySelector('[x-model="filterValue"]').value);
+                    formData.append('metadata_filters', JSON.stringify(this.metadataFilters));
+
+                    // Save search using HTMX
+                    fetch('/api/files/save-search', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Close the modal
+                            bootstrap.Modal.getInstance(document.getElementById('saveSearchModal')).hide();
+
+                            // Show success message
+                            alert(data.message);
+
+                            // Reset form
+                            this.searchName = '';
+
+                            // Reload saved searches
+                            this.loadSavedSearches();
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error saving search:', error);
+                        alert('Error saving search. Please try again.');
+                    });
+                },
+
+                loadSavedSearches() {
+                    // Load saved searches from server
+                    fetch('/api/files/saved-searches')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.savedSearches = data.saved_searches;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading saved searches:', error);
+                    });
+                },
+
+                applySearch(name) {
+                    const formData = new FormData();
+                    formData.append('name', name);
+                    formData.append('view_mode', '{{ view_mode }}');
+
+                    // Apply search using HTMX
+                    htmx.ajax('POST', '/api/files/apply-saved-search', {
+                        target: '#file-listing-container',
+                        swap: 'innerHTML',
+                        values: formData
+                    });
+
+                    // Update the metadata filters in the UI
+                    if (this.savedSearches[name] && this.savedSearches[name].metadata_filters) {
+                        this.metadataFilters = this.savedSearches[name].metadata_filters;
+                    }
+                },
+
+                deleteSearch(name) {
+                    if (!confirm(`Are you sure you want to delete the saved search "${name}"?`)) {
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('name', name);
+
+                    // Delete search using fetch
+                    fetch('/api/files/delete-saved-search', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            alert(data.message);
+
+                            // Reload saved searches
+                            this.loadSavedSearches();
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting search:', error);
+                        alert('Error deleting search. Please try again.');
+                    });
+                },
+
+                formatDate(dateString) {
+                    if (!dateString) return '';
+                    const date = new Date(dateString);
+                    return date.toLocaleString();
+                }
+            };
+        });
+
         Alpine.data('fileExplorer', function() {
             return {
                 selectedFiles: [],
@@ -453,23 +859,55 @@
                     const files = event.type === 'drop' ? event.dataTransfer.files : event.target.files;
                     if (!files || files.length === 0) return;
 
-                    const formData = new FormData();
-                    formData.append('path', '{{ current_path }}');
-                    formData.append('view_mode', this.viewMode);
+                    // Show processing indicator
+                    const processingIndicator = document.createElement('div');
+                    processingIndicator.className = 'alert alert-info mt-3';
+                    processingIndicator.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Processing...</span>
+                            </div>
+                            <div>
+                                <strong>Processing files with specialized handlers...</strong>
+                                <p class="mb-0 small">Files will be analyzed based on their type for metadata extraction and specialized processing.</p>
+                            </div>
+                        </div>
+                    `;
+                    document.querySelector('#file-listing-container').prepend(processingIndicator);
 
-                    for (let i = 0; i < files.length; i++) {
-                        formData.append('file', files[i]);
-                    }
+                    // Process files one by one to allow specialized processing for each
+                    const processNextFile = (index) => {
+                        if (index >= files.length) {
+                            // All files processed, hide the upload form
+                            Alpine.store('fileExplorer').showUploadForm = false;
+                            return;
+                        }
 
-                    // Upload files using HTMX
-                    htmx.ajax('POST', '/api/files/upload', {
-                        target: '#file-listing-container',
-                        swap: 'innerHTML',
-                        values: formData
-                    });
+                        const formData = new FormData();
+                        formData.append('path', '{{ current_path }}');
+                        formData.append('view_mode', this.viewMode);
+                        formData.append('file', files[index]);
 
-                    // Hide the upload form
-                    Alpine.store('fileExplorer').showUploadForm = false;
+                        // Upload file using HTMX
+                        htmx.ajax('POST', '/api/files/upload', {
+                            target: '#file-listing-container',
+                            swap: 'innerHTML',
+                            values: formData,
+                            handler: (xhr, event) => {
+                                // After this file is processed, move to the next one
+                                if (xhr.status === 200) {
+                                    setTimeout(() => processNextFile(index + 1), 500);
+                                } else {
+                                    // Error handling
+                                    console.error('Error uploading file:', xhr.responseText);
+                                    setTimeout(() => processNextFile(index + 1), 500);
+                                }
+                            }
+                        });
+                    };
+
+                    // Start processing the first file
+                    processNextFile(0);
                 },
 
                 createFolder() {

@@ -78,3 +78,130 @@
     {% endfor %}
 </div>
 {% endif %}
+
+{% if processing_result %}
+<div class="alert {% if processing_result.success %}alert-success{% else %}alert-warning{% endif %} alert-dismissible fade show mt-3" role="alert">
+    <h5>File Upload Result</h5>
+    <p><strong>File:</strong> {{ processing_result.file_name }}</p>
+
+    {% if processing_result.interpreter_used %}
+    <p><strong>Processed with:</strong> {{ processing_result.interpreter_used }}</p>
+    {% else %}
+    <p><strong>No specialized interpreter available for this file type.</strong></p>
+    {% endif %}
+
+    {% if processing_result.metadata %}
+    <div class="mt-2">
+        <p><strong>Extracted Metadata:</strong></p>
+        <div class="metadata-container" style="max-height: 200px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+            <pre>{{ processing_result.metadata | tojson(indent=2) }}</pre>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not processing_result.success %}
+    <p><strong>Error:</strong> {{ processing_result.error }}</p>
+    {% endif %}
+
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+{% if applied_search %}
+<div class="alert alert-info alert-dismissible fade show mt-3" role="alert">
+    <h5>Applied Saved Search: {{ applied_search }}</h5>
+
+    {% if filter_pattern %}
+    <p><strong>Filename Filter:</strong> {{ filter_pattern }}</p>
+    {% endif %}
+
+    {% if metadata_filters and metadata_filters|length > 0 %}
+    <p><strong>Metadata Filters:</strong></p>
+    <ul>
+        {% for filter in metadata_filters %}
+        <li>{{ filter.field }} {{ filter.operator }} {{ filter.value }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Modified</th>
+                <th>Size</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for directory in directories %}
+            <tr class="directory-item" 
+                hx-get="/api/files/navigate?path={{ directory.path }}&view_mode={{ view_mode }}" 
+                hx-target="#file-listing-container"
+                hx-indicator=".htmx-indicator"
+                hx-push-url="?path={{ directory.path }}&view_mode={{ view_mode }}">
+                <td>
+                    <i class="bi bi-folder text-warning file-icon"></i>
+                    {{ directory.name }}
+                </td>
+                <td>Directory</td>
+                <td>{{ directory.modified }}</td>
+                <td>-</td>
+            </tr>
+            {% endfor %}
+
+            {% for file in files %}
+            <tr class="file-item" 
+                x-data="{ selected: false }"
+                x-bind:class="{ 'selected': selected }"
+                data-path="{{ file.path }}"
+                @click="
+                    if ($event.ctrlKey || $event.metaKey) {
+                        selected = !selected;
+                    } else if ($event.shiftKey) {
+                        // Shift-click logic would go here
+                        selected = true;
+                    } else {
+                        // Deselect all other items
+                        document.querySelectorAll('.file-item').forEach(item => {
+                            if (item !== $el) item.__x.$data.selected = false;
+                        });
+                        selected = true;
+                    }
+                    window.updateButtonStates();
+                ">
+                <td>
+                    {% if file.type == 'image' %}
+                    <i class="bi bi-file-image text-primary file-icon"></i>
+                    {% elif file.type == 'text' %}
+                    <i class="bi bi-file-text text-secondary file-icon"></i>
+                    {% elif file.type == 'document' %}
+                    <i class="bi bi-file-earmark-text text-info file-icon"></i>
+                    {% elif file.type == 'code' %}
+                    <i class="bi bi-file-code text-success file-icon"></i>
+                    {% elif file.type == 'scientific' %}
+                    <i class="bi bi-file-earmark-bar-graph text-danger file-icon"></i>
+                    {% else %}
+                    <i class="bi bi-file text-dark file-icon"></i>
+                    {% endif %}
+                    {{ file.name }}
+                </td>
+                <td>{{ file.type|capitalize }}</td>
+                <td>{{ file.modified }}</td>
+                <td>{{ file.size }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if files|length == 0 and directories|length == 0 %}
+<div class="alert alert-info">
+    <p>This directory is empty.</p>
+</div>
+{% endif %}

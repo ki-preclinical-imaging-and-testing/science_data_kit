@@ -52,7 +52,7 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Data Visualization Components (scientific data viewers)
   - ✓ Media Player Components (audio/video players)
   - ✓ Search and Discovery (metadata-based search, advanced filters)
-  - ⟳ Search and Discovery (faceted search, saved searches)
+  - ⟳ Search and Discovery (faceted search, ✓ saved searches)
 - Implement Advanced Features
   - ⟳ Content Extraction (text extraction, OCR, table extraction)
   - ⟳ Similarity Analysis (file similarity metrics, duplicate detection)

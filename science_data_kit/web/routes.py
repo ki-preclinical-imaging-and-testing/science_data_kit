@@ -198,6 +198,21 @@ def filter_files():
     page.set_sort(sort_by, sort_order)
     page.set_filter(filter_pattern)
 
+    # Apply metadata filters if provided
+    metadata_filters = request.args.get('metadata_filters')
+    if metadata_filters:
+        try:
+            filters = json.loads(metadata_filters)
+            page.clear_metadata_filters()
+            for filter_item in filters:
+                page.set_metadata_filter(
+                    filter_item.get('field', ''),
+                    filter_item.get('operator', '='),
+                    filter_item.get('value', '')
+                )
+        except json.JSONDecodeError:
+            pass
+
     return render_template('partials/file_listing.html',
                           files=page.get_page_data().files,
                           directories=page.get_page_data().directories,
@@ -309,6 +324,270 @@ def download_file():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@main_bp.route('/api/files/metadata-filter', methods=['POST'])
+@login_required
+def apply_metadata_filter():
+    """Apply metadata filters to the file browser."""
+    path = request.form.get('path', os.path.expanduser('~'))
+    view_mode = request.form.get('view_mode', 'list')
+    sort_by = request.form.get('sort_by', 'name')
+    sort_order = request.form.get('sort_order', 'ascending')
+
+    # Get filter data from form
+    field = request.form.get('field')
+    operator = request.form.get('operator')
+    value = request.form.get('value')
+
+    # Convert value to appropriate type
+    if value and value.isdigit():
+        value = int(value)
+    elif value == 'true':
+        value = True
+    elif value == 'false':
+        value = False
+
+    page = FileBrowserPage(initial_path=path)
+    page.set_view_mode(view_mode)
+    page.set_sort(sort_by, sort_order)
+
+    # Apply the metadata filter
+    if field and operator:
+        page.set_metadata_filter(field, operator, value)
+
+    return render_template('partials/file_listing.html',
+                          files=page.get_page_data().files,
+                          directories=page.get_page_data().directories,
+                          current_path=page.get_page_data().current_path,
+                          view_mode=view_mode,
+                          selected_files=[],
+                          metadata_filters=page.metadata_filters)
+
+@main_bp.route('/api/files/clear-metadata-filters', methods=['POST'])
+@login_required
+def clear_metadata_filters():
+    """Clear all metadata filters."""
+    path = request.form.get('path', os.path.expanduser('~'))
+    view_mode = request.form.get('view_mode', 'list')
+    sort_by = request.form.get('sort_by', 'name')
+    sort_order = request.form.get('sort_order', 'ascending')
+
+    page = FileBrowserPage(initial_path=path)
+    page.set_view_mode(view_mode)
+    page.set_sort(sort_by, sort_order)
+    page.clear_metadata_filters()
+
+    return render_template('partials/file_listing.html',
+                          files=page.get_page_data().files,
+                          directories=page.get_page_data().directories,
+                          current_path=page.get_page_data().current_path,
+                          view_mode=view_mode,
+                          selected_files=[])
+
+@main_bp.route('/api/files/saved-searches', methods=['GET'])
+@login_required
+def get_saved_searches():
+    """Get all saved searches."""
+    page = FileBrowserPage()
+    saved_searches = page.load_saved_searches()
+
+    return jsonify({"success": True, "saved_searches": saved_searches})
+
+@main_bp.route('/api/files/save-search', methods=['POST'])
+@login_required
+def save_search():
+    """Save the current search criteria."""
+    name = request.form.get('name')
+    path = request.form.get('path', os.path.expanduser('~'))
+    filter_pattern = request.form.get('filter_pattern', '')
+    metadata_filters = request.form.get('metadata_filters', '[]')
+
+    page = FileBrowserPage(initial_path=path)
+    page.set_filter(filter_pattern)
+
+    # Apply metadata filters if provided
+    try:
+        filters = json.loads(metadata_filters)
+        page.clear_metadata_filters()
+        for filter_item in filters:
+            page.set_metadata_filter(
+                filter_item.get('field', ''),
+                filter_item.get('operator', '='),
+                filter_item.get('value', '')
+            )
+    except json.JSONDecodeError:
+        pass
+
+    # Save the search
+    result = page.save_search(name)
+
+    return jsonify(result)
+
+@main_bp.route('/api/files/apply-saved-search', methods=['POST'])
+@login_required
+def apply_saved_search():
+    """Apply a saved search."""
+    name = request.form.get('name')
+
+    page = FileBrowserPage()
+    result = page.apply_saved_search(name)
+
+    if result.get('success'):
+        # Return the file listing with the applied search
+        page.set_view_mode(request.form.get('view_mode', 'list'))
+        page.set_sort(request.form.get('sort_by', 'name'), request.form.get('sort_order', 'ascending'))
+
+        return render_template('partials/file_listing.html',
+                              files=page.get_page_data().files,
+                              directories=page.get_page_data().directories,
+                              current_path=page.get_page_data().current_path,
+                              view_mode=page.view_mode,
+                              selected_files=[],
+                              applied_search=name,
+                              filter_pattern=page.filter_pattern,
+                              metadata_filters=page.metadata_filters)
+    else:
+        return jsonify(result), 400
+
+@main_bp.route('/api/files/delete-saved-search', methods=['POST'])
+@login_required
+def delete_saved_search():
+    """Delete a saved search."""
+    name = request.form.get('name')
+
+    page = FileBrowserPage()
+    result = page.delete_saved_search(name)
+
+    return jsonify(result)
+
+@main_bp.route('/api/files/export-metadata')
+@login_required
+def export_metadata():
+    """Endpoint for exporting file metadata in various formats."""
+    from science_data_kit.core.integrations.plugin_architecture import get_file_interpreter_for_file
+    import json
+    import csv
+    import yaml
+    from io import StringIO
+    import pandas as pd
+    from datetime import datetime
+
+    file_path = request.args.get('path', '')
+    export_format = request.args.get('format', 'json')
+
+    if not os.path.isfile(file_path):
+        return jsonify({'error': 'File not found'}), 404
+
+    # Try to get a file interpreter for this file
+    interpreter = get_file_interpreter_for_file(file_path)
+
+    # Initialize metadata dictionary
+    all_metadata = {}
+
+    # Get basic file info
+    try:
+        stat_info = os.stat(file_path)
+        all_metadata.update({
+            'name': os.path.basename(file_path),
+            'path': file_path,
+            'size': stat_info.st_size,
+            'extension': os.path.splitext(file_path)[1],
+            'created': datetime.fromtimestamp(stat_info.st_ctime).isoformat(),
+            'modified': datetime.fromtimestamp(stat_info.st_mtime).isoformat(),
+            'accessed': datetime.fromtimestamp(stat_info.st_atime).isoformat()
+        })
+    except Exception as e:
+        return jsonify({'error': f'Error getting basic file info: {str(e)}'}), 500
+
+    # If an interpreter is available, extract specialized metadata
+    if interpreter:
+        try:
+            specialized_metadata = interpreter.extract_metadata(file_path)
+            all_metadata['specialized'] = specialized_metadata
+        except Exception as e:
+            # If metadata extraction fails, log the error but continue with basic metadata
+            print(f"Error extracting specialized metadata from {file_path}: {str(e)}")
+
+    # Export metadata in the requested format
+    try:
+        if export_format == 'json':
+            # JSON format
+            response = make_response(json.dumps(all_metadata, indent=2))
+            response.headers['Content-Type'] = 'application/json'
+            response.headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}_metadata.json"'
+            return response
+
+        elif export_format == 'csv':
+            # CSV format - flatten nested structures
+            csv_data = StringIO()
+            csv_writer = csv.writer(csv_data)
+            csv_writer.writerow(['Key', 'Value'])
+
+            # Helper function to flatten nested dictionaries
+            def flatten_dict(d, parent_key=''):
+                items = []
+                for k, v in d.items():
+                    new_key = f"{parent_key}.{k}" if parent_key else k
+                    if isinstance(v, dict):
+                        items.extend(flatten_dict(v, new_key).items())
+                    elif isinstance(v, list):
+                        items.append((new_key, json.dumps(v)))
+                    else:
+                        items.append((new_key, v))
+                return dict(items)
+
+            # Flatten and write to CSV
+            flattened = flatten_dict(all_metadata)
+            for key, value in flattened.items():
+                csv_writer.writerow([key, value])
+
+            response = make_response(csv_data.getvalue())
+            response.headers['Content-Type'] = 'text/csv'
+            response.headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}_metadata.csv"'
+            return response
+
+        elif export_format == 'yaml':
+            # YAML format
+            response = make_response(yaml.dump(all_metadata, default_flow_style=False))
+            response.headers['Content-Type'] = 'application/x-yaml'
+            response.headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}_metadata.yaml"'
+            return response
+
+        elif export_format == 'excel':
+            # Excel format - flatten nested structures
+            output = StringIO()
+
+            # Helper function to flatten nested dictionaries
+            def flatten_dict(d, parent_key=''):
+                items = []
+                for k, v in d.items():
+                    new_key = f"{parent_key}.{k}" if parent_key else k
+                    if isinstance(v, dict):
+                        items.extend(flatten_dict(v, new_key).items())
+                    elif isinstance(v, list):
+                        items.append((new_key, json.dumps(v)))
+                    else:
+                        items.append((new_key, v))
+                return dict(items)
+
+            # Flatten and create DataFrame
+            flattened = flatten_dict(all_metadata)
+            df = pd.DataFrame(list(flattened.items()), columns=['Key', 'Value'])
+
+            # Create Excel file
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                df.to_excel(writer, sheet_name='Metadata', index=False)
+
+            response = make_response(output.getvalue())
+            response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            response.headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}_metadata.xlsx"'
+            return response
+
+        else:
+            return jsonify({'error': f'Unsupported export format: {export_format}'}), 400
+
+    except Exception as e:
+        return jsonify({'error': f'Error exporting metadata: {str(e)}'}), 500
+
 @main_bp.route('/api/files/raw')
 @login_required
 def raw_file():
@@ -327,8 +606,9 @@ def raw_file():
 @main_bp.route('/api/files/upload', methods=['POST'])
 @login_required
 def upload_file():
-    """Endpoint for uploading files."""
+    """Endpoint for uploading files with specialized processing."""
     from werkzeug.utils import secure_filename
+    from science_data_kit.core.integrations.plugin_architecture import get_file_interpreter_for_file
 
     # Get the target directory
     target_dir = request.form.get('path', os.path.expanduser('~'))
@@ -349,7 +629,46 @@ def upload_file():
         file_path = os.path.join(target_dir, filename)
         file.save(file_path)
 
-        # Return updated file listing
+        # Check if a file interpreter is available for this file type
+        interpreter = get_file_interpreter_for_file(file_path)
+
+        # If an interpreter is available, process the file
+        if interpreter:
+            try:
+                # Extract metadata from the file
+                metadata = interpreter.extract_metadata(file_path)
+
+                # Update the knowledge graph with the metadata
+                page = FileBrowserPage(initial_path=target_dir)
+                page.update_knowledge_graph_with_metadata(file_path)
+
+                # Return success with metadata
+                processing_result = {
+                    'success': True,
+                    'file_path': file_path,
+                    'file_name': filename,
+                    'interpreter_used': interpreter.__class__.__name__,
+                    'metadata': metadata
+                }
+            except Exception as processing_error:
+                # If processing fails, log the error but don't fail the upload
+                processing_result = {
+                    'success': False,
+                    'file_path': file_path,
+                    'file_name': filename,
+                    'error': str(processing_error)
+                }
+        else:
+            # No interpreter available, just return basic info
+            processing_result = {
+                'success': True,
+                'file_path': file_path,
+                'file_name': filename,
+                'interpreter_used': None,
+                'metadata': None
+            }
+
+        # Return updated file listing with processing result
         page = FileBrowserPage(initial_path=target_dir)
         page.set_view_mode(request.form.get('view_mode', 'list'))
 
@@ -358,7 +677,8 @@ def upload_file():
                               directories=page.get_page_data().directories,
                               current_path=page.get_page_data().current_path,
                               view_mode=request.form.get('view_mode', 'list'),
-                              selected_files=[])
+                              selected_files=[],
+                              processing_result=processing_result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
