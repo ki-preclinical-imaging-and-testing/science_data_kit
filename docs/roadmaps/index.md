@@ -39,9 +39,9 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files.
 
-**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_02.md)
+**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_03.md)
 
-**Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. The capability mixins, configuration schema, MIME type mapping, and plugin selection logic have also been implemented. Key completed tasks include:
+**Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. The capability mixins, configuration schema, MIME type mapping, plugin selection logic, plugin validation, and comprehensive documentation have been implemented. Key completed tasks include:
 
 1. Added new plugin categories to the PluginCategory enum
 2. Created the FileInterpreterPlugin and MetadataExtractorPlugin base classes
@@ -53,6 +53,9 @@ This roadmap outlines a comprehensive plan for implementing specialized file han
 8. Implemented MIME type mapping for file interpreters with support for scientific formats
 9. Created plugin selection logic based on file type
 10. Added comprehensive tests for capability mixins, MIME type mapping, and plugin selection logic
+11. Implemented plugin validation to ensure plugins implement required methods and capabilities
+12. Created detailed documentation for plugin interfaces, including examples and guidelines for creating custom plugins
+13. Added tests for plugin validation to ensure validation functions work correctly
 
 The roadmap is divided into four phases:
 

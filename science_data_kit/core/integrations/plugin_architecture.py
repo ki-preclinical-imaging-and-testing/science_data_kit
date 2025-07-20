@@ -703,6 +703,24 @@ class PluginRegistry:
                 logger.warning(f"Plugin '{metadata.name}' is already registered")
                 return False
 
+            # Validate the plugin
+            validation_results = validate_plugin(temp_instance)
+            if not validation_results.get("is_valid", False):
+                # Log validation failures
+                failed_validations = [
+                    key for key, value in validation_results.items() 
+                    if not value and key != "is_valid" and key != "capabilities_valid"
+                ]
+                logger.warning(f"Plugin '{metadata.name}' failed validation: {', '.join(failed_validations)}")
+
+                # If it's a file interpreter or metadata extractor, we require validation to pass
+                if metadata.category in [PluginCategory.FILE_INTERPRETER, PluginCategory.METADATA_EXTRACTOR]:
+                    logger.error(f"Plugin '{metadata.name}' cannot be registered due to validation failures")
+                    return False
+                else:
+                    # For other plugin types, log a warning but still register
+                    logger.warning(f"Registering plugin '{metadata.name}' despite validation failures")
+
             # Register the plugin
             self._plugins[metadata.name] = plugin_class
             self._categories[metadata.category].add(metadata.name)
@@ -1198,6 +1216,141 @@ def get_plugins_by_extension(extension: str) -> List[str]:
         List of plugin names.
     """
     return plugin_registry.get_plugins_by_extension(extension)
+
+
+def validate_file_interpreter_plugin(plugin: FileInterpreterPlugin) -> Dict[str, bool]:
+    """
+    Validate a file interpreter plugin to ensure it implements all required methods.
+
+    This function checks if the plugin implements all the required methods and has
+    the necessary capabilities declared in its metadata.
+
+    Args:
+        plugin: The file interpreter plugin to validate.
+
+    Returns:
+        A dictionary mapping validation criteria to boolean results.
+    """
+    validation_results = {}
+
+    # Check required methods
+    validation_results["has_can_interpret"] = hasattr(plugin, "can_interpret") and callable(getattr(plugin, "can_interpret"))
+    validation_results["has_get_supported_extensions"] = hasattr(plugin, "get_supported_extensions") and callable(getattr(plugin, "get_supported_extensions"))
+    validation_results["has_get_supported_mime_types"] = hasattr(plugin, "get_supported_mime_types") and callable(getattr(plugin, "get_supported_mime_types"))
+    validation_results["has_extract_metadata"] = hasattr(plugin, "extract_metadata") and callable(getattr(plugin, "extract_metadata"))
+    validation_results["has_generate_preview"] = hasattr(plugin, "generate_preview") and callable(getattr(plugin, "generate_preview"))
+
+    # Check if capabilities declared in metadata are implemented
+    capabilities = plugin.metadata.capabilities if hasattr(plugin.metadata, "capabilities") else []
+
+    if FileInterpreterCapability.TEXT_EXTRACTION.value in capabilities:
+        validation_results["implements_text_extraction"] = isinstance(plugin, TextExtractionCapability) or (
+            hasattr(plugin, "extract_text") and callable(getattr(plugin, "extract_text"))
+        )
+
+    if FileInterpreterCapability.PREVIEW_GENERATION.value in capabilities:
+        validation_results["implements_preview_generation"] = isinstance(plugin, PreviewGenerationCapability) or (
+            hasattr(plugin, "generate_preview") and callable(getattr(plugin, "generate_preview"))
+        )
+
+    if FileInterpreterCapability.THUMBNAIL_GENERATION.value in capabilities:
+        validation_results["implements_thumbnail_generation"] = isinstance(plugin, ThumbnailGenerationCapability) or (
+            hasattr(plugin, "generate_thumbnail") and callable(getattr(plugin, "generate_thumbnail"))
+        )
+
+    if FileInterpreterCapability.CONTENT_ANALYSIS.value in capabilities:
+        validation_results["implements_content_analysis"] = isinstance(plugin, ContentAnalysisCapability) or (
+            hasattr(plugin, "analyze_content") and callable(getattr(plugin, "analyze_content"))
+        )
+
+    if FileInterpreterCapability.STRUCTURED_DATA_EXTRACTION.value in capabilities:
+        validation_results["implements_structured_data_extraction"] = isinstance(plugin, StructuredDataExtractionCapability) or (
+            hasattr(plugin, "extract_structured_data") and callable(getattr(plugin, "extract_structured_data"))
+        )
+
+    # Overall validation result
+    validation_results["is_valid"] = all([
+        validation_results["has_can_interpret"],
+        validation_results["has_get_supported_extensions"],
+        validation_results["has_get_supported_mime_types"],
+        validation_results["has_extract_metadata"],
+        validation_results["has_generate_preview"]
+    ])
+
+    # Check capability-specific validations
+    capability_validations = [
+        f"implements_{cap.value}" for cap in FileInterpreterCapability 
+        if cap.value in capabilities and f"implements_{cap.value}" in validation_results
+    ]
+
+    if capability_validations:
+        validation_results["capabilities_valid"] = all(validation_results[key] for key in capability_validations)
+        validation_results["is_valid"] = validation_results["is_valid"] and validation_results["capabilities_valid"]
+
+    return validation_results
+
+
+def validate_metadata_extractor_plugin(plugin: MetadataExtractorPlugin) -> Dict[str, bool]:
+    """
+    Validate a metadata extractor plugin to ensure it implements all required methods.
+
+    This function checks if the plugin implements all the required methods.
+
+    Args:
+        plugin: The metadata extractor plugin to validate.
+
+    Returns:
+        A dictionary mapping validation criteria to boolean results.
+    """
+    validation_results = {}
+
+    # Check required methods
+    validation_results["has_can_extract"] = hasattr(plugin, "can_extract") and callable(getattr(plugin, "can_extract"))
+    validation_results["has_get_supported_extensions"] = hasattr(plugin, "get_supported_extensions") and callable(getattr(plugin, "get_supported_extensions"))
+    validation_results["has_get_supported_mime_types"] = hasattr(plugin, "get_supported_mime_types") and callable(getattr(plugin, "get_supported_mime_types"))
+    validation_results["has_extract_metadata"] = hasattr(plugin, "extract_metadata") and callable(getattr(plugin, "extract_metadata"))
+
+    # Overall validation result
+    validation_results["is_valid"] = all([
+        validation_results["has_can_extract"],
+        validation_results["has_get_supported_extensions"],
+        validation_results["has_get_supported_mime_types"],
+        validation_results["has_extract_metadata"]
+    ])
+
+    return validation_results
+
+
+def validate_plugin(plugin: PluginBase) -> Dict[str, bool]:
+    """
+    Validate a plugin to ensure it implements all required methods based on its type.
+
+    This function delegates to the appropriate validation function based on the plugin type.
+
+    Args:
+        plugin: The plugin to validate.
+
+    Returns:
+        A dictionary mapping validation criteria to boolean results.
+    """
+    if isinstance(plugin, FileInterpreterPlugin):
+        return validate_file_interpreter_plugin(plugin)
+    elif isinstance(plugin, MetadataExtractorPlugin):
+        return validate_metadata_extractor_plugin(plugin)
+    else:
+        # Basic validation for other plugin types
+        validation_results = {}
+        validation_results["has_metadata"] = hasattr(plugin, "metadata") and callable(getattr(plugin, "metadata"))
+        validation_results["has_initialize"] = hasattr(plugin, "initialize") and callable(getattr(plugin, "initialize"))
+        validation_results["has_shutdown"] = hasattr(plugin, "shutdown") and callable(getattr(plugin, "shutdown"))
+
+        validation_results["is_valid"] = all([
+            validation_results["has_metadata"],
+            validation_results["has_initialize"],
+            validation_results["has_shutdown"]
+        ])
+
+        return validation_results
 
 
 def get_file_interpreter_for_file(file_path: str) -> Optional[FileInterpreterPlugin]:
