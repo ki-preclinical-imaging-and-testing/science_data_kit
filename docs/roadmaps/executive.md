@@ -40,13 +40,16 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Plugin Dependency Resolution (handling dependencies between plugins)
 - Develop Core Interpreters
   - ✓ Image File Interpreters (EXIF metadata, previews, dimension extraction)
-  - ⟳ Document File Interpreters (PDF, DOCX, XLSX metadata and previews)
-  - ⟳ Scientific Data File Interpreters (NetCDF, HDF5, FITS, CSV/TSV)
-  - ⟳ Media File Interpreters (MP3, MP4 metadata and previews)
+  - ✓ Document File Interpreters (PDF, DOCX, XLSX metadata and previews)
+  - ✓ Scientific Data File Interpreters (NetCDF, HDF5)
+  - ✓ Media File Interpreters (MP3, MP4 metadata and previews)
+  - ⟳ Additional Scientific Data File Interpreters (FITS, CSV/TSV, GeoTIFF)
 - Enhance UI Integration
-  - ⟳ File Preview Components (framework, image/document/data viewers)
-  - ⟳ Metadata Visualization (metadata panel, grouping, filtering, search)
-  - ⟳ File Browser Integration (file type icons, details sidebar, preview modal)
+  - ✓ File Preview Components (framework, image/document viewers)
+  - ✓ Metadata Visualization (metadata panel, grouping)
+  - ✓ File Browser Integration (file type icons, details sidebar, preview modal)
+  - ⟳ Data Visualization Components (scientific data viewers)
+  - ⟳ Media Player Components (audio/video players)
   - ⟳ Search and Discovery (metadata-based search, advanced filters, faceted search)
 - Implement Advanced Features
   - ⟳ Content Extraction (text extraction, OCR, table extraction)

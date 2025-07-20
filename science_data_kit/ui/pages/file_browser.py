@@ -15,6 +15,7 @@ import json
 
 from science_data_kit.ui.pages.base_page import BasePage
 from science_data_kit.ui.components.sidebar import render_file_connections_sidebar
+from science_data_kit.ui.components.file_preview_components import render_file_preview
 from science_data_kit.core.utils.file_utils import (
     get_directory_contents,
     get_file_info,
@@ -270,64 +271,42 @@ class FileBrowserPage(BasePage):
             st.info("Select a file to view")
             return
 
-        # Get file info
-        file_info = get_file_info(current_file)
+        # Use the enhanced file preview component
+        render_file_preview(current_file)
 
-        # Display file info
-        st.subheader(file_info["name"])
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.write(f"Type: {file_info['type']}")
-        with col2:
-            st.write(f"Size: {file_info['size']} bytes")
-        with col3:
-            st.write(f"Modified: {file_info['modified']}")
-
-        # Check if file is readable as a spreadsheet or table
-        if file_info["is_readable"]:
-            # Get file preview
-            preview = get_file_preview(current_file)
-
-            if preview["success"]:
-                # Display preview
-                st.subheader("Preview")
-
-                # Create DataFrame from preview data
-                preview_df = pd.DataFrame(
-                    preview["data"]["data"],
-                    columns=preview["data"]["columns"]
-                )
-
-                # Display DataFrame
-                st.dataframe(preview_df)
-
-                # Show total rows
-                st.write(f"Showing {preview['data']['preview_rows']} of {preview['data']['total_rows']} rows")
-
-                # Option to load full data
-                if st.button("Load Full Data"):
-                    df, error = read_file_as_dataframe(current_file)
-                    if df is not None:
-                        st.subheader("Full Data")
-                        st.dataframe(df)
-                    else:
-                        st.error(f"Error loading full data: {error}")
-            else:
-                st.error(f"Error previewing file: {preview['error']}")
-        else:
-            # For non-readable files, show a message
-            st.info("This file type cannot be previewed as a spreadsheet or table")
-
-            # For text files, try to display content
-            ext = os.path.splitext(current_file)[1].lower()
-            if ext in ['.txt', '.md', '.py', '.json', '.csv', '.html', '.xml', '.yml', '.yaml']:
+        # Add option to view as spreadsheet/table if applicable
+        ext = os.path.splitext(current_file)[1].lower()
+        if ext in ['.csv', '.xlsx', '.xls', '.tsv', '.json', '.xml']:
+            with st.expander("View as Spreadsheet/Table", expanded=False):
                 try:
-                    with open(current_file, 'r') as f:
-                        content = f.read()
-                    st.subheader("File Content")
-                    st.text(content)
+                    # Get file preview using the traditional method
+                    preview = get_file_preview(current_file)
+
+                    if preview["success"]:
+                        # Create DataFrame from preview data
+                        preview_df = pd.DataFrame(
+                            preview["data"]["data"],
+                            columns=preview["data"]["columns"]
+                        )
+
+                        # Display DataFrame
+                        st.dataframe(preview_df)
+
+                        # Show total rows
+                        st.write(f"Showing {preview['data']['preview_rows']} of {preview['data']['total_rows']} rows")
+
+                        # Option to load full data
+                        if st.button("Load Full Data"):
+                            df, error = read_file_as_dataframe(current_file)
+                            if df is not None:
+                                st.subheader("Full Data")
+                                st.dataframe(df)
+                            else:
+                                st.error(f"Error loading full data: {error}")
+                    else:
+                        st.error(f"Error previewing file as spreadsheet: {preview['error']}")
                 except Exception as e:
-                    st.error(f"Error reading file: {e}")
+                    st.error(f"Error viewing as spreadsheet: {str(e)}")
 
     def render_content(self) -> None:
         """Render the File Browser page content."""
