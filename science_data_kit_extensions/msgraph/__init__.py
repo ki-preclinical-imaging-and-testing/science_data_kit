@@ -8,6 +8,7 @@ OneDrive, Outlook, and user/group information.
 
 from .connector import MSGraphConnector
 from .files import MSGraphFileManager
+from .sharepoint import SharePointFileManager
 
 __version__ = "0.1.0"
-__all__ = ["MSGraphConnector", "MSGraphFileManager"]
+__all__ = ["MSGraphConnector", "MSGraphFileManager", "SharePointFileManager"]

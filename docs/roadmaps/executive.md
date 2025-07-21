@@ -40,7 +40,7 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ⟳ Phase 1: Foundation (authentication, SharePoint integration, core integration)
     - ✓ Authentication and connection setup with support for multiple authentication methods
     - ✓ OneDrive file management with comprehensive file operations
-    - ⟳ SharePoint integration with site and list access
+    - ✓ SharePoint integration with site, list, and document library access
 - Implement Google Drive/Workspace Extension
   - ⟳ Phase 1: Foundation (authentication, file operations, core integration)
 - ✓ Create unified authentication management interface for all cloud providers
