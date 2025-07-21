@@ -2,14 +2,15 @@
 File Handling Module for Science Data Kit
 
 This module provides advanced file handling capabilities for the Science Data Kit,
-including text extraction, OCR, table extraction, AI service integration, and other content processing features.
+including text extraction, OCR, table extraction, chart data extraction, AI service integration, and other content processing features.
 
 The module includes:
 1. Text extraction framework for extracting text from various file types
 2. OCR capabilities for extracting text from images
 3. Table extraction for extracting structured data from documents
-4. AI service integration for leveraging external AI services
-5. Content analysis utilities for processing extracted content
+4. Chart data extraction for extracting data from charts and graphs
+5. AI service integration for leveraging external AI services
+6. Content analysis utilities for processing extracted content
 """
 
 from science_data_kit.core.file_handling.text_extraction import (
@@ -25,6 +26,12 @@ from science_data_kit.core.file_handling.table_extraction import (
     TableExtractor, TableExtractionOptions, TableExtractionResult, Table,
     TableFormat, get_table_extractor_for_file, extract_tables_from_file,
     PDFTableExtractor
+)
+
+from science_data_kit.core.file_handling.chart_extraction import (
+    ChartExtractor, ChartExtractionOptions, ChartExtractionResult, ChartData,
+    ChartType, ChartDataFormat, get_chart_extractor_for_file, extract_charts_from_file,
+    ImageBasedChartExtractor
 )
 
 from science_data_kit.core.file_handling.ai_service_integration import (
@@ -50,6 +57,11 @@ __all__ = [
     'TableExtractor', 'TableExtractionOptions', 'TableExtractionResult', 'Table',
     'TableFormat', 'get_table_extractor_for_file', 'extract_tables_from_file',
     'PDFTableExtractor',
+
+    # Chart data extraction
+    'ChartExtractor', 'ChartExtractionOptions', 'ChartExtractionResult', 'ChartData',
+    'ChartType', 'ChartDataFormat', 'get_chart_extractor_for_file', 'extract_charts_from_file',
+    'ImageBasedChartExtractor',
 
     # AI service integration
     'AIServicePlugin', 'AIServiceCapability', 'AIServiceResult',
