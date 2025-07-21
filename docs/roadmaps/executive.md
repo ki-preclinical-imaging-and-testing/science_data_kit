@@ -48,8 +48,8 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Metadata-based search
   - ✓ Faceted search
   - ✓ Saved searches
-- ⟳ Create visual indicators for files with specialized handling capabilities
-- ⟳ Develop contextual menus for file-specific operations
+- ✓ Create visual indicators for files with specialized handling capabilities
+- ✓ Develop contextual menus for file-specific operations
 
 ### Phase 2: Advanced Feature Integration (4-6 weeks)
 
@@ -77,7 +77,7 @@ The following roadmap outlines the key steps for implementing the strategic visi
 ### Phase 3: New Feature Development (6-8 weeks)
 
 #### Specialized File Handling Enhancements (Deprioritized)
-Note: The Specialized File Handling roadmap has been deprioritized to focus on earlier phases. The following items will be addressed in future development cycles.
+Note: The Specialized File Handling roadmap has been deprioritized to focus on earlier phases. Only DICOM metadata extraction and FHIR viewer integration will be prioritized from this roadmap. All other items will be addressed in future development cycles.
 
 - ✓ Specialized File Handling Foundation
   - ✓ Plugin Interface Design (base classes, capability mixins, configuration schema)
@@ -90,6 +90,9 @@ Note: The Specialized File Handling roadmap has been deprioritized to focus on e
   - ✓ Scientific Data File Interpreters (NetCDF, HDF5)
   - ✓ Media File Interpreters (MP3, MP4 metadata and previews)
   - ✓ Additional Scientific Data File Interpreters (FITS, CSV/TSV, GeoTIFF)
+- ⟳ Medical Imaging Support (Prioritized)
+  - ⟳ DICOM metadata extraction (medical imaging files)
+  - ⟳ FHIR viewer integration for DICOM files
 - ✓ Advanced Features
   - ✓ Metadata Export (export metadata in JSON, YAML, CSV, Excel formats)
   - ✓ Content Extraction (text extraction, OCR, table extraction)

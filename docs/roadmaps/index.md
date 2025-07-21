@@ -37,9 +37,9 @@ The roadmap is divided into four phases:
 
 ### Specialized File Handling (Deprioritized)
 
-This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files. Note that this roadmap has been deprioritized to focus on earlier phases.
+This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files. Note that this roadmap has been deprioritized to focus on earlier phases, with only DICOM metadata extraction and FHIR viewer integration being prioritized.
 
-**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_23.md)
+**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_24.md)
 
 **Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase and has completed several key components of the core interpreters phase, UI integration phase, and advanced features phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. The capability mixins, configuration schema, MIME type mapping, and plugin selection logic have been implemented. Plugin validation has been added to ensure plugins implement all required methods and capabilities, and comprehensive documentation has been created for plugin interfaces. Core integration with the file browser has been completed, including file details view with metadata and file preview component. The plugin priority system and plugin dependency resolution have been implemented, and several file interpreters have been created, including image, PDF, DOCX, NetCDF, HDF5, MP3, MP4, XLSX, FITS, CSV/TSV, and GeoTIFF interpreters. UI components for file previews have been implemented, including image preview component, document preview component, scientific data visualization component, and metadata grouping. Metadata-based search and filtering has been implemented, allowing users to search and filter files based on their metadata. Knowledge graph integration has been implemented, allowing file nodes to be enhanced with specialized metadata extracted by file interpreters. Saved searches functionality has been implemented, allowing users to save and reuse search queries with both filename filters and metadata filters. Faceted search functionality has been implemented, allowing users to filter search results by facets generated from file metadata. Metadata export functionality has been implemented, allowing users to export metadata in various formats (JSON, YAML, CSV, Excel). Content extraction framework has been implemented, including text extraction, OCR capabilities for images, and table extraction from documents. Key completed tasks include:
 
@@ -110,6 +110,8 @@ This roadmap outlines a comprehensive plan for implementing specialized file han
 65. Created recommendation engine for recommending related files based on content and metadata similarity
 66. Implemented similarity visualization for visualizing file similarities
 67. Implemented chart data extraction framework for extracting data from charts and graphs
+68. Implemented visual indicators for files with specialized handling capabilities
+69. Created contextual menus for file-specific operations
 
 The roadmap is divided into four phases:
 
@@ -445,7 +447,7 @@ The Cloud Storage Extensions roadmaps represent a significant advancement in the
 3. Enable rich file previews for various document formats
 4. Streamline research workflows by reducing manual data handling and format conversion
 
-Note: The Specialized File Handling roadmap has been deprioritized to focus on earlier phases. The specialized file format support (NetCDF, HDF5, FITS, etc.) will be addressed in future development cycles.
+Note: The Specialized File Handling roadmap has been deprioritized to focus on earlier phases, with only DICOM metadata extraction and FHIR viewer integration being prioritized. Other specialized file format support (NetCDF, HDF5, FITS, etc.) will be addressed in future development cycles.
 
 By implementing these roadmaps, the Science Data Kit will provide researchers with powerful tools for working with cloud storage services, enabling more efficient and effective research workflows.
 

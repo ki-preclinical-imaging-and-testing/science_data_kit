@@ -19,6 +19,30 @@
     .selected {
         background-color: #e9ecef;
     }
+    /* Enhanced file indicators */
+    .badge.bg-warning, .badge.bg-info {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        vertical-align: middle;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+    /* Contextual menu styles */
+    .dropdown-menu {
+        min-width: 200px;
+    }
+    .dropdown-item i {
+        width: 20px;
+        text-align: center;
+    }
+    /* Prevent dropdown from closing when clicking inside it */
+    .dropdown-menu.show {
+        z-index: 1050;
+    }
     .breadcrumb-item a {
         text-decoration: none;
     }

@@ -69,9 +69,81 @@
              x-bind:class="{ 'selected': selected }"
              @click="selected = !selected; updateButtonStates()">
             <div class="card-body text-center">
+                {% if file.type == 'image' %}
+                <i class="bi bi-file-image display-4 text-primary"></i>
+                {% elif file.type == 'text' %}
+                <i class="bi bi-file-text display-4 text-secondary"></i>
+                {% elif file.type == 'document' %}
+                <i class="bi bi-file-earmark-text display-4 text-info"></i>
+                {% elif file.type == 'code' %}
+                <i class="bi bi-file-code display-4 text-success"></i>
+                {% elif file.type == 'scientific' %}
+                <i class="bi bi-file-earmark-bar-graph display-4 text-danger"></i>
+                {% elif file.type == 'specialized' %}
+                <i class="bi bi-file-earmark-binary display-4 text-warning"></i>
+                {% else %}
                 <i class="bi bi-file-earmark display-4 text-primary"></i>
-                <p class="card-text mt-2">{{ file.name }}</p>
+                {% endif %}
+
+                <p class="card-text mt-2">
+                    {{ file.name }}
+                    {% if file.type == 'specialized' %}
+                    <span class="badge bg-warning text-dark ms-1" title="This file has specialized handling capabilities">Enhanced</span>
+                    {% endif %}
+                    {% if has_file_interpreter and file.path in selected_files %}
+                    <span class="badge bg-info text-white ms-1" title="This file has specialized handling capabilities">Enhanced</span>
+                    {% endif %}
+                </p>
                 <small class="text-muted">{{ file.size }}</small>
+
+                <!-- Contextual menu for file-specific operations -->
+                <div class="mt-2">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                id="dropdownMenuButton-grid-{{ loop.index }}" data-bs-toggle="dropdown" 
+                                aria-expanded="false" @click.stop>
+                            <i class="bi bi-three-dots-vertical"></i> Actions
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-grid-{{ loop.index }}">
+                            <!-- Common operations for all files -->
+                            <li><a class="dropdown-item" href="#" @click.stop="previewFile()">
+                                <i class="bi bi-eye me-2"></i>Preview</a>
+                            </li>
+                            <li><a class="dropdown-item" href="/api/files/download?path={{ file.path }}" @click.stop>
+                                <i class="bi bi-download me-2"></i>Download</a>
+                            </li>
+
+                            <!-- Operations for files with specialized handling -->
+                            {% if file.type == 'specialized' or file.type == 'scientific' or file.type == 'document' or file.type == 'image' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/export-metadata?path={{ file.path }}&format=json'">
+                                <i class="bi bi-filetype-json me-2"></i>Export Metadata (JSON)</a>
+                            </li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/export-metadata?path={{ file.path }}&format=csv'">
+                                <i class="bi bi-filetype-csv me-2"></i>Export Metadata (CSV)</a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Type-specific operations -->
+                            {% if file.type == 'image' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/image-info?path={{ file.path }}'">
+                                <i class="bi bi-info-circle me-2"></i>Image Information</a>
+                            </li>
+                            {% elif file.type == 'document' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/extract-text?path={{ file.path }}'">
+                                <i class="bi bi-file-text me-2"></i>Extract Text</a>
+                            </li>
+                            {% elif file.type == 'scientific' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/visualize-data?path={{ file.path }}'">
+                                <i class="bi bi-graph-up me-2"></i>Visualize Data</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -186,10 +258,63 @@
                     <i class="bi bi-file-code text-success file-icon"></i>
                     {% elif file.type == 'scientific' %}
                     <i class="bi bi-file-earmark-bar-graph text-danger file-icon"></i>
+                    {% elif file.type == 'specialized' %}
+                    <i class="bi bi-file-earmark-binary text-warning file-icon"></i>
+                    <span class="badge bg-warning text-dark ms-1" title="This file has specialized handling capabilities">Enhanced</span>
                     {% else %}
                     <i class="bi bi-file text-dark file-icon"></i>
                     {% endif %}
+                    {% if has_file_interpreter and file.path in selected_files %}
+                    <span class="badge bg-info text-white ms-1" title="This file has specialized handling capabilities">Enhanced</span>
+                    {% endif %}
                     {{ file.name }}
+
+                    <!-- Contextual menu for file-specific operations -->
+                    <div class="dropdown d-inline-block ms-2">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                id="dropdownMenuButton-{{ loop.index }}" data-bs-toggle="dropdown" 
+                                aria-expanded="false" @click.stop>
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-{{ loop.index }}">
+                            <!-- Common operations for all files -->
+                            <li><a class="dropdown-item" href="#" @click.stop="previewFile()">
+                                <i class="bi bi-eye me-2"></i>Preview</a>
+                            </li>
+                            <li><a class="dropdown-item" href="/api/files/download?path={{ file.path }}" @click.stop>
+                                <i class="bi bi-download me-2"></i>Download</a>
+                            </li>
+
+                            <!-- Operations for files with specialized handling -->
+                            {% if file.type == 'specialized' or file.type == 'scientific' or file.type == 'document' or file.type == 'image' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/export-metadata?path={{ file.path }}&format=json'">
+                                <i class="bi bi-filetype-json me-2"></i>Export Metadata (JSON)</a>
+                            </li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/export-metadata?path={{ file.path }}&format=csv'">
+                                <i class="bi bi-filetype-csv me-2"></i>Export Metadata (CSV)</a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Type-specific operations -->
+                            {% if file.type == 'image' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/image-info?path={{ file.path }}'">
+                                <i class="bi bi-info-circle me-2"></i>Image Information</a>
+                            </li>
+                            {% elif file.type == 'document' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/extract-text?path={{ file.path }}'">
+                                <i class="bi bi-file-text me-2"></i>Extract Text</a>
+                            </li>
+                            {% elif file.type == 'scientific' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @click.stop="window.location.href='/api/files/visualize-data?path={{ file.path }}'">
+                                <i class="bi bi-graph-up me-2"></i>Visualize Data</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
                 </td>
                 <td>{{ file.type|capitalize }}</td>
                 <td>{{ file.modified }}</td>
