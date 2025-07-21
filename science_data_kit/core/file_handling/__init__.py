@@ -2,13 +2,14 @@
 File Handling Module for Science Data Kit
 
 This module provides advanced file handling capabilities for the Science Data Kit,
-including text extraction, OCR, table extraction, and other content processing features.
+including text extraction, OCR, table extraction, AI service integration, and other content processing features.
 
 The module includes:
 1. Text extraction framework for extracting text from various file types
 2. OCR capabilities for extracting text from images
 3. Table extraction for extracting structured data from documents
-4. Content analysis utilities for processing extracted content
+4. AI service integration for leveraging external AI services
+5. Content analysis utilities for processing extracted content
 """
 
 from science_data_kit.core.file_handling.text_extraction import (
@@ -26,6 +27,17 @@ from science_data_kit.core.file_handling.table_extraction import (
     PDFTableExtractor
 )
 
+from science_data_kit.core.file_handling.ai_service_integration import (
+    AIServicePlugin, AIServiceCapability, AIServiceResult,
+    ImageAnalysisResult, TextAnalysisResult, SpeechRecognitionResult,
+    TranslationResult, DocumentAnalysisResult,
+    ImageAnalysisCapability, TextAnalysisCapability, SpeechRecognitionCapability,
+    TranslationCapability, DocumentAnalysisCapability,
+    get_ai_service_for_capability, get_image_analysis_service, get_text_analysis_service,
+    get_speech_recognition_service, get_translation_service, get_document_analysis_service,
+    analyze_image, analyze_text, analyze_text_file, recognize_speech, translate_text, analyze_document
+)
+
 __all__ = [
     # Text extraction
     'TextExtractor', 'TextExtractionOptions', 'TextExtractionResult',
@@ -37,5 +49,15 @@ __all__ = [
     # Table extraction
     'TableExtractor', 'TableExtractionOptions', 'TableExtractionResult', 'Table',
     'TableFormat', 'get_table_extractor_for_file', 'extract_tables_from_file',
-    'PDFTableExtractor'
+    'PDFTableExtractor',
+
+    # AI service integration
+    'AIServicePlugin', 'AIServiceCapability', 'AIServiceResult',
+    'ImageAnalysisResult', 'TextAnalysisResult', 'SpeechRecognitionResult',
+    'TranslationResult', 'DocumentAnalysisResult',
+    'ImageAnalysisCapability', 'TextAnalysisCapability', 'SpeechRecognitionCapability',
+    'TranslationCapability', 'DocumentAnalysisCapability',
+    'get_ai_service_for_capability', 'get_image_analysis_service', 'get_text_analysis_service',
+    'get_speech_recognition_service', 'get_translation_service', 'get_document_analysis_service',
+    'analyze_image', 'analyze_text', 'analyze_text_file', 'recognize_speech', 'translate_text', 'analyze_document'
 ]
