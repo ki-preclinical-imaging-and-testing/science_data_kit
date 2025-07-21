@@ -6,4 +6,8 @@ It enables access to Microsoft 365 services including Microsoft Teams, SharePoin
 OneDrive, Outlook, and user/group information.
 """
 
+from .connector import MSGraphConnector
+from .files import MSGraphFileManager
+
 __version__ = "0.1.0"
+__all__ = ["MSGraphConnector", "MSGraphFileManager"]

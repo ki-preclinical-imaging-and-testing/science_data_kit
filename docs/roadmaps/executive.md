@@ -38,9 +38,12 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ⟳ Phase 3: UI Integration (connection management, file browser, team folder management)
 - Enhance Microsoft Graph Extension
   - ⟳ Phase 1: Foundation (authentication, SharePoint integration, core integration)
+    - ✓ Authentication and connection setup with support for multiple authentication methods
+    - ✓ OneDrive file management with comprehensive file operations
+    - ⟳ SharePoint integration with site and list access
 - Implement Google Drive/Workspace Extension
   - ⟳ Phase 1: Foundation (authentication, file operations, core integration)
-- ⟳ Create unified authentication management interface for all cloud providers
+- ✓ Create unified authentication management interface for all cloud providers
 
 #### Feature Accessibility Enhancement
 - ✓ Add GUI access points for metadata extraction and visualization

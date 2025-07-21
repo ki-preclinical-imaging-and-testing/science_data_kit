@@ -124,9 +124,9 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for enhancing the Microsoft Graph extension for the Science Data Kit. The extension enables integration with Microsoft 365 services including SharePoint, OneDrive, Teams, and Excel through the Microsoft Graph API.
 
-**Latest Version**: [Microsoft Graph Extension Roadmap](active/roadmap_MSGraphExtension_00.md)
+**Latest Version**: [Microsoft Graph Extension Roadmap](active/roadmap_MSGraphExtension_01.md)
 
-**Status**: In Progress - The Microsoft Graph extension is partially implemented, with basic functionality for connecting to Microsoft Graph API and accessing some Microsoft 365 services. Phase 1 (Foundation) is currently in progress with authentication and connection setup being implemented.
+**Status**: In Progress - The Microsoft Graph extension has made significant progress in Phase 1 (Foundation). The core connector class (MSGraphConnector) has been implemented, providing authentication, connection management, and API request capabilities. A file manager class (MSGraphFileManager) has also been implemented, providing file operations for OneDrive including listing folders, getting metadata, downloading and uploading files, creating folders, deleting files/folders, and searching. Additionally, a unified authentication management interface for cloud storage providers has been created, which includes support for both Dropbox and Microsoft Graph.
 
 The roadmap is divided into four phases:
 
