@@ -56,8 +56,8 @@ The following roadmap outlines the key steps for implementing the strategic visi
 - Implement Advanced Features
   - ✓ Metadata Export (export metadata in JSON, YAML, CSV, Excel formats)
   - ✓ Content Extraction (✓ text extraction, ✓ OCR, ✓ table extraction)
-  - ✓ Similarity Analysis (✓ file similarity metrics, ✓ content-based similarity, ✓ duplicate detection)
-  - ✓ Automated Tagging (✓ keyword extraction, ✓ topic modeling, ✓ entity recognition)
+  - ✓ Similarity Analysis (✓ file similarity metrics, ✓ content-based similarity, ✓ duplicate detection, ✓ file clustering)
+  - ✓ Automated Tagging (✓ keyword extraction, ✓ topic modeling, ✓ entity recognition, ✓ sentiment analysis)
   - ✓ AI Service Integration (✓ image analysis, ✓ text analysis, ✓ speech recognition, ✓ translation)
 
 ## Extension and File Handling Integration

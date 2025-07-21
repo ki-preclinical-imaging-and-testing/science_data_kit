@@ -39,7 +39,7 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files.
 
-**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_17.md)
+**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_18.md)
 
 **Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase and has completed several key components of the core interpreters phase, UI integration phase, and advanced features phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. The capability mixins, configuration schema, MIME type mapping, and plugin selection logic have been implemented. Plugin validation has been added to ensure plugins implement all required methods and capabilities, and comprehensive documentation has been created for plugin interfaces. Core integration with the file browser has been completed, including file details view with metadata and file preview component. The plugin priority system and plugin dependency resolution have been implemented, and several file interpreters have been created, including image, PDF, DOCX, NetCDF, HDF5, MP3, MP4, XLSX, FITS, CSV/TSV, and GeoTIFF interpreters. UI components for file previews have been implemented, including image preview component, document preview component, scientific data visualization component, and metadata grouping. Metadata-based search and filtering has been implemented, allowing users to search and filter files based on their metadata. Knowledge graph integration has been implemented, allowing file nodes to be enhanced with specialized metadata extracted by file interpreters. Saved searches functionality has been implemented, allowing users to save and reuse search queries with both filename filters and metadata filters. Faceted search functionality has been implemented, allowing users to filter search results by facets generated from file metadata. Metadata export functionality has been implemented, allowing users to export metadata in various formats (JSON, YAML, CSV, Excel). Content extraction framework has been implemented, including text extraction, OCR capabilities for images, and table extraction from documents. Key completed tasks include:
 
@@ -91,6 +91,17 @@ This roadmap outlines a comprehensive plan for implementing specialized file han
 46. Created topic modeling for documents to identify main themes and topics
 47. Implemented entity recognition for content analysis to extract named entities from documents
 48. Added comprehensive tests for file similarity metrics, content-based similarity analysis, keyword extraction, topic modeling, and entity recognition
+49. Implemented AI service integration framework for integrating with external AI services
+50. Created Google Cloud Vision integration for image analysis
+51. Implemented Google Cloud Natural Language integration for text analysis
+52. Added comprehensive tests for the AI service integration framework and service implementations
+53. Implemented Google Cloud Speech-to-Text integration for speech recognition
+54. Created Google Cloud Translation integration for text translation
+55. Implemented duplicate detection functionality for identifying exact duplicates and similar files
+56. Added comprehensive tests for speech recognition, translation, and duplicate detection
+57. Implemented file clustering functionality for automatically grouping similar files
+58. Created sentiment analysis integration for analyzing sentiment in text content
+59. Added comprehensive tests for file clustering and sentiment analysis
 
 The roadmap is divided into four phases:
 
