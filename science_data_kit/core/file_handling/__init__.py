@@ -2,7 +2,7 @@
 File Handling Module for Science Data Kit
 
 This module provides advanced file handling capabilities for the Science Data Kit,
-including text extraction, OCR, table extraction, chart data extraction, AI service integration, and other content processing features.
+including text extraction, OCR, table extraction, chart data extraction, AI service integration, batch processing, and other content processing features.
 
 The module includes:
 1. Text extraction framework for extracting text from various file types
@@ -10,7 +10,8 @@ The module includes:
 3. Table extraction for extracting structured data from documents
 4. Chart data extraction for extracting data from charts and graphs
 5. AI service integration for leveraging external AI services
-6. Content analysis utilities for processing extracted content
+6. Batch processing capabilities for performing operations on multiple files
+7. Content analysis utilities for processing extracted content
 """
 
 from science_data_kit.core.file_handling.text_extraction import (
@@ -45,6 +46,13 @@ from science_data_kit.core.file_handling.ai_service_integration import (
     analyze_image, analyze_text, analyze_text_file, recognize_speech, translate_text, analyze_document
 )
 
+from science_data_kit.core.file_handling.batch_processing import (
+    BatchProcessor, BatchProcessingResult,
+    batch_copy_files, batch_move_files, batch_delete_files, batch_rename_files,
+    batch_extract_metadata, batch_generate_previews, batch_update_knowledge_graph,
+    batch_export_metadata
+)
+
 __all__ = [
     # Text extraction
     'TextExtractor', 'TextExtractionOptions', 'TextExtractionResult',
@@ -71,5 +79,11 @@ __all__ = [
     'TranslationCapability', 'DocumentAnalysisCapability',
     'get_ai_service_for_capability', 'get_image_analysis_service', 'get_text_analysis_service',
     'get_speech_recognition_service', 'get_translation_service', 'get_document_analysis_service',
-    'analyze_image', 'analyze_text', 'analyze_text_file', 'recognize_speech', 'translate_text', 'analyze_document'
+    'analyze_image', 'analyze_text', 'analyze_text_file', 'recognize_speech', 'translate_text', 'analyze_document',
+
+    # Batch processing
+    'BatchProcessor', 'BatchProcessingResult',
+    'batch_copy_files', 'batch_move_files', 'batch_delete_files', 'batch_rename_files',
+    'batch_extract_metadata', 'batch_generate_previews', 'batch_update_knowledge_graph',
+    'batch_export_metadata'
 ]
