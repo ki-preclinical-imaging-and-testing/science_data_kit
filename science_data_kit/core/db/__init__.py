@@ -18,9 +18,12 @@ from .database_connector_base import (
     DatabaseConnectorBase, GraphDatabaseConnector, RelationalDatabaseConnector
 )
 
+from .msgraph_neo4j import MSGraphNeo4jIntegration
+
 __all__ = [
     'Neo4jManager', 'DatabaseError', 'ConnectionError',
     'load_db_config', 'update_db_config_auto',
     'Neo4jConfigManager', 'config_manager',
-    'DatabaseConnectorBase', 'GraphDatabaseConnector', 'RelationalDatabaseConnector'
+    'DatabaseConnectorBase', 'GraphDatabaseConnector', 'RelationalDatabaseConnector',
+    'MSGraphNeo4jIntegration'
 ]

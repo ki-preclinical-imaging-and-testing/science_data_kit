@@ -37,10 +37,11 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Phase 2: Advanced Features (real-time sync, team folders, file sharing metadata, error handling)
   - ⟳ Phase 3: UI Integration (connection management, file browser, team folder management)
 - Enhance Microsoft Graph Extension
-  - ⟳ Phase 1: Foundation (authentication, SharePoint integration, core integration)
+  - ✓ Phase 1: Foundation (authentication, SharePoint integration, core integration)
     - ✓ Authentication and connection setup with support for multiple authentication methods
     - ✓ OneDrive file management with comprehensive file operations
     - ✓ SharePoint integration with site, list, and document library access
+    - ✓ Core integration with entity schemas and Neo4j knowledge graph
 - Implement Google Drive/Workspace Extension
   - ⟳ Phase 1: Foundation (authentication, file operations, core integration)
 - ✓ Create unified authentication management interface for all cloud providers
@@ -409,8 +410,8 @@ The Extensions and Specialized File Handling implementation is currently in prog
      - ⟳ Phase 4 (Enterprise Features) is planned for future implementation
 
    - **Microsoft Graph Extension**:
-     - ⟳ Phase 1 (Foundation) is in progress with basic authentication and connection setup
-     - ⟳ Phase 2 (Advanced Features) is planned for future implementation
+     - ✓ Phase 1 (Foundation) has been completed with authentication, connection setup, SharePoint integration, core integration with entity schemas, and Neo4j knowledge graph integration
+     - ⟳ Phase 2 (Advanced Features) is in progress with OneDrive file management and Teams conversation analysis
 
    - **Google Drive/Workspace Extension**:
      - ⟳ Phase 1 (Foundation) is planned for implementation after Microsoft Graph Extension
@@ -442,7 +443,8 @@ The Extensions and Specialized File Handling implementation is currently in prog
 
 4. **Next Steps**:
    - Complete Dropbox Extension Phase 3 (UI Integration)
-   - Advance Microsoft Graph Extension Phase 1 (Foundation)
+   - Continue Microsoft Graph Extension Phase 2 (Advanced Features) with Teams conversation analysis and Excel file processing
+   - Begin Microsoft Graph Extension Phase 3 (UI Integration) with connection management and file browser components
    - Continue development of Core Interpreters for Specialized File Handling
    - Implement XLSX File Interpreter
    - Implement Media File Interpreters (MP3, MP4)

@@ -23,28 +23,28 @@ logger = logging.getLogger(__name__)
 def get_fhir_viewer_url(file_path: str) -> Optional[str]:
     """
     Get the FHIR viewer URL for a DICOM file.
-    
+
     Args:
         file_path: Path to the DICOM file.
-        
+
     Returns:
         URL to view the file in a FHIR-compatible viewer, or None if not available.
     """
     try:
         # Get file interpreter for the file
         interpreter = get_file_interpreter_for_file(file_path)
-        
+
         if not interpreter:
             logger.warning(f"No interpreter found for file: {file_path}")
             return None
-        
+
         # Extract metadata to get FHIR viewer URL
         metadata = interpreter.extract_metadata(file_path)
-        
+
         # Check if FHIR viewer URL is available
         if 'fhir_viewer_url' in metadata:
             return metadata['fhir_viewer_url']
-        
+
         # If not in metadata, try to extract structured data
         if hasattr(interpreter, 'extract_structured_data') and callable(getattr(interpreter, 'extract_structured_data')):
             try:
@@ -53,7 +53,7 @@ def get_fhir_viewer_url(file_path: str) -> Optional[str]:
                     return fhir_data['viewerUrl']
             except Exception as e:
                 logger.warning(f"Error extracting FHIR data: {str(e)}")
-        
+
         return None
     except Exception as e:
         logger.error(f"Error getting FHIR viewer URL: {str(e)}")
@@ -62,26 +62,26 @@ def get_fhir_viewer_url(file_path: str) -> Optional[str]:
 def open_in_fhir_viewer(file_path: str) -> Dict[str, Any]:
     """
     Open a DICOM file in a FHIR-compatible viewer.
-    
+
     Args:
         file_path: Path to the DICOM file.
-        
+
     Returns:
         Dictionary with status and message.
     """
     try:
         # Get FHIR viewer URL
         viewer_url = get_fhir_viewer_url(file_path)
-        
+
         if not viewer_url:
             return {
                 'status': 'error',
                 'message': 'FHIR viewer URL not available for this file'
             }
-        
+
         # Open URL in web browser
         webbrowser.open(viewer_url)
-        
+
         return {
             'status': 'success',
             'message': f'Opened file in FHIR viewer: {viewer_url}'
@@ -96,19 +96,19 @@ def open_in_fhir_viewer(file_path: str) -> Dict[str, Any]:
 def render_fhir_viewer_button(file_path: str) -> str:
     """
     Render a button to open a DICOM file in a FHIR-compatible viewer.
-    
+
     Args:
         file_path: Path to the DICOM file.
-        
+
     Returns:
         HTML for the FHIR viewer button.
     """
     # Check if FHIR viewer URL is available
     viewer_url = get_fhir_viewer_url(file_path)
-    
+
     if not viewer_url:
         return ""
-    
+
     # Render button
     return f"""
     <div class="mt-3">
@@ -122,35 +122,35 @@ def render_fhir_viewer_button(file_path: str) -> str:
 def render_fhir_viewer_section(file_path: str) -> str:
     """
     Render a section with FHIR viewer information and button.
-    
+
     Args:
         file_path: Path to the DICOM file.
-        
+
     Returns:
         HTML for the FHIR viewer section.
     """
     # Check if FHIR viewer URL is available
     viewer_url = get_fhir_viewer_url(file_path)
-    
+
     if not viewer_url:
         return ""
-    
+
     # Get file interpreter for the file
     interpreter = get_file_interpreter_for_file(file_path)
-    
+
     if not interpreter:
         return ""
-    
+
     # Extract metadata to get DICOM information
     metadata = interpreter.extract_metadata(file_path)
     dicom_metadata = metadata.get('dicom_metadata', {})
-    
+
     # Get patient and study information
     patient_name = dicom_metadata.get('PatientName', 'Unknown Patient')
     study_desc = dicom_metadata.get('StudyDescription', 'Unknown Study')
     modality = dicom_metadata.get('Modality', 'Unknown')
     study_date = dicom_metadata.get('StudyDate', 'Unknown Date')
-    
+
     # Render section
     return f"""
     <div class="card mt-4">
@@ -185,7 +185,7 @@ def render_fhir_viewer_section(file_path: str) -> str:
 def register_fhir_viewer_routes(app):
     """
     Register Flask routes for FHIR viewer integration.
-    
+
     Args:
         app: Flask application instance.
     """
@@ -194,69 +194,69 @@ def register_fhir_viewer_routes(app):
         """API endpoint to get FHIR viewer URL for a file."""
         data = request.json
         file_path = data.get('file_path')
-        
+
         if not file_path:
             return jsonify({
                 'status': 'error',
                 'message': 'File path is required'
             }), 400
-        
+
         viewer_url = get_fhir_viewer_url(file_path)
-        
+
         if not viewer_url:
             return jsonify({
                 'status': 'error',
                 'message': 'FHIR viewer URL not available for this file'
             }), 404
-        
+
         return jsonify({
             'status': 'success',
             'viewer_url': viewer_url
         })
-    
+
     @app.route('/api/fhir/open-viewer', methods=['POST'])
     def open_fhir_viewer_api():
         """API endpoint to open a file in FHIR viewer."""
         data = request.json
         file_path = data.get('file_path')
-        
+
         if not file_path:
             return jsonify({
                 'status': 'error',
                 'message': 'File path is required'
             }), 400
-        
+
         result = open_in_fhir_viewer(file_path)
-        
+
         if result['status'] == 'error':
             return jsonify(result), 404
-        
+
         return jsonify(result)
 
 def is_dicom_file(file_path: str) -> bool:
     """
     Check if a file is a DICOM file.
-    
+
     Args:
         file_path: Path to the file.
-        
+
     Returns:
         True if the file is a DICOM file, False otherwise.
     """
     # Get file extension
     _, ext = os.path.splitext(file_path)
     ext = ext.lower()
-    
+
     # Check common DICOM extensions
     if ext in ['.dcm', '.dicom', '.dic']:
         return True
-    
+
     # Try to get an interpreter for the file
     interpreter = get_file_interpreter_for_file(file_path)
-    
+
     if not interpreter:
         return False
-    
+
     # Check if the interpreter is for DICOM files
     metadata = interpreter.extract_metadata(file_path)
     return metadata.get('format') == 'DICOM'
@@ -264,7 +264,7 @@ def is_dicom_file(file_path: str) -> bool:
 def get_fhir_viewer_config() -> Dict[str, Any]:
     """
     Get configuration for FHIR viewer integration.
-    
+
     Returns:
         Dictionary with configuration settings.
     """
@@ -274,7 +274,7 @@ def get_fhir_viewer_config() -> Dict[str, Any]:
         'enabled': True,
         'open_in_new_tab': True
     }
-    
+
     # Try to get configuration from app config
     try:
         if current_app and current_app.config:
@@ -287,6 +287,5 @@ def get_fhir_viewer_config() -> Dict[str, Any]:
     except Exception:
         # Ignore errors if current_app is not available
         pass
-    
+
     return config
-"""
