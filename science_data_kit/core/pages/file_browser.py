@@ -19,6 +19,7 @@ from science_data_kit.core.pages.base import BasePage
 from science_data_kit.core.models.page import FileExplorerPageData
 from science_data_kit.core.integrations.plugin_architecture import get_file_interpreter_for_file
 from science_data_kit.core.db.db_manager import Neo4jManager
+from science_data_kit.ui.components.fhir_viewer_integration import get_fhir_viewer_url, is_dicom_file, open_in_fhir_viewer
 
 # Import pandas conditionally to avoid hard dependency
 try:
@@ -69,6 +70,8 @@ class FileBrowserPage(BasePage):
         selected_file_metadata = None
         selected_file_preview = None
         has_file_interpreter = False
+        has_fhir_viewer = False
+        fhir_viewer_url = None
 
         if self.selected_files and len(self.selected_files) == 1:
             selected_file_path = self.selected_files[0]
@@ -84,6 +87,11 @@ class FileBrowserPage(BasePage):
                 # Generate preview if metadata extraction was successful
                 if selected_file_metadata:
                     selected_file_preview = self.generate_preview(selected_file_path)
+
+            # Check if the file is a DICOM file and can be opened in a FHIR viewer
+            if is_dicom_file(selected_file_path):
+                fhir_viewer_url = get_fhir_viewer_url(selected_file_path)
+                has_fhir_viewer = fhir_viewer_url is not None
 
         # Generate facets from files in the current directory
         self.generate_facets()
@@ -101,6 +109,8 @@ class FileBrowserPage(BasePage):
             selected_file_metadata=selected_file_metadata,
             selected_file_preview=selected_file_preview,
             has_file_interpreter=has_file_interpreter,
+            has_fhir_viewer=has_fhir_viewer,
+            fhir_viewer_url=fhir_viewer_url,
             facets=self.facets
         )
 
@@ -308,6 +318,12 @@ class FileBrowserPage(BasePage):
                     return "document"
                 elif any(mime.startswith('application/x-netcdf') or mime.startswith('application/x-hdf5') for mime in mime_types):
                     return "scientific"
+                elif any(mime.startswith('application/dicom') or mime == 'image/dicom' for mime in mime_types):
+                    return "dicom"
+
+            # Check if it's a DICOM file using the is_dicom_file function
+            if is_dicom_file(file_path):
+                return "dicom"
 
             # If we couldn't determine a specific type but have an interpreter, use "specialized"
             return "specialized"
@@ -325,6 +341,8 @@ class FileBrowserPage(BasePage):
             return "code"
         elif extension in ['.nc', '.hdf5', '.h5', '.fits', '.fts', '.fit', '.nii', '.nii.gz']:
             return "scientific"
+        elif extension in ['.dcm', '.dicom', '.dic']:
+            return "dicom"
         else:
             return "other"
 
@@ -864,6 +882,29 @@ class FileBrowserPage(BasePage):
                 flattened[new_key] = str(value) if value is not None else ''
 
         return flattened
+
+    def open_in_fhir_viewer(self, file_path: str) -> Dict[str, Any]:
+        """
+        Open a DICOM file in a FHIR-compatible viewer.
+
+        This method checks if the file is a DICOM file and can be opened in a FHIR viewer,
+        then opens the file in the viewer.
+
+        Args:
+            file_path: The path of the file to open in the FHIR viewer.
+
+        Returns:
+            A dictionary with the result of the operation.
+        """
+        # Check if the file is a DICOM file
+        if not is_dicom_file(file_path):
+            return {
+                'status': 'error',
+                'message': 'This file is not a DICOM file'
+            }
+
+        # Open the file in the FHIR viewer
+        return open_in_fhir_viewer(file_path)
 
     def update_knowledge_graph_with_metadata(self, file_path: str) -> bool:
         """

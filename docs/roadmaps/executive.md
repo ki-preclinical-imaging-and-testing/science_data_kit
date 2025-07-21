@@ -90,9 +90,9 @@ Note: The Specialized File Handling roadmap has been deprioritized to focus on e
   - ✓ Scientific Data File Interpreters (NetCDF, HDF5)
   - ✓ Media File Interpreters (MP3, MP4 metadata and previews)
   - ✓ Additional Scientific Data File Interpreters (FITS, CSV/TSV, GeoTIFF)
-- ⟳ Medical Imaging Support (Prioritized)
-  - ⟳ DICOM metadata extraction (medical imaging files)
-  - ⟳ FHIR viewer integration for DICOM files
+- ✓ Medical Imaging Support (Prioritized)
+  - ✓ DICOM metadata extraction (medical imaging files)
+  - ✓ FHIR viewer integration for DICOM files
 - ✓ Advanced Features
   - ✓ Metadata Export (export metadata in JSON, YAML, CSV, Excel formats)
   - ✓ Content Extraction (text extraction, OCR, table extraction)
