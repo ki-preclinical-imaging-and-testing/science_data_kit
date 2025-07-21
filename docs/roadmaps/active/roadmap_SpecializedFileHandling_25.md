@@ -34,7 +34,7 @@ This roadmap outlines a comprehensive plan for implementing specialized file han
 | 22 | 2026-01-07 | Updated with completed batch processing capabilities for file operations |
 | 23 | 2026-01-14 | Updated to reflect deprioritization of the roadmap to focus on earlier phases |
 | 24 | 2026-01-21 | Updated with completed visual indicators for files with specialized handling capabilities and contextual menus for file-specific operations |
-| 25 | 2026-01-28 | Updated with completed DICOM metadata extraction and FHIR viewer integration for DICOM files |
+| 25 | 2026-01-28 | Updated with completed DICOM metadata extraction and OHIF viewer integration for DICOM files |
 
 ## Background
 The Science Data Kit currently has limited capabilities for handling specialized file types beyond basic file operations. Researchers often work with complex file formats such as scientific data files (NetCDF, HDF5), document files (PDF, DOCX), image files with metadata (JPEG, TIFF), and various media formats. Adding specialized file handling capabilities allows researchers to extract valuable metadata, interpret content, and visualize these files directly within the Science Data Kit.
@@ -68,7 +68,7 @@ In the latest update, batch processing capabilities for file operations have bee
 
 Additionally, visual indicators for files with specialized handling capabilities have been implemented, making it easier for users to identify files that have specialized interpreters available. These visual indicators include badges and icons that clearly distinguish files with enhanced capabilities. Contextual menus for file-specific operations have also been implemented, providing users with easy access to operations that are relevant to the specific file type, such as exporting metadata, extracting text, or visualizing data.
 
-Most recently, DICOM metadata extraction and FHIR viewer integration for DICOM files have been implemented. The DICOM file interpreter extracts comprehensive metadata from DICOM medical imaging files, including patient information, study details, and technical parameters. The FHIR viewer integration allows users to open DICOM files in FHIR-compatible viewers like OHIF Viewer, providing a specialized interface for viewing and analyzing medical images. This integration enhances the platform's capabilities for medical research and clinical applications.
+Most recently, DICOM metadata extraction and OHIF viewer integration for DICOM files have been implemented. The DICOM file interpreter extracts comprehensive metadata from DICOM medical imaging files, including patient information, study details, and technical parameters. The OHIF viewer integration allows users to open DICOM files in the OHIF Viewer, a FHIR-compatible medical imaging viewer, providing a specialized interface for viewing and analyzing medical images. This integration enhances the platform's capabilities for medical research and clinical applications.
 
 The following tasks have been completed:
 
@@ -159,8 +159,8 @@ The following tasks have been completed:
 85. Implemented visual indicators for files with specialized handling capabilities
 86. Created contextual menus for file-specific operations
 87. Implemented DICOM file interpreter with metadata extraction and preview/thumbnail generation
-88. Created FHIR viewer integration for DICOM files
-89. Updated file browser to identify DICOM files and provide FHIR viewer access
+88. Created OHIF viewer integration for DICOM files
+89. Updated file browser to identify DICOM files and provide OHIF viewer access
 
 The roadmap is divided into four phases:
 
@@ -316,7 +316,7 @@ The roadmap is divided into four phases:
 | Task | Priority | Status | Notes |
 |------|----------|--------|-------|
 | Implement DICOM metadata extraction | High | Completed | Extract metadata from DICOM medical imaging files |
-| Create FHIR viewer integration | High | Completed | Integrate with FHIR-compatible viewers like OHIF Viewer |
+| Create OHIF viewer integration | High | Completed | Integrate with the OHIF Viewer, a FHIR-compatible medical imaging viewer |
 | Implement DICOM preview generation | Medium | Completed | Generate previews for DICOM files |
 | Create DICOM series browser | Medium | To Do | Browse and navigate DICOM series |
 | Implement DICOM anonymization | Low | To Do | Anonymize DICOM files for privacy |
@@ -422,7 +422,7 @@ The roadmap is divided into four phases:
    - Implement metadata export functionality ✓
    - Create visual indicators for specialized files ✓
    - Implement contextual menus for file operations ✓
-   - Create FHIR viewer integration ✓
+   - Create OHIF viewer integration ✓
 
 4. **Weeks 19-28: Advanced Features** ✓
    - Implement text extraction framework ✓
@@ -499,7 +499,7 @@ The roadmap is divided into four phases:
 
 The Specialized File Handling implementation has made significant progress, with the completion of the foundation phase, core interpreters phase, UI integration phase, and most of the advanced features phase. The implementation of the content extraction framework, file similarity metrics, automated tagging, and AI service integration has provided researchers with powerful tools for analyzing and understanding the content of their files.
 
-Most recently, the implementation of DICOM metadata extraction and FHIR viewer integration has enhanced the platform's capabilities for medical research and clinical applications. Researchers can now extract comprehensive metadata from DICOM medical imaging files and open these files in FHIR-compatible viewers like OHIF Viewer, providing a specialized interface for viewing and analyzing medical images. This integration is particularly valuable for researchers working with medical imaging data, as it allows them to leverage specialized tools for viewing and analyzing DICOM files directly from the Science Data Kit.
+Most recently, the implementation of DICOM metadata extraction and OHIF viewer integration has enhanced the platform's capabilities for medical research and clinical applications. Researchers can now extract comprehensive metadata from DICOM medical imaging files and open these files in the OHIF Viewer, a FHIR-compatible medical imaging viewer, providing a specialized interface for viewing and analyzing medical images. This integration is particularly valuable for researchers working with medical imaging data, as it allows them to leverage specialized tools for viewing and analyzing DICOM files directly from the Science Data Kit.
 
 However, this roadmap has been deprioritized to focus on earlier phases. The remaining tasks will be addressed in future development cycles. The focus will shift to completing the cloud storage extensions and enhancing the user experience.
 

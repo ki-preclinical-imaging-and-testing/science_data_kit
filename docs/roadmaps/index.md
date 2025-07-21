@@ -37,7 +37,7 @@ The roadmap is divided into four phases:
 
 ### Specialized File Handling (Deprioritized)
 
-This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files. Note that this roadmap has been deprioritized to focus on earlier phases, with only DICOM metadata extraction and FHIR viewer integration being prioritized.
+This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files. Note that this roadmap has been deprioritized to focus on earlier phases, with only DICOM metadata extraction and OHIF viewer integration being prioritized.
 
 **Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_25.md)
 
@@ -301,7 +301,7 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 **Quality Gates**: UI Integration before Enterprise Features
 
 ### Specialized File Handling (Deprioritized)
-**Implementation Status**: Deprioritized - Foundation phase completed, Core Interpreters phase completed, UI Integration phase completed (including DICOM metadata extraction and FHIR viewer integration), Advanced Features phase partially completed
+**Implementation Status**: Deprioritized - Foundation phase completed, Core Interpreters phase completed, UI Integration phase completed (including DICOM metadata extraction and OHIF viewer integration), Advanced Features phase partially completed
 **Testing Status**: On hold - Comprehensive testing framework implemented and executed for all completed components
 **Next Testing Steps**: Deprioritized - Test AI service integration framework and remaining advanced features when roadmap is reactivated
 **Recommended Testing**: Use prompts #21 for code analysis, #19 for quality assessment, #24 for file format testing, #23 for performance validation of similarity analysis
@@ -447,7 +447,7 @@ The Cloud Storage Extensions roadmaps represent a significant advancement in the
 3. Enable rich file previews for various document formats
 4. Streamline research workflows by reducing manual data handling and format conversion
 
-Note: The Specialized File Handling roadmap has been deprioritized to focus on earlier phases, with only DICOM metadata extraction and FHIR viewer integration being prioritized. Other specialized file format support (NetCDF, HDF5, FITS, etc.) will be addressed in future development cycles.
+Note: The Specialized File Handling roadmap has been deprioritized to focus on earlier phases, with only DICOM metadata extraction and OHIF viewer integration being prioritized. Other specialized file format support (NetCDF, HDF5, FITS, etc.) will be addressed in future development cycles.
 
 By implementing these roadmaps, the Science Data Kit will provide researchers with powerful tools for working with cloud storage services, enabling more efficient and effective research workflows.
 
