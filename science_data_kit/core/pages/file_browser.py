@@ -186,78 +186,110 @@ class FileBrowserPage(BasePage):
 
         # Apply metadata filtering
         if self.metadata_filters:
-            filtered_files = []
-            for file in files:
-                # Extract metadata for the file
-                metadata = self.extract_metadata(file["path"])
-                if metadata:
-                    # Check if the file passes all metadata filters
-                    passes_all_filters = True
-                    for filter_criterion in self.metadata_filters:
-                        field = filter_criterion["field"]
-                        operator = filter_criterion["operator"]
-                        filter_value = filter_criterion["value"]
+            # Add a helper method to apply metadata filters
+            files = self._apply_metadata_filters(files, connection_type)
 
-                        # Handle nested fields (e.g., 'crs.epsg')
-                        field_parts = field.split('.')
-                        field_value = metadata
-                        for part in field_parts:
-                            if isinstance(field_value, dict) and part in field_value:
-                                field_value = field_value[part]
-                            else:
-                                field_value = None
-                                break
+    def _apply_metadata_filters(self, files: List[Dict[str, Any]], connection_type: str = None) -> List[Dict[str, Any]]:
+        """
+        Apply metadata filters to a list of files.
 
-                        # Skip this filter if the field doesn't exist
-                        if field_value is None:
+        Args:
+            files: List of file metadata dictionaries
+            connection_type: The type of connection ('local_fs', 'dropbox', 'sharepoint', 'onedrive', 'gdrive')
+
+        Returns:
+            Filtered list of file metadata dictionaries
+        """
+        if not self.metadata_filters:
+            return files
+
+        # Check if the provider supports metadata filtering
+        if connection_type:
+            provider = self._get_storage_provider(connection_type)
+            if provider and hasattr(provider, 'filter_by_metadata') and callable(getattr(provider, 'filter_by_metadata')):
+                # Delegate filtering to the provider
+                try:
+                    import asyncio
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    filtered_files = loop.run_until_complete(provider.filter_by_metadata(files, self.metadata_filters))
+                    loop.close()
+                    return filtered_files
+                except Exception as e:
+                    self.logger.error(f"Error delegating metadata filtering to provider: {str(e)}")
+                    # Fall back to client-side filtering
+
+        # Client-side filtering
+        filtered_files = []
+        for file in files:
+            # Extract metadata for the file
+            metadata = self.extract_metadata(file["path"])
+            if metadata:
+                # Check if the file passes all metadata filters
+                passes_all_filters = True
+                for filter_criterion in self.metadata_filters:
+                    field = filter_criterion["field"]
+                    operator = filter_criterion["operator"]
+                    filter_value = filter_criterion["value"]
+
+                    # Handle nested fields (e.g., 'crs.epsg')
+                    field_parts = field.split('.')
+                    field_value = metadata
+                    for part in field_parts:
+                        if isinstance(field_value, dict) and part in field_value:
+                            field_value = field_value[part]
+                        else:
+                            field_value = None
+                            break
+
+                    # Skip this filter if the field doesn't exist
+                    if field_value is None:
+                        passes_all_filters = False
+                        break
+
+                    # Apply the operator
+                    if operator == '=':
+                        if field_value != filter_value:
+                            passes_all_filters = False
+                            break
+                    elif operator == '!=':
+                        if field_value == filter_value:
+                            passes_all_filters = False
+                            break
+                    elif operator == '>':
+                        if not (isinstance(field_value, (int, float)) and field_value > filter_value):
+                            passes_all_filters = False
+                            break
+                    elif operator == '<':
+                        if not (isinstance(field_value, (int, float)) and field_value < filter_value):
+                            passes_all_filters = False
+                            break
+                    elif operator == '>=':
+                        if not (isinstance(field_value, (int, float)) and field_value >= filter_value):
+                            passes_all_filters = False
+                            break
+                    elif operator == '<=':
+                        if not (isinstance(field_value, (int, float)) and field_value <= filter_value):
+                            passes_all_filters = False
+                            break
+                    elif operator == 'contains':
+                        if not (isinstance(field_value, str) and filter_value.lower() in field_value.lower()):
+                            passes_all_filters = False
+                            break
+                    elif operator == 'startswith':
+                        if not (isinstance(field_value, str) and field_value.lower().startswith(filter_value.lower())):
+                            passes_all_filters = False
+                            break
+                    elif operator == 'endswith':
+                        if not (isinstance(field_value, str) and field_value.lower().endswith(filter_value.lower())):
                             passes_all_filters = False
                             break
 
-                        # Apply the operator
-                        if operator == '=':
-                            if field_value != filter_value:
-                                passes_all_filters = False
-                                break
-                        elif operator == '!=':
-                            if field_value == filter_value:
-                                passes_all_filters = False
-                                break
-                        elif operator == '>':
-                            if not (isinstance(field_value, (int, float)) and field_value > filter_value):
-                                passes_all_filters = False
-                                break
-                        elif operator == '<':
-                            if not (isinstance(field_value, (int, float)) and field_value < filter_value):
-                                passes_all_filters = False
-                                break
-                        elif operator == '>=':
-                            if not (isinstance(field_value, (int, float)) and field_value >= filter_value):
-                                passes_all_filters = False
-                                break
-                        elif operator == '<=':
-                            if not (isinstance(field_value, (int, float)) and field_value <= filter_value):
-                                passes_all_filters = False
-                                break
-                        elif operator == 'contains':
-                            if not (isinstance(field_value, str) and filter_value.lower() in field_value.lower()):
-                                passes_all_filters = False
-                                break
-                        elif operator == 'startswith':
-                            if not (isinstance(field_value, str) and field_value.lower().startswith(filter_value.lower())):
-                                passes_all_filters = False
-                                break
-                        elif operator == 'endswith':
-                            if not (isinstance(field_value, str) and field_value.lower().endswith(filter_value.lower())):
-                                passes_all_filters = False
-                                break
+                # Add the file to the filtered list if it passes all filters
+                if passes_all_filters:
+                    filtered_files.append(file)
 
-                    # Add the file to the filtered list if it passes all filters
-                    if passes_all_filters:
-                        filtered_files.append(file)
-
-            files = filtered_files
-
-        return files
+        return filtered_files
 
     def _get_directories(self) -> List[Dict[str, Any]]:
         """
@@ -408,7 +440,7 @@ class FileBrowserPage(BasePage):
         Get the appropriate storage provider based on the connection type.
 
         Args:
-            connection_type: The type of connection ('local_fs', 'dropbox', 'sharepoint', 'gdrive').
+            connection_type: The type of connection ('local_fs', 'dropbox', 'sharepoint', 'onedrive', 'gdrive').
 
         Returns:
             The storage provider instance, or None if not available.
@@ -421,6 +453,8 @@ class FileBrowserPage(BasePage):
         from science_data_kit.core.providers.storage.local_storage_provider import LocalStorageProvider
         from science_data_kit.core.providers.storage.dropbox_provider import DropboxProvider
         from science_data_kit.core.providers.storage.google_drive_provider import GoogleDriveProvider
+        from science_data_kit.core.providers.storage.sharepoint_provider import SharePointProvider
+        from science_data_kit.core.providers.storage.onedrive_provider import OneDriveProvider
 
         # Create the appropriate provider based on connection type
         provider = None
@@ -435,9 +469,26 @@ class FileBrowserPage(BasePage):
             config = {'token_path': os.environ.get('GDRIVE_TOKEN_PATH', '')}
             provider = GoogleDriveProvider(config)
         elif connection_type == 'sharepoint':
-            # SharePoint provider not implemented yet
-            self.logger.warning("SharePoint provider not implemented yet")
-            return None
+            # Get SharePoint credentials from session state or config
+            config = {
+                'tenant_id': os.environ.get('MSGRAPH_TENANT_ID', ''),
+                'client_id': os.environ.get('MSGRAPH_CLIENT_ID', ''),
+                'client_secret': os.environ.get('MSGRAPH_CLIENT_SECRET', ''),
+                'auth_method': os.environ.get('MSGRAPH_AUTH_METHOD', 'device_code'),
+                'site_id': os.environ.get('SHAREPOINT_SITE_ID', ''),
+                'drive_id': os.environ.get('SHAREPOINT_DRIVE_ID', '')
+            }
+            provider = SharePointProvider(config)
+        elif connection_type == 'onedrive':
+            # Get OneDrive credentials from session state or config
+            config = {
+                'tenant_id': os.environ.get('MSGRAPH_TENANT_ID', ''),
+                'client_id': os.environ.get('MSGRAPH_CLIENT_ID', ''),
+                'client_secret': os.environ.get('MSGRAPH_CLIENT_SECRET', ''),
+                'auth_method': os.environ.get('MSGRAPH_AUTH_METHOD', 'device_code'),
+                'drive_id': os.environ.get('ONEDRIVE_DRIVE_ID', '')
+            }
+            provider = OneDriveProvider(config)
 
         # Initialize the provider
         if provider:
@@ -505,24 +556,40 @@ class FileBrowserPage(BasePage):
                 else:
                     self.current_path = parent
                 self.selected_files = []
-        elif connection_type == 'gdrive':
-            # Google Drive uses folder IDs, so we need to get the parent folder ID
+        elif connection_type in ['gdrive', 'sharepoint', 'onedrive']:
+            # These providers use item IDs for navigation
             provider = self._get_storage_provider(connection_type)
             if provider:
                 try:
-                    # Get the parent folder ID
-                    # This is a simplified approach; in a real implementation,
-                    # you would need to get the parent folder ID from the API
-                    if self.current_path != 'root':
-                        # For simplicity, we'll just go back to the root folder
+                    # If we're at the root, there's nowhere to go up
+                    if not self.current_path or self.current_path == 'root' or self.current_path == '/':
+                        return
+
+                    # For Microsoft Graph providers (SharePoint and OneDrive), we need to get the parent ID
+                    if connection_type in ['sharepoint', 'onedrive']:
+                        # Get the current folder metadata
+                        import asyncio
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        folder_info = loop.run_until_complete(provider.get_file_info(self.current_path))
+                        loop.close()
+
+                        # Get the parent folder ID from parentReference
+                        if 'parentReference' in folder_info and 'id' in folder_info['parentReference']:
+                            parent_id = folder_info['parentReference']['id']
+                            self.current_path = parent_id
+                            self.selected_files = []
+                        else:
+                            # If we can't get the parent ID, go back to root
+                            self.current_path = 'root'
+                            self.selected_files = []
+                    else:
+                        # For Google Drive, we'll just go back to the root folder for simplicity
                         # In a real implementation, you would track the folder hierarchy
                         self.current_path = 'root'
                         self.selected_files = []
                 except Exception as e:
-                    self.logger.error(f"Error navigating up in Google Drive: {str(e)}")
-        elif connection_type == 'sharepoint':
-            # SharePoint navigation not implemented yet
-            self.logger.warning("SharePoint navigation not implemented yet")
+                    self.logger.error(f"Error navigating up in {connection_type}: {str(e)}")
 
     def select_file(self, file_path: str, multi_select: bool = False, update_graph: bool = True) -> None:
         """
