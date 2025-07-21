@@ -39,7 +39,7 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for implementing specialized file handling capabilities in the Science Data Kit. The system will provide a plugin-based architecture for interpreting different file types, extracting metadata, and generating previews. This enhancement will enable researchers to work more effectively with specialized scientific file formats, document types, and media files.
 
-**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_14.md)
+**Latest Version**: [Specialized File Handling Roadmap](active/roadmap_SpecializedFileHandling_15.md)
 
 **Status**: In Progress - The Specialized File Handling implementation has made significant progress in the foundation phase and has completed several key components of the core interpreters phase, UI integration phase, and advanced features phase. The plugin interfaces for file interpreters and metadata extractors have been created, along with the necessary directory structure and unit tests. The capability mixins, configuration schema, MIME type mapping, and plugin selection logic have been implemented. Plugin validation has been added to ensure plugins implement all required methods and capabilities, and comprehensive documentation has been created for plugin interfaces. Core integration with the file browser has been completed, including file details view with metadata and file preview component. The plugin priority system and plugin dependency resolution have been implemented, and several file interpreters have been created, including image, PDF, DOCX, NetCDF, HDF5, MP3, MP4, XLSX, FITS, CSV/TSV, and GeoTIFF interpreters. UI components for file previews have been implemented, including image preview component, document preview component, scientific data visualization component, and metadata grouping. Metadata-based search and filtering has been implemented, allowing users to search and filter files based on their metadata. Knowledge graph integration has been implemented, allowing file nodes to be enhanced with specialized metadata extracted by file interpreters. Saved searches functionality has been implemented, allowing users to save and reuse search queries with both filename filters and metadata filters. Faceted search functionality has been implemented, allowing users to filter search results by facets generated from file metadata. Metadata export functionality has been implemented, allowing users to export metadata in various formats (JSON, YAML, CSV, Excel). Content extraction framework has been implemented, including text extraction, OCR capabilities for images, and table extraction from documents. Key completed tasks include:
 
@@ -80,6 +80,17 @@ This roadmap outlines a comprehensive plan for implementing specialized file han
 35. Implemented knowledge graph integration to enhance file nodes with specialized metadata extracted by file interpreters
 36. Implemented saved searches functionality to allow users to save and reuse search queries with both filename filters and metadata filters
 37. Implemented faceted search functionality to allow users to filter search results by facets generated from file metadata
+38. Added metadata export functionality to allow users to export metadata in various formats (JSON, YAML, CSV, Excel)
+39. Implemented text extraction framework for extracting text from various file types
+40. Created OCR capabilities for extracting text from images
+41. Implemented table extraction for extracting structured data from documents
+42. Added comprehensive tests for text extraction, OCR, and table extraction
+43. Implemented file similarity metrics for comparing files based on content and metadata
+44. Created content-based similarity analysis for finding similar files
+45. Implemented automatic keyword extraction for identifying key terms in documents
+46. Created topic modeling for documents to identify main themes and topics
+47. Implemented entity recognition for content analysis to extract named entities from documents
+48. Added comprehensive tests for file similarity metrics, content-based similarity analysis, keyword extraction, topic modeling, and entity recognition
 
 The roadmap is divided into four phases:
 
@@ -269,11 +280,11 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 **Quality Gates**: UI Integration before Enterprise Features
 
 ### Specialized File Handling
-**Implementation Status**: In Progress - Foundation phase completed, Core Interpreters phase begun
-**Testing Status**: Active - Comprehensive testing framework implemented and executed
-**Next Testing Steps**: Test document file interpreters and scientific data file interpreters
-**Recommended Testing**: Use prompts #21 for code analysis, #19 for quality assessment, #24 for file format testing
-**Quality Gates**: Core Interpreters implementation before UI Integration
+**Implementation Status**: In Progress - Foundation phase completed, Core Interpreters phase completed, UI Integration phase completed, Advanced Features phase partially completed
+**Testing Status**: Active - Comprehensive testing framework implemented and executed for all completed components
+**Next Testing Steps**: Test AI service integration framework and remaining advanced features
+**Recommended Testing**: Use prompts #21 for code analysis, #19 for quality assessment, #24 for file format testing, #23 for performance validation of similarity analysis
+**Quality Gates**: Advanced Features completion before final release
 
 ### Microsoft Graph Extension
 **Implementation Status**: In Progress - Phase 1: Foundation
