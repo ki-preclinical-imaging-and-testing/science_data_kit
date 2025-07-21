@@ -25,11 +25,11 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Metadata display panel
   - ⟳ Consistent navigation across storage providers
   - ⟳ Unified search and filtering
-- ⟳ Create user-friendly interfaces for accessing advanced features
+- ✓ Create user-friendly interfaces for accessing advanced features
   - ✓ File preview components for various formats
   - ✓ Metadata visualization and grouping
-  - ⟳ Contextual menus for file-specific operations
-  - ⟳ Visual indicators for files with specialized handling capabilities
+  - ✓ Contextual menus for file-specific operations
+  - ✓ Visual indicators for files with specialized handling capabilities
 
 #### Cloud Storage Foundation Completion
 - Complete Dropbox Extension
