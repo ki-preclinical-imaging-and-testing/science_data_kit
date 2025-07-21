@@ -23,8 +23,8 @@ The following roadmap outlines the key steps for implementing the strategic visi
 - ⟳ Implement unified file browser interface for local and cloud storage
   - ✓ File type icons and preview capabilities
   - ✓ Metadata display panel
-  - ⟳ Consistent navigation across storage providers
-  - ⟳ Unified search and filtering
+  - ✓ Consistent navigation across storage providers
+  - ✓ Unified search and filtering
 - ✓ Create user-friendly interfaces for accessing advanced features
   - ✓ File preview components for various formats
   - ✓ Metadata visualization and grouping

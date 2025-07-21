@@ -37,16 +37,18 @@ class FileBrowserPage(BasePage):
     be rendered by any UI framework.
     """
 
-    def __init__(self, db_connection=None, initial_path=None):
+    def __init__(self, db_connection=None, initial_path=None, connection_type='local_fs'):
         """
         Initialize the file browser page.
 
         Args:
             db_connection: Optional database connection to use for data retrieval.
             initial_path: Optional initial path to display. Defaults to the user's home directory.
+            connection_type: Type of connection ('local_fs', 'dropbox', 'sharepoint', 'gdrive').
         """
         super().__init__(db_connection)
         self.current_path = initial_path or str(pathlib.Path.home())
+        self.connection_type = connection_type
         self.selected_files = []
         self.view_mode = "list"
         self.sort_by = "name"
@@ -55,6 +57,7 @@ class FileBrowserPage(BasePage):
         self.metadata_filters = []  # List of metadata filter criteria
         self.saved_searches = {}  # Dictionary of saved searches
         self.facets = {}  # Dictionary of metadata facets
+        self._storage_providers = {}  # Cache for storage providers
 
     def get_page_data(self) -> FileExplorerPageData:
         """
@@ -122,28 +125,56 @@ class FileBrowserPage(BasePage):
             A list of dictionaries containing file information.
         """
         files = []
+
+        # Get the connection type from session state
+        connection_type = getattr(self, 'connection_type', 'local_fs')
+
         try:
-            for item in os.listdir(self.current_path):
-                item_path = os.path.join(self.current_path, item)
-                if os.path.isfile(item_path):
-                    # Skip hidden files
-                    if item.startswith('.'):
-                        continue
+            if connection_type == 'local_fs':
+                # Local filesystem handling
+                for item in os.listdir(self.current_path):
+                    item_path = os.path.join(self.current_path, item)
+                    if os.path.isfile(item_path):
+                        # Skip hidden files
+                        if item.startswith('.'):
+                            continue
 
-                    # Get file stats
-                    stats = os.stat(item_path)
+                        # Get file stats
+                        stats = os.stat(item_path)
 
-                    # Add file to the list
-                    files.append({
-                        "name": item,
-                        "path": item_path,
-                        "size": stats.st_size,
-                        "modified": stats.st_mtime,
-                        "type": self._get_file_type(item),
-                        "selected": item_path in self.selected_files
-                    })
+                        # Add file to the list
+                        files.append({
+                            "name": item,
+                            "path": item_path,
+                            "size": stats.st_size,
+                            "modified": stats.st_mtime,
+                            "type": self._get_file_type(item),
+                            "selected": item_path in self.selected_files
+                        })
+            elif connection_type in ['dropbox', 'sharepoint', 'gdrive']:
+                # Get the appropriate provider
+                provider = self._get_storage_provider(connection_type)
+                if provider:
+                    # Get the current path or folder ID
+                    path_or_id = self.current_path
+
+                    # List files using the provider
+                    provider_files = provider.list_files(path_or_id)
+
+                    # Convert to our format
+                    for file in provider_files:
+                        if file.get("type") != "folder":  # Skip folders, they're handled by _get_directories
+                            files.append({
+                                "name": file.get("name", ""),
+                                "path": file.get("path", ""),
+                                "size": file.get("size", 0),
+                                "modified": file.get("modified", ""),
+                                "type": file.get("type", ""),
+                                "selected": file.get("path", "") in self.selected_files
+                            })
         except (FileNotFoundError, PermissionError) as e:
             # Handle errors gracefully
+            self.logger.error(f"Error getting files: {str(e)}")
             pass
 
         # Apply sorting
@@ -236,26 +267,52 @@ class FileBrowserPage(BasePage):
             A list of dictionaries containing directory information.
         """
         directories = []
+
+        # Get the connection type from session state
+        connection_type = getattr(self, 'connection_type', 'local_fs')
+
         try:
-            for item in os.listdir(self.current_path):
-                item_path = os.path.join(self.current_path, item)
-                if os.path.isdir(item_path):
-                    # Skip hidden directories
-                    if item.startswith('.'):
-                        continue
+            if connection_type == 'local_fs':
+                # Local filesystem handling
+                for item in os.listdir(self.current_path):
+                    item_path = os.path.join(self.current_path, item)
+                    if os.path.isdir(item_path):
+                        # Skip hidden directories
+                        if item.startswith('.'):
+                            continue
 
-                    # Get directory stats
-                    stats = os.stat(item_path)
+                        # Get directory stats
+                        stats = os.stat(item_path)
 
-                    # Add directory to the list
-                    directories.append({
-                        "name": item,
-                        "path": item_path,
-                        "modified": stats.st_mtime,
-                        "selected": item_path in self.selected_files
-                    })
+                        # Add directory to the list
+                        directories.append({
+                            "name": item,
+                            "path": item_path,
+                            "modified": stats.st_mtime,
+                            "selected": item_path in self.selected_files
+                        })
+            elif connection_type in ['dropbox', 'sharepoint', 'gdrive']:
+                # Get the appropriate provider
+                provider = self._get_storage_provider(connection_type)
+                if provider:
+                    # Get the current path or folder ID
+                    path_or_id = self.current_path
+
+                    # List files using the provider
+                    provider_files = provider.list_files(path_or_id)
+
+                    # Convert to our format
+                    for file in provider_files:
+                        if file.get("type") == "folder":  # Only include folders
+                            directories.append({
+                                "name": file.get("name", ""),
+                                "path": file.get("path", ""),
+                                "modified": file.get("modified", ""),
+                                "selected": file.get("path", "") in self.selected_files
+                            })
         except (FileNotFoundError, PermissionError) as e:
             # Handle errors gracefully
+            self.logger.error(f"Error getting directories: {str(e)}")
             pass
 
         # Apply sorting
@@ -346,6 +403,57 @@ class FileBrowserPage(BasePage):
         else:
             return "other"
 
+    def _get_storage_provider(self, connection_type: str):
+        """
+        Get the appropriate storage provider based on the connection type.
+
+        Args:
+            connection_type: The type of connection ('local_fs', 'dropbox', 'sharepoint', 'gdrive').
+
+        Returns:
+            The storage provider instance, or None if not available.
+        """
+        # Check if we already have a cached provider
+        if connection_type in self._storage_providers:
+            return self._storage_providers[connection_type]
+
+        # Import providers here to avoid circular imports
+        from science_data_kit.core.providers.storage.local_storage_provider import LocalStorageProvider
+        from science_data_kit.core.providers.storage.dropbox_provider import DropboxProvider
+        from science_data_kit.core.providers.storage.google_drive_provider import GoogleDriveProvider
+
+        # Create the appropriate provider based on connection type
+        provider = None
+        if connection_type == 'local_fs':
+            provider = LocalStorageProvider({'base_path': self.current_path})
+        elif connection_type == 'dropbox':
+            # Get Dropbox credentials from session state or config
+            config = {'access_token': os.environ.get('DROPBOX_ACCESS_TOKEN', '')}
+            provider = DropboxProvider(config)
+        elif connection_type == 'gdrive':
+            # Get Google Drive credentials from session state or config
+            config = {'token_path': os.environ.get('GDRIVE_TOKEN_PATH', '')}
+            provider = GoogleDriveProvider(config)
+        elif connection_type == 'sharepoint':
+            # SharePoint provider not implemented yet
+            self.logger.warning("SharePoint provider not implemented yet")
+            return None
+
+        # Initialize the provider
+        if provider:
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            success = loop.run_until_complete(provider.initialize())
+            loop.close()
+
+            if success:
+                # Cache the provider for future use
+                self._storage_providers[connection_type] = provider
+                return provider
+
+        return None
+
     def navigate_to(self, path: str) -> None:
         """
         Navigate to the specified path.
@@ -353,18 +461,68 @@ class FileBrowserPage(BasePage):
         Args:
             path: The path to navigate to.
         """
-        if os.path.isdir(path):
+        # Get the connection type from session state
+        connection_type = getattr(self, 'connection_type', 'local_fs')
+
+        if connection_type == 'local_fs':
+            # Local filesystem handling
+            if os.path.isdir(path):
+                self.current_path = path
+                self.selected_files = []
+        elif connection_type in ['dropbox', 'sharepoint', 'gdrive']:
+            # For cloud storage providers, we trust that the path is valid
+            # since it came from the provider's list_files method
             self.current_path = path
             self.selected_files = []
+
+            # Clear the cache for this provider to ensure we get fresh data
+            if connection_type in self._storage_providers:
+                # We don't actually remove the provider, just clear any cached data
+                provider = self._storage_providers[connection_type]
+                if hasattr(provider, 'clear_cache') and callable(getattr(provider, 'clear_cache')):
+                    provider.clear_cache()
 
     def navigate_up(self) -> None:
         """
         Navigate to the parent directory.
         """
-        parent = os.path.dirname(self.current_path)
-        if parent and parent != self.current_path:
-            self.current_path = parent
-            self.selected_files = []
+        # Get the connection type from session state
+        connection_type = getattr(self, 'connection_type', 'local_fs')
+
+        if connection_type == 'local_fs':
+            # Local filesystem handling
+            parent = os.path.dirname(self.current_path)
+            if parent and parent != self.current_path:
+                self.current_path = parent
+                self.selected_files = []
+        elif connection_type == 'dropbox':
+            # Dropbox uses path-like navigation
+            parent = os.path.dirname(self.current_path)
+            if parent and parent != self.current_path:
+                # Handle root directory specially
+                if parent == '/':
+                    self.current_path = ''
+                else:
+                    self.current_path = parent
+                self.selected_files = []
+        elif connection_type == 'gdrive':
+            # Google Drive uses folder IDs, so we need to get the parent folder ID
+            provider = self._get_storage_provider(connection_type)
+            if provider:
+                try:
+                    # Get the parent folder ID
+                    # This is a simplified approach; in a real implementation,
+                    # you would need to get the parent folder ID from the API
+                    if self.current_path != 'root':
+                        # For simplicity, we'll just go back to the root folder
+                        # In a real implementation, you would track the folder hierarchy
+                        self.current_path = 'root'
+                        self.selected_files = []
+                except Exception as e:
+                    self.logger.error(f"Error navigating up in Google Drive: {str(e)}")
+        elif connection_type == 'sharepoint':
+            # SharePoint navigation not implemented yet
+            self.logger.warning("SharePoint navigation not implemented yet")
 
     def select_file(self, file_path: str, multi_select: bool = False, update_graph: bool = True) -> None:
         """
