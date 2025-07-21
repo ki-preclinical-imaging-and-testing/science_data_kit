@@ -76,7 +76,9 @@ The following roadmap outlines the key steps for implementing the strategic visi
 
 ### Phase 3: New Feature Development (6-8 weeks)
 
-#### Specialized File Handling Enhancements
+#### Specialized File Handling Enhancements (Deprioritized)
+Note: The Specialized File Handling roadmap has been deprioritized to focus on earlier phases. The following items will be addressed in future development cycles.
+
 - ✓ Specialized File Handling Foundation
   - ✓ Plugin Interface Design (base classes, capability mixins, configuration schema)
   - ✓ Plugin Discovery and Registration (directory structure, registry updates, MIME type mapping)
@@ -95,8 +97,8 @@ The following roadmap outlines the key steps for implementing the strategic visi
   - ✓ Automated Tagging (keyword extraction, topic modeling, entity recognition, sentiment analysis, automated categorization, tag suggestion system)
   - ✓ AI Service Integration (image analysis, text analysis, speech recognition, translation, content summarization, data analysis automation)
 - ✓ Implement batch processing capabilities for file operations
-- ⟳ Create advanced visualization components for scientific data
-- ⟳ Develop automated workflows for common research tasks
+- ⟳ Create advanced visualization components for scientific data (Deprioritized)
+- ⟳ Develop automated workflows for common research tasks (Deprioritized)
 
 ## Extension and File Handling Integration
 
