@@ -3,62 +3,100 @@
 ## Overview
 This document provides a high-level strategic roadmap for the Science Data Kit project, outlining the key initiatives, their relationships, and the overall direction of the project. It serves as a guide for stakeholders to understand the project's priorities and progress at a glance.
 
-## Current Strategic Focus: Extensions and Specialized File Handling
+## Current Strategic Focus: Feature Integration and User Experience
 
-The Science Data Kit is now focused on enhancing its capabilities for working with specialized file formats and cloud storage services. This strategic shift will:
+The Science Data Kit is now focused on completing and integrating existing features to provide a cohesive, user-friendly experience for researchers. This strategic shift will:
 
-1. **Expand data source connectivity** through robust cloud storage extensions
-2. **Enhance scientific data analysis** with specialized file format support
-3. **Improve metadata extraction** for better knowledge graph integration
-4. **Enable rich file previews** for various scientific and document formats
-5. **Streamline research workflows** by reducing manual data handling
+1. **Enhance user accessibility** to existing advanced features through intuitive interfaces
+2. **Complete cloud storage connectivity** for seamless access to research data across platforms
+3. **Integrate specialized file handling** capabilities into the main user interface
+4. **Streamline research workflows** by providing consistent interaction patterns
+5. **Balance development resources** between feature completion and user experience
 
 ## Implementation Roadmap
 
 The following roadmap outlines the key steps for implementing the strategic vision:
 
-### Phase 1: Cloud Storage Extensions (4-6 weeks)
+### Phase 1: Core Feature Completion and Integration (4-6 weeks)
+
+#### UI Integration for Existing Features
+- ⟳ Implement unified file browser interface for local and cloud storage
+  - ✓ File type icons and preview capabilities
+  - ✓ Metadata display panel
+  - ⟳ Consistent navigation across storage providers
+  - ⟳ Unified search and filtering
+- ⟳ Create user-friendly interfaces for accessing advanced features
+  - ✓ File preview components for various formats
+  - ✓ Metadata visualization and grouping
+  - ⟳ Contextual menus for file-specific operations
+  - ⟳ Visual indicators for files with specialized handling capabilities
+
+#### Cloud Storage Foundation Completion
 - Complete Dropbox Extension
   - ✓ Phase 1: Foundation (authentication, file operations, core integration, Neo4j integration)
   - ✓ Phase 2: Advanced Features (real-time sync, team folders, file sharing metadata, error handling)
   - ⟳ Phase 3: UI Integration (connection management, file browser, team folder management)
-  - ⟳ Phase 4: Enterprise Features (batch processing, scheduled sync, advanced security)
 - Enhance Microsoft Graph Extension
   - ⟳ Phase 1: Foundation (authentication, SharePoint integration, core integration)
-  - ⟳ Phase 2: Advanced Features (OneDrive management, Teams analysis, Excel processing)
 - Implement Google Drive/Workspace Extension
   - ⟳ Phase 1: Foundation (authentication, file operations, core integration)
+- ⟳ Create unified authentication management interface for all cloud providers
+
+#### Feature Accessibility Enhancement
+- ✓ Add GUI access points for metadata extraction and visualization
+- ✓ Implement user-friendly interfaces for search and filtering capabilities
+  - ✓ Metadata-based search
+  - ✓ Faceted search
+  - ✓ Saved searches
+- ⟳ Create visual indicators for files with specialized handling capabilities
+- ⟳ Develop contextual menus for file-specific operations
+
+### Phase 2: Advanced Feature Integration (4-6 weeks)
+
+#### Cloud Storage Advanced Features
+- Complete Dropbox Extension
+  - ⟳ Phase 4: Enterprise Features (batch processing, scheduled sync, advanced security)
+- Enhance Microsoft Graph Extension
+  - ⟳ Phase 2: Advanced Features (OneDrive management, Teams analysis, Excel processing)
+- Implement Google Drive/Workspace Extension
   - ⟳ Phase 2: Advanced Features (real-time sync, spreadsheet/document parsing)
 
-### Phase 2: Specialized File Handling (6-8 weeks)
-- Implement Foundation
+#### Knowledge Graph Integration
+- ✓ Enhance file nodes with specialized metadata from file interpreters
+- ⟳ Implement relationship discovery and navigation
+- ⟳ Create user-friendly interfaces for graph exploration
+- ⟳ Develop visualization tools for knowledge graph relationships
+
+#### Advanced Search and Discovery
+- ✓ Integrate faceted search into the main file browser
+- ✓ Implement visual search results with filtering options
+- ✓ Create saved search management interface
+- ⟳ Develop content-based search capabilities
+- ⟳ Implement similarity search for finding related files
+
+### Phase 3: New Feature Development (6-8 weeks)
+
+#### Specialized File Handling Enhancements
+- ✓ Specialized File Handling Foundation
   - ✓ Plugin Interface Design (base classes, capability mixins, configuration schema)
   - ✓ Plugin Discovery and Registration (directory structure, registry updates, MIME type mapping)
-  - ✓ Core Integration (file browser integration, metadata display, preview component)
-  - ✓ Testing and Documentation (unit tests, integration tests, documentation)
   - ✓ Plugin Priority System (handling multiple plugins for the same file type)
   - ✓ Plugin Dependency Resolution (handling dependencies between plugins)
-- Develop Core Interpreters
+- ✓ Core Interpreters
   - ✓ Image File Interpreters (EXIF metadata, previews, dimension extraction)
   - ✓ Document File Interpreters (PDF, DOCX, XLSX metadata and previews)
   - ✓ Scientific Data File Interpreters (NetCDF, HDF5)
   - ✓ Media File Interpreters (MP3, MP4 metadata and previews)
-  - ✓ Additional Scientific Data File Interpreters (FITS, CSV/TSV)
-    - ✓ Additional Scientific Data File Interpreters (GeoTIFF)
-- Enhance UI Integration
-  - ✓ File Preview Components (framework, image/document viewers)
-  - ✓ Metadata Visualization (metadata panel, grouping)
-  - ✓ File Browser Integration (file type icons, details sidebar, preview modal)
-  - ✓ Data Visualization Components (scientific data viewers)
-  - ✓ Media Player Components (audio/video players)
-  - ✓ Search and Discovery (metadata-based search, advanced filters)
-  - ✓ Search and Discovery (✓ faceted search, ✓ saved searches)
-- Implement Advanced Features
+  - ✓ Additional Scientific Data File Interpreters (FITS, CSV/TSV, GeoTIFF)
+- ✓ Advanced Features
   - ✓ Metadata Export (export metadata in JSON, YAML, CSV, Excel formats)
-  - ✓ Content Extraction (✓ text extraction, ✓ OCR, ✓ table extraction)
-  - ✓ Similarity Analysis (✓ file similarity metrics, ✓ content-based similarity, ✓ duplicate detection, ✓ file clustering, ✓ recommendation engine, ✓ similarity visualization)
-  - ✓ Automated Tagging (✓ keyword extraction, ✓ topic modeling, ✓ entity recognition, ✓ sentiment analysis, ✓ automated categorization, ✓ tag suggestion system)
-  - ✓ AI Service Integration (✓ image analysis, ✓ text analysis, ✓ speech recognition, ✓ translation, ✓ content summarization, ✓ data analysis automation)
+  - ✓ Content Extraction (text extraction, OCR, table extraction)
+  - ✓ Similarity Analysis (file similarity metrics, content-based similarity, duplicate detection, file clustering, recommendation engine, similarity visualization)
+  - ✓ Automated Tagging (keyword extraction, topic modeling, entity recognition, sentiment analysis, automated categorization, tag suggestion system)
+  - ✓ AI Service Integration (image analysis, text analysis, speech recognition, translation, content summarization, data analysis automation)
+- ⟳ Implement batch processing capabilities for file operations
+- ⟳ Create advanced visualization components for scientific data
+- ⟳ Develop automated workflows for common research tasks
 
 ## Extension and File Handling Integration
 
@@ -316,17 +354,40 @@ After completing the Extensions and Specialized File Handling roadmap, the proje
    - Implement performance monitoring for scientific workflows
    - Create community contribution frameworks for extensions and interpreters
 
+## Implementation Strategy
+
+To ensure successful execution of the roadmap, the following implementation strategy will be adopted:
+
+### 1. Prioritize User Experience
+- Focus on making existing features accessible through intuitive interfaces
+- Ensure consistent interaction patterns across different file types and storage providers
+- Create comprehensive documentation and tutorials for users
+- Gather user feedback to guide further development
+
+### 2. Adopt Incremental Integration
+- Integrate features into the UI as they are completed
+- Release regular updates with usable feature sets
+- Implement progressive enhancement for core functionality
+- Maintain backward compatibility with existing workflows
+
+### 3. Balance Development Resources
+- Allocate resources to both UI integration and backend development
+- Prioritize completing foundational features before adding advanced ones
+- Focus on quality and usability over feature quantity
+- Leverage existing components and patterns where possible
+
 ## Success Metrics
 
-The success of the Extensions and Specialized File Handling implementation will be measured by:
+The success of the implementation will be measured by:
 
-1. **Extension Coverage**: Implementation of all planned cloud storage extensions (Dropbox, Microsoft Graph, Google Drive)
-2. **File Format Support**: Support for key scientific file formats (NetCDF, HDF5, FITS) and common document formats
-3. **Metadata Extraction**: Comprehensive metadata extraction from supported file types
-4. **Knowledge Graph Integration**: Enhanced file nodes with specialized metadata in the knowledge graph
-5. **User Experience**: Intuitive interfaces for working with specialized file formats
-6. **Performance**: Efficient processing of large scientific datasets
-7. **Extensibility**: Ease of adding new file interpreters and cloud storage connectors
+1. **Feature Accessibility**: Percentage of implemented features accessible through the GUI
+2. **User Adoption**: Number of users actively using cloud storage and specialized file handling features
+3. **Workflow Efficiency**: Time saved in common research workflows compared to baseline
+4. **Feature Completeness**: Percentage of planned features fully implemented and integrated
+5. **Extension Coverage**: Implementation of all planned cloud storage extensions (Dropbox, Microsoft Graph, Google Drive)
+6. **File Format Support**: Support for key scientific file formats (NetCDF, HDF5, FITS) and common document formats
+7. **Performance**: Efficient processing of large scientific datasets
+8. **Extensibility**: Ease of adding new file interpreters and cloud storage connectors
 
 ## Current Status and Progress
 
@@ -527,17 +588,18 @@ A comprehensive testing strategy is being implemented for the Extensions and Spe
 
 ## Conclusion
 
-This executive roadmap guides the Science Data Kit project through the implementation of Extensions and Specialized File Handling capabilities, building upon the solid foundation established by the Plugin Architecture and the completed Flask migration. By following this roadmap, the project will achieve enhanced capabilities for scientific data analysis, particularly for researchers working with specialized file formats and cloud storage services.
+This restructured executive roadmap guides the Science Data Kit project through a balanced approach to feature development and integration, focusing on making the powerful capabilities already built accessible and useful to researchers. By prioritizing the completion and integration of existing features before adding new ones, the project will deliver a cohesive, user-friendly experience that addresses the real needs of scientific researchers.
 
-The Extensions and Specialized File Handling roadmap represents a significant advancement for the Science Data Kit project:
+The restructured roadmap represents a strategic shift for the Science Data Kit project:
 
-1. **Cloud Storage Extensions** will expand the platform's data source connectivity, enabling seamless integration with popular cloud services like Dropbox, Microsoft 365, and Google Workspace.
-2. **Specialized File Handling** will enhance scientific data analysis by providing rich metadata extraction and content interpretation for specialized scientific formats like NetCDF, HDF5, and FITS.
-3. **Knowledge Graph Integration** will improve data discovery and relationship visualization by enhancing file nodes with specialized metadata.
-4. **UI Enhancements** will provide intuitive interfaces for working with specialized file formats, including rich previews and metadata visualization.
+1. **Core Feature Completion and Integration** will ensure that existing capabilities are fully accessible through intuitive interfaces, providing immediate value to researchers.
+2. **Advanced Feature Integration** will enhance the platform with powerful knowledge graph capabilities, advanced search and discovery, and cloud storage features that streamline research workflows.
+3. **New Feature Development** will build upon the solid foundation to add specialized capabilities that address specific research needs, with a focus on automation and visualization.
 
-The implementation leverages the existing plugin architecture, extending it to support file interpreters and metadata extractors. This approach ensures consistency, extensibility, and maintainability while providing a powerful framework for handling diverse file formats and data sources.
+The implementation leverages the significant progress already made in specialized file handling and cloud storage extensions, while addressing the gap between backend capabilities and user experience. This approach ensures that researchers can take full advantage of the platform's powerful features through consistent, intuitive interfaces.
 
-With the implementation of this roadmap, the Science Data Kit will become an even more valuable tool for scientific researchers, enabling them to work more effectively with specialized data formats and cloud storage services. The project will continue to evolve with future enhancements focused on the Knowledge Graph Documentation System, Conversational Pipeline Builder, and Strategic Enhancements.
+With the implementation of this roadmap, the Science Data Kit will become an even more valuable tool for scientific researchers, enabling them to work more effectively with specialized data formats and cloud storage services. The balanced approach to development will ensure that the platform evolves in a way that maximizes value for users while maintaining technical excellence and extensibility.
+
+The project will continue to evolve with future enhancements focused on the Knowledge Graph Documentation System, Conversational Pipeline Builder, and Strategic Enhancements, building upon the solid foundation established by this roadmap.
 
 Note: This file has been updated in place (rather than creating a new version with _v2 suffix) to keep file counts to a minimum.
