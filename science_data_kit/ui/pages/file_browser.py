@@ -137,6 +137,15 @@ class FileBrowserPage(BasePage):
         Args:
             path: The path to navigate to.
         """
+        # Get the connection type from session state
+        connection_type = st.session_state.get("connection_type", "local_fs")
+
+        # Use the core implementation to navigate
+        from science_data_kit.core.pages.file_browser import FileBrowserPage
+        core_page = FileBrowserPage(initial_path=st.session_state.get("current_path", ""), 
+                                    connection_type=connection_type)
+        core_page.navigate_to(path)
+
         # Update current path
         st.session_state["current_path"] = path
 
@@ -169,8 +178,20 @@ class FileBrowserPage(BasePage):
             # Remove current path from history
             st.session_state["file_history"].pop()
 
-            # Set current path to previous path
-            st.session_state["current_path"] = st.session_state["file_history"][-1]
+            # Get the previous path
+            previous_path = st.session_state["file_history"][-1]
+
+            # Get the connection type from session state
+            connection_type = st.session_state.get("connection_type", "local_fs")
+
+            # Use the core implementation to navigate to the previous path
+            from science_data_kit.core.pages.file_browser import FileBrowserPage
+            core_page = FileBrowserPage(initial_path=st.session_state.get("current_path", ""), 
+                                        connection_type=connection_type)
+            core_page.navigate_to(previous_path)
+
+            # Update current path
+            st.session_state["current_path"] = previous_path
 
             # Clear current file
             st.session_state["current_file"] = None
@@ -180,11 +201,32 @@ class FileBrowserPage(BasePage):
 
     def _go_up(self):
         """Go up one directory level."""
-        current_path = st.session_state["current_path"]
-        parent_path = os.path.dirname(current_path)
+        # Get the connection type from session state
+        connection_type = st.session_state.get("connection_type", "local_fs")
 
-        if parent_path and parent_path != current_path:
-            self._navigate_to(parent_path)
+        # Use the core implementation to navigate up
+        from science_data_kit.core.pages.file_browser import FileBrowserPage
+        core_page = FileBrowserPage(initial_path=st.session_state.get("current_path", ""), 
+                                    connection_type=connection_type)
+        core_page.navigate_up()
+
+        # Update current path from core page
+        new_path = core_page.current_path
+
+        # Only update if the path has changed
+        if new_path and new_path != st.session_state["current_path"]:
+            # Update current path
+            st.session_state["current_path"] = new_path
+
+            # Add to history if not already there
+            if new_path not in st.session_state["file_history"]:
+                st.session_state["file_history"].append(new_path)
+
+            # Clear current file
+            st.session_state["current_file"] = None
+
+            # Rerun to update UI
+            st.rerun()
 
     def render_file_browser(self):
         """Render the file browser section."""
@@ -292,18 +334,43 @@ class FileBrowserPage(BasePage):
 
         # Display current directory contents
         current_path = st.session_state["current_path"]
+        connection_type = st.session_state.get("connection_type", "local_fs")
+
         if current_path:
             try:
-                contents = get_directory_contents(current_path)
+                # Use the core implementation to get directory contents
+                from science_data_kit.core.pages.file_browser import FileBrowserPage
+                core_page = FileBrowserPage(
+                    initial_path=current_path, 
+                    connection_type=connection_type
+                )
 
-                if not contents:
+                # Apply any active filters
+                if "filename_filter" in st.session_state and st.session_state.filename_filter:
+                    core_page.set_filter(st.session_state.filename_filter)
+
+                # Apply metadata filters
+                if "metadata_filters" in st.session_state and st.session_state.metadata_filters:
+                    core_page.clear_metadata_filters()
+                    for filter_item in st.session_state.metadata_filters:
+                        core_page.set_metadata_filter(
+                            filter_item["field"],
+                            filter_item["operator"],
+                            filter_item["value"]
+                        )
+
+                # Get page data from core implementation
+                page_data = core_page.get_page_data()
+
+                # Get files and directories from page data
+                files = page_data.files
+                directories = page_data.directories
+
+                if not files and not directories:
                     st.info(f"No items found in {current_path}")
                     return
 
-                # Create a DataFrame for display
-                df = pd.DataFrame(contents)
-
-                # Format size column
+                # Format size for files
                 def format_size(size):
                     if size is None:
                         return ""
@@ -316,28 +383,57 @@ class FileBrowserPage(BasePage):
                     else:
                         return f"{size / (1024 * 1024 * 1024):.1f} GB"
 
-                df["size_formatted"] = df["size"].apply(format_size)
+                # Display directories first
+                if directories:
+                    st.subheader("Directories")
+                    for directory in directories:
+                        col1, col2 = st.columns([4, 1])
 
-                # Display as a table with clickable links
-                for _, row in df.iterrows():
-                    col1, col2, col3, col4 = st.columns([3, 1, 2, 1])
+                        with col1:
+                            if st.button(f"📁 {directory['name']}", key=f"dir_{directory['path']}"):
+                                self._navigate_to(directory['path'])
 
-                    with col1:
-                        if row["type"] == "directory":
-                            if st.button(f"📁 {row['name']}", key=f"dir_{row['path']}"):
-                                self._navigate_to(row["path"])
-                        else:
-                            if st.button(f"📄 {row['name']}", key=f"file_{row['path']}"):
-                                self._view_file(row["path"])
+                        with col2:
+                            # Format modified time
+                            modified = directory.get('modified', '')
+                            if isinstance(modified, (int, float)):
+                                from datetime import datetime
+                                modified = datetime.fromtimestamp(modified).strftime("%Y-%m-%d %H:%M:%S")
+                            st.write(modified)
 
-                    with col2:
-                        st.write(row["type"])
+                # Display files
+                if files:
+                    st.subheader("Files")
+                    for file in files:
+                        col1, col2, col3, col4 = st.columns([3, 1, 2, 1])
 
-                    with col3:
-                        st.write(row["modified"])
+                        with col1:
+                            if st.button(f"📄 {file['name']}", key=f"file_{file['path']}"):
+                                self._view_file(file["path"])
 
-                    with col4:
-                        st.write(row["size_formatted"])
+                        with col2:
+                            st.write(file.get("type", ""))
+
+                        with col3:
+                            # Format modified time
+                            modified = file.get('modified', '')
+                            if isinstance(modified, (int, float)):
+                                from datetime import datetime
+                                modified = datetime.fromtimestamp(modified).strftime("%Y-%m-%d %H:%M:%S")
+                            st.write(modified)
+
+                        with col4:
+                            st.write(format_size(file.get("size", 0)))
+
+                # Display facets if available
+                if page_data.facets:
+                    with st.expander("Metadata Facets", expanded=False):
+                        for category, facets in page_data.facets.items():
+                            st.subheader(category)
+                            for field, values in facets.items():
+                                st.write(f"**{field}**")
+                                for value, count in values.items():
+                                    st.write(f"  {value}: {count}")
 
             except Exception as e:
                 st.error(f"Error browsing directory: {e}")
@@ -391,41 +487,15 @@ class FileBrowserPage(BasePage):
 
     def _apply_filename_filter(self):
         """Apply the filename filter to the file browser."""
-        # Get the filter pattern from session state
-        filter_pattern = st.session_state.get("filename_filter", "")
-
-        # Get the core page instance
-        from science_data_kit.core.pages.file_browser import FileBrowserPage
-        core_page = FileBrowserPage()
-
-        # Set the current path
-        core_page.current_path = st.session_state.get("current_path", "")
-
-        # Apply the filter
-        core_page.set_filter(filter_pattern)
+        # The actual filtering is now done in render_file_browser
+        # This method just triggers a rerun to refresh the UI
+        st.rerun()
 
     def _apply_metadata_filters(self):
         """Apply metadata filters to the file browser."""
-        # Get the metadata filters from session state
-        metadata_filters = st.session_state.get("metadata_filters", [])
-
-        # Get the core page instance
-        from science_data_kit.core.pages.file_browser import FileBrowserPage
-        core_page = FileBrowserPage()
-
-        # Set the current path
-        core_page.current_path = st.session_state.get("current_path", "")
-
-        # Clear existing metadata filters
-        core_page.clear_metadata_filters()
-
-        # Apply each metadata filter
-        for filter_item in metadata_filters:
-            core_page.set_metadata_filter(
-                filter_item["field"],
-                filter_item["operator"],
-                filter_item["value"]
-            )
+        # The actual filtering is now done in render_file_browser
+        # This method just triggers a rerun to refresh the UI
+        st.rerun()
 
     def render_content(self) -> None:
         """Render the File Browser page content."""

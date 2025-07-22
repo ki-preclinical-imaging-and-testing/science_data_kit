@@ -5,6 +5,14 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 ## Active Roadmaps
 
+### UI Integration
+
+This roadmap outlines a comprehensive plan for implementing a unified file browser interface for local and cloud storage in the Science Data Kit. The goal is to provide a consistent user experience across different storage providers, with unified navigation, search, and filtering capabilities.
+
+**Latest Version**: [UI Integration Roadmap](active/roadmap_UIIntegration_00.md)
+
+**Status**: Phase 1 Completed - The UI Integration roadmap has completed Phase 1 (Core Navigation Consistency) with the implementation of consistent navigation across storage providers and unified search and filtering capabilities. The UI implementation now leverages the provider-agnostic capabilities of the core implementation, ensuring a consistent user experience regardless of the storage provider being used. Phase 2 (Enhanced UI Components) and Phase 3 (Advanced Integration) are planned for future implementation.
+
 ### Design/UX Phase
 
 This roadmap outlines a comprehensive plan for the Design/UX phase of the Science Data Kit, focusing on frontend component validation, user experience optimization, backend validation through the user interface, and workshop preparation integration. This phase is critical for ensuring that the backend architecture established in previous phases is effectively integrated with frontend components and that the overall user experience is thoroughly tested, refined, and validated.
@@ -278,6 +286,13 @@ This roadmap outlines a comprehensive plan for strategic enhancements to the Sci
 3. **Phase 3: Platform Expansion** - Completing domain branch templates and adding cross-platform deployment and scientific workflow integration.
 
 ## Testing and Quality Status
+
+### UI Integration
+**Implementation Status**: Phase 1 Completed - Core Navigation Consistency
+**Testing Status**: Completed - Consistent navigation and unified search/filtering implemented and tested
+**Next Testing Steps**: Test enhanced file preview capabilities for cloud storage files
+**Recommended Testing**: Use prompts #19 for quality assessment, #21 for code analysis, #24 for real data testing
+**Quality Gates**: Core Navigation Consistency before Enhanced UI Components
 
 ### Design/UX Phase
 **Implementation Status**: In Progress - Phase 1: Core Component Validation
