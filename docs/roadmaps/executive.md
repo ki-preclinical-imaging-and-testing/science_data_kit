@@ -414,12 +414,12 @@ The Extensions and Specialized File Handling implementation is currently in prog
    - **Dropbox Extension**:
      - ✓ Phase 1 (Foundation) has been completed with authentication, file operations, core integration, and Neo4j integration
      - ✓ Phase 2 (Advanced Features) has been completed with real-time sync, team folders, file sharing metadata, and error handling
-     - ⟳ Phase 3 (UI Integration) is in progress with connection management and file browser components implemented
+     - ⟳ Phase 3 (UI Integration) is in progress with connection management, file browser components, and team folder management interface implemented
      - ⟳ Phase 4 (Enterprise Features) is planned for future implementation
 
    - **Microsoft Graph Extension**:
      - ✓ Phase 1 (Foundation) has been completed with authentication, connection setup, SharePoint integration, core integration with entity schemas, and Neo4j knowledge graph integration
-     - ⟳ Phase 2 (Advanced Features) is in progress with OneDrive file management and Teams conversation analysis
+     - ⟳ Phase 2 (Advanced Features) is in progress with OneDrive file management and enhanced Teams conversation analysis capabilities including message extraction, conversation metrics, participant analysis, and topic extraction
 
    - **Google Drive/Workspace Extension**:
      - ⟳ Phase 1 (Foundation) is planned for implementation after Microsoft Graph Extension

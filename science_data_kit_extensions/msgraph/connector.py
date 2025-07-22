@@ -435,3 +435,188 @@ class MSGraphConnector:
         """
         response = self.request("GET", f"/teams/{team_id}/channels/{channel_id}/messages")
         return response.get('value', [])
+
+    def get_message_replies(self, team_id: str, channel_id: str, message_id: str) -> List[Dict[str, Any]]:
+        """
+        Get replies to a specific message in a channel.
+
+        Args:
+            team_id: ID of the team
+            channel_id: ID of the channel
+            message_id: ID of the message
+
+        Returns:
+            List[Dict[str, Any]]: List of reply messages
+        """
+        response = self.request("GET", f"/teams/{team_id}/channels/{channel_id}/messages/{message_id}/replies")
+        return response.get('value', [])
+
+    def get_chat_messages(self, chat_id: str) -> List[Dict[str, Any]]:
+        """
+        Get messages from a Teams chat.
+
+        Args:
+            chat_id: ID of the chat
+
+        Returns:
+            List[Dict[str, Any]]: List of chat messages
+        """
+        response = self.request("GET", f"/chats/{chat_id}/messages")
+        return response.get('value', [])
+
+    def get_user_chats(self) -> List[Dict[str, Any]]:
+        """
+        Get all chats for the current user.
+
+        Returns:
+            List[Dict[str, Any]]: List of chats
+        """
+        response = self.request("GET", "/me/chats")
+        return response.get('value', [])
+
+    def analyze_conversation(self, team_id: str, channel_id: str) -> Dict[str, Any]:
+        """
+        Analyze a Teams channel conversation to extract insights.
+
+        This method retrieves all messages in a channel and performs basic analysis
+        to extract conversation metrics, active participants, and conversation timeline.
+
+        Args:
+            team_id: ID of the team
+            channel_id: ID of the channel
+
+        Returns:
+            Dict[str, Any]: Analysis results including:
+                - message_count: Total number of messages
+                - participant_count: Number of unique participants
+                - participants: List of participants with message counts
+                - timeline: Message counts by date
+                - top_active_periods: Most active conversation periods
+        """
+        messages = self.get_messages(team_id, channel_id)
+
+        # Extract basic metrics
+        message_count = len(messages)
+
+        # Extract participants and their message counts
+        participants = {}
+        timeline = {}
+
+        for message in messages:
+            # Count messages by participant
+            from_user = message.get('from', {}).get('user', {})
+            user_id = from_user.get('id', 'unknown')
+            user_name = from_user.get('displayName', 'Unknown User')
+
+            if user_id not in participants:
+                participants[user_id] = {
+                    'id': user_id,
+                    'name': user_name,
+                    'message_count': 0
+                }
+
+            participants[user_id]['message_count'] += 1
+
+            # Track message timeline
+            created_datetime = message.get('createdDateTime', '')
+            if created_datetime:
+                date_only = created_datetime.split('T')[0]  # Extract date part
+                timeline[date_only] = timeline.get(date_only, 0) + 1
+
+        # Sort timeline by date
+        sorted_timeline = dict(sorted(timeline.items()))
+
+        # Find most active periods
+        sorted_by_activity = sorted(timeline.items(), key=lambda x: x[1], reverse=True)
+        top_active_periods = sorted_by_activity[:5] if len(sorted_by_activity) >= 5 else sorted_by_activity
+
+        return {
+            'message_count': message_count,
+            'participant_count': len(participants),
+            'participants': list(participants.values()),
+            'timeline': sorted_timeline,
+            'top_active_periods': dict(top_active_periods)
+        }
+
+    def extract_conversation_topics(self, team_id: str, channel_id: str) -> Dict[str, Any]:
+        """
+        Extract potential topics from a Teams channel conversation.
+
+        This method uses a simple frequency-based approach to identify potential
+        topics from message content. For more advanced topic modeling, consider
+        integrating with NLP services.
+
+        Args:
+            team_id: ID of the team
+            channel_id: ID of the channel
+
+        Returns:
+            Dict[str, Any]: Topic analysis results including:
+                - common_terms: Most frequently used terms
+                - potential_topics: Potential conversation topics
+        """
+        messages = self.get_messages(team_id, channel_id)
+
+        # Extract message content
+        all_content = ""
+        for message in messages:
+            content = message.get('body', {}).get('content', '')
+            # Remove HTML tags if present (simple approach)
+            content = content.replace('<p>', ' ').replace('</p>', ' ')
+            content = content.replace('<br>', ' ').replace('</br>', ' ')
+            all_content += " " + content
+
+        # Simple word frequency analysis
+        # In a real implementation, you would use more sophisticated NLP techniques
+        words = all_content.lower().split()
+        word_freq = {}
+
+        # Common English stop words to filter out
+        stop_words = {'a', 'an', 'the', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 
+                     'in', 'on', 'at', 'to', 'for', 'with', 'by', 'about', 'like', 
+                     'through', 'over', 'before', 'after', 'between', 'under', 'during',
+                     'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them'}
+
+        for word in words:
+            # Remove punctuation
+            word = word.strip('.,!?;:()"\'')
+            if word and len(word) > 3 and word not in stop_words:
+                word_freq[word] = word_freq.get(word, 0) + 1
+
+        # Get most common terms
+        sorted_terms = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
+        common_terms = dict(sorted_terms[:20]) if len(sorted_terms) >= 20 else dict(sorted_terms)
+
+        # Group related terms (simplified approach)
+        # In a real implementation, you would use more sophisticated clustering or topic modeling
+        potential_topics = []
+        processed_terms = set()
+
+        for term, count in sorted_terms[:50]:
+            if term in processed_terms:
+                continue
+
+            related_terms = [term]
+            for other_term, _ in sorted_terms[:100]:
+                if other_term != term and other_term not in processed_terms:
+                    # Simple string matching - in a real implementation, use semantic similarity
+                    if term in other_term or other_term in term:
+                        related_terms.append(other_term)
+                        processed_terms.add(other_term)
+
+            if len(related_terms) > 1 or count > 5:
+                potential_topics.append({
+                    'main_term': term,
+                    'related_terms': related_terms,
+                    'frequency': count
+                })
+
+            processed_terms.add(term)
+
+            if len(potential_topics) >= 10:
+                break
+
+        return {
+            'common_terms': common_terms,
+            'potential_topics': potential_topics
+        }

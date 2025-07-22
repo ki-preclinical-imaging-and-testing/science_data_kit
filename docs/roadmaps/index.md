@@ -36,9 +36,9 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for implementing the Dropbox extension for the Science Data Kit. The extension will enable integration with Dropbox cloud storage, including file access and synchronization, team folder management, and file sharing metadata extraction.
 
-**Latest Version**: [Dropbox Extension Roadmap](active/roadmap_DropboxExtension_09.md)
+**Latest Version**: [Dropbox Extension Roadmap](active/roadmap_DropboxExtension_10.md)
 
-**Status**: Progressing in Phase 3 - The Dropbox extension implementation has completed Phase 1 (Foundation) and Phase 2 (Advanced Features). Phase 3 (UI Integration) is now well underway with the implementation of both the Dropbox connection management page and the file browser component. File preview capabilities have been significantly enhanced with support for PDF, Excel, HTML, XML, Python, JavaScript, and improved Markdown rendering.
+**Status**: Progressing in Phase 3 - The Dropbox extension implementation has completed Phase 1 (Foundation) and Phase 2 (Advanced Features). Phase 3 (UI Integration) is now well underway with the implementation of the Dropbox connection management page, file browser component, and team folder management interface. The team folder management interface provides a comprehensive UI for listing, viewing details, creating, archiving, and deleting team folders. File preview capabilities have been significantly enhanced with support for PDF, Excel, HTML, XML, Python, JavaScript, and improved Markdown rendering.
 
 The roadmap is divided into four phases:
 
@@ -136,9 +136,13 @@ The roadmap is divided into four phases:
 
 This roadmap outlines a comprehensive plan for enhancing the Microsoft Graph extension for the Science Data Kit. The extension enables integration with Microsoft 365 services including SharePoint, OneDrive, Teams, and Excel through the Microsoft Graph API.
 
-**Latest Version**: [Microsoft Graph Extension Roadmap](active/roadmap_MSGraphExtension_03.md)
+**Latest Version**: [Microsoft Graph Extension Roadmap](active/roadmap_MSGraphExtension_04.md)
 
-**Status**: Phase 1 Completed, Phase 3 In Progress - The Microsoft Graph extension has completed Phase 1 (Foundation) and is now making significant progress in Phase 3 (UI Integration). The core connector class (MSGraphConnector) has been implemented, providing authentication, connection management, and API request capabilities. A file manager class (MSGraphFileManager) has also been implemented, providing file operations for OneDrive including listing folders, getting metadata, downloading and uploading files, creating folders, deleting files/folders, and searching. Additionally, a unified authentication management interface for cloud storage providers has been created, which includes support for both Dropbox and Microsoft Graph. The SharePoint document library integration has been completed with the implementation of SharePoint-specific methods in the MSGraphConnector class. Most recently, the UI Integration phase has begun with the implementation of SharePoint and OneDrive storage providers for the unified file browser interface. These providers enable consistent navigation across storage providers and unified search and filtering capabilities. The next steps include enhancing the Teams conversation analysis capabilities and implementing Excel file processing via Microsoft Graph.
+**Status**: Phase 1 Completed, Phase 2 and 3 In Progress - The Microsoft Graph extension has completed Phase 1 (Foundation) and is now making significant progress in both Phase 2 (Advanced Features) and Phase 3 (UI Integration). The core connector class (MSGraphConnector) has been implemented, providing authentication, connection management, and API request capabilities. A file manager class (MSGraphFileManager) has also been implemented, providing file operations for OneDrive including listing folders, getting metadata, downloading and uploading files, creating folders, deleting files/folders, and searching. 
+
+The Teams conversation analysis capabilities have been significantly enhanced with the implementation of methods for message extraction, conversation metrics, participant analysis, and topic extraction. These enhancements enable researchers to gain insights from Teams conversations, including identifying active participants, tracking conversation timelines, and extracting potential topics from message content.
+
+Additionally, a unified authentication management interface for cloud storage providers has been created, which includes support for both Dropbox and Microsoft Graph. The SharePoint document library integration has been completed with the implementation of SharePoint-specific methods in the MSGraphConnector class. The UI Integration phase has begun with the implementation of SharePoint and OneDrive storage providers for the unified file browser interface. These providers enable consistent navigation across storage providers and unified search and filtering capabilities. The next steps include implementing Excel file processing via Microsoft Graph and continuing the UI Integration phase.
 
 The roadmap is divided into four phases:
 

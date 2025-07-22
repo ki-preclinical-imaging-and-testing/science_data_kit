@@ -1316,6 +1316,19 @@ def dropbox_browser():
 
     return render_page_html(page, 'dropbox_browser.html')
 
+@main_bp.route('/dropbox-team-folders')
+@login_required
+def dropbox_team_folders():
+    """Dropbox team folder management page."""
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+
+    return render_page_html(page, 'dropbox_team_folders.html')
+
 @main_bp.route('/api/dropbox/files', methods=['GET'])
 @login_required
 def get_dropbox_files():
@@ -1487,6 +1500,184 @@ def search_dropbox():
         'success': True,
         'results': page.search_results
     })
+
+@main_bp.route('/api/dropbox/team-folders', methods=['GET'])
+@login_required
+def get_team_folders():
+    """Get all team folders from Dropbox."""
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+    else:
+        return jsonify({'success': False, 'error': 'Not connected to Dropbox'}), 400
+
+    # Get team folders
+    try:
+        team_folders = page.connector.teams_manager.list_team_folders()
+        return jsonify({
+            'success': True,
+            'folders': team_folders
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error listing team folders: {str(e)}'}), 500
+
+@main_bp.route('/api/dropbox/team-folder', methods=['GET'])
+@login_required
+def get_team_folder():
+    """Get details for a specific team folder."""
+    folder_id = request.args.get('id', '')
+
+    if not folder_id:
+        return jsonify({'success': False, 'error': 'Team folder ID is required'}), 400
+
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+    else:
+        return jsonify({'success': False, 'error': 'Not connected to Dropbox'}), 400
+
+    # Get team folder details
+    try:
+        folder = page.connector.teams_manager.get_team_folder_metadata(folder_id)
+        return jsonify({
+            'success': True,
+            'folder': folder
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error getting team folder details: {str(e)}'}), 500
+
+@main_bp.route('/api/dropbox/team-folder-permissions', methods=['GET'])
+@login_required
+def get_team_folder_permissions():
+    """Get permissions for a team folder."""
+    folder_id = request.args.get('id', '')
+
+    if not folder_id:
+        return jsonify({'success': False, 'error': 'Team folder ID is required'}), 400
+
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+    else:
+        return jsonify({'success': False, 'error': 'Not connected to Dropbox'}), 400
+
+    # Get team folder permissions
+    try:
+        permissions = page.connector.teams_manager.get_team_folder_permissions(folder_id)
+        return jsonify({
+            'success': True,
+            'permissions': permissions
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error getting team folder permissions: {str(e)}'}), 500
+
+@main_bp.route('/api/dropbox/create-team-folder', methods=['POST'])
+@login_required
+def create_team_folder():
+    """Create a new team folder."""
+    data = request.get_json()
+    folder_name = data.get('name', '') if data else ''
+
+    if not folder_name:
+        return jsonify({'success': False, 'error': 'Folder name is required'}), 400
+
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+    else:
+        return jsonify({'success': False, 'error': 'Not connected to Dropbox'}), 400
+
+    # Create team folder
+    try:
+        folder = page.connector.teams_manager.create_team_folder(folder_name)
+        return jsonify({
+            'success': True,
+            'folder': folder
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error creating team folder: {str(e)}'}), 500
+
+@main_bp.route('/api/dropbox/archive-team-folder', methods=['POST'])
+@login_required
+def archive_team_folder():
+    """Archive a team folder."""
+    data = request.get_json()
+    folder_id = data.get('id', '') if data else ''
+
+    if not folder_id:
+        return jsonify({'success': False, 'error': 'Team folder ID is required'}), 400
+
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+    else:
+        return jsonify({'success': False, 'error': 'Not connected to Dropbox'}), 400
+
+    # Archive team folder
+    try:
+        folder = page.connector.teams_manager.archive_team_folder(folder_id)
+        return jsonify({
+            'success': True,
+            'folder': folder
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error archiving team folder: {str(e)}'}), 500
+
+@main_bp.route('/api/dropbox/delete-team-folder', methods=['POST'])
+@login_required
+def delete_team_folder():
+    """Permanently delete a team folder."""
+    data = request.get_json()
+    folder_id = data.get('id', '') if data else ''
+
+    if not folder_id:
+        return jsonify({'success': False, 'error': 'Team folder ID is required'}), 400
+
+    # Create page instance
+    page = DropboxBrowserPage()
+
+    # Restore connector from session if available
+    if 'dropbox_connector' in session:
+        page.set_connector(session['dropbox_connector'])
+    else:
+        return jsonify({'success': False, 'error': 'Not connected to Dropbox'}), 400
+
+    # Delete team folder
+    try:
+        success = page.connector.teams_manager.permanently_delete_team_folder(folder_id)
+        return jsonify({
+            'success': success,
+            'message': 'Team folder deleted successfully' if success else 'Failed to delete team folder'
+        })
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error deleting team folder: {str(e)}'}), 500
 
 @main_bp.route('/api/cbioportal/cancer-types', methods=['GET'])
 @login_required
