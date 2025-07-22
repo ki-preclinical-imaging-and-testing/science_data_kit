@@ -275,3 +275,58 @@ class WorkshopPageData(PageData):
     demo_videos: List[Dict[str, Any]] = field(default_factory=list)
     reference_cards: List[Dict[str, Any]] = field(default_factory=list)
     interactive_demos: List[Dict[str, Any]] = field(default_factory=list)
+
+@dataclass
+class TeamsConversationPageData(PageData):
+    """Microsoft Teams conversation browser page specific data"""
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    teams: List[Dict[str, Any]] = field(default_factory=list)
+    selected_team: Optional[Dict[str, Any]] = None
+    channels: List[Dict[str, Any]] = field(default_factory=list)
+    selected_channel: Optional[Dict[str, Any]] = None
+    messages: List[Dict[str, Any]] = field(default_factory=list)
+    selected_message: Optional[Dict[str, Any]] = None
+    message_replies: List[Dict[str, Any]] = field(default_factory=list)
+    conversation_analysis: Optional[Dict[str, Any]] = None
+    topic_analysis: Optional[Dict[str, Any]] = None
+    visualization_data: Optional[Dict[str, Any]] = None
+    search_query: Optional[str] = None
+    search_results: List[Dict[str, Any]] = field(default_factory=list)
+    filter_options: Dict[str, List[str]] = field(default_factory=dict)
+    applied_filters: Dict[str, str] = field(default_factory=dict)
+    sort_by: str = "createdDateTime"
+    sort_order: str = "descending"
+    view_mode: str = "list"
+    page_size: int = 20
+    current_page: int = 1
+    total_pages: int = 1
+
+@dataclass
+class ExcelViewerPageData(PageData):
+    """Microsoft Excel viewer page specific data"""
+    connection_status: Dict[str, bool] = field(default_factory=dict)
+    connection_errors: Dict[str, str] = field(default_factory=dict)
+    drive_id: Optional[str] = None
+    site_id: Optional[str] = None
+    item_id: Optional[str] = None
+    file_metadata: Optional[Dict[str, Any]] = None
+    worksheets: List[Dict[str, Any]] = field(default_factory=list)
+    selected_worksheet: Optional[Dict[str, Any]] = None
+    worksheet_data: Optional[Dict[str, Any]] = None
+    charts: List[Dict[str, Any]] = field(default_factory=list)
+    selected_chart: Optional[Dict[str, Any]] = None
+    chart_data: Optional[Dict[str, Any]] = None
+    tables: List[Dict[str, Any]] = field(default_factory=list)
+    selected_table: Optional[Dict[str, Any]] = None
+    table_data: Optional[Dict[str, Any]] = None
+    range_address: Optional[str] = None
+    visualization_data: Optional[Dict[str, Any]] = None
+    filter_options: Dict[str, List[str]] = field(default_factory=dict)
+    applied_filters: Dict[str, str] = field(default_factory=dict)
+    sort_by: Optional[str] = None
+    sort_order: str = "ascending"
+    view_mode: str = "grid"
+    page_size: int = 100
+    current_page: int = 1
+    total_pages: int = 1

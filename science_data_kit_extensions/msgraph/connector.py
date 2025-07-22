@@ -620,3 +620,254 @@ class MSGraphConnector:
             'common_terms': common_terms,
             'potential_topics': potential_topics
         }
+
+    def get_excel_file_metadata(self, drive_id: Optional[str] = None, item_id: str = None, 
+                               site_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get metadata for an Excel file stored in OneDrive or SharePoint.
+
+        Args:
+            drive_id: ID of the drive (optional, defaults to the current user's drive)
+            item_id: ID of the Excel file
+            site_id: ID of the SharePoint site (if the file is in SharePoint)
+
+        Returns:
+            Dict[str, Any]: Metadata for the Excel file
+        """
+        if not self.is_connected():
+            raise ConnectionError("Not connected to Microsoft Graph API")
+
+        if not item_id:
+            raise ValueError("item_id is required")
+
+        # Construct the appropriate endpoint based on the provided parameters
+        if site_id and drive_id:
+            endpoint = f"/sites/{site_id}/drives/{drive_id}/items/{item_id}"
+        elif drive_id:
+            endpoint = f"/drives/{drive_id}/items/{item_id}"
+        else:
+            endpoint = f"/me/drive/items/{item_id}"
+
+        # Get the file metadata
+        return self.request("GET", endpoint)
+
+    def get_excel_worksheets(self, drive_id: Optional[str] = None, item_id: str = None, 
+                            site_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get a list of worksheets in an Excel file.
+
+        Args:
+            drive_id: ID of the drive (optional, defaults to the current user's drive)
+            item_id: ID of the Excel file
+            site_id: ID of the SharePoint site (if the file is in SharePoint)
+
+        Returns:
+            List[Dict[str, Any]]: List of worksheets in the Excel file
+        """
+        if not self.is_connected():
+            raise ConnectionError("Not connected to Microsoft Graph API")
+
+        if not item_id:
+            raise ValueError("item_id is required")
+
+        # Construct the appropriate endpoint based on the provided parameters
+        if site_id and drive_id:
+            endpoint = f"/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/worksheets"
+        elif drive_id:
+            endpoint = f"/drives/{drive_id}/items/{item_id}/workbook/worksheets"
+        else:
+            endpoint = f"/me/drive/items/{item_id}/workbook/worksheets"
+
+        # Get the worksheets
+        response = self.request("GET", endpoint)
+        return response.get('value', [])
+
+    def get_excel_worksheet_data(self, drive_id: Optional[str] = None, item_id: str = None, 
+                                worksheet_id: str = None, site_id: Optional[str] = None,
+                                range_address: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get data from an Excel worksheet.
+
+        Args:
+            drive_id: ID of the drive (optional, defaults to the current user's drive)
+            item_id: ID of the Excel file
+            worksheet_id: ID or name of the worksheet
+            site_id: ID of the SharePoint site (if the file is in SharePoint)
+            range_address: Address of the range to get (e.g., "A1:C10")
+
+        Returns:
+            Dict[str, Any]: Data from the worksheet
+        """
+        if not self.is_connected():
+            raise ConnectionError("Not connected to Microsoft Graph API")
+
+        if not item_id:
+            raise ValueError("item_id is required")
+
+        if not worksheet_id:
+            raise ValueError("worksheet_id is required")
+
+        # Construct the appropriate endpoint based on the provided parameters
+        if site_id and drive_id:
+            base_endpoint = f"/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}"
+        elif drive_id:
+            base_endpoint = f"/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}"
+        else:
+            base_endpoint = f"/me/drive/items/{item_id}/workbook/worksheets/{worksheet_id}"
+
+        # If a range is specified, get that range, otherwise get the used range
+        if range_address:
+            endpoint = f"{base_endpoint}/range(address='{range_address}')"
+        else:
+            endpoint = f"{base_endpoint}/usedRange"
+
+        # Get the worksheet data
+        return self.request("GET", endpoint)
+
+    def get_excel_chart_data(self, drive_id: Optional[str] = None, item_id: str = None, 
+                            worksheet_id: str = None, chart_id: str = None, 
+                            site_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get data from an Excel chart.
+
+        Args:
+            drive_id: ID of the drive (optional, defaults to the current user's drive)
+            item_id: ID of the Excel file
+            worksheet_id: ID or name of the worksheet
+            chart_id: ID of the chart
+            site_id: ID of the SharePoint site (if the file is in SharePoint)
+
+        Returns:
+            Dict[str, Any]: Data from the chart
+        """
+        if not self.is_connected():
+            raise ConnectionError("Not connected to Microsoft Graph API")
+
+        if not item_id:
+            raise ValueError("item_id is required")
+
+        if not worksheet_id:
+            raise ValueError("worksheet_id is required")
+
+        if not chart_id:
+            raise ValueError("chart_id is required")
+
+        # Construct the appropriate endpoint based on the provided parameters
+        if site_id and drive_id:
+            endpoint = f"/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}/charts/{chart_id}"
+        elif drive_id:
+            endpoint = f"/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}/charts/{chart_id}"
+        else:
+            endpoint = f"/me/drive/items/{item_id}/workbook/worksheets/{worksheet_id}/charts/{chart_id}"
+
+        # Get the chart data
+        return self.request("GET", endpoint)
+
+    def get_excel_charts(self, drive_id: Optional[str] = None, item_id: str = None, 
+                        worksheet_id: str = None, site_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get a list of charts in an Excel worksheet.
+
+        Args:
+            drive_id: ID of the drive (optional, defaults to the current user's drive)
+            item_id: ID of the Excel file
+            worksheet_id: ID or name of the worksheet
+            site_id: ID of the SharePoint site (if the file is in SharePoint)
+
+        Returns:
+            List[Dict[str, Any]]: List of charts in the worksheet
+        """
+        if not self.is_connected():
+            raise ConnectionError("Not connected to Microsoft Graph API")
+
+        if not item_id:
+            raise ValueError("item_id is required")
+
+        if not worksheet_id:
+            raise ValueError("worksheet_id is required")
+
+        # Construct the appropriate endpoint based on the provided parameters
+        if site_id and drive_id:
+            endpoint = f"/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}/charts"
+        elif drive_id:
+            endpoint = f"/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}/charts"
+        else:
+            endpoint = f"/me/drive/items/{item_id}/workbook/worksheets/{worksheet_id}/charts"
+
+        # Get the charts
+        response = self.request("GET", endpoint)
+        return response.get('value', [])
+
+    def get_excel_tables(self, drive_id: Optional[str] = None, item_id: str = None, 
+                        worksheet_id: str = None, site_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get a list of tables in an Excel worksheet.
+
+        Args:
+            drive_id: ID of the drive (optional, defaults to the current user's drive)
+            item_id: ID of the Excel file
+            worksheet_id: ID or name of the worksheet
+            site_id: ID of the SharePoint site (if the file is in SharePoint)
+
+        Returns:
+            List[Dict[str, Any]]: List of tables in the worksheet
+        """
+        if not self.is_connected():
+            raise ConnectionError("Not connected to Microsoft Graph API")
+
+        if not item_id:
+            raise ValueError("item_id is required")
+
+        if not worksheet_id:
+            raise ValueError("worksheet_id is required")
+
+        # Construct the appropriate endpoint based on the provided parameters
+        if site_id and drive_id:
+            endpoint = f"/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}/tables"
+        elif drive_id:
+            endpoint = f"/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}/tables"
+        else:
+            endpoint = f"/me/drive/items/{item_id}/workbook/worksheets/{worksheet_id}/tables"
+
+        # Get the tables
+        response = self.request("GET", endpoint)
+        return response.get('value', [])
+
+    def get_excel_table_data(self, drive_id: Optional[str] = None, item_id: str = None, 
+                            worksheet_id: str = None, table_id: str = None, 
+                            site_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get data from an Excel table.
+
+        Args:
+            drive_id: ID of the drive (optional, defaults to the current user's drive)
+            item_id: ID of the Excel file
+            worksheet_id: ID or name of the worksheet
+            table_id: ID of the table
+            site_id: ID of the SharePoint site (if the file is in SharePoint)
+
+        Returns:
+            Dict[str, Any]: Data from the table
+        """
+        if not self.is_connected():
+            raise ConnectionError("Not connected to Microsoft Graph API")
+
+        if not item_id:
+            raise ValueError("item_id is required")
+
+        if not worksheet_id:
+            raise ValueError("worksheet_id is required")
+
+        if not table_id:
+            raise ValueError("table_id is required")
+
+        # Construct the appropriate endpoint based on the provided parameters
+        if site_id and drive_id:
+            endpoint = f"/sites/{site_id}/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}/tables/{table_id}/range"
+        elif drive_id:
+            endpoint = f"/drives/{drive_id}/items/{item_id}/workbook/worksheets/{worksheet_id}/tables/{table_id}/range"
+        else:
+            endpoint = f"/me/drive/items/{item_id}/workbook/worksheets/{worksheet_id}/tables/{table_id}/range"
+
+        # Get the table data
+        return self.request("GET", endpoint)
