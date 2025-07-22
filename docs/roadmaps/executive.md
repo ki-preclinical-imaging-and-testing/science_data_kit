@@ -65,6 +65,14 @@ The following roadmap outlines the key steps for implementing the strategic visi
 - Implement Google Drive/Workspace Extension
   - ⟳ Phase 2: Advanced Features (real-time sync, spreadsheet/document parsing)
 
+#### Enhanced UI Components
+- ✓ Improve file preview capabilities for cloud storage files
+  - ✓ Implement streaming preview for large files
+  - ✓ Add support for previewing specialized file formats from cloud storage
+  - ✓ Improve error handling and logging for preview generation
+- ⟳ Implement drag and drop file upload for all storage providers
+- ⟳ Support batch operations (copy, move, delete) across storage providers
+
 #### Knowledge Graph Integration
 - ✓ Enhance file nodes with specialized metadata from file interpreters
 - ⟳ Implement relationship discovery and navigation

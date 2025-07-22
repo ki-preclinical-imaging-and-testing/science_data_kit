@@ -189,6 +189,8 @@ class FileBrowserPage(BasePage):
             # Add a helper method to apply metadata filters
             files = self._apply_metadata_filters(files, connection_type)
 
+        return files
+
     def _apply_metadata_filters(self, files: List[Dict[str, Any]], connection_type: str = None) -> List[Dict[str, Any]]:
         """
         Apply metadata filters to a list of files.
@@ -648,19 +650,110 @@ class FileBrowserPage(BasePage):
                 return None
         return None
 
-    def generate_preview(self, file_path: str) -> Optional[Any]:
+    def generate_preview(self, file_path: str, max_size_mb: int = 50) -> Optional[Any]:
         """
         Generate a preview for a file using a FileInterpreterPlugin.
 
+        This method handles both local and cloud storage files, with support for
+        streaming previews for large files and specialized file formats.
+
         Args:
             file_path: The path of the file to generate a preview for.
+            max_size_mb: Maximum file size in MB for full preview generation.
+                         Files larger than this will use streaming preview if available.
 
         Returns:
             Preview data or path to the generated preview, or None if no suitable interpreter is found.
         """
+        # Get the connection type from session state
+        connection_type = getattr(self, 'connection_type', 'local_fs')
+
+        # Get file interpreter
         interpreter = get_file_interpreter_for_file(file_path)
-        if interpreter:
-            try:
+        if not interpreter:
+            return None
+
+        try:
+            # Check if we need to handle a cloud storage file
+            if connection_type in ['dropbox', 'sharepoint', 'onedrive', 'gdrive']:
+                # Get the appropriate provider
+                provider = self._get_storage_provider(connection_type)
+                if not provider:
+                    self.logger.error(f"No provider available for {connection_type}")
+                    return None
+
+                # Get file info to check size
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                file_info = loop.run_until_complete(provider.get_file_info(file_path))
+                loop.close()
+
+                file_size_mb = file_info.get('size', 0) / (1024 * 1024)
+
+                # For large files, use streaming preview if available
+                if file_size_mb > max_size_mb and hasattr(interpreter, 'generate_streaming_preview'):
+                    self.logger.info(f"Using streaming preview for large file: {file_path} ({file_size_mb:.2f} MB)")
+
+                    # Create a temporary file for the preview
+                    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                        temp_path = temp_file.name
+
+                    # Download the file in chunks and generate streaming preview
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    preview = loop.run_until_complete(
+                        self._download_and_preview_streaming(provider, file_path, interpreter, temp_path)
+                    )
+                    loop.close()
+
+                    # Clean up the temporary file
+                    try:
+                        os.unlink(temp_path)
+                    except Exception as e:
+                        self.logger.warning(f"Error removing temporary file: {str(e)}")
+
+                    return preview
+                else:
+                    # For smaller files, download the entire file and generate preview
+                    self.logger.info(f"Downloading file for preview: {file_path}")
+
+                    # Create a temporary file for the download
+                    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                        temp_path = temp_file.name
+
+                    # Download the file
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    download_success = loop.run_until_complete(
+                        provider.download_file(file_path, temp_path)
+                    )
+                    loop.close()
+
+                    if not download_success:
+                        self.logger.error(f"Failed to download file: {file_path}")
+                        try:
+                            os.unlink(temp_path)
+                        except Exception:
+                            pass
+                        return None
+
+                    # Create a temporary directory for the preview
+                    with tempfile.TemporaryDirectory() as temp_dir:
+                        output_path = os.path.join(temp_dir, "preview")
+
+                        # Generate the preview
+                        preview = interpreter.generate_preview(temp_path, output_path)
+
+                        # Clean up the temporary file
+                        try:
+                            os.unlink(temp_path)
+                        except Exception as e:
+                            self.logger.warning(f"Error removing temporary file: {str(e)}")
+
+                        return preview
+            else:
+                # Local file handling
                 # Create a temporary directory for the preview
                 with tempfile.TemporaryDirectory() as temp_dir:
                     output_path = os.path.join(temp_dir, "preview")
@@ -669,11 +762,45 @@ class FileBrowserPage(BasePage):
                     preview = interpreter.generate_preview(file_path, output_path)
 
                     return preview
-            except Exception as e:
-                # Handle errors gracefully
-                print(f"Error generating preview for {file_path}: {str(e)}")
-                return None
+        except Exception as e:
+            # Handle errors gracefully
+            self.logger.error(f"Error generating preview for {file_path}: {str(e)}")
+            return None
+
         return None
+
+    async def _download_and_preview_streaming(self, provider, file_path: str, interpreter, temp_path: str) -> Optional[Any]:
+        """
+        Download a file in chunks and generate a streaming preview.
+
+        Args:
+            provider: The storage provider to use for downloading.
+            file_path: The path of the file to download.
+            interpreter: The file interpreter to use for preview generation.
+            temp_path: Temporary path to use for the download.
+
+        Returns:
+            Preview data or None if preview generation failed.
+        """
+        try:
+            # Check if the interpreter supports streaming preview
+            if not hasattr(interpreter, 'generate_streaming_preview'):
+                self.logger.warning(f"Interpreter does not support streaming preview for {file_path}")
+                return None
+
+            # Start the download
+            download_stream = await provider.download_file_stream(file_path)
+            if not download_stream:
+                self.logger.error(f"Failed to start download stream for {file_path}")
+                return None
+
+            # Generate streaming preview
+            preview = await interpreter.generate_streaming_preview(download_stream, temp_path)
+            return preview
+
+        except Exception as e:
+            self.logger.error(f"Error in streaming preview for {file_path}: {str(e)}")
+            return None
 
     def set_view_mode(self, mode: str) -> None:
         """

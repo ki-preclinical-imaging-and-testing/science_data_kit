@@ -9,9 +9,13 @@ This document serves as a master index for all roadmaps in the Science Data Kit 
 
 This roadmap outlines a comprehensive plan for implementing a unified file browser interface for local and cloud storage in the Science Data Kit. The goal is to provide a consistent user experience across different storage providers, with unified navigation, search, and filtering capabilities.
 
-**Latest Version**: [UI Integration Roadmap](active/roadmap_UIIntegration_00.md)
+**Latest Version**: [UI Integration Roadmap](active/roadmap_UIIntegration_01.md)
 
-**Status**: Phase 1 Completed - The UI Integration roadmap has completed Phase 1 (Core Navigation Consistency) with the implementation of consistent navigation across storage providers and unified search and filtering capabilities. The UI implementation now leverages the provider-agnostic capabilities of the core implementation, ensuring a consistent user experience regardless of the storage provider being used. Phase 2 (Enhanced UI Components) and Phase 3 (Advanced Integration) are planned for future implementation.
+**Status**: Phase 1 Completed, Phase 2 In Progress - The UI Integration roadmap has completed Phase 1 (Core Navigation Consistency) with the implementation of consistent navigation across storage providers and unified search and filtering capabilities. The UI implementation now leverages the provider-agnostic capabilities of the core implementation, ensuring a consistent user experience regardless of the storage provider being used. 
+
+Significant progress has been made in Phase 2 (Enhanced UI Components) with the implementation of enhanced file preview capabilities for cloud storage files. The file preview system now supports streaming previews for large files, specialized file format previews for cloud storage files, improved error handling, and proper temporary file handling for downloaded files. These enhancements provide a more seamless experience when working with files stored in cloud services.
+
+The next steps include implementing drag and drop support for file uploads and batch operations for working with multiple files, followed by Phase 3 (Advanced Integration).
 
 ### Design/UX Phase
 
